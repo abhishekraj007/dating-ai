@@ -8,7 +8,7 @@ import { betterAuth } from "better-auth";
 import { v } from "convex/values";
 
 const siteUrl = process.env.SITE_URL!;
-const nativeAppUrl = process.env.NATIVE_APP_URL || "mybettertapp://";
+const nativeAppUrl = process.env.NATIVE_APP_URL || "quotes://";
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
@@ -26,6 +26,13 @@ function createAuth(
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,
+    },
+    socialProviders: {
+      google: {
+        prompt: "select_account",
+        clientId: process.env.GOOGLE_CLIENT_ID as string,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      },
     },
     plugins: [expo(), convex()],
   });

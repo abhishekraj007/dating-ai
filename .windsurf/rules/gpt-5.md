@@ -1,0 +1,11 @@
+---
+trigger: always_on
+description:
+globs:
+---
+
+# Important
+
+- never use dynamic imports (unless asked to) like `await import(..)`
+- never cast to `any`
+- do not add extra defensive checks or try/catch blocks.

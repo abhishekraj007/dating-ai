@@ -1,0 +1,33 @@
+{
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true,
+        "image": "latest"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview"
+    },
+    "production": {
+      "channel": "production",
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle",
+        "node": "20.10.0"
+      },
+      "ios": {
+        "node": "20.10.0"
+      }
+    }
+  },
+  "cli": {
+    "promptToConfigurePushNotifications": false
+  }
+}

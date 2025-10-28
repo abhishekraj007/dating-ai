@@ -1,6 +1,7 @@
 import { TabBarIcon } from "@/components/tabbar-icon";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { Tabs } from "expo-router";
+import { Header } from "@/components/header";
 
 export default function TabLayout() {
 	const { isDarkColorScheme } = useColorScheme();
@@ -8,7 +9,8 @@ export default function TabLayout() {
 	return (
 		<Tabs
 			screenOptions={{
-				headerShown: false,
+				headerShown: true,
+				header: () => <Header />,
 				tabBarActiveTintColor: isDarkColorScheme
 					? "hsl(217.2 91.2% 59.8%)"
 					: "hsl(221.2 83.2% 53.3%)",

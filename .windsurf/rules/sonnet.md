@@ -1,0 +1,10 @@
+---
+trigger: always_on
+description:
+globs:
+---
+
+# Important
+
+- never create markdown (`.md`) files after you're done. NEVER!
+- never user emojis in your replies

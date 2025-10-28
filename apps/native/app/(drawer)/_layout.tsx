@@ -1,49 +1,34 @@
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { Link } from "expo-router";
 import { Drawer } from "expo-router/drawer";
+import { useConvexAuth, useQuery } from "convex/react";
+import { api } from "@convex-starter/backend/convex/_generated/api";
+import { LoginScreen } from "@/components/auth/login-screen";
+import { View, ActivityIndicator } from "react-native";
 
-import { HeaderButton } from "@/components/header-button";
+export default function DrawerLayout() {
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
 
-const DrawerLayout = () => {
-	return (
-		<Drawer>
-			<Drawer.Screen
-				name="index"
-				options={{
-					headerTitle: "Home",
-					drawerLabel: "Home",
-					drawerIcon: ({ size, color }) => (
-						<Ionicons name="home-outline" size={size} color={color} />
-					),
-				}}
-			/>
-			<Drawer.Screen
-				name="(tabs)"
-				options={{
-					headerTitle: "Tabs",
-					drawerLabel: "Tabs",
-					drawerIcon: ({ size, color }) => (
-						<MaterialIcons name="border-bottom" size={size} color={color} />
-					),
-					headerRight: () => (
-						<Link href="/modal" asChild>
-							<HeaderButton />
-						</Link>
-					),
-				}}
-			/>
-			<Drawer.Screen
-				name="todos"
-				options={{
-					headerTitle: "Todos",
-					drawerLabel: "Todos",
-					drawerIcon: ({ size, color }) => (
-						<Ionicons name="checkbox-outline" size={size} color={color} />
-					),
-				}}
-			/>
-		</Drawer>
-	);
-};
+  if (isLoading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-background">
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
 
-export default DrawerLayout;
+  if (!isAuthenticated || !user) {
+    return <LoginScreen />;
+  }
+
+  return (
+    <Drawer>
+      <Drawer.Screen
+        name="(tabs)"
+        options={{
+          headerShown: false,
+          drawerLabel: "Home",
+        }}
+      />
+    </Drawer>
+  );
+}
