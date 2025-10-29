@@ -11,16 +11,43 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Loader2, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex-starter/backend/convex/_generated/api";
 import type { Id } from "@convex-starter/backend/convex/_generated/dataModel";
 
 export default function TodosPage() {
+	const router = useRouter();
 	const [newTodoText, setNewTodoText] = useState("");
+	const hasCheckedAuth = useRef(false);
 
+	const userData = useQuery(api.user.fetchUserAndProfile);
 	const todos = useQuery(api.todos.getAll);
+
+	useEffect(() => {
+		// Only redirect if we've loaded and confirmed user is null
+		if (userData !== undefined && userData === null && !hasCheckedAuth.current) {
+			hasCheckedAuth.current = true;
+			router.push("/auth");
+		}
+	}, [userData, router]);
+
+	if (userData === undefined) {
+		return (
+			<div className="flex min-h-screen items-center justify-center">
+				<div className="text-center">
+					<Loader2 className="h-8 w-8 animate-spin" />
+					<p className="mt-4 text-muted-foreground">Loading...</p>
+				</div>
+			</div>
+		);
+	}
+
+	if (userData === null) {
+		return null;
+	}
 	const createTodoMutation = useMutation(api.todos.create);
 	const toggleTodoMutation = useMutation(api.todos.toggle);
 	const deleteTodoMutation = useMutation(api.todos.deleteTodo);

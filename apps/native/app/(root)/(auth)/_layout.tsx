@@ -13,14 +13,6 @@ export default function AuthLayout() {
           ...standard,
         }}
       />
-      <Stack.Screen
-        name="email"
-        options={{
-          headerShown: false,
-          presentation: "modal",
-          ...root,
-        }}
-      />
     </Stack>
   );
 }

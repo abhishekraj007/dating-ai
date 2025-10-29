@@ -2,10 +2,9 @@ import { type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { expo } from "@better-auth/expo";
 import { DataModel } from "../../_generated/dataModel";
-import { query } from "../../_generated/server";
 import { betterAuth } from "better-auth";
-import { v } from "convex/values";
 import { authComponent } from "./component";
+import { getEnvironment } from "../../util";
 
 const siteUrl = process.env.SITE_URL!;
 const nativeAppUrl = process.env.NATIVE_APP_URL || "quotes://";
@@ -18,7 +17,8 @@ export function createAuth(
     logger: {
       disabled: optionsOnly,
     },
-    baseURL: siteUrl,
+    // baseURL: "http://localhost:3004", // enable this for web login
+    baseURL: siteUrl, // enable this for mobile login
     trustedOrigins: [siteUrl, nativeAppUrl, "http://localhost:3004"],
     database: authComponent.adapter(ctx),
     user: {

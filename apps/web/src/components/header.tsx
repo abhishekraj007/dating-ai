@@ -1,8 +1,16 @@
 "use client";
 import Link from "next/link";
 import { ModeToggle } from "./mode-toggle";
+import UserMenu from "./user-menu";
+import { Button } from "./ui/button";
+import { useRouter } from "next/navigation";
+import { useQuery } from "convex/react";
+import { api } from "@convex-starter/backend/convex/_generated/api";
 
 export default function Header() {
+	const router = useRouter();
+	const userData = useQuery(api.user.fetchUserAndProfile);
+
 	const links = [
 		{ to: "/", label: "Home" },
 		{ to: "/dashboard", label: "Dashboard" },
@@ -23,6 +31,11 @@ export default function Header() {
 				</nav>
 				<div className="flex items-center gap-2">
 					<ModeToggle />
+					{userData ? (
+						<UserMenu />
+					) : (
+						<Button onClick={() => router.push("/auth")}>Login</Button>
+					)}
 				</div>
 			</div>
 			<hr />

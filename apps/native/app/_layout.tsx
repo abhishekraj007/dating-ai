@@ -3,6 +3,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
 import { HeroUINativeProvider } from "heroui-native";
 import { AppThemeProvider, useAppTheme } from "@/contexts/app-theme-context";
+import { PurchasesProvider } from "@/contexts/purchases-context";
 import ConvexProvider from "@/providers/ConvexProvider";
 import SplashScreenProvider from "@/providers/SplashScreenProvider";
 
@@ -30,7 +31,9 @@ export default function Layout() {
       <ConvexProvider>
         <SplashScreenProvider>
           <AppThemeProvider>
-            <ThemedLayout />
+            <PurchasesProvider>
+              <ThemedLayout />
+            </PurchasesProvider>
           </AppThemeProvider>
         </SplashScreenProvider>
       </ConvexProvider>
