@@ -62,4 +62,23 @@ export default defineSchema({
     text: v.string(),
     completed: v.boolean(),
   }),
+  
+  // Orders table for tracking one-time purchases (credit purchases)
+  orders: defineTable({
+    userId: v.id("user"),
+    platform: v.union(v.literal("polar"), v.literal("revenuecat")),
+    platformOrderId: v.string(), // Unique order ID from platform
+    platformProductId: v.string(), // Product ID that was purchased
+    amount: v.number(), // Credit amount purchased
+    status: v.union(
+      v.literal("paid"),
+      v.literal("pending"),
+      v.literal("failed"),
+      v.literal("refunded")
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_platform_order_id", ["platformOrderId"])
+    .index("by_user", ["userId"])
+    .index("by_user_platform", ["userId", "platform"]),
 });

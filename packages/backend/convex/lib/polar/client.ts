@@ -32,8 +32,6 @@ export const polar = new Polar(components.polar, {
   },
 });
 
-console.log("Polar setup logs:", polar);
-
 // Export Polar API functions
 export const {
   changeCurrentSubscription,

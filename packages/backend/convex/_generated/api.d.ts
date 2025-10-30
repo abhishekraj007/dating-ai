@@ -28,6 +28,7 @@ import type * as lib_betterAuth_index from "../lib/betterAuth/index.js";
 import type * as lib_polar_client from "../lib/polar/client.js";
 import type * as lib_polar_index from "../lib/polar/index.js";
 import type * as lib_polar_products from "../lib/polar/products.js";
+import type * as lib_polar_sync from "../lib/polar/sync.js";
 import type * as lib_polarWebhooks from "../lib/polarWebhooks.js";
 import type * as migrations_addCreditsToProfiles from "../migrations/addCreditsToProfiles.js";
 import type * as model_user from "../model/user.js";
@@ -72,6 +73,7 @@ declare const fullApi: ApiFromModules<{
   "lib/polar/client": typeof lib_polar_client;
   "lib/polar/index": typeof lib_polar_index;
   "lib/polar/products": typeof lib_polar_products;
+  "lib/polar/sync": typeof lib_polar_sync;
   "lib/polarWebhooks": typeof lib_polarWebhooks;
   "migrations/addCreditsToProfiles": typeof migrations_addCreditsToProfiles;
   "model/user": typeof model_user;

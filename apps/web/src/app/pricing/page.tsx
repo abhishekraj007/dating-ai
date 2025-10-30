@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { LoginModal } from "@/components/login-modal";
+import { useState } from "react";
 
 export default function PricingPage() {
 	const products = useQuery(api.lib.polar.products.getConfiguredProducts);
@@ -21,8 +23,10 @@ export default function PricingPage() {
 	const canPurchase = useQuery(api.features.subscriptions.queries.canPurchaseSubscription, {
 		platform: "polar",
 	});
+	const [loginModalOpen, setLoginModalOpen] = useState(false);
 
 	const isLoading = products === undefined || userData === undefined || userSubscriptions === undefined;
+	const isAuthenticated = userData !== null && userData !== undefined;
 
 	if (isLoading) {
 		return (
@@ -70,7 +74,7 @@ export default function PricingPage() {
 				<p className="text-xl text-muted-foreground">
 					Select the perfect plan for your needs
 				</p>
-				{userSubscriptions?.hasActiveSubscription && (
+				{isAuthenticated && userSubscriptions?.hasActiveSubscription && (
 					<div className="mt-4 p-4 bg-muted border border-border rounded-lg">
 						<p className="text-foreground">
 							You already have an active subscription on{" "}
@@ -141,7 +145,14 @@ export default function PricingPage() {
 						</ul>
 					</CardContent>
 					<CardFooter>
-						{userData?.subscription?.productKey === "proMonthly" ? (
+						{!isAuthenticated ? (
+							<Button
+								className="w-full"
+								onClick={() => setLoginModalOpen(true)}
+							>
+								Get Started
+							</Button>
+						) : userData?.subscription?.productKey === "proMonthly" ? (
 							<CustomerPortalLink
 								polarApi={{
 									generateCustomerPortalUrl:
@@ -159,14 +170,18 @@ export default function PricingPage() {
 							<Button className="w-full" disabled>
 								Already Subscribed
 							</Button>
-						) : (
+						) : proMonthly?.id ? (
 							<CheckoutLink
 								polarApi={api.lib.polar.client}
-								productIds={proMonthly?.prices?.[0]?.id ? [proMonthly.prices[0].id] : []}
+								productIds={[proMonthly.id]}
 								embed={true}
 							>
 								<Button className="w-full">Get Started</Button>
 							</CheckoutLink>
+						) : (
+							<Button className="w-full" disabled>
+								{proMonthly ? "Price not configured" : "Product not loaded"}
+							</Button>
 						)}
 					</CardFooter>
 				</Card>
@@ -200,7 +215,14 @@ export default function PricingPage() {
 						</ul>
 					</CardContent>
 					<CardFooter>
-						{userData?.subscription?.productKey === "proYearly" ? (
+						{!isAuthenticated ? (
+							<Button
+								className="w-full"
+								onClick={() => setLoginModalOpen(true)}
+							>
+								Get Started
+							</Button>
+						) : userData?.subscription?.productKey === "proYearly" ? (
 							<CustomerPortalLink
 								polarApi={{
 									generateCustomerPortalUrl:
@@ -218,14 +240,18 @@ export default function PricingPage() {
 							<Button className="w-full" disabled>
 								Already Subscribed
 							</Button>
-						) : (
+						) : proYearly?.id ? (
 							<CheckoutLink
 								polarApi={api.lib.polar.client}
-								productIds={proYearly?.prices?.[0]?.id ? [proYearly.prices[0].id] : []}
+								productIds={[proYearly.id]}
 								embed={true}
 							>
 								<Button className="w-full">Get Started</Button>
 							</CheckoutLink>
+						) : (
+							<Button className="w-full" disabled>
+								{proYearly ? "Price not configured" : "Product not loaded"}
+							</Button>
 						)}
 					</CardFooter>
 				</Card>
@@ -237,6 +263,12 @@ export default function PricingPage() {
 					All plans include a 14-day money-back guarantee. Cancel anytime.
 				</p>
 			</div>
+
+			<LoginModal
+				open={loginModalOpen}
+				onOpenChange={setLoginModalOpen}
+				returnUrl="/pricing"
+			/>
 		</div>
 	);
 }

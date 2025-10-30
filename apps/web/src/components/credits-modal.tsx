@@ -101,6 +101,7 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
 								? (item.product.prices[0].priceAmount / 100).toFixed(2)
 								: "0.00";
 							
+							
 							return (
 								<Card
 									key={item.key}
@@ -140,10 +141,10 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
 										</p>
 									</CardContent>
 									<CardFooter>
-										{priceId ? (
+										{item.product?.id ? (
 											<CheckoutLink
 												polarApi={api.lib.polar.client}
-												productIds={[priceId]}
+												productIds={[item.product.id]}
 												embed={true}
 												className="w-full"
 											>
@@ -151,7 +152,7 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
 											</CheckoutLink>
 										) : (
 											<Button className="w-full" disabled>
-												Not Available
+												{item.product ? "Product not configured" : "Product not loaded"}
 											</Button>
 										)}
 									</CardFooter>

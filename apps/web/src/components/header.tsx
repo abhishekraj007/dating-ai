@@ -14,6 +14,7 @@ export default function Header() {
 	const router = useRouter();
 	const userData = useQuery(api.user.fetchUserAndProfile);
 	const userCredits = useQuery(api.features.credits.queries.getUserCredits);
+	const premiumStatus = useQuery(api.features.premium.queries.isPremium);
 	const [creditsModalOpen, setCreditsModalOpen] = useState(false);
 
 	const links = [
@@ -43,20 +44,31 @@ export default function Header() {
 				<div className="flex items-center gap-2">
 					<ModeToggle />
 					{userData && (
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => setCreditsModalOpen(true)}
-							className="flex items-center gap-2"
-						>
-							<Coins className="h-4 w-4" />
-							{userCredits?.credits !== undefined
-								? userCredits.credits.toLocaleString()
-								: "..."}
-						</Button>
+						<>
+							{!premiumStatus?.isPremium && (
+								<Button
+									variant="default"
+									size="sm"
+									onClick={() => router.push("/pricing")}
+								>
+									Upgrade
+								</Button>
+							)}
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => setCreditsModalOpen(true)}
+								className="flex items-center gap-2"
+							>
+								<Coins className="h-4 w-4" />
+								{userCredits?.credits !== undefined
+									? userCredits.credits.toLocaleString()
+									: "..."}
+							</Button>
+						</>
 					)}
 					{userData ? (
-						<UserMenu />
+						<UserMenu isPremium={premiumStatus?.isPremium ?? false} />
 					) : (
 						<Button onClick={() => router.push("/auth")}>Login</Button>
 					)}

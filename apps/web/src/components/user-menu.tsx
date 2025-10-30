@@ -12,8 +12,13 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@convex-starter/backend/convex/_generated/api";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Crown } from "lucide-react";
 
-export default function UserMenu() {
+interface UserMenuProps {
+  isPremium: boolean;
+}
+
+export default function UserMenu({ isPremium }: UserMenuProps) {
   const router = useRouter();
   const userData = useQuery(api.user.fetchUserAndProfile);
 
@@ -40,6 +45,11 @@ export default function UserMenu() {
             <AvatarImage src={userImage || undefined} alt={userName} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
+          {isPremium && (
+            <div className="absolute -top-1 -right-1 bg-primary rounded-full p-0.5 border-2 border-background">
+              <Crown className="h-3 w-3 text-primary-foreground fill-primary-foreground" />
+            </div>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-card w-56" align="end">
