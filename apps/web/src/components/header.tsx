@@ -21,15 +21,20 @@ export default function Header() {
 		{ to: "/dashboard", label: "Dashboard" },
 		{ to: "/todos", label: "Todos" },
 		{ to: "/pricing", label: "Pricing" },
+		{ to: "/components", label: "Components" },
 	] as const;
 
 	return (
 		<div>
-			<div className="flex flex-row items-center justify-between px-2 py-1">
-				<nav className="flex gap-4 text-lg">
+			<div className="flex flex-row items-center justify-between px-4 py-3 border-b border-border">
+				<nav className="flex gap-6 text-sm font-medium">
 					{links.map(({ to, label }) => {
 						return (
-							<Link key={to} href={to}>
+							<Link
+								key={to}
+								href={to}
+								className="hover:text-primary transition-colors"
+							>
 								{label}
 							</Link>
 						);
@@ -57,7 +62,6 @@ export default function Header() {
 					)}
 				</div>
 			</div>
-			<hr />
 			<CreditsModal
 				open={creditsModalOpen}
 				onOpenChange={setCreditsModalOpen}

@@ -27,23 +27,50 @@ interface CreditsModalProps {
 }
 
 export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
-	const creditProducts = useQuery(api.features.credits.queries.getCreditProducts);
+	const polarProducts = useQuery(api.lib.polar.products.getConfiguredProducts);
 	const userCredits = useQuery(api.features.credits.queries.getUserCredits);
 
-	const isLoading = creditProducts === undefined || userCredits === undefined;
+	const isLoading = polarProducts === undefined || userCredits === undefined;
 
 	const getIcon = (index: number) => {
 		switch (index) {
 			case 0:
-				return <Coins className="h-8 w-8 text-blue-500" />;
+				return <Coins className="h-8 w-8 text-foreground" />;
 			case 1:
-				return <Sparkles className="h-8 w-8 text-purple-500" />;
+				return <Sparkles className="h-8 w-8 text-foreground" />;
 			case 2:
-				return <Zap className="h-8 w-8 text-yellow-500" />;
+				return <Zap className="h-8 w-8 text-foreground" />;
 			default:
-				return <Coins className="h-8 w-8 text-blue-500" />;
+				return <Coins className="h-8 w-8 text-foreground" />;
 		}
 	};
+
+	// Map Polar products to credit packages
+	const creditProducts = [
+		{
+			key: "credits1000",
+			product: polarProducts?.credits1000,
+			credits: 1000,
+			label: "1,000 Credits",
+			description: "Perfect for getting started",
+		},
+		{
+			key: "credits2500",
+			product: polarProducts?.credits2500,
+			credits: 2500,
+			label: "2,500 Credits",
+			description: "Most popular choice",
+			badge: "Popular",
+		},
+		{
+			key: "credits5000",
+			product: polarProducts?.credits5000,
+			credits: 5000,
+			label: "5,000 Credits",
+			description: "For power users",
+			badge: "Save 30%",
+		},
+	];
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -68,62 +95,69 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
 					</div>
 				) : (
 					<div className="grid md:grid-cols-3 gap-4 py-4">
-						{creditProducts?.map((product: any, index: number) => (
-							<Card
-								key={product.key}
-								className={
-									product.badge === "Popular"
-										? "border-primary shadow-lg relative"
-										: "relative"
-								}
-							>
-								{product.badge && (
-									<div className="absolute top-0 right-4">
-										<span
-											className={`px-3 py-1 rounded-b-lg text-xs font-semibold ${
-												product.badge === "Popular"
-													? "bg-primary text-primary-foreground"
-													: "bg-green-500 text-white"
-											}`}
-										>
-											{product.badge}
-										</span>
-									</div>
-								)}
-								<CardHeader className="text-center">
-									<div className="flex justify-center mb-2">{getIcon(index)}</div>
-									<CardTitle className="text-xl">{product.label}</CardTitle>
-									<CardDescription>{product.description}</CardDescription>
-								</CardHeader>
-								<CardContent className="text-center">
-									<div className="mb-4">
-										<span className="text-3xl font-bold">${product.price}</span>
-									</div>
-									<p className="text-sm text-muted-foreground">
-										{product.credits.toLocaleString()} credits
-									</p>
-									<p className="text-xs text-muted-foreground mt-1">
-										${(product.price / product.credits * 1000).toFixed(2)} per 1000 credits
-									</p>
-								</CardContent>
-								<CardFooter>
-									{product.productId ? (
-										<CheckoutLink
-											polarApi={api.lib.polar.client}
-											productIds={[product.productId]}
-											embed={true}
-											className="w-full"
-										>
-											<Button className="w-full">Buy Now</Button>
-										</CheckoutLink>
-									) : (
-										<Button className="w-full" disabled>
-											Not Available
-										</Button>
+						{creditProducts?.map((item, index: number) => {
+							const priceId = item.product?.prices?.[0]?.id;
+							const price = item.product?.prices?.[0]?.priceAmount
+								? (item.product.prices[0].priceAmount / 100).toFixed(2)
+								: "0.00";
+							
+							return (
+								<Card
+									key={item.key}
+									className={
+										item.badge === "Popular"
+											? "border-primary shadow-lg relative"
+											: "relative"
+									}
+								>
+									{item.badge && (
+										<div className="absolute top-0 right-4">
+											<span
+												className={`px-3 py-1 rounded-b-lg text-xs font-semibold ${
+													item.badge === "Popular"
+														? "bg-primary text-primary-foreground"
+														: "bg-muted text-muted-foreground"
+												}`}
+											>
+												{item.badge}
+											</span>
+										</div>
 									)}
-								</CardFooter>
-							</Card>
-						))}
+									<CardHeader className="text-center">
+										<div className="flex justify-center mb-2">{getIcon(index)}</div>
+										<CardTitle className="text-xl">{item.label}</CardTitle>
+										<CardDescription>{item.description}</CardDescription>
+									</CardHeader>
+									<CardContent className="text-center">
+										<div className="mb-4">
+											<span className="text-3xl font-bold">${price}</span>
+										</div>
+										<p className="text-sm text-muted-foreground">
+											{item.credits.toLocaleString()} credits
+										</p>
+										<p className="text-xs text-muted-foreground mt-1">
+											${(parseFloat(price) / item.credits * 1000).toFixed(2)} per 1000 credits
+										</p>
+									</CardContent>
+									<CardFooter>
+										{priceId ? (
+											<CheckoutLink
+												polarApi={api.lib.polar.client}
+												productIds={[priceId]}
+												embed={true}
+												className="w-full"
+											>
+												<Button className="w-full">Buy Now</Button>
+											</CheckoutLink>
+										) : (
+											<Button className="w-full" disabled>
+												Not Available
+											</Button>
+										)}
+									</CardFooter>
+								</Card>
+							);
+						})}
 					</div>
 				)}
 

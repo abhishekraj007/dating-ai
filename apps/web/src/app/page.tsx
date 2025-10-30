@@ -29,7 +29,7 @@ export default function Home() {
 					<h2 className="mb-2 font-medium">API Status</h2>
 					<div className="flex items-center gap-2">
 						<div
-							className={`h-2 w-2 rounded-full ${healthCheck === "OK" ? "bg-green-500" : healthCheck === undefined ? "bg-orange-400" : "bg-red-500"}`}
+							className={`h-2 w-2 rounded-full ${healthCheck === "OK" ? "bg-foreground" : healthCheck === undefined ? "bg-muted-foreground" : "bg-destructive"}`}
 						/>
 						<span className="text-sm text-muted-foreground">
 							{healthCheck === undefined

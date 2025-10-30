@@ -3,6 +3,8 @@ import * as Users from "../../model/user";
 
 /**
  * Get credit products available for purchase
+ * Note: These return product IDs, not price IDs. 
+ * Use lib.polar.products.getConfiguredProducts for actual price IDs.
  */
 export const getCreditProducts = query({
   handler: async () => {

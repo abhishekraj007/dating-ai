@@ -5,6 +5,7 @@ import { api, components } from "../../_generated/api";
  * Polar Client Configuration
  * Centralized Polar setup for the application
  */
+
 export const polar = new Polar(components.polar, {
   getUserInfo: async (
     ctx
@@ -30,6 +31,8 @@ export const polar = new Polar(components.polar, {
       process.env.POLAR_PRODUCT_CREDITS_5000 || "product_id_credits_5000",
   },
 });
+
+console.log("Polar setup logs:", polar);
 
 // Export Polar API functions
 export const {

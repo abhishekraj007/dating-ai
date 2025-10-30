@@ -71,8 +71,8 @@ export default function PricingPage() {
 					Select the perfect plan for your needs
 				</p>
 				{userSubscriptions?.hasActiveSubscription && (
-					<div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
-						<p className="text-blue-800 dark:text-blue-200">
+					<div className="mt-4 p-4 bg-muted border border-border rounded-lg">
+						<p className="text-foreground">
 							You already have an active subscription on{" "}
 							{userSubscriptions.hasWebSubscription ? "web" : "mobile"}. You can
 							only purchase credits or manage your existing subscription.
@@ -96,7 +96,7 @@ export default function PricingPage() {
 						<ul className="space-y-3">
 							{features.free.map((feature, index) => (
 								<li key={index} className="flex items-start gap-2">
-									<Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+									<Check className="h-5 w-5 text-foreground shrink-0 mt-0.5" />
 									<span className="text-sm">{feature}</span>
 								</li>
 							))}
@@ -134,7 +134,7 @@ export default function PricingPage() {
 						<ul className="space-y-3">
 							{features.pro.map((feature, index) => (
 								<li key={index} className="flex items-start gap-2">
-									<Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+									<Check className="h-5 w-5 text-foreground shrink-0 mt-0.5" />
 									<span className="text-sm">{feature}</span>
 								</li>
 							))}
@@ -162,7 +162,7 @@ export default function PricingPage() {
 						) : (
 							<CheckoutLink
 								polarApi={api.lib.polar.client}
-								productIds={proMonthly ? [proMonthly.id] : []}
+								productIds={proMonthly?.prices?.[0]?.id ? [proMonthly.prices[0].id] : []}
 								embed={true}
 							>
 								<Button className="w-full">Get Started</Button>
@@ -174,7 +174,7 @@ export default function PricingPage() {
 				{/* Yearly Pro */}
 				<Card className="relative">
 					<div className="absolute top-0 right-4">
-						<span className="bg-green-500 text-white px-3 py-1 rounded-b-lg text-xs font-semibold">
+						<span className="bg-primary text-primary-foreground px-3 py-1 rounded-b-lg text-xs font-semibold">
 							Save 17%
 						</span>
 					</div>
@@ -193,7 +193,7 @@ export default function PricingPage() {
 						<ul className="space-y-3">
 							{features.pro.map((feature, index) => (
 								<li key={index} className="flex items-start gap-2">
-									<Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+									<Check className="h-5 w-5 text-foreground shrink-0 mt-0.5" />
 									<span className="text-sm">{feature}</span>
 								</li>
 							))}
@@ -221,7 +221,7 @@ export default function PricingPage() {
 						) : (
 							<CheckoutLink
 								polarApi={api.lib.polar.client}
-								productIds={proYearly ? [proYearly.id] : []}
+								productIds={proYearly?.prices?.[0]?.id ? [proYearly.prices[0].id] : []}
 								embed={true}
 							>
 								<Button className="w-full">Get Started</Button>
