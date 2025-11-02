@@ -12,7 +12,8 @@ const authFunctions: AuthFunctions = internal.auth;
 
 export const authComponent = createClient<DataModel>(components.betterAuth, {
   authFunctions,
-  verbose: isDevelopment(), // NOTE: if you want this or not?
+  // verbose: isDevelopment(), // NOTE: if you want this or not?
+  verbose: false, // NOTE: if you want this or not?
   triggers: {
     user: {
       onCreate: async (ctx, authUser) => {
@@ -28,6 +29,7 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
           authUserId: authUser._id,
           credits: 0,
           isPremium: false,
+          email: authUser.email,
         });
       },
       onUpdate: async () =>
