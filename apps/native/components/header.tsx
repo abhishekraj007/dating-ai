@@ -26,6 +26,7 @@ export const Header = () => {
             <Button
               variant="tertiary"
               size="sm"
+              isIconOnly
               className="rounded-full bg-pink-500"
               onPress={presentPaywall}
             >
@@ -48,6 +49,7 @@ export const Header = () => {
             <Button
               variant="tertiary"
               size="sm"
+              isIconOnly
               className="rounded-full"
               onPress={() => {
                 router.navigate("/settings");

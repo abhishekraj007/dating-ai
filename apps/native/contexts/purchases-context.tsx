@@ -143,10 +143,10 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
 
     setCreditPackages(products);
 
-    console.log(
-      "revenuecat-> Fetched products:",
-      JSON.stringify(products, null, 2)
-    );
+    // console.log(
+    //   "revenuecat-> Fetched products:",
+    //   JSON.stringify(products, null, 2)
+    // );
 
     return products;
   };

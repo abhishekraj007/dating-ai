@@ -1,10 +1,10 @@
 import { Stack } from "expo-router";
 import { useNavigationOptions } from "@/hooks/useNavigationOptions";
-import { Header } from "@/components";
-import { useThemeColor } from "heroui-native";
+import { useAppTheme } from "@/contexts/app-theme-context";
 
 export default function MainLayout() {
   const { standard } = useNavigationOptions();
+  const { isDark } = useAppTheme();
 
   return (
     <Stack>
@@ -15,7 +15,6 @@ export default function MainLayout() {
           title: "Home",
           headerTitle: "",
           headerShown: false,
-          // headerRight: () => <Header />,
         }}
       />
       <Stack.Screen
@@ -25,7 +24,7 @@ export default function MainLayout() {
           presentation: "modal",
           headerTitle: "",
           headerBackTitle: "Back",
-          headerShown: false,
+          // headerShown: false,
           ...standard,
         }}
       />
@@ -35,7 +34,9 @@ export default function MainLayout() {
           title: "Settings",
           presentation: "modal",
           headerBackButtonDisplayMode: "generic",
-          headerShown: false,
+          headerBlurEffect: isDark ? "dark" : "light",
+          // animation: "fade",
+          // headerShown: false,
           ...standard,
         }}
       />

@@ -82,13 +82,8 @@ export default function Landing() {
               onPress={handleAppleSignIn}
               isDisabled={isLoading}
             >
-              <Ionicons
-                name="logo-apple"
-                size={20}
-                color={"white"}
-                // color={colors.defaultForeground}
-              />
-              <Text className="text-foreground">Apple</Text>
+              <Ionicons name="logo-apple" size={20} color={"white"} />
+              <Text className="text-white">Apple</Text>
             </Button>
           </View>
           <View className="justify-center gap-1 flex-row flex-wrap items-center ">
