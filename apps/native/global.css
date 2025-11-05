@@ -12,4 +12,15 @@
   --font-semibold: "Inter_600SemiBold";
 }
 
+@variant light {
+  /* button theme */
+  --accent: oklch(0.65 0.25 270);
+  --accent: oklch(0.65 0.25 123);
+}
+
+@variant dark {
+  --accent: oklch(0.65 0.25 123);
+  --background: oklch(0.15 0 0);
+}
+
 @source '../../node_modules/heroui-native/lib';
