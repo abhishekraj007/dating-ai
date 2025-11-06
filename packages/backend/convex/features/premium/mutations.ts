@@ -114,6 +114,12 @@ export const syncPremiumFromSubscription = internalMutation({
 
     const hasActiveSubscription = args.hasActiveSubscription;
 
+    console.log(
+      "syncPremiumFromSubscription called with args: ",
+      args.userId,
+      args.hasActiveSubscription
+    );
+
     // Only update if premium is subscription-based (don't override manual/lifetime)
     if (
       profile.premiumGrantedBy === "subscription" ||

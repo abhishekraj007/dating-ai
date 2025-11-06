@@ -90,7 +90,7 @@ The Polar plugin is configured in `packages/backend/convex/lib/betterAuth/create
   platformSubscriptionId: string,
   platformProductId: string,
   status: "active" | "canceled" | "expired" | "past_due" | "trialing",
-  productKey: "proMonthly" | "proYearly",
+  productType: "monthly" | "yearly",
   currentPeriodEnd: number,
   // ... other fields
 }

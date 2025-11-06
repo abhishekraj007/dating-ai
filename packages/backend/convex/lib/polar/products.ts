@@ -14,8 +14,8 @@ export const getConfiguredProducts = query({
   handler: async (ctx): Promise<Record<string, any>> => {
     try {
       const productIds = {
-        proMonthly: process.env.POLAR_PRODUCT_PRO_MONTHLY,
-        proYearly: process.env.POLAR_PRODUCT_PRO_YEARLY,
+        monthly: process.env.POLAR_PRODUCT_PRO_MONTHLY,
+        yearly: process.env.POLAR_PRODUCT_PRO_YEARLY,
         credits1000: process.env.POLAR_PRODUCT_CREDITS_1000,
         credits2500: process.env.POLAR_PRODUCT_CREDITS_2500,
         credits5000: process.env.POLAR_PRODUCT_CREDITS_5000,
@@ -74,8 +74,8 @@ export const getCurrentUserWithSubscription = query({
       subscription,
       isFree: !subscription,
       isPro:
-        subscription?.productKey === "proMonthly" ||
-        subscription?.productKey === "proYearly",
+        subscription?.productType === "monthly" ||
+        subscription?.productType === "yearly",
     };
   },
 });

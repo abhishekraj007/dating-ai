@@ -28,8 +28,8 @@ export const polar = new Polar(components.polar, {
     };
   },
   products: {
-    proMonthly: process.env.POLAR_PRODUCT_PRO_MONTHLY || "product_id_monthly",
-    proYearly: process.env.POLAR_PRODUCT_PRO_YEARLY || "product_id_yearly",
+    monthly: process.env.POLAR_PRODUCT_PRO_MONTHLY || "product_id_monthly",
+    yearly: process.env.POLAR_PRODUCT_PRO_YEARLY || "product_id_yearly",
     credits1000:
       process.env.POLAR_PRODUCT_CREDITS_1000 || "product_id_credits_1000",
     credits2500:

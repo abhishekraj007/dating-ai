@@ -12,6 +12,7 @@
     "@convex-dev/polar": "^0.6.4",
     "@convex-starter/backend": "workspace:*",
     "@polar-sh/better-auth": "^1.2.1",
+    "@polar-sh/nextjs": "^0.7.0",
     "@polar-sh/sdk": "^0.40.3",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",

@@ -16,8 +16,12 @@ import { Check } from "lucide-react";
 import { LoginModal } from "@/components/login-modal";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { POLAR_PRICES } from "../contstants/pricing";
 
 export default function PricingPage() {
+  const router = useRouter();
+
   const userData = useQuery(api.user.fetchUserAndProfile);
   const userSubscriptions = useQuery(
     api.features.subscriptions.queries.getUserSubscriptions
@@ -28,30 +32,40 @@ export default function PricingPage() {
   const isLoading = userData === undefined || userSubscriptions === undefined;
   const isAuthenticated = userData !== null && userData !== undefined;
 
-  const handleCheckout = async (slug: string) => {
+  const customerId = userSubscriptions?.subscriptions?.[0]?.platformCustomerId;
+
+  const handleCheckout = (productId: string | undefined) => {
     if (!isAuthenticated) {
       setLoginModalOpen(true);
       return;
     }
 
-    try {
-      setCheckoutLoading(slug);
-      await authClient.checkout({ slug });
-    } catch (error) {
-      console.error("Checkout error:", error);
-      toast.error("Failed to start checkout");
-    } finally {
-      setCheckoutLoading(null);
-    }
+    if (!productId) return;
+
+    setCheckoutLoading(productId);
+
+    const userId = userData!.profile?.authUserId || "";
+    const userEmail = userData!.userMetadata.email || "";
+    const userName = userData!.profile?.name || userData!.userMetadata.name;
+
+    const params = new URLSearchParams({
+      products: productId,
+      customerEmail: userEmail,
+      customerExternalId: userId,
+      customerName: userName,
+    });
+
+    const url = `/checkout?${params.toString()}` as any;
+    router.push(url);
   };
 
-  const openPortal = async () => {
-    try {
-      await authClient.customer.portal();
-    } catch (error) {
-      console.error("Portal error:", error);
-      toast.error("Failed to open customer portal");
+  const goToPortal = async () => {
+    // find the customer id associated with this user
+    if (!customerId) {
+      console.error("No customer ID found");
+      return;
     }
+    router.push(`/portal?userId=${customerId}` as any);
   };
 
   if (isLoading) {
@@ -69,24 +83,12 @@ export default function PricingPage() {
     userSubscriptions?.hasActiveSubscription || false;
   const currentProductKey = userSubscriptions?.subscriptions?.find(
     (sub) => sub.status === "active"
-  )?.productKey;
+  )?.productType;
 
-  const features = {
-    free: [
-      "Basic features",
-      "100 credits per month",
-      "Community support",
-      "Standard processing",
-    ],
-    pro: [
-      "All Free features",
-      "Unlimited credits",
-      "Priority support",
-      "Advanced analytics",
-      "Custom integrations",
-      "API access",
-    ],
-  };
+  // Get pricing tiers from constants
+  const freeTier = POLAR_PRICES.find((p) => p.id === "free")!;
+  const monthlyTier = POLAR_PRICES.find((p) => p.id === "monthly")!;
+  const yearlyTier = POLAR_PRICES.find((p) => p.id === "yearly")!;
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -95,33 +97,24 @@ export default function PricingPage() {
         <p className="text-xl text-muted-foreground">
           Select the perfect plan for your needs
         </p>
-        {isAuthenticated && hasActiveSubscription && (
-          <div className="mt-4 p-4 bg-muted border border-border rounded-lg">
-            <p className="text-foreground">
-              You have an active subscription. You can manage it or purchase
-              credits.
-            </p>
-            <Button onClick={openPortal} variant="outline" className="mt-2">
-              Manage Subscription
-            </Button>
-          </div>
-        )}
       </div>
 
       <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
         {/* Free Tier */}
         <Card className="relative">
           <CardHeader>
-            <CardTitle className="text-2xl">Free</CardTitle>
-            <CardDescription>Perfect for getting started</CardDescription>
+            <CardTitle className="text-2xl">{freeTier.name}</CardTitle>
+            <CardDescription>{freeTier.description}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-6">
-              <span className="text-4xl font-bold">$0</span>
-              <span className="text-muted-foreground">/month</span>
+              <span className="text-4xl font-bold">${freeTier.price}</span>
+              <span className="text-muted-foreground">
+                {freeTier.frequency}
+              </span>
             </div>
             <ul className="space-y-3">
-              {features.free.map((feature, index) => (
+              {freeTier.features.map((feature, index) => (
                 <li key={index} className="flex items-start gap-2">
                   <Check className="h-5 w-5 text-foreground shrink-0 mt-0.5" />
                   <span className="text-sm">{feature}</span>
@@ -144,16 +137,18 @@ export default function PricingPage() {
             </span>
           </div>
           <CardHeader>
-            <CardTitle className="text-2xl">Pro Monthly</CardTitle>
-            <CardDescription>For professionals and teams</CardDescription>
+            <CardTitle className="text-2xl">{monthlyTier.name}</CardTitle>
+            <CardDescription>{monthlyTier.description}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-6">
-              <span className="text-4xl font-bold">$9.99</span>
-              <span className="text-muted-foreground">/month</span>
+              <span className="text-4xl font-bold">${monthlyTier.price}</span>
+              <span className="text-muted-foreground">
+                {monthlyTier.frequency}
+              </span>
             </div>
             <ul className="space-y-3">
-              {features.pro.map((feature, index) => (
+              {monthlyTier.features.map((feature, index) => (
                 <li key={index} className="flex items-start gap-2">
                   <Check className="h-5 w-5 text-foreground shrink-0 mt-0.5" />
                   <span className="text-sm">{feature}</span>
@@ -169,8 +164,8 @@ export default function PricingPage() {
               >
                 Get Started
               </Button>
-            ) : currentProductKey === "proMonthly" ? (
-              <Button onClick={openPortal} className="w-full">
+            ) : currentProductKey === "monthly" ? (
+              <Button onClick={goToPortal} className="w-full">
                 Manage Subscription
               </Button>
             ) : hasActiveSubscription ? (
@@ -180,10 +175,12 @@ export default function PricingPage() {
             ) : (
               <Button
                 className="w-full"
-                onClick={() => handleCheckout("pro-monthly")}
-                disabled={checkoutLoading === "pro-monthly"}
+                onClick={() =>
+                  handleCheckout(monthlyTier.productId || undefined)
+                }
+                disabled={checkoutLoading === monthlyTier.productId}
               >
-                {checkoutLoading === "pro-monthly"
+                {checkoutLoading === monthlyTier.productId
                   ? "Loading..."
                   : "Get Started"}
               </Button>
@@ -199,19 +196,21 @@ export default function PricingPage() {
             </span>
           </div>
           <CardHeader>
-            <CardTitle className="text-2xl">Pro Yearly</CardTitle>
-            <CardDescription>Best value for committed users</CardDescription>
+            <CardTitle className="text-2xl">{yearlyTier.name}</CardTitle>
+            <CardDescription>{yearlyTier.description}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-2">
-              <span className="text-4xl font-bold">$99</span>
-              <span className="text-muted-foreground">/year</span>
+              <span className="text-4xl font-bold">${yearlyTier.price}</span>
+              <span className="text-muted-foreground">
+                {yearlyTier.frequency}
+              </span>
             </div>
             <p className="text-sm text-muted-foreground mb-6">
-              $8.25/month billed annually
+              ${((yearlyTier.price || 0) / 12).toFixed(2)}/month billed annually
             </p>
             <ul className="space-y-3">
-              {features.pro.map((feature, index) => (
+              {yearlyTier.features.map((feature, index) => (
                 <li key={index} className="flex items-start gap-2">
                   <Check className="h-5 w-5 text-foreground shrink-0 mt-0.5" />
                   <span className="text-sm">{feature}</span>
@@ -227,8 +226,8 @@ export default function PricingPage() {
               >
                 Get Started
               </Button>
-            ) : currentProductKey === "proYearly" ? (
-              <Button onClick={openPortal} className="w-full">
+            ) : currentProductKey === "yearly" ? (
+              <Button onClick={goToPortal} className="w-full">
                 Manage Subscription
               </Button>
             ) : hasActiveSubscription ? (
@@ -238,101 +237,18 @@ export default function PricingPage() {
             ) : (
               <Button
                 className="w-full"
-                onClick={() => handleCheckout("pro-yearly")}
-                disabled={checkoutLoading === "pro-yearly"}
+                onClick={() =>
+                  handleCheckout(yearlyTier.productId || undefined)
+                }
+                disabled={checkoutLoading === yearlyTier.productId}
               >
-                {checkoutLoading === "pro-yearly"
+                {checkoutLoading === yearlyTier.productId
                   ? "Loading..."
                   : "Get Started"}
               </Button>
             )}
           </CardFooter>
         </Card>
-      </div>
-
-      {/* Credit Packages */}
-      <div className="mt-16">
-        <h2 className="text-3xl font-bold text-center mb-8">
-          One-Time Credit Packages
-        </h2>
-        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle>1000 Credits</CardTitle>
-              <CardDescription>Perfect for occasional use</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4">
-                <span className="text-3xl font-bold">$9.99</span>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button
-                className="w-full"
-                variant="outline"
-                onClick={() =>
-                  isAuthenticated
-                    ? handleCheckout("credits-1000")
-                    : setLoginModalOpen(true)
-                }
-                disabled={checkoutLoading === "credits-1000"}
-              >
-                {checkoutLoading === "credits-1000" ? "Loading..." : "Purchase"}
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="border-primary">
-            <CardHeader>
-              <CardTitle>2500 Credits</CardTitle>
-              <CardDescription>Best value for most users</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4">
-                <span className="text-3xl font-bold">$19.99</span>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button
-                className="w-full"
-                onClick={() =>
-                  isAuthenticated
-                    ? handleCheckout("credits-2500")
-                    : setLoginModalOpen(true)
-                }
-                disabled={checkoutLoading === "credits-2500"}
-              >
-                {checkoutLoading === "credits-2500" ? "Loading..." : "Purchase"}
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>5000 Credits</CardTitle>
-              <CardDescription>For power users</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4">
-                <span className="text-3xl font-bold">$34.99</span>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button
-                className="w-full"
-                variant="outline"
-                onClick={() =>
-                  isAuthenticated
-                    ? handleCheckout("credits-5000")
-                    : setLoginModalOpen(true)
-                }
-                disabled={checkoutLoading === "credits-5000"}
-              >
-                {checkoutLoading === "credits-5000" ? "Loading..." : "Purchase"}
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
       </div>
 
       {/* FAQ or Additional Info */}

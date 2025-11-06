@@ -17,6 +17,7 @@ import type * as features_premium_guards from "../features/premium/guards.js";
 import type * as features_premium_index from "../features/premium/index.js";
 import type * as features_premium_mutations from "../features/premium/mutations.js";
 import type * as features_premium_queries from "../features/premium/queries.js";
+import type * as features_subscriptions_actions from "../features/subscriptions/actions.js";
 import type * as features_subscriptions_index from "../features/subscriptions/index.js";
 import type * as features_subscriptions_mutations from "../features/subscriptions/mutations.js";
 import type * as features_subscriptions_queries from "../features/subscriptions/queries.js";
@@ -63,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   "features/premium/index": typeof features_premium_index;
   "features/premium/mutations": typeof features_premium_mutations;
   "features/premium/queries": typeof features_premium_queries;
+  "features/subscriptions/actions": typeof features_subscriptions_actions;
   "features/subscriptions/index": typeof features_subscriptions_index;
   "features/subscriptions/mutations": typeof features_subscriptions_mutations;
   "features/subscriptions/queries": typeof features_subscriptions_queries;

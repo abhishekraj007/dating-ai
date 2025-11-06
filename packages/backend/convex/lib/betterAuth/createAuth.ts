@@ -49,8 +49,8 @@ export function createAuth(
     logger: {
       disabled: optionsOnly,
     },
-    // baseURL: "http://localhost:3004", // enable this for web login
-    baseURL: siteUrl, // enable this for mobile login
+    baseURL: "http://localhost:3004", // enable this for web login
+    // baseURL: siteUrl, // enable this for mobile login
     trustedOrigins: [siteUrl, nativeAppUrl, "http://localhost:3004"],
     database: authComponent.adapter(ctx),
     user: {
@@ -246,7 +246,7 @@ export function createAuth(
       //               customerEmail: payload.data.customer.email,
       //               customerName: payload.data.customer.name,
       //               status: "active",
-      //               productKey: getProductKeyFromId(payload.data.productId),
+      //               productType: getProductKeyFromId(payload.data.productId),
       //               currentPeriodStart: payload.data.currentPeriodStart
       //                 ? payload.data.currentPeriodStart.getTime()
       //                 : undefined,
@@ -314,7 +314,7 @@ export function createAuth(
       //               customerEmail: payload.data.customer.email,
       //               customerName: payload.data.customer.name,
       //               status,
-      //               productKey: getProductKeyFromId(payload.data.productId),
+      //               productType: getProductKeyFromId(payload.data.productId),
       //               currentPeriodStart: payload.data.currentPeriodStart
       //                 ? payload.data.currentPeriodStart.getTime()
       //                 : undefined,
@@ -363,8 +363,8 @@ export function createAuth(
 // Helper function to get product key from product ID
 function getProductKeyFromId(productId: string): string | undefined {
   const productMap: Record<string, string> = {
-    [process.env.POLAR_PRODUCT_PRO_MONTHLY!]: "proMonthly",
-    [process.env.POLAR_PRODUCT_PRO_YEARLY!]: "proYearly",
+    [process.env.POLAR_PRODUCT_PRO_MONTHLY!]: "monthly",
+    [process.env.POLAR_PRODUCT_PRO_YEARLY!]: "yearly",
     [process.env.POLAR_PRODUCT_CREDITS_1000!]: "credits1000",
     [process.env.POLAR_PRODUCT_CREDITS_2500!]: "credits2500",
     [process.env.POLAR_PRODUCT_CREDITS_5000!]: "credits5000",

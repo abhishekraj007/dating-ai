@@ -1,7 +1,7 @@
 import { httpRouter } from "convex/server";
 import { authComponent, createAuth } from "./lib/betterAuth";
 import { polar } from "./lib/polar/client";
-import * as PolarWebhooks from "./lib/polarWebhooks";
+// import * as PolarWebhooks from "./lib/polarWebhooks";
 import { handleRevenueCatWebhook } from "./lib/revenuecatWebhooks";
 
 const http = httpRouter();

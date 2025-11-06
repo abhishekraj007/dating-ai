@@ -115,7 +115,7 @@ export const getSubscriptionByPlatformSubscriptionId = internalQuery({
         v.literal("past_due"),
         v.literal("trialing")
       ),
-      productKey: v.optional(v.string()),
+      productType: v.optional(v.string()),
       customerEmail: v.string(),
       customerName: v.optional(v.string()),
       currentPeriodStart: v.optional(v.number()),

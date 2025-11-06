@@ -9,13 +9,13 @@ import { internal } from "../_generated/api";
  */
 
 /**
- * Map Polar product ID to our internal productKey
+ * Map Polar product ID to our internal productType
  */
 function getProductKey(productId: string): string | undefined {
   if (productId === process.env.POLAR_PRODUCT_PRO_MONTHLY) {
-    return "proMonthly";
+    return "monthly";
   } else if (productId === process.env.POLAR_PRODUCT_PRO_YEARLY) {
-    return "proYearly";
+    return "yearly";
   }
   return undefined;
 }
@@ -61,7 +61,7 @@ export async function handleSubscriptionCreated(ctx: any, event: any) {
     }
 
     const productId = event.data.product_id;
-    const productKey = getProductKey(productId);
+    const productType = getProductKey(productId);
 
     if (!productId) {
       throw new Error("Missing product_id in subscription.created event");
@@ -83,7 +83,7 @@ export async function handleSubscriptionCreated(ctx: any, event: any) {
         customerEmail: event.data.customer_email || "",
         customerName: event.data.customer_name,
         status: "active" as const,
-        productKey,
+        productType,
         currentPeriodStart: event.data.current_period_start
           ? new Date(event.data.current_period_start).getTime()
           : undefined,
@@ -103,7 +103,7 @@ export async function handleSubscriptionCreated(ctx: any, event: any) {
     );
 
     // Add bonus credits ONLY for new subscriptions (idempotent)
-    if (result.isNew && productKey) {
+    if (result.isNew && productType) {
       await ctx.runMutation(
         internal.features.credits.mutations.addBonusCredits,
         {
@@ -184,7 +184,7 @@ export async function handleSubscriptionUpdated(ctx: any, event: any) {
         customerName:
           event.data.customer_name || existingSubscription?.customerName,
         status: status as any,
-        productKey: existingSubscription?.productKey, // Preserve productKey from existing
+        productType: existingSubscription?.productType, // Preserve productType from existing
         currentPeriodStart: event.data.current_period_start
           ? new Date(event.data.current_period_start).getTime()
           : existingSubscription?.currentPeriodStart,

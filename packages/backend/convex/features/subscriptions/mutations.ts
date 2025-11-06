@@ -21,7 +21,7 @@ export const upsertSubscription = internalMutation({
       v.literal("past_due"),
       v.literal("trialing")
     ),
-    productKey: v.optional(v.string()),
+    productType: v.optional(v.string()),
     currentPeriodStart: v.optional(v.number()),
     currentPeriodEnd: v.optional(v.number()),
     canceledAt: v.optional(v.number()),
@@ -29,9 +29,17 @@ export const upsertSubscription = internalMutation({
   returns: v.object({
     subscriptionId: v.id("subscriptions"),
     isNew: v.boolean(),
+    isRenewal: v.boolean(),
   }),
   handler: async (ctx, args) => {
     const now = Date.now();
+
+    console.log(
+      "update subscription called with args: userId",
+      args.userId,
+      args.status,
+      args.customerEmail
+    );
 
     // Check if subscription already exists by subscription ID
     const existing = await ctx.db
@@ -43,11 +51,23 @@ export const upsertSubscription = internalMutation({
 
     if (existing) {
       // Update existing subscription
+      // Check if this is a renewal by comparing period start times
+      const isRenewal =
+        args.currentPeriodStart !== undefined &&
+        existing.currentPeriodStart !== undefined &&
+        args.currentPeriodStart > existing.currentPeriodStart;
+
+      console.log("Checking renewal:", {
+        isRenewal,
+        newPeriodStart: args.currentPeriodStart,
+        existingPeriodStart: existing.currentPeriodStart,
+      });
+
       await ctx.db.patch(existing._id, {
         userId: args.userId, // Update userId in case it changed
         status: args.status,
         platformProductId: args.platformProductId,
-        productKey: args.productKey,
+        productType: args.productType,
         customerEmail: args.customerEmail,
         customerName: args.customerName,
         currentPeriodStart: args.currentPeriodStart,
@@ -55,7 +75,7 @@ export const upsertSubscription = internalMutation({
         canceledAt: args.canceledAt,
         updatedAt: now,
       });
-      return { subscriptionId: existing._id, isNew: false };
+      return { subscriptionId: existing._id, isNew: false, isRenewal };
     } else {
       // Create new subscription
       const subscriptionId = await ctx.db.insert("subscriptions", {
@@ -67,14 +87,14 @@ export const upsertSubscription = internalMutation({
         customerEmail: args.customerEmail,
         customerName: args.customerName,
         status: args.status,
-        productKey: args.productKey,
+        productType: args.productType,
         currentPeriodStart: args.currentPeriodStart,
         currentPeriodEnd: args.currentPeriodEnd,
         canceledAt: args.canceledAt,
         createdAt: now,
         updatedAt: now,
       });
-      return { subscriptionId, isNew: true };
+      return { subscriptionId, isNew: true, isRenewal: false };
     }
   },
 });

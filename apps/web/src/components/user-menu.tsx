@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@convex-starter/backend/convex/_generated/api";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Crown } from "lucide-react";
+import { Crown, Settings } from "lucide-react";
 
 interface UserMenuProps {
   isPremium: boolean;
@@ -61,6 +61,14 @@ export default function UserMenu({ isPremium }: UserMenuProps) {
             </p>
           </div>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => router.push("/settings" as any)}
+          className="cursor-pointer"
+        >
+          <Settings className="mr-2 h-4 w-4" />
+          <span>Settings</span>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Button

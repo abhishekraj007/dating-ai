@@ -58,12 +58,12 @@ interface RevenueCatEvent {
 }
 
 /**
- * Map RevenueCat product ID to our internal productKey
+ * Map RevenueCat product ID to our internal productType
  */
 function getProductKey(productId: string): string | undefined {
   const productMap: Record<string, string> = {
-    pro_monthly: "proMonthly",
-    pro_yearly: "proYearly",
+    pro_monthly: "monthly",
+    pro_yearly: "yearly",
     credits_1000: "credits1000",
     credits_2500: "credits2500",
     credits_5000: "credits5000",
@@ -177,7 +177,7 @@ export const handleRevenueCatWebhook = httpAction(async (ctx, request) => {
         break;
 
       default:
-        await handleInitialPurchase(ctx, event, userId);
+        // await handleInitialPurchase(ctx, event, userId);
         console.log("[REVENUECAT WEBHOOK] Unhandled event type:", event.type);
     }
 
@@ -400,13 +400,13 @@ async function createOrUpdateSubscription(
   userId: string,
   status: "active" | "canceled" | "expired" | "past_due"
 ) {
-  const productKey = getProductKey(event.product_id);
+  const productType = getProductKey(event.product_id);
 
   console.log("createOrUpdateSubscription", {
     userId,
     event,
     status,
-    productKey,
+    productType,
   });
 
   await ctx.runMutation(
@@ -423,7 +423,7 @@ async function createOrUpdateSubscription(
       customerEmail: event.subscriber_attributes?.email?.value || "",
       customerName: event.subscriber_attributes?.name?.value,
       status,
-      productKey,
+      productType,
       currentPeriodStart: event.purchased_at_ms,
       currentPeriodEnd: event.expiration_at_ms,
       canceledAt: status === "canceled" ? Date.now() : undefined,

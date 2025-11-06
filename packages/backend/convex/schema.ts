@@ -39,7 +39,7 @@ export default defineSchema({
       v.literal("past_due"),
       v.literal("trialing")
     ),
-    productKey: v.optional(v.string()), // e.g., "proMonthly", "proYearly" - derived from webhook
+    productType: v.optional(v.string()), // e.g., "monthly", "yearly" - derived from webhook
 
     // Customer info (denormalized for convenience)
     customerEmail: v.string(),
