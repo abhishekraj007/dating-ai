@@ -75,7 +75,7 @@ export default function UserMenu({ isPremium }: UserMenuProps) {
             authClient.signOut({
               fetchOptions: {
                 onSuccess: () => {
-                  router.push("/dashboard");
+                  router.push("/auth");
                 },
               },
             });

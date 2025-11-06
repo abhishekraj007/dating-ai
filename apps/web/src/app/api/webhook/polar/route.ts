@@ -3,15 +3,18 @@ import { Webhooks } from "@polar-sh/nextjs";
 import { fetchAction, api } from "@/lib/convex-client";
 
 /**
- * Map Polar product ID to our internal productType
+ * Map Polar product interval to our internal productType
+ * Since we fetch products dynamically, we derive the type from the recurring interval
  */
-function getProductKey(productId: string): string | undefined {
-  const productMap: Record<string, string> = {
-    [process.env.NEXT_PUBLIC_POLAR_PRODUCT_PRO_MONTHLY!]: "monthly",
-    [process.env.NEXT_PUBLIC_POLAR_PRODUCT_PRO_YEARLY!]: "yearly",
-  };
+function getProductKey(
+  recurringInterval: string | undefined
+): string | undefined {
+  if (!recurringInterval) return undefined;
 
-  return productMap[productId];
+  if (recurringInterval === "month") return "monthly";
+  if (recurringInterval === "year") return "yearly";
+
+  return undefined;
 }
 
 /**
@@ -115,7 +118,7 @@ async function processPolarSubscriptionEvent(payload: any, eventType: string) {
     mappedStatus = "active"; // Default fallback
   }
 
-  const productType = getProductKey(productId);
+  const productType = getProductKey(recurringInterval);
   const currentPeriodStart = data.currentPeriodStart
     ? new Date(data.currentPeriodStart).getTime()
     : undefined;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
@@ -22,13 +22,15 @@ export default function AuthScreen() {
   const [isSignIn, setIsSignIn] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") || "/dashboard";
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
       const res = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/dashboard",
+        callbackURL: redirectTo,
       });
 
       console.log(res);
@@ -53,7 +55,7 @@ export default function AuthScreen() {
           },
           {
             onSuccess: () => {
-              router.push("/dashboard");
+              router.push(redirectTo as any);
               toast.success("Welcome back!");
             },
             onError: (error) => {
@@ -78,7 +80,7 @@ export default function AuthScreen() {
                 },
                 {
                   onSuccess: () => {
-                    router.push("/dashboard");
+                    router.push(redirectTo as any);
                     toast.success("Account created successfully!");
                   },
                   onError: (error) => {

@@ -108,16 +108,16 @@ export default function PricingPage() {
 
   const hasActiveSubscription =
     userSubscriptions?.hasActiveSubscription || false;
-  const currentProductKey = userSubscriptions?.subscriptions?.find(
-    (sub) => sub.status === "active"
-  )?.productType;
 
-  // Check if user has a canceled subscription (canceled but still active until period end)
-  const hasCanceledSubscription = userSubscriptions?.subscriptions?.some(
-    (sub) => sub.status === "canceled" && sub.canceledAt
+  // Get the current subscription (active or canceled)
+  const currentSubscription = userSubscriptions?.subscriptions?.find(
+    (sub) => sub.status === "active" || sub.status === "canceled"
   );
 
-  console.log({ userSubscriptions, hasCanceledSubscription });
+  const currentProductKey = currentSubscription?.productType;
+
+  // Check if user has any subscription (active or canceled)
+  const hasAnySubscription = !!currentSubscription;
 
   // Get free tier from constants
   const freeTier = POLAR_PRICES.find((p) => p.id === "free")!;
@@ -234,17 +234,9 @@ export default function PricingPage() {
               >
                 Get Started
               </Button>
-            ) : currentProductKey === "monthly" ? (
+            ) : hasAnySubscription ? (
               <Button onClick={goToPortal} className="w-full">
                 Manage Subscription
-              </Button>
-            ) : hasCanceledSubscription ? (
-              <Button onClick={goToPortal} className="w-full" variant="outline">
-                Manage Subscription
-              </Button>
-            ) : hasActiveSubscription ? (
-              <Button className="w-full" variant="outline" disabled>
-                Already Subscribed
               </Button>
             ) : (
               <Button
@@ -300,17 +292,9 @@ export default function PricingPage() {
               >
                 Get Started
               </Button>
-            ) : currentProductKey === "yearly" ? (
+            ) : hasAnySubscription ? (
               <Button onClick={goToPortal} className="w-full">
                 Manage Subscription
-              </Button>
-            ) : hasCanceledSubscription ? (
-              <Button onClick={goToPortal} className="w-full" variant="outline">
-                Manage Subscription
-              </Button>
-            ) : hasActiveSubscription ? (
-              <Button className="w-full" variant="outline" disabled>
-                Already Subscribed
               </Button>
             ) : (
               <Button

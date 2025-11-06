@@ -1,24 +1,26 @@
 "use client";
 
 import AuthScreen from "@/components/auth-screen";
-import { useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
-import { api } from "@convex-starter/backend/convex/_generated/api";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useConvexAuth } from "convex/react";
 import { useEffect } from "react";
 
 export default function AuthPage() {
   const router = useRouter();
-  const userData = useQuery(api.user.fetchUserAndProfile);
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo");
 
-  console.log({ userData });
+  const { isAuthenticated, isLoading } = useConvexAuth();
 
   useEffect(() => {
-    if (userData) {
-      router.push("/dashboard");
+    if (!isLoading && isAuthenticated) {
+      // Redirect to the specified page or default to dashboard
+      const destination = redirectTo || "/dashboard";
+      router.push(destination as any);
     }
-  }, [userData, router]);
+  }, [isLoading, isAuthenticated, redirectTo, router]);
 
-  if (userData) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
