@@ -223,10 +223,6 @@ export const POST = Webhooks({
 
   onSubscriptionCreated: async (payload: any) => {
     try {
-      console.log(
-        "Polar webhook onSubscriptionCreated payload",
-        JSON.stringify(payload, null, 2)
-      );
       await processPolarSubscriptionEvent(payload, "subscription.created");
     } catch (err) {
       console.error("Polar webhook onSubscriptionCreated error", err);
@@ -236,10 +232,6 @@ export const POST = Webhooks({
 
   onSubscriptionActive: async (payload: any) => {
     try {
-      console.log(
-        "Polar webhook onSubscriptionActive payload",
-        JSON.stringify(payload, null, 2)
-      );
       await processPolarSubscriptionEvent(payload, "subscription.active");
     } catch (err) {
       console.error("Polar webhook onSubscriptionActive error", err);
@@ -249,10 +241,6 @@ export const POST = Webhooks({
 
   onSubscriptionUpdated: async (payload: any) => {
     try {
-      console.log(
-        "Polar webhook onSubscriptionUpdated payload",
-        JSON.stringify(payload, null, 2)
-      );
       await processPolarSubscriptionEvent(payload, "subscription.updated");
     } catch (err) {
       console.error("Polar webhook onSubscriptionUpdated error", err);
@@ -262,10 +250,6 @@ export const POST = Webhooks({
 
   onSubscriptionCanceled: async (payload: any) => {
     try {
-      console.log(
-        "Polar webhook onSubscriptionCanceled payload",
-        JSON.stringify(payload, null, 2)
-      );
       await processPolarSubscriptionEvent(payload, "subscription.canceled");
     } catch (err) {
       console.error("Polar webhook onSubscriptionCanceled error", err);
@@ -275,10 +259,6 @@ export const POST = Webhooks({
 
   onSubscriptionRevoked: async (payload: any) => {
     try {
-      console.log(
-        "Polar webhook onSubscriptionRevoked payload",
-        JSON.stringify(payload, null, 2)
-      );
       await processPolarSubscriptionEvent(payload, "subscription.revoked");
     } catch (err) {
       console.error("Polar webhook onSubscriptionRevoked error", err);
@@ -286,17 +266,86 @@ export const POST = Webhooks({
     }
   },
 
-  onCheckoutUpdated: async (payload: any) => {
+  onOrderPaid: async (payload: any) => {
     try {
-      console.log(
-        "Polar webhook onCheckoutUpdated payload",
-        JSON.stringify(payload, null, 2)
+      const data = payload?.data;
+
+      // Extract user information
+      const { userId, email } = getUserFromPayload(payload);
+
+      if (!userId) {
+        console.error("[POLAR WEBHOOK] No userId for order:", {
+          email,
+          orderId: data.id,
+        });
+        return;
+      }
+
+      // Check if this order already exists (idempotency)
+      const existingOrder = await fetchAction(
+        (api as any)["features/subscriptions/actions"].getOrderByPlatformId,
+        { platformOrderId: data.id }
       );
 
-      // Handle one-time checkout/purchase if needed
-      // This could be for credit purchases similar to RevenueCat's NON_RENEWING_PURCHASE
+      if (existingOrder) {
+        console.log(
+          `[POLAR WEBHOOK] Order ${data.id} already processed, skipping`
+        );
+        return;
+      }
+
+      // Check if this is a one-time product (credit purchase)
+      const product = data?.product;
+      if (product?.isRecurring) {
+        console.log("[POLAR WEBHOOK] Recurring product order, skipping");
+        return;
+      }
+
+      console.log(`[POLAR WEBHOOK] Processing paid order for user ${userId}`);
+
+      // Extract credit amount from product metadata
+      const creditAmount = parseInt(product?.metadata?.credits || "0");
+
+      if (!creditAmount || creditAmount <= 0) {
+        console.error(
+          "[POLAR WEBHOOK] Invalid or missing credit amount in product metadata:",
+          product
+        );
+        return;
+      }
+
+      console.log(
+        `[POLAR WEBHOOK] Extracted ${creditAmount} credits from product metadata`
+      );
+
+      // Record the order first (for idempotency)
+      await fetchAction(
+        (api as any)["features/subscriptions/actions"].insertOrderFromWebhook,
+        {
+          userId,
+          platform: "polar",
+          platformOrderId: data.id,
+          platformProductId: product?.id || data.productId,
+          amount: creditAmount,
+          status: "paid",
+        }
+      );
+
+      // Grant credits to user
+      const result = await fetchAction(
+        (api as any)["features/subscriptions/actions"].addCreditsFromWebhook,
+        {
+          userId,
+          amount: creditAmount,
+        }
+      );
+
+      console.log(
+        `[POLAR WEBHOOK] Added ${creditAmount} credits to user ${userId}`,
+        result
+      );
     } catch (err) {
-      console.error("Polar webhook onCheckoutUpdated error", err);
+      console.error("Polar webhook onOrderPaid error", err);
       throw err;
     }
   },
@@ -305,10 +354,4 @@ export const POST = Webhooks({
 interface PolarPayload {
   data?: any; // raw Polar event payload (simplified)
   [k: string]: any;
-}
-
-async function getUserByExternalIdOrEmail(payload: PolarPayload) {
-  const externalId: string | undefined = payload?.data?.customer?.externalId;
-  const email: string | undefined = payload?.data?.customer?.email;
-  return { userId: externalId, email };
 }

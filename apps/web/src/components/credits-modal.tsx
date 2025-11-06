@@ -1,36 +1,80 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useQuery as useConvexQuery } from "convex/react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@convex-starter/backend/convex/_generated/api";
-import { CheckoutLink } from "@convex-dev/polar/react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Coins, Sparkles, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface CreditsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
-  const polarProducts = useQuery(api.lib.polar.products.getConfiguredProducts);
-  const userCredits = useQuery(api.features.credits.queries.getUserCredits);
+interface PolarProduct {
+  id: string;
+  name: string;
+  description?: string;
+  prices?: Array<{
+    priceAmount: number;
+    priceCurrency: string;
+  }>;
+  metadata?: {
+    credits?: string;
+    credtis?: string; // Handle typo
+  };
+}
 
-  const isLoading = polarProducts === undefined || userCredits === undefined;
+export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
+  const router = useRouter();
+  const userData = useConvexQuery(api.user.fetchUserAndProfile);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  // Fetch products using react-query for caching
+  const { data: polarProducts = [], isLoading } = useQuery({
+    queryKey: ["polar-products"],
+    queryFn: async () => {
+      const response = await fetch("/api/polar/products");
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
+      }
+      return response.json() as Promise<PolarProduct[]>;
+    },
+    enabled: open, // Only fetch when modal is open
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const handleCheckout = async (productId: string | undefined) => {
+    if (!productId) {
+      console.error("No product ID provided");
+      return;
+    }
+
+    setCheckoutLoading(productId);
+
+    const userId = userData!.profile?.authUserId || "";
+    const userEmail = userData!.userMetadata.email || "";
+    const userName = userData!.profile?.name || userData!.userMetadata.name;
+
+    const params = new URLSearchParams({
+      products: productId,
+      customerEmail: userEmail,
+      customerExternalId: userId,
+      customerName: userName,
+    });
+
+    const url = `/checkout?${params.toString()}` as any;
+    router.push(url);
+  };
 
   const getIcon = (index: number) => {
     switch (index) {
@@ -45,46 +89,47 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
     }
   };
 
-  // Map Polar products to credit packages
-  const creditProducts = [
-    {
-      key: "credits1000",
-      product: polarProducts?.credits1000,
-      credits: 1000,
-      label: "1,000 Credits",
-      description: "Perfect for getting started",
-    },
-    {
-      key: "credits2500",
-      product: polarProducts?.credits2500,
-      credits: 2500,
-      label: "2,500 Credits",
-      description: "Most popular choice",
-      badge: "Popular",
-    },
-    {
-      key: "credits5000",
-      product: polarProducts?.credits5000,
-      credits: 5000,
-      label: "5,000 Credits",
-      description: "For power users",
-      badge: "Save 30%",
-    },
-  ];
+  // Extract credit amount from product name or metadata
+  const getCreditAmount = (product: PolarProduct) => {
+    // Try metadata first
+    const metadata = (product as any).metadata;
+    if (metadata?.credits) {
+      return parseInt(metadata.credits);
+    }
+    if (metadata?.credtis) {
+      // Handle typo in your data
+      return parseInt(metadata.credtis);
+    }
+
+    // Fallback to parsing from name
+    const match = product.name?.match(/(\d+)/);
+    return match ? parseInt(match[1]) : 0;
+  };
+
+  // Get badge for product
+  const getBadge = (credits: number) => {
+    if (credits === 2500) return "Popular";
+    return undefined;
+  };
+
+  // Convert products object to sorted array
+  const creditProducts = polarProducts
+    .filter((product): product is PolarProduct => !!product)
+    .map((product) => {
+      const credits = getCreditAmount(product);
+      return {
+        product,
+        credits,
+        badge: getBadge(credits),
+      };
+    })
+    .sort((a, b) => a.credits - b.credits); // Sort by credit amount ascending
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">Buy Credits</DialogTitle>
-          {/* {userCredits && (
-            <DialogDescription className="text-base">
-              Current Balance:{" "}
-              <span className="font-semibold">
-                {userCredits.credits.toLocaleString()} credits
-              </span>
-            </DialogDescription>
-          )} */}
         </DialogHeader>
 
         {isLoading ? (
@@ -103,7 +148,7 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
 
               return (
                 <Card
-                  key={item.key}
+                  key={item.product.id}
                   className={
                     item.badge === "Popular"
                       ? "border-primary shadow-lg relative"
@@ -128,21 +173,22 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
                       <div className="flex items-center gap-4">
                         <div className="flex-shrink-0">{getIcon(index)}</div>
                         <div className="flex flex-col">
-                          <span className="text-lg">{item.label}</span>
+                          <span className="text-lg">{item.product.name}</span>
                           <span className="text-xl font-bold">${price}</span>
-                          {/* <CardDescription className="text-sm">{item.description}</CardDescription> */}
+                          {/* <CardDescription className="text-sm">{item.product.description}</CardDescription> */}
                         </div>
                       </div>
                       <div>
                         {item.product?.id ? (
-                          <CheckoutLink
-                            polarApi={api.lib.polar.client}
-                            productIds={[item.product.id]}
-                            embed={true}
+                          <Button
                             className="w-full"
+                            onClick={() => handleCheckout(item.product?.id)}
+                            disabled={checkoutLoading === item.product.id}
                           >
-                            <Button className="w-full">Buy Now</Button>
-                          </CheckoutLink>
+                            {checkoutLoading === item.product.id
+                              ? "Processing..."
+                              : "Buy Now"}
+                          </Button>
                         ) : (
                           <Button className="w-full" disabled>
                             Unavailable

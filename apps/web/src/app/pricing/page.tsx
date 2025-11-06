@@ -1,8 +1,8 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useQuery as useConvexQuery } from "convex/react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@convex-starter/backend/convex/_generated/api";
-import { authClient } from "@/lib/auth-client";
 import {
   Card,
   CardContent,
@@ -15,21 +15,48 @@ import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { LoginModal } from "@/components/login-modal";
 import { useState } from "react";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { POLAR_PRICES } from "../contstants/pricing";
+import { POLAR_PRICES, type PolarTier } from "../contstants/pricing";
 
 export default function PricingPage() {
   const router = useRouter();
 
-  const userData = useQuery(api.user.fetchUserAndProfile);
-  const userSubscriptions = useQuery(
+  const userData = useConvexQuery(api.user.fetchUserAndProfile);
+  const userSubscriptions = useConvexQuery(
     api.features.subscriptions.queries.getUserSubscriptions
   );
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
-  const isLoading = userData === undefined || userSubscriptions === undefined;
+  // Fetch subscription products using react-query for caching
+  const { data: polarProducts = [], isLoading: productsLoading } = useQuery({
+    queryKey: ["polar-subscriptions"],
+    queryFn: async () => {
+      const response = await fetch("/api/polar/subscriptions");
+      if (!response.ok) {
+        throw new Error("Failed to fetch subscription products");
+      }
+      return response.json() as Promise<
+        Array<{
+          id: string;
+          name: string;
+          description?: string;
+          prices?: Array<{
+            type: string;
+            priceAmount: number;
+            priceCurrency: string;
+            recurringInterval?: string;
+          }>;
+        }>
+      >;
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const isLoading =
+    userData === undefined ||
+    userSubscriptions === undefined ||
+    productsLoading;
   const isAuthenticated = userData !== null && userData !== undefined;
 
   const customerId = userSubscriptions?.subscriptions?.[0]?.platformCustomerId;
@@ -85,10 +112,46 @@ export default function PricingPage() {
     (sub) => sub.status === "active"
   )?.productType;
 
-  // Get pricing tiers from constants
+  // Get free tier from constants
   const freeTier = POLAR_PRICES.find((p) => p.id === "free")!;
-  const monthlyTier = POLAR_PRICES.find((p) => p.id === "monthly")!;
-  const yearlyTier = POLAR_PRICES.find((p) => p.id === "yearly")!;
+
+  // Map Polar products to pricing tiers
+  const monthlyProduct = polarProducts.find((p) =>
+    p.prices?.some((price) => price.recurringInterval === "month")
+  );
+  const yearlyProduct = polarProducts.find((p) =>
+    p.prices?.some((price) => price.recurringInterval === "year")
+  );
+
+  const monthlyTier: PolarTier = monthlyProduct
+    ? {
+        name: monthlyProduct.name || "Monthly Pro",
+        id: "monthly",
+        description: monthlyProduct.description || "Monthly subscription",
+        features: POLAR_PRICES.find((p) => p.id === "monthly")?.features || [],
+        featured: true,
+        productId: monthlyProduct.id,
+        price:
+          (monthlyProduct.prices?.find((p) => p.recurringInterval === "month")
+            ?.priceAmount || 0) / 100,
+        frequency: "/month",
+      }
+    : POLAR_PRICES.find((p) => p.id === "monthly")!;
+
+  const yearlyTier: PolarTier = yearlyProduct
+    ? {
+        name: yearlyProduct.name || "Yearly Pro",
+        id: "yearly",
+        description: yearlyProduct.description || "Yearly subscription",
+        features: POLAR_PRICES.find((p) => p.id === "yearly")?.features || [],
+        featured: false,
+        productId: yearlyProduct.id,
+        price:
+          (yearlyProduct.prices?.find((p) => p.recurringInterval === "year")
+            ?.priceAmount || 0) / 100,
+        frequency: "/year",
+      }
+    : POLAR_PRICES.find((p) => p.id === "yearly")!;
 
   return (
     <div className="container mx-auto px-4 py-16">

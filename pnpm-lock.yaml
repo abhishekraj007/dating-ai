@@ -243,6 +243,9 @@ importers:
       '@tanstack/react-form':
         specifier: ^1.12.3
         version: 1.23.8(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@tanstack/react-query':
+        specifier: ^5.90.5
+        version: 5.90.5(react@19.1.0)
       babel-plugin-react-compiler:
         specifier: ^1.0.0
         version: 1.0.0

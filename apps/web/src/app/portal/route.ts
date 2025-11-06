@@ -10,5 +10,6 @@ export const GET = CustomerPortal({
     }
     return userId;
   },
+  returnUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3004"}/dashboard`,
   server: (process.env.POLAR_SERVER as "sandbox" | "production") || "sandbox",
 });
