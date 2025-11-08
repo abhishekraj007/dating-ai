@@ -1,5 +1,5 @@
 {
-  "name": "convex-starter",
+  "name": "book-ai",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -12,8 +12,8 @@
     "check-types": "turbo check-types",
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
-    "dev:server": "turbo -F @convex-starter/backend dev",
-    "dev:setup": "turbo -F @convex-starter/backend dev:setup"
+    "dev:server": "turbo -F @book-ai/backend dev",
+    "dev:setup": "turbo -F @book-ai/backend dev:setup"
   },
   "dependencies": {},
   "devDependencies": {

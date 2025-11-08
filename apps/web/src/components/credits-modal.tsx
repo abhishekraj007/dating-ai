@@ -2,7 +2,7 @@
 
 import { useQuery as useConvexQuery } from "convex/react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@convex-starter/backend/convex/_generated/api";
+import { api } from "@book-ai/backend/convex/_generated/api";
 import {
   Dialog,
   DialogContent,

@@ -5,32 +5,30 @@ import Providers from "@/components/providers";
 import Header from "@/components/header";
 
 const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
-	subsets: ["latin"],
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-	title: "convex-starter",
-	description: "convex-starter",
+  title: "book-ai",
+  description: "book-ai",
 };
 
 export default function RootLayout({
-	children,
+  children,
 }: Readonly<{
-	children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-	return (
-		<html lang="en" suppressHydrationWarning>
-		<body
-			className={`${geistMono.variable} font-mono antialiased`}
-		>
-				<Providers>
-					<div className="grid grid-rows-[auto_1fr] h-svh">
-						<Header />
-						{children}
-					</div>
-				</Providers>
-			</body>
-		</html>
-	);
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistMono.variable} font-mono antialiased`}>
+        <Providers>
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            {children}
+          </div>
+        </Providers>
+      </body>
+    </html>
+  );
 }
