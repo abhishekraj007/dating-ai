@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@convex-starter/backend/convex/_generated/api";
+import { api } from "@book-ai/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { ProtectedRoute } from "@/components/protected-route";
 

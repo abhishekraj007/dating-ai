@@ -1,5 +1,5 @@
 import { fetchMutation, fetchQuery, fetchAction } from "convex/nextjs";
-import { api } from "@convex-starter/backend/convex/_generated/api";
+import { api } from "@book-ai/backend/convex/_generated/api";
 
 /**
  * Server-side Convex helpers for API routes and webhooks

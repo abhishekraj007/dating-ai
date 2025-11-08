@@ -14,8 +14,8 @@ import { Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { useMutation, useQuery } from "convex/react";
-import { api } from "@convex-starter/backend/convex/_generated/api";
-import type { Id } from "@convex-starter/backend/convex/_generated/dataModel";
+import { api } from "@book-ai/backend/convex/_generated/api";
+import type { Id } from "@book-ai/backend/convex/_generated/dataModel";
 import { ProtectedRoute } from "@/components/protected-route";
 
 export default function TodosPage() {
@@ -88,7 +88,11 @@ export default function TodosPage() {
                       />
                       <label
                         htmlFor={`todo-${todo._id}`}
-                        className={`${todo.completed ? "line-through text-muted-foreground" : ""}`}
+                        className={`${
+                          todo.completed
+                            ? "line-through text-muted-foreground"
+                            : ""
+                        }`}
                       >
                         {todo.text}
                       </label>

@@ -12,7 +12,7 @@
   "dependencies": {
     "@better-auth/expo": "1.3.27",
     "@convex-dev/better-auth": "^0.9.1",
-    "@convex-starter/backend": "workspace:*",
+    "@book-ai/backend": "workspace:*",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo/html-elements": "^0.10.1",
     "@expo/vector-icons": "^15.0.2",
