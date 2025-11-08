@@ -10,7 +10,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
-import { api } from "@book-ai/backend/convex/_generated/api";
+import { api } from "@convex-starter/backend/convex/_generated/api";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Crown, LogOut, Settings } from "lucide-react";
 

@@ -1,4 +1,4 @@
-import { api, useConvexAuth, useQuery } from "@book-ai/backend";
+import { api, useConvexAuth, useQuery } from "@convex-starter/backend";
 import {
   Button,
   Card,

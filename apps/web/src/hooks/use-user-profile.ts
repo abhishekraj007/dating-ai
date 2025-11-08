@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { api } from "@book-ai/backend/convex/_generated/api";
+import { api } from "@convex-starter/backend/convex/_generated/api";
 
 export function useUserProfile() {
   const profile = useQuery(api.user.fetchUserAndProfile);

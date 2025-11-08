@@ -1,5 +1,5 @@
 {
-  "name": "@book-ai/backend",
+  "name": "@convex-starter/backend",
   "version": "1.0.0",
   "scripts": {
     "dev": "convex dev",

@@ -1,4 +1,4 @@
-# book-ai
+# convex-starter
 
 A modern TypeScript saas stack that combines Next.js, Convex, expo, and more.
 
@@ -45,7 +45,7 @@ Your app will connect to the Convex cloud backend automatically.
 ## Project Structure
 
 ```
-book-ai/
+convex-starter/
 ├── apps/
 │   ├── web/         # Frontend application (Next.js)
 │   ├── native/      # Mobile application (React Native, Expo)
