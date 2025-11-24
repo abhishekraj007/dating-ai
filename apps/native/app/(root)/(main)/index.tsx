@@ -11,10 +11,13 @@ export default function HomeRoute() {
     <View className="flex-1">
       <SafeAreaView>
         <Header />
-        <View className="p-4">
-          <Text className="text-2xl font-bold mb-4">Home</Text>
+        <View className="p-4 gap-3">
+          <Text className="text-2xl font-bold mb-2">Home</Text>
           <Button onPress={() => router.push("/(root)/(main)/uploads")}>
             Go to Uploads
+          </Button>
+          <Button onPress={() => router.push("/(root)/(main)/notifications")}>
+            Go to Notifications
           </Button>
         </View>
       </SafeAreaView>

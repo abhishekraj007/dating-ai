@@ -5,6 +5,7 @@ import {
   Divider,
   Spinner,
   Surface,
+  Switch,
   useThemeColor,
 } from "heroui-native";
 import { useEffect, useState } from "react";
@@ -21,8 +22,10 @@ import {
   Calendar,
   Palette,
   Check,
+  Bell,
 } from "lucide-react-native";
 import { router } from "expo-router";
+import { useNotificationSettings } from "@/hooks/useNotificationSettings";
 
 type ThemeOption = {
   id: string;
@@ -88,6 +91,12 @@ export default function SettingsRoute() {
   const textDanger = useThemeColor("danger-foreground");
   const muted = useThemeColor("muted");
 
+  const {
+    isEnabled: notificationsEnabled,
+    isRequesting,
+    enableNotifications,
+  } = useNotificationSettings();
+
   const getCurrentThemeId = () => {
     if (currentTheme === "light" || currentTheme === "dark") return "default";
     if (currentTheme.startsWith("lavender")) return "lavender";
@@ -99,6 +108,28 @@ export default function SettingsRoute() {
   const handleThemeSelect = async (theme: ThemeOption) => {
     const variant = isLight ? theme.lightVariant : theme.darkVariant;
     await setTheme(variant as any);
+  };
+
+  const handleNotificationToggle = async (enabled: boolean) => {
+    if (enabled) {
+      try {
+        await enableNotifications();
+        Alert.alert("Success", "Notifications enabled successfully!");
+      } catch (error) {
+        Alert.alert(
+          "Error",
+          error instanceof Error
+            ? error.message
+            : "Failed to enable notifications"
+        );
+      }
+    } else {
+      Alert.alert(
+        "Disable Notifications",
+        "To disable notifications, please go to your device settings.",
+        [{ text: "OK" }]
+      );
+    }
   };
 
   const { isAuthenticated } = useConvexAuth();
@@ -225,6 +256,34 @@ export default function SettingsRoute() {
             </View>
           </View>
         </Surface>
+
+        {/* Notifications Section */}
+        <Surface className="p-5 gap-4">
+          <View className="flex-row items-center gap-2">
+            <Bell size={20} color={foreground} />
+            <Text className="text-xl font-semibold text-foreground">
+              Notifications
+            </Text>
+          </View>
+          <Divider />
+
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1 gap-1">
+              <Text className="text-base text-foreground font-medium">
+                Push Notifications
+              </Text>
+              <Text className="text-sm text-muted">
+                Receive notifications about important updates
+              </Text>
+            </View>
+            <Switch
+              isSelected={notificationsEnabled}
+              onSelectedChange={handleNotificationToggle}
+              isDisabled={isRequesting}
+            />
+          </View>
+        </Surface>
+
         <SignOutButton />
 
         {/* Danger Zone */}

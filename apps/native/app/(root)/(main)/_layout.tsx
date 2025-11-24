@@ -49,6 +49,14 @@ export default function MainLayout() {
           ...standard,
         }}
       />
+      <Stack.Screen
+        name="notifications"
+        options={{
+          title: "Notifications",
+          headerBackTitle: "Back",
+          ...standard,
+        }}
+      />
     </Stack>
   );
 }

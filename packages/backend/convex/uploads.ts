@@ -39,10 +39,6 @@ export const { generateUploadUrl, syncMetadata, onSyncMetadata } = r2.clientApi(
       // This runs after metadata sync, so r2.getMetadata will work
       // args: { bucket: string; key: string; isNew: boolean }
       const metadata = await r2.getMetadata(ctx, args.key);
-      console.log(
-        "Synced metadata:",
-        JSON.stringify({ key: args.key, metadata, isNew: args.isNew }, null, 2)
-      );
 
       if (!metadata) {
         console.error("No metadata found for key:", args.key);
