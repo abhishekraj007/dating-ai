@@ -18,6 +18,8 @@ export default defineSchema({
     ),
     premiumGrantedAt: v.optional(v.number()),
     premiumExpiresAt: v.optional(v.number()), // null = lifetime/subscription-based
+    // Active thread for English tutor (syncs across devices)
+    activeTutorThreadId: v.optional(v.string()),
   }).index("by_auth_user_id", ["authUserId"]),
 
   // Unified subscriptions table for both Polar (web) and RevenueCat (native)
