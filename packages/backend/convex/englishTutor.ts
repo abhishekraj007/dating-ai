@@ -6,7 +6,7 @@ import {
   query,
   httpAction,
 } from "./_generated/server";
-import { components, internal } from "./_generated/api";
+import { components, internal, api } from "./_generated/api";
 import {
   Agent,
   createThread,
@@ -16,16 +16,6 @@ import {
   syncStreams,
 } from "@convex-dev/agent";
 import { paginationOptsValidator } from "convex/server";
-import {
-  PersistentTextStreaming,
-  StreamId,
-  StreamIdValidator,
-} from "@convex-dev/persistent-text-streaming";
-
-// Define the persistent text streaming instance
-const persistentTextStreaming = new PersistentTextStreaming(
-  components.persistentTextStreaming
-);
 
 // Define the English tutor agent
 const englishTutor = new Agent(components.agent, {
@@ -136,9 +126,6 @@ export const sendMessage = mutation({
     prompt: v.string(),
   },
   handler: async (ctx, { threadId, userId, prompt }) => {
-    // Create a stream for the response
-    const streamId = await persistentTextStreaming.createStream(ctx);
-
     // Save the user's message
     const { messageId } = await saveMessage(ctx, components.agent, {
       threadId,
@@ -154,11 +141,10 @@ export const sendMessage = mutation({
         threadId,
         userId,
         promptMessageId: messageId,
-        streamId,
       }
     );
 
-    return { messageId, streamId };
+    return { messageId };
   },
 });
 
@@ -168,9 +154,8 @@ export const generateResponseAsync = internalAction({
     threadId: v.string(),
     userId: v.string(),
     promptMessageId: v.string(),
-    streamId: v.string(),
   },
-  handler: async (ctx, { threadId, userId, promptMessageId, streamId }) => {
+  handler: async (ctx, { threadId, userId, promptMessageId }) => {
     await englishTutor.streamText(
       ctx,
       { threadId, userId },
@@ -178,61 +163,6 @@ export const generateResponseAsync = internalAction({
       { saveStreamDeltas: true }
     );
   },
-});
-
-// Get the stream body for a message
-export const getMessageBody = query({
-  args: {
-    streamId: StreamIdValidator,
-  },
-  handler: async (ctx, args) => {
-    return await persistentTextStreaming.getStreamBody(
-      ctx,
-      args.streamId as StreamId
-    );
-  },
-});
-
-// HTTP action for streaming tutor responses
-export const streamTutorResponse = httpAction(async (ctx, request) => {
-  const body = (await request.json()) as {
-    streamId: string;
-    threadId: string;
-    userId: string;
-    promptMessageId: string;
-  };
-
-  const generateResponse = async (
-    _ctx: any,
-    _request: any,
-    _streamId: any,
-    chunkAppender: (chunk: string) => Promise<void>
-  ) => {
-    // Get the AI response stream
-    const stream = await englishTutor.streamText(
-      ctx,
-      { threadId: body.threadId, userId: body.userId },
-      { promptMessageId: body.promptMessageId },
-      { saveStreamDeltas: true }
-    );
-
-    // Stream each chunk to both HTTP client and database
-    for await (const chunk of stream.textStream) {
-      await chunkAppender(chunk);
-    }
-  };
-
-  const response = await persistentTextStreaming.stream(
-    ctx,
-    request,
-    body.streamId as StreamId,
-    generateResponse
-  );
-
-  // Set CORS headers
-  response.headers.set("Access-Control-Allow-Origin", "*");
-  response.headers.set("Vary", "Origin");
-  return response;
 });
 
 // List messages in a thread with streaming support

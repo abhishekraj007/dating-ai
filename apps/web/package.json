@@ -10,7 +10,6 @@
   "dependencies": {
     "@convex-dev/agent": "^0.3.0",
     "@convex-dev/better-auth": "catalog:",
-    "@convex-dev/persistent-text-streaming": "^0.3.0",
     "@convex-dev/polar": "^0.6.4",
     "@convex-dev/r2": "^0.8.0",
     "@convex-starter/backend": "workspace:*",

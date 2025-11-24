@@ -6,10 +6,9 @@ import { api } from "@convex-starter/backend/convex/_generated/api";
 import {
   useUIMessages,
   optimisticallySendMessage,
+  SmoothText,
 } from "@convex-dev/agent/react";
 import type { UIMessage } from "@convex-dev/agent/react";
-import { useStream } from "@convex-dev/persistent-text-streaming/react";
-import type { StreamId } from "@convex-dev/persistent-text-streaming";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,8 +27,6 @@ import { cn } from "@/lib/utils";
 export default function EnglishTutorPage() {
   const [message, setMessage] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
-  const [activeStreamId, setActiveStreamId] = useState<string | null>(null);
-  const [isInitiator, setIsInitiator] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const userData = useQuery(api.user.fetchUserAndProfile);
@@ -59,20 +56,6 @@ export default function EnglishTutorPage() {
     api.englishTutor.listThreadMessages,
     threadId ? { threadId } : "skip",
     { initialNumItems: 50, stream: true }
-  );
-
-  // Get Convex URL for streaming endpoint
-  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL?.replace(
-    /\.convex\.cloud$/,
-    ".convex.site"
-  );
-
-  // Use persistent text streaming for the active response
-  const { text: streamedText, status: streamStatus } = useStream(
-    api.englishTutor.getMessageBody,
-    new URL(`${convexUrl}/tutor-stream`),
-    isInitiator,
-    activeStreamId as StreamId | undefined
   );
 
   const setActiveThread = useMutation(api.englishTutor.setActiveThread);
@@ -107,7 +90,7 @@ export default function EnglishTutorPage() {
     setActiveThread,
   ]);
 
-  // Auto-scroll to bottom on new messages or streaming updates
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
     if (scrollAreaRef.current) {
       const viewport = scrollAreaRef.current.querySelector(
@@ -117,7 +100,7 @@ export default function EnglishTutorPage() {
         viewport.scrollTop = viewport.scrollHeight;
       }
     }
-  }, [messages, streamedText]);
+  }, [messages]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,36 +108,23 @@ export default function EnglishTutorPage() {
 
     const userMessage = message;
     setMessage("");
-    setIsInitiator(true);
 
-    const result = await sendMessageMutation({
+    await sendMessageMutation({
       threadId,
       userId,
       prompt: userMessage,
     });
-
-    // Set the stream ID for the response
-    if (result?.streamId) {
-      setActiveStreamId(result.streamId);
-    }
   };
 
   const handleNewConversation = async () => {
     if (!userId) return;
     const newThreadId = await createThread({ userId });
     setThreadId(newThreadId);
-    setActiveStreamId(null);
-    setIsInitiator(false);
   };
 
   const renderMessage = (msg: UIMessage) => {
     const isUser = msg.role === "user";
-    const isActiveStream = msg.key === activeStreamId;
-    const isStreaming = isActiveStream && streamStatus === "streaming";
-
-    // Use streamed text for the active stream, otherwise use message text
-    const displayText =
-      isActiveStream && streamedText ? streamedText : msg.text;
+    const isStreaming = msg.status === "streaming";
 
     return (
       <div
@@ -183,11 +153,13 @@ export default function EnglishTutorPage() {
           >
             {isStreaming ? (
               <div className="flex items-center gap-2">
-                <p className="text-sm whitespace-pre-wrap">{displayText}</p>
+                <div className="text-sm whitespace-pre-wrap">
+                  <SmoothText text={msg.text} />
+                </div>
                 <Loader2 className="h-3 w-3 animate-spin" />
               </div>
             ) : (
-              <p className="text-sm whitespace-pre-wrap">{displayText}</p>
+              <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
             )}
           </div>
           {msg._creationTime && (
