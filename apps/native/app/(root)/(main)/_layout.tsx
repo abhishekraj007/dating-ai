@@ -41,6 +41,14 @@ export default function MainLayout() {
           ...standard,
         }}
       />
+      <Stack.Screen
+        name="uploads"
+        options={{
+          title: "Uploads",
+          headerBackTitle: "Back",
+          ...standard,
+        }}
+      />
     </Stack>
   );
 }

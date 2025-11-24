@@ -85,4 +85,15 @@ export default defineSchema({
     .index("by_platform_order_id", ["platformOrderId"])
     .index("by_user", ["userId"])
     .index("by_user_platform", ["userId", "platform"]),
+
+  // Uploads table for tracking R2 uploads
+  uploads: defineTable({
+    key: v.string(), // R2 object key
+    userId: v.string(), // Better Auth user ID
+    contentType: v.string(),
+    contentLength: v.number(),
+    uploadedAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_key", ["key"]),
 });
