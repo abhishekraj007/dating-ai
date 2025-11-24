@@ -1,4 +1,4 @@
-import { createAuth } from "@convex-starter/backend/convex/auth";
+import { createAuth } from "@dating-ai/backend/convex/auth";
 import { getToken as getTokenNextjs } from "@convex-dev/better-auth/nextjs";
 
 export const getToken = () => {

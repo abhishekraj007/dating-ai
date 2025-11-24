@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { api } from "@convex-starter/backend/convex/_generated/api";
+import { api } from "@dating-ai/backend/convex/_generated/api";
 import { AuthenticatedLayout } from "@/components/authenticated-layout";
 import Header from "@/components/header";
 import { usePathname } from "next/navigation";

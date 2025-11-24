@@ -12,7 +12,7 @@
     "@convex-dev/better-auth": "catalog:",
     "@convex-dev/polar": "^0.6.4",
     "@convex-dev/r2": "^0.8.0",
-    "@convex-starter/backend": "workspace:*",
+    "@dating-ai/backend": "workspace:*",
     "@polar-sh/better-auth": "^1.2.1",
     "@polar-sh/nextjs": "^0.7.0",
     "@polar-sh/sdk": "^0.40.3",

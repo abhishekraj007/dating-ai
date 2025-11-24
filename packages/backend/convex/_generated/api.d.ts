@@ -8,10 +8,16 @@
  * @module
  */
 
+import type * as aiProfiles_seedProfiles from "../aiProfiles/seedProfiles.js";
 import type * as auth from "../auth.js";
+import type * as datingAgent from "../datingAgent.js";
 import type * as englishTutor from "../englishTutor.js";
+import type * as features_ai_index from "../features/ai/index.js";
+import type * as features_ai_profiles from "../features/ai/profiles.js";
+import type * as features_ai_r2Helpers from "../features/ai/r2Helpers.js";
 import type * as features_credits_index from "../features/credits/index.js";
 import type * as features_credits_mutations from "../features/credits/mutations.js";
+import type * as features_credits_pricing from "../features/credits/pricing.js";
 import type * as features_credits_queries from "../features/credits/queries.js";
 import type * as features_premium_admin from "../features/premium/admin.js";
 import type * as features_premium_guards from "../features/premium/guards.js";
@@ -53,10 +59,16 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "aiProfiles/seedProfiles": typeof aiProfiles_seedProfiles;
   auth: typeof auth;
+  datingAgent: typeof datingAgent;
   englishTutor: typeof englishTutor;
+  "features/ai/index": typeof features_ai_index;
+  "features/ai/profiles": typeof features_ai_profiles;
+  "features/ai/r2Helpers": typeof features_ai_r2Helpers;
   "features/credits/index": typeof features_credits_index;
   "features/credits/mutations": typeof features_credits_mutations;
+  "features/credits/pricing": typeof features_credits_pricing;
   "features/credits/queries": typeof features_credits_queries;
   "features/premium/admin": typeof features_premium_admin;
   "features/premium/guards": typeof features_premium_guards;

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery, useAction } from "convex/react";
-import { api } from "@convex-starter/backend/convex/_generated/api";
+import { api } from "@dating-ai/backend/convex/_generated/api";
 import {
   useUIMessages,
   optimisticallySendMessage,

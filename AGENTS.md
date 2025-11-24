@@ -8,6 +8,9 @@
 - Layout and components should be mobile first and responsive.
 - Do not write documentation .md file untill neccessary and it's a big feature.
 - use heroui-native https://github.com/heroui-inc/heroui-native for native app components and screens development
+- **ALWAYS check heroui-native MCP server for available components before using native React Native components**
+- Prefer heroui-native components over native components when available (Button over Pressable, TextField over TextInput, Avatar for avatars, Card for cards, etc.)
+- Use heroui-native list_components tool to see all available components before implementing UI
 - use shadcn-ui for web components and screens development
 - use Use shadcn CLI for installing any new web components
 - never create markdown (`.md`) files after you're done unless it's a big feature and planning is required. NEVER!

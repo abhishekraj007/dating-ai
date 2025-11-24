@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Alert, Image as RNImage, Text, ScrollView } from "react-native";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "@convex-starter/backend/convex/_generated/api";
+import { api } from "@dating-ai/backend/convex/_generated/api";
 import * as ImagePicker from "expo-image-picker";
 import { Button, Card, Spinner } from "heroui-native";
 import { Ionicons } from "@expo/vector-icons";

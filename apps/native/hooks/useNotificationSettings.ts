@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "@convex-starter/backend/convex/_generated/api";
+import { api } from "@dating-ai/backend/convex/_generated/api";
 import Constants from "expo-constants";
 
 export function useNotificationSettings() {
