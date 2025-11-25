@@ -1,10 +1,11 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, LayoutChangeEvent } from "react-native";
 import Animated, {
   useAnimatedStyle,
-  withSpring,
+  withTiming,
   useSharedValue,
+  Easing,
 } from "react-native-reanimated";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type Gender = "female" | "male";
 
@@ -23,20 +24,27 @@ export const GenderTabs = ({
   maleCount,
   showCounts = false,
 }: GenderTabsProps) => {
+  const [containerWidth, setContainerWidth] = useState(0);
   const indicatorPosition = useSharedValue(value === "female" ? 0 : 1);
 
   useEffect(() => {
-    indicatorPosition.value = withSpring(value === "female" ? 0 : 1, {
-      damping: 15,
-      stiffness: 150,
+    indicatorPosition.value = withTiming(value === "female" ? 0 : 1, {
+      duration: 200,
+      easing: Easing.out(Easing.cubic),
     });
   }, [value]);
 
-  const indicatorStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: indicatorPosition.value * 50 + "%" }],
-    left: 0,
-    width: "50%",
-  }));
+  const indicatorStyle = useAnimatedStyle(() => {
+    const tabWidth = containerWidth / 2;
+    return {
+      transform: [{ translateX: indicatorPosition.value * tabWidth }],
+      width: tabWidth,
+    };
+  });
+
+  const handleLayout = (event: LayoutChangeEvent) => {
+    setContainerWidth(event.nativeEvent.layout.width);
+  };
 
   const getFemaleLabel = () => {
     if (showCounts && femaleCount !== undefined) {
@@ -53,7 +61,10 @@ export const GenderTabs = ({
   };
 
   return (
-    <View className="flex-row bg-surface rounded-full p-1 relative">
+    <View
+      className="flex-row bg-surface rounded-full p-1 relative"
+      onLayout={handleLayout}
+    >
       {/* Animated indicator */}
       <Animated.View
         style={indicatorStyle}
@@ -90,4 +101,3 @@ export const GenderTabs = ({
     </View>
   );
 };
-

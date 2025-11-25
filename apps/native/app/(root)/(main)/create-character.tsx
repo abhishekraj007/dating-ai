@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable, Alert } from "react-native";
+import { View, ScrollView, Pressable, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button, TextField, Chip } from "heroui-native";
@@ -13,6 +13,7 @@ import { useState } from "react";
 import { useCreateAIProfile } from "@/hooks/dating";
 import { PhotoUploadSlot } from "@/components/dating";
 import { useThemeColor } from "heroui-native";
+import { Text } from "@/components";
 
 const AGES = Array.from({ length: 43 }, (_, i) => i + 18); // 18-60
 const GENDERS = ["female", "male"] as const;
@@ -102,7 +103,12 @@ export default function CreateCharacterScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <SafeAreaView className="flex-1" edges={["top"]}>
+      <SafeAreaView
+        style={{
+          flex: 1,
+        }}
+        edges={["top"]}
+      >
         {/* Header */}
         <View className="flex-row items-center justify-between px-4 py-2 border-b border-border">
           <Button

@@ -9,7 +9,12 @@ export default function AccountScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <SafeAreaView className="flex-1" edges={["top"]}>
+      <SafeAreaView
+        style={{
+          flex: 1,
+        }}
+        edges={["top"]}
+      >
         <Header title="Account" />
         <ScrollView className="flex-1 px-4 py-4">
           <View className="gap-3">
@@ -37,4 +42,3 @@ export default function AccountScreen() {
     </View>
   );
 }
-
