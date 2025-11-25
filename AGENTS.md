@@ -3,6 +3,7 @@
 - Divide logics and UI into hooks and components.
 - Keep files and component maintable and shorts, devide into multiple if required.
 - Always seperate UI and logics into components and hooks.
+- **For feature pages, split into smaller components** - Create separate files for forms, cards, modals, etc. (e.g., `edit-character-sheet.tsx`, `character-card.tsx`) to keep components under 200-300 lines.
 - Do not use useCallback unless necessary.
 - Write layout and components that should work in both light and dark mode.
 - Layout and components should be mobile first and responsive.

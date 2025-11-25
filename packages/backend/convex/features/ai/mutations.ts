@@ -8,6 +8,7 @@ import {
   calculateRelationshipLevel,
   calculateCompatibilityScore,
 } from "./agent";
+import { r2 } from "../../uploads";
 
 /**
  * Start a new conversation with an AI profile.
@@ -290,9 +291,164 @@ export const archiveAIProfile = mutation({
 });
 
 /**
- * Request a custom selfie from an AI profile.
+ * Admin: Update any system AI profile (not user-created).
+ * Only users with isAdmin=true can use this.
  */
-export const requestSelfie = mutation({
+export const adminUpdateProfile = mutation({
+  args: {
+    profileId: v.id("aiProfiles"),
+    name: v.optional(v.string()),
+    gender: v.optional(v.union(v.literal("female"), v.literal("male"))),
+    avatarImageKey: v.optional(v.string()),
+    age: v.optional(v.number()),
+    zodiacSign: v.optional(v.string()),
+    occupation: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    interests: v.optional(v.array(v.string())),
+    personalityTraits: v.optional(v.array(v.string())),
+    profileImageKeys: v.optional(v.array(v.string())),
+    language: v.optional(v.string()),
+    voiceId: v.optional(v.string()),
+    status: v.optional(
+      v.union(v.literal("active"), v.literal("pending"), v.literal("archived"))
+    ),
+  },
+  handler: async (ctx, { profileId, ...updates }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    // Check if user is admin
+    const userProfile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
+      .unique();
+
+    if (!userProfile?.isAdmin) {
+      throw new Error("Admin access required");
+    }
+
+    const profile = await ctx.db.get(profileId);
+    if (!profile) {
+      throw new Error("Profile not found");
+    }
+
+    // Only allow updating system profiles (not user-created)
+    if (profile.isUserCreated) {
+      throw new Error("Cannot admin-edit user-created profiles");
+    }
+
+    // Filter out undefined values
+    const patch: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(updates)) {
+      if (value !== undefined) {
+        patch[key] = value;
+      }
+    }
+
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch(profileId, patch);
+    }
+
+    return profileId;
+  },
+});
+
+/**
+ * Admin: Generate upload URL for AI profile images.
+ */
+export const adminGenerateUploadUrl = mutation({
+  args: {
+    profileId: v.id("aiProfiles"),
+    type: v.union(v.literal("avatar"), v.literal("gallery")),
+  },
+  handler: async (ctx, { profileId, type }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    // Check if user is admin
+    const userProfile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
+      .unique();
+
+    if (!userProfile?.isAdmin) {
+      throw new Error("Admin access required");
+    }
+
+    const profile = await ctx.db.get(profileId);
+    if (!profile) {
+      throw new Error("Profile not found");
+    }
+
+    if (profile.isUserCreated) {
+      throw new Error("Cannot admin-edit user-created profiles");
+    }
+
+    // Create a key with aiProfiles prefix and type info
+    const key = `aiProfiles/${profileId}/${type}/${crypto.randomUUID()}`;
+    const { url } = await r2.generateUploadUrl(key);
+    return { url, key };
+  },
+});
+
+/**
+ * Admin: Delete an image from AI profile.
+ */
+export const adminDeleteProfileImage = mutation({
+  args: {
+    profileId: v.id("aiProfiles"),
+    imageKey: v.string(),
+    type: v.union(v.literal("avatar"), v.literal("gallery")),
+  },
+  handler: async (ctx, { profileId, imageKey, type }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    // Check if user is admin
+    const userProfile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
+      .unique();
+
+    if (!userProfile?.isAdmin) {
+      throw new Error("Admin access required");
+    }
+
+    const profile = await ctx.db.get(profileId);
+    if (!profile) {
+      throw new Error("Profile not found");
+    }
+
+    if (profile.isUserCreated) {
+      throw new Error("Cannot admin-edit user-created profiles");
+    }
+
+    // Delete from R2
+    await r2.deleteObject(ctx, imageKey);
+
+    // Update the profile
+    if (type === "avatar") {
+      await ctx.db.patch(profileId, { avatarImageKey: undefined });
+    } else {
+      const currentKeys = profile.profileImageKeys ?? [];
+      const newKeys = currentKeys.filter((k) => k !== imageKey);
+      await ctx.db.patch(profileId, { profileImageKeys: newKeys });
+    }
+
+    return null;
+  },
+});
+
+/**
+ * Request a custom image from an AI profile (selfies, photos, etc.).
+ */
+export const requestChatImage = mutation({
   args: {
     conversationId: v.id("aiConversations"),
     prompt: v.string(),
@@ -326,32 +482,32 @@ export const requestSelfie = mutation({
     }
 
     const currentCredits = profile.credits ?? 0;
-    const selfieCost = 5;
+    const imageCost = 5;
 
-    if (currentCredits < selfieCost) {
+    if (currentCredits < imageCost) {
       throw new Error("Insufficient credits");
     }
 
     // Deduct credits
     await ctx.db.patch(profile._id, {
-      credits: currentCredits - selfieCost,
+      credits: currentCredits - imageCost,
     });
 
-    // Create selfie request
-    const requestId = await ctx.db.insert("selfieRequests", {
+    // Create chat image request
+    const requestId = await ctx.db.insert("chatImages", {
       conversationId,
       userId: user._id,
       aiProfileId: conversation.aiProfileId,
       prompt,
       styleOptions,
       status: "pending",
-      creditsCharged: selfieCost,
+      creditsCharged: imageCost,
     });
 
     // Schedule image generation
     await ctx.scheduler.runAfter(
       0,
-      internal.features.ai.actions.generateSelfie,
+      internal.features.ai.actions.generateChatImage,
       {
         requestId,
       }
@@ -362,11 +518,11 @@ export const requestSelfie = mutation({
 });
 
 /**
- * Internal mutation to update selfie request status.
+ * Internal mutation to update chat image request status.
  */
-export const updateSelfieRequest = internalMutation({
+export const updateChatImageRequest = internalMutation({
   args: {
-    requestId: v.id("selfieRequests"),
+    requestId: v.id("chatImages"),
     status: v.union(
       v.literal("pending"),
       v.literal("processing"),
@@ -380,7 +536,7 @@ export const updateSelfieRequest = internalMutation({
   handler: async (ctx, { requestId, ...updates }) => {
     const request = await ctx.db.get(requestId);
     if (!request) {
-      throw new Error("Selfie request not found");
+      throw new Error("Chat image request not found");
     }
 
     const patch: Record<string, unknown> = { status: updates.status };

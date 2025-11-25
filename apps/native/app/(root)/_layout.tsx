@@ -7,7 +7,7 @@ import { Platform } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SplashScreen } from "@/components/splash-screen";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { api } from "@convex-starter/backend/convex/_generated/api";
+import { api } from "@dating-ai/backend/convex/_generated/api";
 
 export const unstable_settings = {
   initialRouteName: "(main)",

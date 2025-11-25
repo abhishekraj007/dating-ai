@@ -9,7 +9,6 @@
  */
 
 import type * as auth from "../auth.js";
-import type * as englishTutor from "../englishTutor.js";
 import type * as features_ai_actions from "../features/ai/actions.js";
 import type * as features_ai_agent from "../features/ai/agent.js";
 import type * as features_ai_index from "../features/ai/index.js";
@@ -61,7 +60,6 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
-  englishTutor: typeof englishTutor;
   "features/ai/actions": typeof features_ai_actions;
   "features/ai/agent": typeof features_ai_agent;
   "features/ai/index": typeof features_ai_index;

@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 import { Crown, Coins, Settings, Search } from "lucide-react-native";
 import { useConvexAuth, useQuery } from "convex/react";
 import { usePurchases } from "@/contexts/purchases-context";
-import { api } from "@convex-starter/backend";
+import { api } from "@dating-ai/backend";
 import { AppLogo } from "./app-logo";
 
 interface HeaderProps {
@@ -76,17 +76,17 @@ export const Header = ({
             </Button>
 
             {showSettings && (
-            <Button
-              variant="tertiary"
-              size="sm"
-              isIconOnly
-              className="rounded-full"
-              onPress={() => {
-                router.navigate("/settings");
-              }}
-            >
-              <Settings size={16} color={foregroundColor} />
-            </Button>
+              <Button
+                variant="tertiary"
+                size="sm"
+                isIconOnly
+                className="rounded-full"
+                onPress={() => {
+                  router.navigate("/settings");
+                }}
+              >
+                <Settings size={16} color={foregroundColor} />
+              </Button>
             )}
           </>
         ) : (

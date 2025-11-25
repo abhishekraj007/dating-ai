@@ -20,6 +20,7 @@ export {
   getConversation,
   getConversationByProfile,
   getMessages,
+  getSystemProfiles,
 } from "./queries";
 
 // Public mutations
@@ -29,6 +30,8 @@ export {
   createAIProfile,
   updateAIProfile,
   archiveAIProfile,
-  requestSelfie,
+  requestChatImage,
+  adminUpdateProfile,
+  adminGenerateUploadUrl,
+  adminDeleteProfileImage,
 } from "./mutations";
-

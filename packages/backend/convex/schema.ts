@@ -7,6 +7,8 @@ export default defineSchema({
     name: v.optional(v.string()),
     authUserId: v.string(),
     credits: v.optional(v.number()),
+    // Admin status - can only be set manually in database
+    isAdmin: v.optional(v.boolean()),
     // Premium status - can be granted manually or via subscription
     isPremium: v.optional(v.boolean()),
     premiumGrantedBy: v.optional(
@@ -18,8 +20,6 @@ export default defineSchema({
     ),
     premiumGrantedAt: v.optional(v.number()),
     premiumExpiresAt: v.optional(v.number()), // null = lifetime/subscription-based
-    // Active thread for English tutor (syncs across devices)
-    activeTutorThreadId: v.optional(v.string()),
   }).index("by_auth_user_id", ["authUserId"]),
 
   // Unified subscriptions table for both Polar (web) and RevenueCat (native)
@@ -63,11 +63,6 @@ export default defineSchema({
       "platform",
       "platformSubscriptionId",
     ]),
-
-  todos: defineTable({
-    text: v.string(),
-    completed: v.boolean(),
-  }),
 
   // Orders table for tracking one-time purchases (credit purchases)
   orders: defineTable({
@@ -146,8 +141,8 @@ export default defineSchema({
     .index("by_thread", ["threadId"])
     .index("by_user_and_last_message", ["userId", "lastMessageAt"]),
 
-  // Selfie generation requests
-  selfieRequests: defineTable({
+  // Chat image generation requests (selfies, custom images, etc.)
+  chatImages: defineTable({
     conversationId: v.id("aiConversations"),
     userId: v.string(),
     aiProfileId: v.id("aiProfiles"),

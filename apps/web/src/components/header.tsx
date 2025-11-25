@@ -5,7 +5,7 @@ import UserMenu from "./user-menu";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
-import { api } from "@convex-starter/backend/convex/_generated/api";
+import { api } from "@dating-ai/backend/convex/_generated/api";
 import { CreditsModal } from "./credits-modal";
 import { Coins, Menu } from "lucide-react";
 import { useState } from "react";
@@ -28,14 +28,12 @@ export default function Header() {
   const links = [
     { to: "/", label: "Home" },
     { to: "/dashboard", label: "Dashboard" },
-    { to: "/todos", label: "Todos" },
-    { to: "/tutor", label: "English Tutor" },
     { to: "/pricing", label: "Pricing" },
     { to: "/components", label: "Components" },
   ] as const;
 
   return (
-    <div>
+    <div className="sticky top-0 z-50 bg-background">
       <div className="flex flex-row items-center justify-between px-4 py-3 border-b border-border">
         {/* Mobile Menu Toggle */}
         <div className="flex items-center gap-4">

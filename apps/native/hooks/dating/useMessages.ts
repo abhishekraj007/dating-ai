@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "convex/react";
-import { api } from "@convex-starter/backend";
+import { api } from "@dating-ai/backend";
 import { useMemo } from "react";
 
 export function useMessages(conversationId: string | undefined) {

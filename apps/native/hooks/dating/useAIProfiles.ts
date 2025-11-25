@@ -1,5 +1,5 @@
 import { useQuery } from "convex/react";
-import { api } from "@convex-starter/backend";
+import { api } from "@dating-ai/backend";
 
 type Gender = "female" | "male";
 
@@ -26,4 +26,3 @@ export function useAIProfile(profileId: string | undefined) {
     isLoading: profile === undefined,
   };
 }
-

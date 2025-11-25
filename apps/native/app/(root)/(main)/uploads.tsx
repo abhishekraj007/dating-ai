@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Alert, Text, ScrollView } from "react-native";
 import { Image } from "expo-image";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "@convex-starter/backend/convex/_generated/api";
+import { api } from "@dating-ai/backend/convex/_generated/api";
 import * as ImagePicker from "expo-image-picker";
 import { Button, Card, Spinner } from "heroui-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -230,7 +230,12 @@ export default function UploadsScreen() {
                     {isImage(upload.contentType) && upload.url ? (
                       <Image
                         source={{ uri: upload.url }}
-                        style={{ width: "100%", height: 192, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+                        style={{
+                          width: "100%",
+                          height: 192,
+                          borderTopLeftRadius: 12,
+                          borderTopRightRadius: 12,
+                        }}
                         contentFit="cover"
                         cachePolicy="memory-disk"
                         transition={200}

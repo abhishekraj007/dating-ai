@@ -1,4 +1,4 @@
-import { api, useConvexAuth, useQuery } from "@convex-starter/backend";
+import { api, useConvexAuth, useQuery } from "@dating-ai/backend";
 import {
   Button,
   Card,

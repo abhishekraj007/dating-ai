@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "convex/react";
-import { api } from "@convex-starter/backend";
+import { api } from "@dating-ai/backend";
 
 export function useConversations() {
   const conversations = useQuery(api.features.ai.queries.getUserConversations);
@@ -41,4 +41,3 @@ export function useStartConversation() {
 
   return { startConversation };
 }
-

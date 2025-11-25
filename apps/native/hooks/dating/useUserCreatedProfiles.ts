@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "convex/react";
-import { api } from "@convex-starter/backend";
+import { api } from "@dating-ai/backend";
 
 type Gender = "female" | "male";
 
@@ -27,8 +27,9 @@ export function useUpdateAIProfile() {
 }
 
 export function useArchiveAIProfile() {
-  const archiveProfile = useMutation(api.features.ai.mutations.archiveAIProfile);
+  const archiveProfile = useMutation(
+    api.features.ai.mutations.archiveAIProfile
+  );
 
   return { archiveProfile };
 }
-

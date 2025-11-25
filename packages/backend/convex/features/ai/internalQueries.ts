@@ -28,12 +28,12 @@ export const getProfileInternal = internalQuery({
 });
 
 /**
- * Internal query to get selfie request without auth check.
+ * Internal query to get chat image request without auth check.
  * Used by actions processing the request.
  */
-export const getSelfieRequestInternal = internalQuery({
+export const getChatImageRequestInternal = internalQuery({
   args: {
-    requestId: v.id("selfieRequests"),
+    requestId: v.id("chatImages"),
   },
   handler: async (ctx, { requestId }) => {
     return await ctx.db.get(requestId);

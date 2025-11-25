@@ -53,28 +53,31 @@ export const generateResponse = internalAction({
 });
 
 /**
- * Generate a custom selfie using Replicate Qwen-Image.
+ * Generate a custom chat image using Replicate.
  * TODO: Implement actual Replicate API integration.
  */
-export const generateSelfie = internalAction({
+export const generateChatImage = internalAction({
   args: {
-    requestId: v.id("selfieRequests"),
+    requestId: v.id("chatImages"),
   },
   handler: async (ctx, { requestId }) => {
     // Update status to processing
-    await ctx.runMutation(internal.features.ai.mutations.updateSelfieRequest, {
-      requestId,
-      status: "processing",
-    });
+    await ctx.runMutation(
+      internal.features.ai.mutations.updateChatImageRequest,
+      {
+        requestId,
+        status: "processing",
+      }
+    );
 
     // Get request details
     const request = await ctx.runQuery(
-      internal.features.ai.internalQueries.getSelfieRequestInternal,
+      internal.features.ai.internalQueries.getChatImageRequestInternal,
       { requestId }
     );
 
     if (!request) {
-      console.error("Selfie request not found:", requestId);
+      console.error("Chat image request not found:", requestId);
       return null;
     }
 
@@ -86,7 +89,7 @@ export const generateSelfie = internalAction({
 
     if (!profile) {
       await ctx.runMutation(
-        internal.features.ai.mutations.updateSelfieRequest,
+        internal.features.ai.mutations.updateChatImageRequest,
         {
           requestId,
           status: "failed",
@@ -96,15 +99,17 @@ export const generateSelfie = internalAction({
       return null;
     }
 
-    // TODO: Implement Replicate Qwen-Image-Edit API call
+    // TODO: Implement Replicate API call for image generation
     // For now, we'll mark as failed with a placeholder message
-    // This will be implemented in the image-gen todo
 
-    await ctx.runMutation(internal.features.ai.mutations.updateSelfieRequest, {
-      requestId,
-      status: "failed",
-      errorMessage: "Image generation not yet implemented",
-    });
+    await ctx.runMutation(
+      internal.features.ai.mutations.updateChatImageRequest,
+      {
+        requestId,
+        status: "failed",
+        errorMessage: "Image generation not yet implemented",
+      }
+    );
 
     return null;
   },

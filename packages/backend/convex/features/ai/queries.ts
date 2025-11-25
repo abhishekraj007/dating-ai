@@ -270,3 +270,39 @@ export const getMessages = query({
     return { ...paginated, streams };
   },
 });
+
+/**
+ * Admin: Get all system-created AI profiles (not user-created).
+ * Returns profiles with signed image URLs.
+ */
+export const getSystemProfiles = query({
+  args: {},
+  handler: async (ctx) => {
+    // Get all profiles that are not user-created
+    const profiles = await ctx.db.query("aiProfiles").collect();
+
+    // Filter to only system profiles (not user-created)
+    const systemProfiles = profiles.filter((p) => !p.isUserCreated);
+
+    // Generate signed URLs for avatars and gallery images
+    return Promise.all(
+      systemProfiles.map(async (profile) => {
+        const avatarUrl = profile.avatarImageKey
+          ? await r2.getUrl(profile.avatarImageKey)
+          : null;
+
+        const profileImageUrls = profile.profileImageKeys
+          ? await Promise.all(
+              profile.profileImageKeys.map((key) => r2.getUrl(key))
+            )
+          : [];
+
+        return {
+          ...profile,
+          avatarUrl,
+          profileImageUrls,
+        };
+      })
+    );
+  },
+});
