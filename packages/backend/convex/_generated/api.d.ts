@@ -10,6 +10,13 @@
 
 import type * as auth from "../auth.js";
 import type * as englishTutor from "../englishTutor.js";
+import type * as features_ai_actions from "../features/ai/actions.js";
+import type * as features_ai_agent from "../features/ai/agent.js";
+import type * as features_ai_index from "../features/ai/index.js";
+import type * as features_ai_internalQueries from "../features/ai/internalQueries.js";
+import type * as features_ai_mutations from "../features/ai/mutations.js";
+import type * as features_ai_queries from "../features/ai/queries.js";
+import type * as features_ai_seed from "../features/ai/seed.js";
 import type * as features_credits_index from "../features/credits/index.js";
 import type * as features_credits_mutations from "../features/credits/mutations.js";
 import type * as features_credits_queries from "../features/credits/queries.js";
@@ -55,6 +62,13 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   englishTutor: typeof englishTutor;
+  "features/ai/actions": typeof features_ai_actions;
+  "features/ai/agent": typeof features_ai_agent;
+  "features/ai/index": typeof features_ai_index;
+  "features/ai/internalQueries": typeof features_ai_internalQueries;
+  "features/ai/mutations": typeof features_ai_mutations;
+  "features/ai/queries": typeof features_ai_queries;
+  "features/ai/seed": typeof features_ai_seed;
   "features/credits/index": typeof features_credits_index;
   "features/credits/mutations": typeof features_credits_mutations;
   "features/credits/queries": typeof features_credits_queries;

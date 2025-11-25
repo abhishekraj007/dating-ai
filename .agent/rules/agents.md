@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Important
 
 - Divide logics and UI into hooks and components.

@@ -8,6 +8,47 @@ export default function MainLayout() {
 
   return (
     <Stack>
+      {/* Tab navigator as the main screen */}
+      <Stack.Screen
+        name="(tabs)"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      {/* Profile detail screen */}
+      <Stack.Screen
+        name="profile/[id]"
+        options={{
+          ...standard,
+          title: "Profile",
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+
+      {/* Chat screen */}
+      <Stack.Screen
+        name="chat/[id]"
+        options={{
+          ...standard,
+          title: "Chat",
+          headerShown: false,
+        }}
+      />
+
+      {/* Create character modal */}
+      <Stack.Screen
+        name="create-character"
+        options={{
+          ...standard,
+          title: "Create New AI Character",
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+
+      {/* Legacy/utility screens */}
       <Stack.Screen
         name="index"
         options={{
@@ -24,7 +65,6 @@ export default function MainLayout() {
           presentation: "modal",
           headerTitle: "",
           headerBackTitle: "Back",
-          // headerShown: false,
           ...standard,
         }}
       />
@@ -36,8 +76,6 @@ export default function MainLayout() {
           headerBackButtonDisplayMode: "generic",
           headerBlurEffect: isDark ? "dark" : "light",
           headerBackTitle: "Back",
-          // animation: "fade",
-          // headerShown: false,
           ...standard,
         }}
       />

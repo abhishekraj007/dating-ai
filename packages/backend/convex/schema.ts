@@ -98,4 +98,79 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_key", ["key"]),
+
+  // AI Profiles - pre-seeded + user-created AI characters
+  aiProfiles: defineTable({
+    // Required fields
+    name: v.string(),
+    gender: v.union(v.literal("female"), v.literal("male")),
+    avatarImageKey: v.optional(v.string()), // R2 key for main avatar (optional for seed data)
+    isUserCreated: v.boolean(),
+    status: v.union(
+      v.literal("active"),
+      v.literal("pending"),
+      v.literal("archived")
+    ),
+    // Optional profile fields - AI adapts if missing
+    age: v.optional(v.number()),
+    zodiacSign: v.optional(v.string()),
+    occupation: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    interests: v.optional(v.array(v.string())),
+    personalityTraits: v.optional(v.array(v.string())),
+    profileImageKeys: v.optional(v.array(v.string())), // Additional R2 keys
+    relationshipGoal: v.optional(v.string()),
+    mbtiType: v.optional(v.string()),
+    language: v.optional(v.string()), // defaults to "en"
+    voiceId: v.optional(v.string()), // ElevenLabs voice ID
+    voiceType: v.optional(v.string()), // Voice type description (legacy)
+    createdAt: v.optional(v.number()), // Creation timestamp (legacy)
+    createdByUserId: v.optional(v.string()), // Better Auth user ID if user-created
+  })
+    .index("by_gender", ["gender"])
+    .index("by_user", ["createdByUserId"])
+    .index("by_status_and_gender", ["status", "gender"]),
+
+  // Conversation metadata - links Agent threads to AI profiles
+  aiConversations: defineTable({
+    threadId: v.string(), // Agent component thread ID
+    userId: v.string(), // Better Auth user ID
+    aiProfileId: v.id("aiProfiles"),
+    relationshipLevel: v.number(), // 1-5, default 1
+    compatibilityScore: v.number(), // 0-100, default 60
+    messageCount: v.number(), // default 0
+    lastMessageAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_profile", ["userId", "aiProfileId"])
+    .index("by_thread", ["threadId"])
+    .index("by_user_and_last_message", ["userId", "lastMessageAt"]),
+
+  // Selfie generation requests
+  selfieRequests: defineTable({
+    conversationId: v.id("aiConversations"),
+    userId: v.string(),
+    aiProfileId: v.id("aiProfiles"),
+    prompt: v.string(),
+    styleOptions: v.optional(
+      v.object({
+        hairstyle: v.optional(v.string()),
+        clothing: v.optional(v.string()),
+        scene: v.optional(v.string()),
+      })
+    ),
+    imageKey: v.optional(v.string()), // R2 key when complete
+    status: v.union(
+      v.literal("pending"),
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("failed")
+    ),
+    replicateJobId: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+    creditsCharged: v.number(),
+  })
+    .index("by_conversation", ["conversationId"])
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"]),
 });
