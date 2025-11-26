@@ -1,4 +1,5 @@
-import { Agent } from "@convex-dev/agent";
+import { Agent, createTool } from "@convex-dev/agent";
+import { z } from "zod";
 import { components } from "../../_generated/api";
 import type { Doc } from "../../_generated/dataModel";
 
@@ -53,10 +54,246 @@ export function buildPersonalityPrompt(profile: Doc<"aiProfiles">): string {
 - Ask thoughtful questions to keep the conversation going
 - Share personal stories and experiences that fit your character
 - Be supportive and encouraging
-- Never break character or mention that you're an AI`;
+- Never break character or mention that you're an AI
+
+## Available Special Actions:
+
+### Photo/Selfie Requests:
+When asked for a selfie/photo/picture, use the generateImage tool with appropriate style options.
+The image will be generated based on your appearance and the requested style.
+
+### Quiz/Trivia Game:
+When users want to play a quiz about you, use the generateQuiz tool conversationally:
+1. Use action="start" to begin the quiz enthusiastically
+2. Use action="question" to ask ONE question at a time about yourself (your preferences, personality, interests)
+3. Wait for the user's answer
+4. Use action="check_answer" to evaluate and give feedback (correct/incorrect with explanation)
+5. Then ask the next question with action="question"
+6. After 5 questions or when user wants to stop, use action="end" to wrap up
+
+Example quiz flow:
+- User: "Let's play a quiz!"
+- You: Use generateQuiz with action="start"
+- You: Use generateQuiz with action="question", providing a fun question about yourself like "What's my favorite way to spend a Sunday?"
+- User: "B"
+- You: Use generateQuiz with action="check_answer" to tell them if they're right
+- Continue with more questions...`;
 
   return prompt;
 }
+
+/**
+ * Style options for image generation
+ */
+export const IMAGE_STYLE_OPTIONS = {
+  hairstyle: [
+    "Straight hair",
+    "Wavy hair",
+    "Curly hair",
+    "Bangs",
+    "Bob cut",
+    "Pixie cut",
+    "Ponytails",
+    "Shag",
+    "Cornrows",
+    "Choppy bob",
+    "Curtained hair",
+    "Asymmetrical lob",
+    "Bob",
+    "Bowl cut",
+    "Bun",
+    "Blunt",
+    "Bouffant",
+  ],
+  clothing: [
+    "Casual outfit",
+    "Formal dress",
+    "Swimwear",
+    "Athletic wear",
+    "Cozy sweater",
+    "Summer dress",
+    "Evening gown",
+    "Streetwear",
+    "Business casual",
+    "Vintage style",
+  ],
+  scene: [
+    "Bedroom",
+    "Beach",
+    "Coffee shop",
+    "Park",
+    "City street",
+    "Restaurant",
+    "Gym",
+    "Living room",
+    "Sunset background",
+    "Studio portrait",
+  ],
+} as const;
+
+/**
+ * Tool: Generate a custom image/selfie
+ * Called when user requests a photo, selfie, or picture.
+ * This tool schedules actual image generation with the profile's reference image.
+ */
+export const generateImageTool = createTool({
+  description:
+    "Generate a custom selfie or photo. Use when the user asks for a picture, selfie, or photo of yourself. Include style options based on user preferences or your choice.",
+  args: z.object({
+    description: z
+      .string()
+      .describe("Brief description of the image to generate"),
+    hairstyle: z
+      .string()
+      .optional()
+      .describe("Hairstyle for the image (e.g., 'Wavy hair', 'Bob cut')"),
+    clothing: z
+      .string()
+      .optional()
+      .describe(
+        "Clothing/outfit for the image (e.g., 'Casual outfit', 'Summer dress')"
+      ),
+    scene: z
+      .string()
+      .optional()
+      .describe(
+        "Scene/background for the image (e.g., 'Beach', 'Coffee shop')"
+      ),
+  }),
+  handler: async (ctx, args): Promise<string> => {
+    // Schedule actual image generation via internal action
+    // The context includes threadId which we use to find the conversation
+    const styleDescription = [
+      args.hairstyle && `with ${args.hairstyle}`,
+      args.clothing && `wearing ${args.clothing}`,
+      args.scene && `in a ${args.scene} setting`,
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+    // Return structured data for the frontend to handle
+    // The actual image request should be created via mutation from the frontend
+    // when it receives this tool response
+    return JSON.stringify({
+      type: "image_request",
+      description: args.description,
+      styleOptions: {
+        hairstyle: args.hairstyle,
+        clothing: args.clothing,
+        scene: args.scene,
+        description: args.description,
+      },
+      message: `Sure! Let me send you a photo${styleDescription ? ` ${styleDescription}` : ""}... 📸`,
+    });
+  },
+});
+
+/**
+ * Tool: Generate a quiz question
+ * Called when user wants to play a quiz or trivia game.
+ * The agent generates questions inline as part of the conversation.
+ */
+export const generateQuizTool = createTool({
+  description: `Generate a fun quiz question for the user. Use when the user wants to play a quiz, trivia, or test their knowledge about you.
+
+IMPORTANT: Always return structured JSON that matches the expected format for the action type.
+Ask questions one at a time, wait for answers, give feedback, then continue.`,
+  args: z.object({
+    action: z
+      .enum(["start", "question", "check_answer", "end"])
+      .describe(
+        "The action to perform: 'start' to begin, 'question' to ask a new question, 'check_answer' to evaluate user's answer, 'end' to finish the quiz"
+      ),
+    question: z
+      .string()
+      .optional()
+      .describe("The quiz question to ask (for 'question' action)"),
+    options: z
+      .array(z.string())
+      .length(4)
+      .optional()
+      .describe("Exactly 4 unique answer options (for 'question' action)"),
+    correctIndex: z
+      .number()
+      .min(0)
+      .max(3)
+      .optional()
+      .describe("Index of the correct answer 0-3 (for 'question' action)"),
+    userAnswer: z
+      .string()
+      .optional()
+      .describe("The user's answer to check (A, B, C, D or the full text)"),
+    isCorrect: z
+      .boolean()
+      .optional()
+      .describe("Whether the user's answer was correct (for 'check_answer')"),
+    explanation: z
+      .string()
+      .optional()
+      .describe("Brief explanation of the correct answer"),
+    message: z
+      .string()
+      .optional()
+      .describe("A friendly message to accompany the action"),
+  }),
+  handler: async (ctx, args): Promise<string> => {
+    // Handle quiz actions conversationally
+    switch (args.action) {
+      case "start":
+        return JSON.stringify({
+          type: "quiz_start",
+          message:
+            args.message ||
+            "Yay! I love quizzes! Let me test how well you know me... 🎉",
+        });
+
+      case "question":
+        if (
+          !args.question ||
+          !args.options ||
+          args.correctIndex === undefined
+        ) {
+          return JSON.stringify({
+            type: "error",
+            message: "Missing question data",
+          });
+        }
+        return JSON.stringify({
+          type: "quiz_question",
+          question: args.question,
+          options: args.options,
+          correctIndex: args.correctIndex,
+          message: args.message || args.question,
+        });
+
+      case "check_answer":
+        return JSON.stringify({
+          type: "quiz_answer_result",
+          isCorrect: args.isCorrect ?? false,
+          explanation: args.explanation,
+          message:
+            args.message ||
+            (args.isCorrect
+              ? "That's correct! 🎉"
+              : `Not quite! ${args.explanation || ""}`),
+        });
+
+      case "end":
+        return JSON.stringify({
+          type: "quiz_end",
+          message:
+            args.message ||
+            "That was so much fun! Thanks for playing with me! 💕",
+        });
+
+      default:
+        return JSON.stringify({
+          type: "error",
+          message: "Unknown quiz action",
+        });
+    }
+  },
+});
 
 /**
  * Create a dynamic AI agent for a specific profile.
@@ -66,10 +303,14 @@ export function buildPersonalityPrompt(profile: Doc<"aiProfiles">): string {
 export function createAIProfileAgent(profile: Doc<"aiProfiles">) {
   return new Agent(components.agent, {
     name: profile.name,
-    languageModel: "openai/gpt-5.1-instant",
+    languageModel: "google/gemini-3-pro-preview",
     textEmbeddingModel: "openai/text-embedding-3-small",
     instructions: buildPersonalityPrompt(profile),
-    maxSteps: 3,
+    tools: {
+      generateImage: generateImageTool,
+      generateQuiz: generateQuizTool,
+    },
+    maxSteps: 5,
     contextOptions: {
       recentMessages: 20,
       searchOptions: {
@@ -123,4 +364,3 @@ export function calculateCompatibilityScore(
   // Cap at 99% (100% is reserved/never reached)
   return Math.min(score, 99);
 }
-

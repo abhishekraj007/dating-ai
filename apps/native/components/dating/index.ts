@@ -10,4 +10,10 @@ export { LevelBadge } from "./level-badge";
 export { PhotoUploadSlot } from "./photo-upload-slot";
 export { GenderTabs } from "./gender-tabs";
 export { InterestChip } from "./interest-chip";
-
+export { ImageRequestSheet } from "./image-request-sheet";
+export type { ImageRequestOptions } from "./image-request-sheet";
+export { QuizDivider } from "./quiz-divider";
+export { QuizQuestionCard } from "./quiz-question-card";
+export type { QuizQuestion } from "./quiz-question-card";
+export { QuizFeedbackToast } from "./quiz-feedback-toast";
+export { MessageActionsSheet } from "./message-actions-sheet";

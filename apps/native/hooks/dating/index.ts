@@ -8,11 +8,12 @@ export {
   useConversationByProfile,
   useStartConversation,
 } from "./useConversations";
-export { useMessages, useSendMessage } from "./useMessages";
+export { useMessages, useSendMessage, useDeleteMessage } from "./useMessages";
 export {
   useUserCreatedProfiles,
   useCreateAIProfile,
   useUpdateAIProfile,
   useArchiveAIProfile,
 } from "./useUserCreatedProfiles";
-
+export { useRequestChatImage } from "./useImageRequest";
+export type { ImageRequestOptions } from "./useImageRequest";

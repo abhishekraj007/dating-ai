@@ -168,4 +168,36 @@ export default defineSchema({
     .index("by_conversation", ["conversationId"])
     .index("by_user", ["userId"])
     .index("by_status", ["status"]),
+
+  // Quiz sessions for interactive quizzes in chat
+  quizSessions: defineTable({
+    conversationId: v.id("aiConversations"),
+    userId: v.string(),
+    aiProfileId: v.id("aiProfiles"),
+    status: v.union(
+      v.literal("active"),
+      v.literal("completed"),
+      v.literal("cancelled")
+    ),
+    // Quiz questions and answers
+    questions: v.array(
+      v.object({
+        id: v.string(),
+        question: v.string(),
+        options: v.array(v.string()), // ["A) Paris", "B) Rome", ...]
+        correctIndex: v.number(), // 0-3
+        userAnswer: v.optional(v.number()), // User's selected index
+        isCorrect: v.optional(v.boolean()),
+      })
+    ),
+    currentQuestionIndex: v.number(),
+    score: v.number(), // Correct answers count
+    totalQuestions: v.number(),
+    compatibilityBonus: v.number(), // Bonus earned from this quiz (max 10%)
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_conversation", ["conversationId"])
+    .index("by_user", ["userId"])
+    .index("by_conversation_status", ["conversationId", "status"]),
 });

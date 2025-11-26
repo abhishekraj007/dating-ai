@@ -21,12 +21,15 @@ export {
   getConversationByProfile,
   getMessages,
   getSystemProfiles,
+  getActiveQuiz,
+  getQuiz,
 } from "./queries";
 
 // Public mutations
 export {
   startConversation,
   sendMessage,
+  deleteMessage,
   createAIProfile,
   updateAIProfile,
   archiveAIProfile,
@@ -34,4 +37,7 @@ export {
   adminUpdateProfile,
   adminGenerateUploadUrl,
   adminDeleteProfileImage,
+  startQuiz,
+  answerQuizQuestion,
+  endQuiz,
 } from "./mutations";

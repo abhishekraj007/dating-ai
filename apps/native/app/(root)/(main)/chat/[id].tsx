@@ -9,7 +9,7 @@ import {
 import { FlashList } from "@shopify/flash-list";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, Avatar, Skeleton } from "heroui-native";
+import { Button, Avatar, Skeleton, Spinner } from "heroui-native";
 import {
   ChevronLeft,
   Phone,
@@ -20,14 +20,24 @@ import {
   Mic,
   Paperclip,
   Camera,
+  HelpCircle,
 } from "lucide-react-native";
 import { useState, useRef, useEffect } from "react";
-import { useConversation, useMessages, useSendMessage } from "@/hooks/dating";
+import {
+  useConversation,
+  useMessages,
+  useSendMessage,
+  useDeleteMessage,
+  useRequestChatImage,
+} from "@/hooks/dating";
 import {
   MessageBubble,
   LevelBadge,
   CompatibilityIndicator,
+  ImageRequestSheet,
+  MessageActionsSheet,
 } from "@/components/dating";
+import type { ImageRequestOptions } from "@/hooks/dating";
 import { useThemeColor } from "heroui-native";
 
 export default function ChatScreen() {
@@ -38,10 +48,25 @@ export default function ChatScreen() {
   const [message, setMessage] = useState("");
   const listRef = useRef<any>(null);
 
+  // Conversation and messages
   const { conversation, isLoading: isLoadingConversation } =
     useConversation(id);
   const { messages, isLoading: isLoadingMessages } = useMessages(id);
   const { sendMessage } = useSendMessage();
+
+  // Image request
+  const [isImageSheetOpen, setIsImageSheetOpen] = useState(false);
+  const [isRequestingImage, setIsRequestingImage] = useState(false);
+  const { requestImage } = useRequestChatImage();
+  const { deleteMessage } = useDeleteMessage();
+
+  // Message actions sheet
+  const [isMessageActionsOpen, setIsMessageActionsOpen] = useState(false);
+  const [selectedMessageOrder, setSelectedMessageOrder] = useState<
+    number | null
+  >(null);
+
+  console.log("Messages:", JSON.stringify(messages, null, 2));
 
   const [isSending, setIsSending] = useState(false);
 
@@ -58,6 +83,37 @@ export default function ChatScreen() {
     });
 
     setIsSending(false);
+  };
+
+  // Handle image request
+  const handleImageRequest = async (options: ImageRequestOptions) => {
+    if (!id) return;
+    setIsRequestingImage(true);
+    try {
+      await requestImage(id, options);
+      setIsImageSheetOpen(false);
+    } catch (error) {
+      console.error("Failed to request image:", error);
+    } finally {
+      setIsRequestingImage(false);
+    }
+  };
+
+  // Handle starting quiz - send a message to trigger the agent's quiz flow
+  const handleStartQuiz = async () => {
+    if (!id || isSending) return;
+    setIsSending(true);
+    try {
+      // Send a message to trigger the agent's quiz mode
+      await sendMessage({
+        conversationId: id as any,
+        content: "Let's play a quiz! Ask me questions about yourself.",
+      });
+    } catch (error) {
+      console.error("Failed to start quiz:", error);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   // Scroll to end when new messages arrive
@@ -116,6 +172,53 @@ export default function ChatScreen() {
 
   const profile = conversation.profile;
 
+  const handleOpenMessageActions = (messageOrder: number) => {
+    setSelectedMessageOrder(messageOrder);
+    setIsMessageActionsOpen(true);
+  };
+
+  const handleDeleteMessage = async () => {
+    if (selectedMessageOrder === null) return;
+    try {
+      await deleteMessage(id as string, selectedMessageOrder);
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+    }
+    setSelectedMessageOrder(null);
+  };
+
+  // Handle quiz answer - send the answer as a chat message
+  const handleQuizAnswer = async (answer: string) => {
+    if (!id || isSending) return;
+    setIsSending(true);
+    try {
+      await sendMessage({
+        conversationId: id as any,
+        content: answer,
+      });
+    } catch (error) {
+      console.error("Failed to send quiz answer:", error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  // Handle ending the quiz
+  const handleEndQuiz = async () => {
+    if (!id || isSending) return;
+    setIsSending(true);
+    try {
+      await sendMessage({
+        conversationId: id as any,
+        content: "End the quiz",
+      });
+    } catch (error) {
+      console.error("Failed to end quiz:", error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   const renderMessage = ({ item }: { item: any }) => {
     const isUser = item.role === "user";
     return (
@@ -125,6 +228,11 @@ export default function ChatScreen() {
         timestamp={item._creationTime}
         avatarUrl={!isUser ? profile?.avatarUrl : undefined}
         profileName={profile?.name}
+        onQuizAnswer={handleQuizAnswer}
+        onEndQuiz={handleEndQuiz}
+        onLongPress={
+          isUser ? () => handleOpenMessageActions(item.order) : undefined
+        }
       />
     );
   };
@@ -229,11 +337,30 @@ export default function ChatScreen() {
               alignItems: "center",
             }}
           >
-            <Button variant="secondary" size="sm">
-              <Camera size={16} color={foregroundColor} />
+            <Button
+              variant="secondary"
+              size="sm"
+              onPress={() => setIsImageSheetOpen(true)}
+              isDisabled={isRequestingImage}
+            >
+              {isRequestingImage ? (
+                <Spinner size="sm" />
+              ) : (
+                <Camera size={16} color={foregroundColor} />
+              )}
               <Button.Label>Selfie</Button.Label>
             </Button>
-            <Button variant="secondary" size="sm">
+            <Button
+              variant="secondary"
+              size="sm"
+              onPress={handleStartQuiz}
+              isDisabled={isSending}
+            >
+              {isSending ? (
+                <Spinner size="sm" />
+              ) : (
+                <HelpCircle size={16} color={foregroundColor} />
+              )}
               <Button.Label>Quiz</Button.Label>
             </Button>
             <Button variant="secondary" size="sm">
@@ -278,6 +405,22 @@ export default function ChatScreen() {
           </Button>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Image Request Sheet */}
+      <ImageRequestSheet
+        isOpen={isImageSheetOpen}
+        onClose={() => setIsImageSheetOpen(false)}
+        onSubmit={handleImageRequest}
+        isLoading={isRequestingImage}
+        credits={5}
+      />
+
+      {/* Message Actions Sheet */}
+      <MessageActionsSheet
+        isOpen={isMessageActionsOpen}
+        onClose={() => setIsMessageActionsOpen(false)}
+        onDelete={handleDeleteMessage}
+      />
     </SafeAreaView>
   );
 }

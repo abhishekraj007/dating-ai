@@ -7,6 +7,7 @@ import { authComponent } from "../../lib/betterAuth";
 import {
   calculateRelationshipLevel,
   calculateCompatibilityScore,
+  createAIProfileAgent,
 } from "./agent";
 import { r2 } from "../../uploads";
 
@@ -561,5 +562,332 @@ export const updateChatImageRequest = internalMutation({
     }
 
     return null;
+  },
+});
+
+/**
+ * Start a new quiz session.
+ */
+export const startQuiz = mutation({
+  args: {
+    conversationId: v.id("aiConversations"),
+  },
+  handler: async (ctx, { conversationId }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    const conversation = await ctx.db.get(conversationId);
+    if (!conversation || conversation.userId !== user._id) {
+      throw new Error("Conversation not found");
+    }
+
+    // Check for existing active quiz
+    const existingQuiz = await ctx.db
+      .query("quizSessions")
+      .withIndex("by_conversation_status", (q) =>
+        q.eq("conversationId", conversationId).eq("status", "active")
+      )
+      .first();
+
+    if (existingQuiz) {
+      return existingQuiz._id;
+    }
+
+    // Create quiz session - questions are now generated conversationally by the agent
+    // The agent uses the generateQuiz tool to ask questions inline
+    const quizId = await ctx.db.insert("quizSessions", {
+      conversationId,
+      userId: user._id,
+      aiProfileId: conversation.aiProfileId,
+      status: "active",
+      questions: [], // Agent generates questions conversationally
+      currentQuestionIndex: 0,
+      score: 0,
+      totalQuestions: 5,
+      compatibilityBonus: 0,
+      startedAt: Date.now(),
+    });
+
+    return quizId;
+  },
+});
+
+/**
+ * Answer a quiz question.
+ */
+export const answerQuizQuestion = mutation({
+  args: {
+    quizId: v.id("quizSessions"),
+    questionId: v.string(),
+    answerIndex: v.number(),
+  },
+  handler: async (ctx, { quizId, questionId, answerIndex }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz || quiz.userId !== user._id) {
+      throw new Error("Quiz not found");
+    }
+
+    if (quiz.status !== "active") {
+      throw new Error("Quiz is not active");
+    }
+
+    // Find and update the question
+    const updatedQuestions = quiz.questions.map((q) => {
+      if (q.id === questionId && q.userAnswer === undefined) {
+        const isCorrect = q.correctIndex === answerIndex;
+        return {
+          ...q,
+          userAnswer: answerIndex,
+          isCorrect,
+        };
+      }
+      return q;
+    });
+
+    const answeredQuestion = updatedQuestions.find((q) => q.id === questionId);
+    const isCorrect = answeredQuestion?.isCorrect ?? false;
+
+    // Calculate new score
+    const newScore = isCorrect ? quiz.score + 1 : quiz.score;
+
+    // Update compatibility bonus (+2% per correct, max 10%)
+    const newCompatibilityBonus = Math.min(
+      quiz.compatibilityBonus + (isCorrect ? 2 : 0),
+      10
+    );
+
+    // Check if all questions answered
+    const allAnswered = updatedQuestions.every(
+      (q) => q.userAnswer !== undefined
+    );
+    const isCompleted =
+      allAnswered || quiz.currentQuestionIndex >= quiz.totalQuestions - 1;
+
+    await ctx.db.patch(quizId, {
+      questions: updatedQuestions,
+      score: newScore,
+      compatibilityBonus: newCompatibilityBonus,
+      currentQuestionIndex: quiz.currentQuestionIndex + 1,
+      ...(isCompleted
+        ? {
+            status: "completed" as const,
+            completedAt: Date.now(),
+          }
+        : {}),
+    });
+
+    // If quiz completed, update conversation compatibility
+    if (isCompleted && newCompatibilityBonus > 0) {
+      const conversation = await ctx.db.get(quiz.conversationId);
+      if (conversation) {
+        const newCompatibility = Math.min(
+          (conversation.compatibilityScore ?? 60) + newCompatibilityBonus,
+          99
+        );
+        await ctx.db.patch(quiz.conversationId, {
+          compatibilityScore: newCompatibility,
+        });
+      }
+    }
+
+    return {
+      isCorrect,
+      correctIndex: answeredQuestion?.correctIndex,
+      isCompleted,
+      score: newScore,
+      totalQuestions: quiz.totalQuestions,
+    };
+  },
+});
+
+/**
+ * End a quiz session early.
+ */
+export const endQuiz = mutation({
+  args: {
+    quizId: v.id("quizSessions"),
+  },
+  handler: async (ctx, { quizId }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    const quiz = await ctx.db.get(quizId);
+    if (!quiz || quiz.userId !== user._id) {
+      throw new Error("Quiz not found");
+    }
+
+    if (quiz.status !== "active") {
+      return { success: true };
+    }
+
+    // Apply any compatibility bonus earned
+    if (quiz.compatibilityBonus > 0) {
+      const conversation = await ctx.db.get(quiz.conversationId);
+      if (conversation) {
+        const newCompatibility = Math.min(
+          (conversation.compatibilityScore ?? 60) + quiz.compatibilityBonus,
+          99
+        );
+        await ctx.db.patch(quiz.conversationId, {
+          compatibilityScore: newCompatibility,
+        });
+      }
+    }
+
+    await ctx.db.patch(quizId, {
+      status: "cancelled",
+      completedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Internal mutation to save generated quiz questions.
+ */
+export const saveQuizQuestions = internalMutation({
+  args: {
+    conversationId: v.id("aiConversations"),
+    questions: v.array(
+      v.object({
+        id: v.string(),
+        question: v.string(),
+        options: v.array(v.string()),
+        correctIndex: v.number(),
+      })
+    ),
+  },
+  handler: async (ctx, { conversationId, questions }) => {
+    const quiz = await ctx.db
+      .query("quizSessions")
+      .withIndex("by_conversation_status", (q) =>
+        q.eq("conversationId", conversationId).eq("status", "active")
+      )
+      .first();
+
+    if (!quiz) {
+      throw new Error("Active quiz session not found");
+    }
+
+    await ctx.db.patch(quiz._id, {
+      questions,
+      totalQuestions: questions.length,
+    });
+
+    return quiz._id;
+  },
+});
+
+/**
+ * Internal mutation to update quiz questions after generation.
+ */
+export const updateQuizQuestions = internalMutation({
+  args: {
+    quizSessionId: v.id("quizSessions"),
+    questions: v.array(
+      v.object({
+        id: v.string(),
+        question: v.string(),
+        options: v.array(v.string()),
+        correctIndex: v.number(),
+        explanation: v.optional(v.string()),
+      })
+    ),
+  },
+  handler: async (ctx, { quizSessionId, questions }) => {
+    const quiz = await ctx.db.get(quizSessionId);
+    if (!quiz) {
+      throw new Error("Quiz session not found");
+    }
+
+    await ctx.db.patch(quizSessionId, {
+      questions,
+      totalQuestions: questions.length,
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Internal mutation to end a quiz (for use by actions).
+ */
+export const endQuizInternal = internalMutation({
+  args: {
+    quizSessionId: v.id("quizSessions"),
+    cancelled: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { quizSessionId, cancelled }) => {
+    const quiz = await ctx.db.get(quizSessionId);
+    if (!quiz) {
+      return { success: false };
+    }
+
+    await ctx.db.patch(quizSessionId, {
+      status: cancelled ? "cancelled" : "completed",
+      completedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Delete a user message and its AI response.
+ * The user can only delete their own messages.
+ * This deletes the user message and the following AI response(s).
+ */
+export const deleteMessage = mutation({
+  args: {
+    conversationId: v.id("aiConversations"),
+    messageOrder: v.number(),
+  },
+  handler: async (ctx, { conversationId, messageOrder }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    const conversation = await ctx.db.get(conversationId);
+    if (!conversation || conversation.userId !== user._id) {
+      throw new Error("Conversation not found");
+    }
+
+    // Get the AI profile to create the agent
+    const profile = await ctx.db.get(conversation.aiProfileId);
+    if (!profile) {
+      throw new Error("Profile not found");
+    }
+
+    // Create the agent for this profile to use deleteMessageRange
+    const agent = createAIProfileAgent(profile);
+
+    // Delete the user message and the following AI response
+    // We delete from messageOrder to messageOrder + 2 to include both
+    // the user message (order N) and the AI response (order N+1)
+    await agent.deleteMessageRange(ctx, {
+      threadId: conversation.threadId,
+      startOrder: messageOrder,
+      endOrder: messageOrder + 2, // Exclusive end, so this deletes order N and N+1
+    });
+
+    // Update conversation message count
+    const newMessageCount = Math.max(0, conversation.messageCount - 2);
+    await ctx.db.patch(conversationId, {
+      messageCount: newMessageCount,
+      relationshipLevel: calculateRelationshipLevel(newMessageCount),
+    });
+
+    return { success: true };
   },
 });

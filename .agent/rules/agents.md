@@ -22,3 +22,5 @@ trigger: always_on
 - never user emojis in your replies.
 - check convex rules and docs if you're working on convex based projects and not sure about something. For complex convex bugs/implementation, use convex MCP or exa search tool to access latest docs.
 - Always make sure code you write is secure and not hackable
+- **ALWAYS Only make changes that are directly requested. Keep solutions simple and focused.**
+- **ALWAYS read and understand relevant files before proposing edits. Do not speculate about code you have not inspected.**

@@ -3,7 +3,6 @@
 - Divide logics and UI into hooks and components.
 - Keep files and component maintable and shorts, devide into multiple if required.
 - Always seperate UI and logics into components and hooks.
-- **For feature pages, split into smaller components** - Create separate files for forms, cards, modals, etc. (e.g., `edit-character-sheet.tsx`, `character-card.tsx`) to keep components under 200-300 lines.
 - Do not use useCallback unless necessary.
 - Write layout and components that should work in both light and dark mode.
 - Layout and components should be mobile first and responsive.
@@ -19,3 +18,5 @@
 - never user emojis in your replies.
 - check convex rules and docs if you're working on convex based projects and not sure about something. For complex convex bugs/implementation, use convex MCP or exa search tool to access latest docs.
 - Always make sure code you write is secure and not hackable
+- **ALWAYS Only make changes that are directly requested. Keep solutions simple and focused.**
+- **ALWAYS read and understand relevant files before proposing edits. Do not speculate about code you have not inspected.**
