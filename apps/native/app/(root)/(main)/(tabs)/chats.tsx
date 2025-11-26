@@ -149,7 +149,7 @@ export default function ChatsScreen() {
             <FlatList
               data={conversations}
               renderItem={renderConversation}
-              keyExtractor={(item) => item._id}
+              keyExtractor={(item) => item?._id ?? ""}
               showsVerticalScrollIndicator={false}
             />
           )
