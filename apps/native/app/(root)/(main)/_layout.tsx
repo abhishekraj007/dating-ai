@@ -7,7 +7,7 @@ export default function MainLayout() {
   const { isDark } = useAppTheme();
 
   return (
-    <Stack>
+    <Stack initialRouteName="(tabs)">
       {/* Tab navigator as the main screen */}
       <Stack.Screen
         name="(tabs)"

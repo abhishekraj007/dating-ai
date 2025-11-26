@@ -54,6 +54,9 @@ export default function ChatScreen() {
   const { messages, isLoading: isLoadingMessages } = useMessages(id);
   const { sendMessage } = useSendMessage();
 
+  // Derive profile - may be undefined while loading
+  const profile = conversation?.profile;
+
   // Image request
   const [isImageSheetOpen, setIsImageSheetOpen] = useState(false);
   const [isRequestingImage, setIsRequestingImage] = useState(false);
@@ -65,8 +68,6 @@ export default function ChatScreen() {
   const [selectedMessageOrder, setSelectedMessageOrder] = useState<
     number | null
   >(null);
-
-  console.log("Messages:", JSON.stringify(messages, null, 2));
 
   const [isSending, setIsSending] = useState(false);
 
@@ -124,53 +125,6 @@ export default function ChatScreen() {
       }, 100);
     }
   }, [messages.length]);
-
-  if (isLoadingConversation) {
-    return (
-      <View className="flex-1 bg-background">
-        <SafeAreaView className="flex-1" edges={["top"]}>
-          <View className="flex-row items-center px-2 py-2 border-b border-border">
-            <Button
-              variant="tertiary"
-              size="sm"
-              isIconOnly
-              onPress={() => router.back()}
-            >
-              <ChevronLeft size={24} color={foregroundColor} />
-            </Button>
-            <Skeleton className="w-10 h-10 rounded-full ml-2" />
-            <View className="ml-2">
-              <Skeleton className="h-4 w-24 rounded" />
-              <Skeleton className="h-3 w-12 rounded mt-1" />
-            </View>
-          </View>
-          <View className="flex-1 items-center justify-center">
-            <Skeleton className="w-32 h-32 rounded-full" />
-          </View>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
-  if (!conversation) {
-    return (
-      <View className="flex-1 bg-background">
-        <SafeAreaView
-          className="flex-1 items-center justify-center"
-          edges={["top"]}
-        >
-          <Text className="text-foreground text-xl font-semibold">
-            Conversation not found
-          </Text>
-          <Button className="mt-4" onPress={() => router.back()}>
-            <Button.Label>Go Back</Button.Label>
-          </Button>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
-  const profile = conversation.profile;
 
   const handleOpenMessageActions = (messageOrder: number) => {
     setSelectedMessageOrder(messageOrder);
@@ -255,20 +209,31 @@ export default function ChatScreen() {
             >
               <ChevronLeft size={24} color={foregroundColor} />
             </Button>
-            <Avatar size="sm" alt={profile?.name ?? "AI"}>
-              {profile?.avatarUrl ? (
-                <Avatar.Image source={{ uri: profile.avatarUrl }} />
-              ) : (
-                <Avatar.Fallback>{profile?.name?.[0] ?? "AI"}</Avatar.Fallback>
-              )}
-            </Avatar>
-            <View>
-              <View className="flex-row items-center gap-2">
-                <Text className="text-foreground font-semibold">
-                  {profile?.name ?? "AI"}
-                </Text>
-              </View>
-            </View>
+            {isLoadingConversation ? (
+              <>
+                <Skeleton className="w-10 h-10 rounded-full" />
+                <View>
+                  <Skeleton className="h-4 w-24 rounded" />
+                </View>
+              </>
+            ) : (
+              <>
+                <Avatar size="sm" alt={profile?.name ?? "AI"}>
+                  {profile?.avatarUrl ? (
+                    <Avatar.Image source={{ uri: profile.avatarUrl }} />
+                  ) : (
+                    <Avatar.Fallback>
+                      {profile?.name?.[0] ?? "AI"}
+                    </Avatar.Fallback>
+                  )}
+                </Avatar>
+                <View>
+                  <Text className="text-foreground font-semibold">
+                    {profile?.name ?? "AI"}
+                  </Text>
+                </View>
+              </>
+            )}
           </View>
           <View className="flex-row gap-1">
             <Button variant="tertiary" size="sm" isIconOnly>
@@ -285,15 +250,42 @@ export default function ChatScreen() {
 
         {/* Messages */}
         <View style={{ flex: 1, position: "relative" }}>
-          {isLoadingMessages ? (
-            <View
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text className="text-muted-foreground">Loading messages...</Text>
+          {isLoadingConversation || isLoadingMessages ? (
+            // Skeleton messages while loading
+            <View className="flex-1 p-4 gap-4">
+              {/* AI message skeleton */}
+              <View className="flex-row gap-2">
+                <Skeleton className="w-8 h-8 rounded-full" />
+                <View className="gap-2">
+                  <Skeleton className="h-16 w-52 rounded-2xl rounded-tl-sm" />
+                  <Skeleton className="h-3 w-12" />
+                </View>
+              </View>
+              {/* User message skeleton */}
+              <View className="flex-row justify-end">
+                <View className="gap-2 items-end">
+                  <Skeleton className="h-10 w-40 rounded-2xl rounded-br-sm" />
+                  <Skeleton className="h-3 w-10" />
+                </View>
+              </View>
+              {/* AI message skeleton */}
+              <View className="flex-row gap-2">
+                <Skeleton className="w-8 h-8 rounded-full" />
+                <View className="gap-2">
+                  <Skeleton className="h-24 w-64 rounded-2xl rounded-tl-sm" />
+                  <Skeleton className="h-3 w-12" />
+                </View>
+              </View>
+            </View>
+          ) : !conversation ? (
+            // Conversation not found
+            <View className="flex-1 items-center justify-center px-6">
+              <Text className="text-foreground text-lg font-semibold mb-2">
+                Conversation not found
+              </Text>
+              <Button className="mt-4" onPress={() => router.back()}>
+                <Button.Label>Go Back</Button.Label>
+              </Button>
             </View>
           ) : messages.length === 0 ? (
             <View

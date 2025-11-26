@@ -3,6 +3,8 @@ import { api } from "@dating-ai/backend";
 import { useMemo } from "react";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 
+const PAGE_SIZE = 50; // Load more messages for better UX
+
 interface ProcessedMessage {
   _id: string;
   _creationTime: number;
@@ -98,39 +100,43 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
   ];
 }
 
+/**
+ * Simple hook for fetching messages without pagination.
+ * Uses Convex's reactive queries for real-time updates.
+ */
 export function useMessages(conversationId: string | undefined) {
+  // Stable reference for stream args
   const streamArgs = useMemo(() => ({ kind: "list" as const }), []);
 
+  // Single query - Convex handles reactivity
   const messagesResult = useQuery(
     api.features.ai.queries.getMessages,
     conversationId
       ? {
           conversationId: conversationId as any,
-          paginationOpts: { numItems: 50, cursor: null },
+          paginationOpts: { numItems: PAGE_SIZE, cursor: null },
           streamArgs,
         }
       : "skip"
   );
 
-  // Process messages from agent format
+  // Process messages - only recalculate when data changes
   const messages = useMemo(() => {
-    if (!messagesResult) return [];
+    if (!messagesResult?.page) return [];
 
-    const { page } = messagesResult;
-
-    // Flatten: each raw message can produce multiple UI messages
     const allMessages: ProcessedMessage[] = [];
-    page.forEach((msg: any, index: number) => {
+    messagesResult.page.forEach((msg: any, index: number) => {
       const processed = processMessage(msg, index);
       allMessages.push(...processed);
     });
 
     return allMessages;
-  }, [messagesResult]);
+  }, [messagesResult?.page]);
 
   return {
     messages,
     isLoading: messagesResult === undefined,
+    hasMore: messagesResult ? !messagesResult.isDone : false,
   };
 }
 
