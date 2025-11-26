@@ -1,9 +1,10 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
-import { Avatar } from "heroui-native";
+import { Image } from "expo-image";
+import { Avatar, Spinner } from "heroui-native";
 import { format } from "date-fns";
 import { useThemeColor } from "heroui-native";
 import Markdown from "react-native-markdown-display";
-import { LogOut } from "lucide-react-native";
+import { LogOut, Camera } from "lucide-react-native";
 
 interface QuizQuestionData {
   type: "quiz_question";
@@ -22,8 +23,10 @@ interface QuizAnswerResultData {
 
 interface ImageRequestData {
   type: "image_request";
-  description: string;
-  message: string;
+  description?: string;
+  message?: string;
+  prompt?: string;
+  requestId?: string;
   styleOptions?: {
     hairstyle?: string;
     clothing?: string;
@@ -31,10 +34,18 @@ interface ImageRequestData {
   };
 }
 
+interface ImageResponseData {
+  type: "image_response";
+  imageUrl: string;
+  imageKey: string;
+  prompt?: string;
+}
+
 type StructuredContent =
   | QuizQuestionData
   | QuizAnswerResultData
   | ImageRequestData
+  | ImageResponseData
   | { type: string; message?: string };
 
 interface MessageBubbleProps {
@@ -126,11 +137,32 @@ export const MessageBubble = ({
     },
   });
 
-  // Try to parse structured content
-  const structuredContent = !isUser ? parseStructuredContent(content) : null;
+  // Try to parse structured content (both user and AI messages can have structured content)
+  const structuredContent = parseStructuredContent(content);
 
+  // Handle user message with image request
   if (isUser) {
-    // User message - right aligned, pink background
+    // Check if this is a structured image request from user
+    if (structuredContent?.type === "image_request") {
+      const imageReq = structuredContent as ImageRequestData;
+      return (
+        <Pressable onLongPress={onLongPress} delayLongPress={500}>
+          <View className="flex-row justify-end mb-3 px-4">
+            <View className="max-w-[80%]">
+              <View className="bg-pink-500 rounded-2xl rounded-br-sm px-4 py-3 flex-row items-center">
+                <Camera size={18} color="white" />
+                <Text className="text-white ml-2">
+                  {imageReq.message || "Send me a selfie 📸"}
+                </Text>
+              </View>
+              <Text className="text-muted text-xs text-right mt-1">{time}</Text>
+            </View>
+          </View>
+        </Pressable>
+      );
+    }
+
+    // Regular user message - right aligned, pink background
     return (
       <Pressable onLongPress={onLongPress} delayLongPress={500}>
         <View className="flex-row justify-end mb-3 px-4">
@@ -145,7 +177,7 @@ export const MessageBubble = ({
     );
   }
 
-  // Handle structured content types
+  // Handle structured content types (AI messages)
   if (structuredContent) {
     switch (structuredContent.type) {
       case "quiz_question": {
@@ -316,7 +348,36 @@ export const MessageBubble = ({
             </Avatar>
             <View className="max-w-[75%]">
               <View className="bg-surface rounded-2xl rounded-tl-sm px-4 py-3">
-                <Markdown style={markdownStyles}>{imageData.message}</Markdown>
+                <Markdown style={markdownStyles}>
+                  {imageData.message || "Let me send you a photo... 📸"}
+                </Markdown>
+              </View>
+              <Text className="text-muted text-xs mt-1">{time}</Text>
+            </View>
+          </View>
+        );
+      }
+
+      case "image_response": {
+        const imageResponse = structuredContent as ImageResponseData;
+        return (
+          <View className="flex-row mb-3 px-4">
+            <Avatar alt="" size="sm" className="mr-2">
+              {avatarUrl ? (
+                <Avatar.Image source={{ uri: avatarUrl }} />
+              ) : (
+                <Avatar.Fallback>{profileName?.[0] ?? "AI"}</Avatar.Fallback>
+              )}
+            </Avatar>
+            <View className="max-w-[75%]">
+              <View className="bg-surface rounded-2xl rounded-tl-sm overflow-hidden">
+                <Image
+                  source={{ uri: imageResponse.imageUrl }}
+                  style={{ width: 250, height: 350 }}
+                  contentFit="cover"
+                  transition={200}
+                  cachePolicy="memory-disk"
+                />
               </View>
               <Text className="text-muted text-xs mt-1">{time}</Text>
             </View>

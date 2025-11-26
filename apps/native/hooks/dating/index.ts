@@ -9,6 +9,7 @@ export {
   useStartConversation,
 } from "./useConversations";
 export { useMessages, useSendMessage, useDeleteMessage } from "./useMessages";
+export { useChatScroll } from "./useChatScroll";
 export {
   useUserCreatedProfiles,
   useCreateAIProfile,

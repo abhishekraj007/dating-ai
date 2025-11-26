@@ -22,13 +22,14 @@ import {
   Camera,
   HelpCircle,
 } from "lucide-react-native";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import {
   useConversation,
   useMessages,
   useSendMessage,
   useDeleteMessage,
   useRequestChatImage,
+  useChatScroll,
 } from "@/hooks/dating";
 import {
   MessageBubble,
@@ -47,8 +48,6 @@ export default function ChatScreen() {
   const mutedColor = useThemeColor("muted");
   const [message, setMessage] = useState("");
   const listRef = useRef<any>(null);
-  const prevMessagesLengthRef = useRef(0);
-  const isInitialLoadRef = useRef(true);
 
   // Conversation and messages
   const { conversation, isLoading: isLoadingConversation } =
@@ -63,6 +62,16 @@ export default function ChatScreen() {
     loadMore,
   } = useMessages(threadId);
   const { sendMessage } = useSendMessage();
+
+  console.log("Messages:", JSON.stringify(messages, null, 2));
+
+  // Chat scroll behavior - WhatsApp-like
+  const { shouldLoadMore } = useChatScroll({
+    listRef,
+    messagesLength: messages.length,
+    conversationId: id,
+    isLoading: isLoadingMessages,
+  });
 
   // Derive profile - may be undefined while loading
   const profile = conversation?.profile;
@@ -126,47 +135,6 @@ export default function ChatScreen() {
       setIsSending(false);
     }
   };
-
-  // Track if we've done the initial scroll for this conversation
-  const hasInitialScrolledRef = useRef(false);
-  const lastMessageCountRef = useRef(0);
-
-  // Reset refs when conversation changes
-  useEffect(() => {
-    hasInitialScrolledRef.current = false;
-    lastMessageCountRef.current = 0;
-    prevMessagesLengthRef.current = 0;
-    isInitialLoadRef.current = true;
-  }, [id]);
-
-  // Scroll to end only on initial load or when sending new messages
-  // Not when loading older messages (which adds to the beginning)
-  useEffect(() => {
-    if (messages.length > 0 && !isLoadingMessages) {
-      const prevLength = lastMessageCountRef.current;
-      const currentLength = messages.length;
-
-      // Initial scroll - only once per conversation
-      if (!hasInitialScrolledRef.current) {
-        hasInitialScrolledRef.current = true;
-        // Use requestAnimationFrame for smoother scroll
-        requestAnimationFrame(() => {
-          listRef.current?.scrollToEnd({ animated: false });
-        });
-      }
-      // New message added at the end (sending a message, not loading older ones)
-      else if (currentLength > prevLength && currentLength - prevLength <= 2) {
-        const lastMessage = messages[messages.length - 1];
-        if (lastMessage?.role === "user") {
-          requestAnimationFrame(() => {
-            listRef.current?.scrollToEnd({ animated: true });
-          });
-        }
-      }
-
-      lastMessageCountRef.current = currentLength;
-    }
-  }, [messages, isLoadingMessages]);
 
   const handleOpenMessageActions = (messageOrder: number) => {
     setSelectedMessageOrder(messageOrder);
@@ -355,8 +323,18 @@ export default function ChatScreen() {
                 paddingVertical: 16,
               }}
               showsVerticalScrollIndicator={false}
-              onStartReached={hasMore ? loadMore : undefined}
-              onStartReachedThreshold={0.5}
+              onStartReached={() => {
+                // Don't load more during initial scroll or if already loading
+                if (!shouldLoadMore() || !hasMore || isLoadingMore) {
+                  return;
+                }
+                loadMore();
+              }}
+              onStartReachedThreshold={0.3}
+              maintainVisibleContentPosition={{
+                minIndexForVisible: 1,
+              }}
+              estimatedItemSize={80}
               ListHeaderComponent={
                 isLoadingMore ? (
                   <View className="py-4 items-center">

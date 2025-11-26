@@ -2,7 +2,7 @@
 
 import { v } from "convex/values";
 import { internalAction } from "../../_generated/server";
-import { internal } from "../../_generated/api";
+import { internal, components } from "../../_generated/api";
 import { createAIProfileAgent } from "./agent";
 import { r2 } from "../../uploads";
 import Replicate from "replicate";
@@ -15,6 +15,7 @@ const replicate = new Replicate({
 /**
  * Generate AI response asynchronously with streaming.
  * Called after user sends a message.
+ * If the agent uses the generateImage tool, this will trigger actual image generation.
  */
 export const generateResponse = internalAction({
   args: {
@@ -48,12 +49,101 @@ export const generateResponse = internalAction({
     const agent = createAIProfileAgent(profile);
 
     // Generate streaming response
-    await agent.streamText(
+    const result = await agent.streamText(
       ctx,
       { threadId: conversation.threadId, userId: conversation.userId },
       { promptMessageId },
       { saveStreamDeltas: true }
     );
+
+    // Wait for the stream to complete by awaiting the text
+    const fullText = await result.text;
+    console.log("Stream completed, response text length:", fullText.length);
+
+    // Get the saved messages to check for tool calls
+    // When using saveStreamDeltas, tool calls are saved directly to the message in the database
+    const savedMessages = result.savedMessages;
+    console.log("Saved messages count:", savedMessages?.length ?? 0);
+
+    if (savedMessages && savedMessages.length > 0) {
+      // Log the saved messages structure
+      console.log("Saved messages:", JSON.stringify(savedMessages, null, 2));
+
+      for (const msgId of savedMessages) {
+        console.log("Checking message ID:", msgId);
+      }
+    }
+
+    // Alternative approach: Query the thread messages directly to find tool calls
+    // The tool calls are stored in the message parts with type "tool-generateImage"
+    const messagesResult = await ctx.runQuery(
+      components.agent.messages.listMessagesByThreadId,
+      {
+        threadId: conversation.threadId,
+        order: "desc",
+        paginationOpts: { numItems: 5, cursor: null },
+      }
+    );
+
+    console.log("Thread messages count:", messagesResult.page.length);
+
+    // Get the order of the current response to only process new tool calls
+    const currentOrder = result.order;
+    console.log("Current response order:", currentOrder);
+
+    for (const message of messagesResult.page) {
+      // Only process messages from the current response (same order)
+      // This prevents re-processing tool calls from previous messages
+      if (message.order !== currentOrder) {
+        continue;
+      }
+
+      // Check if this message has tool calls in its content
+      if (message.message?.content && Array.isArray(message.message.content)) {
+        for (const contentPart of message.message.content) {
+          if (
+            contentPart.type === "tool-call" &&
+            contentPart.toolName === "generateImage"
+          ) {
+            console.log("Found generateImage tool call:", contentPart);
+
+            const args = contentPart.args as {
+              description?: string;
+              hairstyle?: string;
+              clothing?: string;
+              scene?: string;
+            };
+
+            // Create the image request via mutation
+            try {
+              await ctx.runMutation(
+                internal.features.ai.mutations.createChatImageRequestInternal,
+                {
+                  conversationId,
+                  userId: conversation.userId,
+                  aiProfileId: conversation.aiProfileId,
+                  prompt: args.description || "A selfie",
+                  styleOptions: {
+                    hairstyle: args.hairstyle,
+                    clothing: args.clothing,
+                    scene: args.scene,
+                    description: args.description,
+                  },
+                }
+              );
+              console.log("Image request created successfully");
+              // Only create one image request per response
+              return null;
+            } catch (error) {
+              console.error(
+                "Failed to create image request from agent:",
+                error
+              );
+            }
+          }
+        }
+      }
+    }
 
     return null;
   },
@@ -223,17 +313,42 @@ export const generateChatImage = internalAction({
       }
 
       // Use Flux-dev for high-quality image generation
-      const output = await replicate.run(
-        "black-forest-labs/flux-dev" as `${string}/${string}`,
-        { input: fluxInput }
+      // Use replicate.run() which handles waiting for completion automatically
+      const output = await replicate.run("black-forest-labs/flux-dev", {
+        input: fluxInput,
+      });
+
+      console.log(
+        "Replicate output type:",
+        typeof output,
+        Array.isArray(output) ? "array" : "not array"
       );
 
-      console.log("Replicate output:", output);
+      // The output is an array of FileOutput objects (ReadableStream with url() method)
+      // We need to extract the URL from the FileOutput object
+      const fileOutput = Array.isArray(output) ? output[0] : output;
 
-      // Get the generated image URL
-      const imageUrl = Array.isArray(output) ? output[0] : output;
+      // FileOutput has a url() method that returns the URL
+      let imageUrl: string;
+      if (
+        fileOutput &&
+        typeof fileOutput === "object" &&
+        "url" in fileOutput &&
+        typeof fileOutput.url === "function"
+      ) {
+        // It's a FileOutput object with url() method
+        const urlResult = fileOutput.url();
+        imageUrl = urlResult.toString();
+      } else if (typeof fileOutput === "string") {
+        // It's already a string URL
+        imageUrl = fileOutput;
+      } else {
+        throw new Error(`Unexpected output format: ${typeof fileOutput}`);
+      }
 
-      if (!imageUrl || typeof imageUrl !== "string") {
+      console.log("Image URL:", imageUrl);
+
+      if (!imageUrl) {
         throw new Error("No image URL returned from Replicate");
       }
 

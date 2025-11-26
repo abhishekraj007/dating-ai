@@ -447,6 +447,86 @@ export const adminDeleteProfileImage = mutation({
 });
 
 /**
+ * Internal mutation to create a chat image request from agent tool call.
+ * This is called when the agent decides to send an image based on conversation.
+ * No authentication check needed as it's called from internal action.
+ */
+export const createChatImageRequestInternal = internalMutation({
+  args: {
+    conversationId: v.id("aiConversations"),
+    userId: v.string(), // Better Auth user ID (string, not v.id("users"))
+    aiProfileId: v.id("aiProfiles"),
+    prompt: v.string(),
+    styleOptions: v.optional(
+      v.object({
+        hairstyle: v.optional(v.string()),
+        clothing: v.optional(v.string()),
+        scene: v.optional(v.string()),
+        description: v.optional(v.string()),
+      })
+    ),
+  },
+  handler: async (
+    ctx,
+    { conversationId, userId, aiProfileId, prompt, styleOptions }
+  ) => {
+    // Get user profile to check/deduct credits
+    const profile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", userId))
+      .unique();
+
+    if (!profile) {
+      console.error("User profile not found for agent image request");
+      return null;
+    }
+
+    const currentCredits = profile.credits ?? 0;
+    const imageCost = 5;
+
+    if (currentCredits < imageCost) {
+      console.log("Insufficient credits for agent image request");
+      // Don't throw, just return - the agent already sent a message
+      return null;
+    }
+
+    // Deduct credits
+    await ctx.db.patch(profile._id, {
+      credits: currentCredits - imageCost,
+    });
+
+    // Create chat image request
+    const requestId = await ctx.db.insert("chatImages", {
+      conversationId,
+      userId,
+      aiProfileId,
+      prompt,
+      styleOptions: styleOptions
+        ? {
+            hairstyle: styleOptions.hairstyle,
+            clothing: styleOptions.clothing,
+            scene: styleOptions.scene,
+          }
+        : undefined,
+      status: "pending",
+      creditsCharged: imageCost,
+    });
+
+    // Schedule image generation
+    await ctx.scheduler.runAfter(
+      0,
+      internal.features.ai.actions.generateChatImage,
+      {
+        requestId,
+      }
+    );
+
+    console.log("Created agent-initiated image request:", requestId);
+    return requestId;
+  },
+});
+
+/**
  * Request a custom image from an AI profile (selfies, photos, etc.).
  */
 export const requestChatImage = mutation({
@@ -505,6 +585,34 @@ export const requestChatImage = mutation({
       creditsCharged: imageCost,
     });
 
+    // Add user message showing the image request
+    if (conversation.threadId) {
+      const styleDescription = styleOptions
+        ? [
+            styleOptions.hairstyle && `with ${styleOptions.hairstyle}`,
+            styleOptions.clothing && `wearing ${styleOptions.clothing}`,
+            styleOptions.scene && `in a ${styleOptions.scene} setting`,
+          ]
+            .filter(Boolean)
+            .join(", ")
+        : "";
+
+      const userMessage = `Can you send me a selfie${styleDescription ? ` ${styleDescription}` : ""}? 📸`;
+
+      // Save user message with prompt parameter (for user messages)
+      await saveMessage(ctx, components.agent, {
+        threadId: conversation.threadId,
+        userId: user._id,
+        prompt: JSON.stringify({
+          type: "image_request",
+          prompt,
+          styleOptions,
+          requestId,
+          message: userMessage,
+        }),
+      });
+    }
+
     // Schedule image generation
     await ctx.scheduler.runAfter(
       0,
@@ -547,7 +655,40 @@ export const updateChatImageRequest = internalMutation({
 
     await ctx.db.patch(requestId, patch);
 
-    // Refund credits on failure
+    // If completed successfully, add the image as a message in the conversation
+    if (updates.status === "completed" && updates.imageKey) {
+      const conversation = await ctx.db.get(request.conversationId);
+      if (conversation && conversation.threadId) {
+        // Get the image URL
+        const imageUrl = await r2.getUrl(updates.imageKey);
+
+        // Get the AI profile for the agent
+        const profile = await ctx.db.get(request.aiProfileId);
+
+        if (profile && imageUrl) {
+          // Create the agent for this profile
+          const agent = createAIProfileAgent(profile);
+
+          // Add a message with the generated image (use message parameter for assistant messages)
+          await saveMessage(ctx, components.agent, {
+            threadId: conversation.threadId,
+            userId: conversation.userId,
+            message: {
+              role: "assistant",
+              content: JSON.stringify({
+                type: "image_response",
+                imageUrl,
+                imageKey: updates.imageKey,
+                prompt: request.prompt,
+              }),
+            },
+            agentName: agent.name,
+          });
+        }
+      }
+    }
+
+    // Refund credits on failure and send apology message
     if (updates.status === "failed") {
       const userProfile = await ctx.db
         .query("profile")
@@ -558,6 +699,25 @@ export const updateChatImageRequest = internalMutation({
         await ctx.db.patch(userProfile._id, {
           credits: (userProfile.credits ?? 0) + request.creditsCharged,
         });
+      }
+
+      // Send an apology message from the AI
+      const conversation = await ctx.db.get(request.conversationId);
+      if (conversation && conversation.threadId) {
+        const profile = await ctx.db.get(request.aiProfileId);
+        if (profile) {
+          const agent = createAIProfileAgent(profile);
+          await saveMessage(ctx, components.agent, {
+            threadId: conversation.threadId,
+            userId: conversation.userId,
+            message: {
+              role: "assistant",
+              content:
+                "Oops, I couldn't take that photo right now 😅 My camera seems to be acting up! Can you ask me something else instead? 💕",
+            },
+            agentName: agent.name,
+          });
+        }
       }
     }
 

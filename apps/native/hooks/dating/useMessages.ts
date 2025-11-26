@@ -1,6 +1,6 @@
 import { useMutation } from "convex/react";
 import { api } from "@dating-ai/backend";
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useEffect } from "react";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { useUIMessages } from "@convex-dev/agent/react";
 
@@ -15,9 +15,23 @@ interface ProcessedMessage {
   isStreaming: boolean;
 }
 
+// Global cache for messages - persists across component remounts
+const messagesCache = new Map<string, ProcessedMessage[]>();
+
+// Get cached messages for a thread
+function getCachedMessages(threadId: string): ProcessedMessage[] | null {
+  return messagesCache.get(threadId) ?? null;
+}
+
+// Update cache for a thread
+function updateCache(threadId: string, messages: ProcessedMessage[]): void {
+  messagesCache.set(threadId, messages);
+}
+
 /**
  * Extract all structured tool outputs from message parts.
  * Returns an array since a single message can have multiple tool calls.
+ * Also extracts structured content from text parts (like image_response).
  */
 function extractToolOutputs(msg: any): string[] {
   const outputs: string[] = [];
@@ -38,12 +52,28 @@ function extractToolOutputs(msg: any): string[] {
             parsed.type === "quiz_start" ||
             parsed.type === "quiz_end" ||
             parsed.type === "quiz_answer_result" ||
-            parsed.type === "image_request"
+            parsed.type === "image_request" ||
+            parsed.type === "image_response"
           ) {
             outputs.push(part.output);
           }
         } catch {
           // Not valid JSON, skip
+        }
+      }
+
+      // Also check text parts for structured content (like image_response)
+      // These are added as separate messages by the image generation action
+      if (part.type === "text" && part.text && part.state === "done") {
+        try {
+          const parsed = JSON.parse(part.text);
+          // Only extract image_response from text parts
+          // (other structured types come from tool outputs)
+          if (parsed.type === "image_response") {
+            outputs.push(part.text);
+          }
+        } catch {
+          // Not valid JSON, skip (most text parts are plain text)
         }
       }
     }
@@ -104,6 +134,7 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
 /**
  * Hook for fetching messages with infinite scroll pagination.
  * Uses the @convex-dev/agent/react useUIMessages hook for proper pagination.
+ * Implements caching to prevent flickering on screen revisits.
  *
  * @param threadId - The thread ID from the conversation
  */
@@ -116,9 +147,17 @@ export function useMessages(threadId: string | undefined) {
     { initialNumItems: PAGE_SIZE }
   );
 
-  // Process all accumulated messages
-  const messages = useMemo(() => {
-    if (!results) return [];
+  console.log("useMessages results:", JSON.stringify(results, null, 2));
+
+  // Get cached messages for this thread (computed once per threadId change)
+  const cachedMessages = useMemo(() => {
+    if (!threadId) return [];
+    return getCachedMessages(threadId) ?? [];
+  }, [threadId]);
+
+  // Process all accumulated messages from the query
+  const processedMessages = useMemo(() => {
+    if (!results || results.length === 0) return [];
 
     const allMessages: ProcessedMessage[] = [];
     results.forEach((msg: any, index: number) => {
@@ -132,6 +171,59 @@ export function useMessages(threadId: string | undefined) {
     return allMessages;
   }, [results]);
 
+  // Merge fresh messages with cached messages
+  // This ensures we don't lose older messages when returning to the screen
+  const messages = useMemo(() => {
+    if (!threadId) return [];
+
+    // If still loading first page, show cached messages
+    if (status === "LoadingFirstPage") {
+      return cachedMessages;
+    }
+
+    // If no fresh messages yet, return cache
+    if (processedMessages.length === 0) {
+      return cachedMessages;
+    }
+
+    // If cache is empty or smaller, just use fresh messages
+    if (cachedMessages.length <= processedMessages.length) {
+      return processedMessages;
+    }
+
+    // IMPORTANT: Cache has MORE messages than current query results
+    // This happens when user loaded older messages, left, and came back
+    // We need to merge: use fresh data for recent messages, cache for older ones
+
+    // Find the oldest message in fresh data
+    const oldestFreshOrder = Math.min(...processedMessages.map((m) => m.order));
+
+    // Get older messages from cache that aren't in fresh data
+    const olderFromCache = cachedMessages.filter(
+      (m) => m.order < oldestFreshOrder
+    );
+
+    // Combine: older cached messages + fresh messages
+    const merged = [...olderFromCache, ...processedMessages];
+
+    // Sort by order
+    merged.sort((a, b) => a.order - b.order);
+
+    return merged;
+  }, [threadId, processedMessages, status, cachedMessages]);
+
+  // Update cache whenever we have messages to cache
+  // This happens after messages are computed to include merged results
+  useEffect(() => {
+    if (threadId && messages.length > 0) {
+      // Only update cache if current messages are more than cached
+      const currentCache = getCachedMessages(threadId);
+      if (!currentCache || messages.length >= currentCache.length) {
+        updateCache(threadId, messages);
+      }
+    }
+  }, [threadId, messages]);
+
   // Memoized loadMore function
   const handleLoadMore = useCallback(() => {
     if (status === "CanLoadMore") {
@@ -139,9 +231,15 @@ export function useMessages(threadId: string | undefined) {
     }
   }, [status, loadMore]);
 
+  // Only show loading skeleton if:
+  // 1. It's the first page load AND
+  // 2. We don't have any messages to show (neither fresh nor cached)
+  const isFirstTimeLoading =
+    status === "LoadingFirstPage" && messages.length === 0;
+
   return {
     messages,
-    isLoading: status === "LoadingFirstPage",
+    isLoading: isFirstTimeLoading,
     isLoadingMore: status === "LoadingMore",
     hasMore: status === "CanLoadMore",
     loadMore: handleLoadMore,
