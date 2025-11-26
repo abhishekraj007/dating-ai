@@ -92,7 +92,7 @@ export default function MyCreationScreen() {
             <Text className="text-foreground text-xl font-semibold mb-2">
               No Characters Yet
             </Text>
-            <Text className="text-muted-foreground text-center mb-4">
+            <Text className="text-muted text-center mb-4">
               Create your first {gender} AI character and start chatting!
             </Text>
             <Button onPress={handleCreatePress}>
@@ -106,7 +106,10 @@ export default function MyCreationScreen() {
             renderItem={renderProfile}
             keyExtractor={(item) => item._id}
             numColumns={2}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingBottom: 100,
+            }}
             showsVerticalScrollIndicator={false}
           />
         )}
@@ -127,4 +130,3 @@ export default function MyCreationScreen() {
     </View>
   );
 }
-

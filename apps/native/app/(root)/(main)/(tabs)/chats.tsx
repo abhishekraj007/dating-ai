@@ -27,13 +27,20 @@ export default function ChatsScreen() {
     );
 
     if (diffDays === 0) {
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     } else if (diffDays === 1) {
       return "Yesterday";
     } else if (diffDays < 7) {
       return formatDistanceToNow(date, { addSuffix: false });
     } else {
-      return date.toLocaleDateString([], { month: "2-digit", day: "2-digit", year: "2-digit" });
+      return date.toLocaleDateString([], {
+        month: "2-digit",
+        day: "2-digit",
+        year: "2-digit",
+      });
     }
   };
 
@@ -42,7 +49,7 @@ export default function ChatsScreen() {
       className="flex-row items-center px-4 py-3 border-b border-border"
       onPress={() => handleConversationPress(item._id)}
     >
-      <Avatar size="md">
+      <Avatar alt="" size="md">
         {item.profile?.avatarUrl ? (
           <Avatar.Image source={{ uri: item.profile.avatarUrl }} />
         ) : (
@@ -57,15 +64,12 @@ export default function ChatsScreen() {
           </Text>
           <LevelBadge level={item.relationshipLevel} size="sm" />
         </View>
-        <Text
-          className="text-muted-foreground text-sm mt-0.5"
-          numberOfLines={1}
-        >
+        <Text className="text-muted text-sm mt-0.5" numberOfLines={1}>
           {item.lastMessage?.content ?? "Start a conversation"}
         </Text>
       </View>
 
-      <Text className="text-muted-foreground text-xs">
+      <Text className="text-muted text-xs">
         {formatTime(item.lastMessageAt)}
       </Text>
     </Pressable>
@@ -137,7 +141,7 @@ export default function ChatsScreen() {
               <Text className="text-foreground text-xl font-semibold mb-2">
                 No Conversations Yet
               </Text>
-              <Text className="text-muted-foreground text-center">
+              <Text className="text-muted text-center">
                 Start chatting with AI profiles from the Explore tab!
               </Text>
             </View>
@@ -154,7 +158,7 @@ export default function ChatsScreen() {
             <Text className="text-foreground text-xl font-semibold mb-2">
               Calls Coming Soon
             </Text>
-            <Text className="text-muted-foreground text-center">
+            <Text className="text-muted text-center">
               Voice and video calls will be available in a future update.
             </Text>
           </View>
@@ -163,4 +167,3 @@ export default function ChatsScreen() {
     </View>
   );
 }
-

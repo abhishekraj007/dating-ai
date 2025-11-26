@@ -11,12 +11,12 @@ export default function ForYouScreen() {
           <Text className="text-foreground text-xl font-semibold mb-2">
             Coming Soon
           </Text>
-          <Text className="text-muted-foreground text-center">
-            Personalized AI recommendations based on your preferences will appear here.
+          <Text className="text-muted text-center">
+            Personalized AI recommendations based on your preferences will
+            appear here.
           </Text>
         </View>
       </SafeAreaView>
     </View>
   );
 }
-

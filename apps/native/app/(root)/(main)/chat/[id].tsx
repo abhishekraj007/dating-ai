@@ -299,7 +299,7 @@ export default function ChatScreen() {
               <Text className="text-foreground text-lg font-semibold mb-2">
                 Start a conversation
               </Text>
-              <Text className="text-muted-foreground text-center">
+              <Text className="text-muted text-center">
                 Say hello to {profile?.name ?? "your AI companion"}!
               </Text>
             </View>

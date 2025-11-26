@@ -76,7 +76,7 @@ export const MessageBubble = ({
 }: MessageBubbleProps) => {
   const time = format(new Date(timestamp), "HH:mm");
   const foreground = useThemeColor("foreground");
-  const mutedForeground = useThemeColor("muted-foreground");
+  const mutedForeground = useThemeColor("muted");
   const background = useThemeColor("background");
 
   // Markdown styles
@@ -138,9 +138,7 @@ export const MessageBubble = ({
             <View className="bg-pink-500 rounded-2xl rounded-br-sm px-4 py-3">
               <Text className="text-white">{content}</Text>
             </View>
-            <Text className="text-muted-foreground text-xs text-right mt-1">
-              {time}
-            </Text>
+            <Text className="text-muted text-xs text-right mt-1">{time}</Text>
           </View>
         </View>
       </Pressable>
@@ -154,7 +152,7 @@ export const MessageBubble = ({
         const quizData = structuredContent as QuizQuestionData;
         return (
           <View className="flex-row mb-3 px-4">
-            <Avatar size="sm" className="mr-2">
+            <Avatar alt="" size="sm" className="mr-2">
               {avatarUrl ? (
                 <Avatar.Image source={{ uri: avatarUrl }} />
               ) : (
@@ -191,10 +189,10 @@ export const MessageBubble = ({
                 className="flex-row items-center bg-surface/50 border border-border rounded-full px-4 py-2 self-start"
               >
                 <LogOut size={16} color={mutedForeground} />
-                <Text className="text-muted-foreground ml-2">End quiz</Text>
+                <Text className="text-muted ml-2">End quiz</Text>
               </Pressable>
 
-              <Text className="text-muted-foreground text-xs mt-2">{time}</Text>
+              <Text className="text-muted text-xs mt-2">{time}</Text>
             </View>
           </View>
         );
@@ -211,7 +209,7 @@ export const MessageBubble = ({
 
         return (
           <View className="flex-row mb-3 px-4">
-            <Avatar size="sm" className="mr-2">
+            <Avatar alt="" size="sm" className="mr-2">
               {avatarUrl ? (
                 <Avatar.Image source={{ uri: avatarUrl }} />
               ) : (
@@ -231,12 +229,12 @@ export const MessageBubble = ({
                   </Text>
                 )}
                 {resultData.explanation && (
-                  <Text className="text-muted-foreground mt-1 text-sm">
+                  <Text className="text-muted mt-1 text-sm">
                     {resultData.explanation}
                   </Text>
                 )}
               </View>
-              <Text className="text-muted-foreground text-xs mt-1">{time}</Text>
+              <Text className="text-muted text-xs mt-1">{time}</Text>
             </View>
           </View>
         );
@@ -253,9 +251,7 @@ export const MessageBubble = ({
                 className="flex-1 h-px"
                 style={{ backgroundColor: borderColor, opacity: 0.3 }}
               />
-              <Text className="text-muted-foreground text-sm">
-                Quiz started
-              </Text>
+              <Text className="text-muted text-sm">Quiz started</Text>
               <View
                 className="flex-1 h-px"
                 style={{ backgroundColor: borderColor, opacity: 0.3 }}
@@ -264,7 +260,7 @@ export const MessageBubble = ({
 
             {/* Message bubble */}
             <View className="flex-row px-4">
-              <Avatar size="sm" className="mr-2">
+              <Avatar alt="" size="sm" className="mr-2">
                 {avatarUrl ? (
                   <Avatar.Image source={{ uri: avatarUrl }} />
                 ) : (
@@ -277,9 +273,7 @@ export const MessageBubble = ({
                     {structuredContent.message || content}
                   </Markdown>
                 </View>
-                <Text className="text-muted-foreground text-xs mt-1">
-                  {time}
-                </Text>
+                <Text className="text-muted text-xs mt-1">{time}</Text>
               </View>
             </View>
           </View>
@@ -291,7 +285,7 @@ export const MessageBubble = ({
         // These are just text messages with markdown
         return (
           <View className="flex-row mb-3 px-4">
-            <Avatar size="sm" className="mr-2">
+            <Avatar alt="" size="sm" className="mr-2">
               {avatarUrl ? (
                 <Avatar.Image source={{ uri: avatarUrl }} />
               ) : (
@@ -304,7 +298,7 @@ export const MessageBubble = ({
                   {structuredContent.message || content}
                 </Markdown>
               </View>
-              <Text className="text-muted-foreground text-xs mt-1">{time}</Text>
+              <Text className="text-muted text-xs mt-1">{time}</Text>
             </View>
           </View>
         );
@@ -313,7 +307,7 @@ export const MessageBubble = ({
         const imageData = structuredContent as ImageRequestData;
         return (
           <View className="flex-row mb-3 px-4">
-            <Avatar size="sm" className="mr-2">
+            <Avatar alt="" size="sm" className="mr-2">
               {avatarUrl ? (
                 <Avatar.Image source={{ uri: avatarUrl }} />
               ) : (
@@ -324,7 +318,7 @@ export const MessageBubble = ({
               <View className="bg-surface rounded-2xl rounded-tl-sm px-4 py-3">
                 <Markdown style={markdownStyles}>{imageData.message}</Markdown>
               </View>
-              <Text className="text-muted-foreground text-xs mt-1">{time}</Text>
+              <Text className="text-muted text-xs mt-1">{time}</Text>
             </View>
           </View>
         );
@@ -335,7 +329,7 @@ export const MessageBubble = ({
   // Default: AI message - left aligned, with markdown support
   return (
     <View className="flex-row mb-3 px-4">
-      <Avatar size="sm" className="mr-2">
+      <Avatar alt="" size="sm" className="mr-2">
         {avatarUrl ? (
           <Avatar.Image source={{ uri: avatarUrl }} />
         ) : (
@@ -346,7 +340,7 @@ export const MessageBubble = ({
         <View className="bg-surface rounded-2xl rounded-tl-sm px-4 py-3">
           <Markdown style={markdownStyles}>{content}</Markdown>
         </View>
-        <Text className="text-muted-foreground text-xs mt-1">{time}</Text>
+        <Text className="text-muted text-xs mt-1">{time}</Text>
       </View>
     </View>
   );

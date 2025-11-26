@@ -68,10 +68,9 @@ export const PhotoUploadSlot = ({
       className="flex-1 aspect-square bg-surface rounded-xl items-center justify-center border border-dashed border-border"
     >
       <Camera size={24} color={mutedColor} />
-      <Text className="text-muted-foreground text-xs mt-1 text-center px-2">
+      <Text className="text-muted text-xs mt-1 text-center px-2">
         {placeholder}
       </Text>
     </Pressable>
   );
 };
-

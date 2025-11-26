@@ -145,11 +145,11 @@ export default function CreateCharacterScreen() {
               <Text className="text-foreground font-medium mt-2">
                 Upload a photo
               </Text>
-              <Text className="text-muted-foreground text-xs text-center mt-1 px-8">
+              <Text className="text-muted text-xs text-center mt-1 px-8">
                 This will be the main photo of your AI character. Give your best
                 photo!
               </Text>
-              <Text className="text-muted-foreground text-xs mt-1">
+              <Text className="text-muted text-xs mt-1">
                 (Supported format: jpg, png, & gif)
               </Text>
             </Pressable>
@@ -173,9 +173,7 @@ export default function CreateCharacterScreen() {
                 className="flex-row items-center justify-between bg-surface rounded-lg px-4 py-3 border border-border"
                 onPress={() => setShowAgePicker(!showAgePicker)}
               >
-                <Text
-                  className={age ? "text-foreground" : "text-muted-foreground"}
-                >
+                <Text className={age ? "text-foreground" : "text-muted"}>
                   {age ? `${age} years old` : "Select Age"}
                 </Text>
                 <ChevronDown size={20} color={mutedColor} />
@@ -210,9 +208,7 @@ export default function CreateCharacterScreen() {
               >
                 <Text
                   className={
-                    gender
-                      ? "text-foreground capitalize"
-                      : "text-muted-foreground"
+                    gender ? "text-foreground capitalize" : "text-muted"
                   }
                 >
                   {gender ? gender : "Select Gender"}
@@ -244,11 +240,7 @@ export default function CreateCharacterScreen() {
                 className="flex-row items-center justify-between bg-surface rounded-lg px-4 py-3 border border-border"
                 onPress={() => setShowZodiacPicker(!showZodiacPicker)}
               >
-                <Text
-                  className={
-                    zodiacSign ? "text-foreground" : "text-muted-foreground"
-                  }
-                >
+                <Text className={zodiacSign ? "text-foreground" : "text-muted"}>
                   {zodiacSign || "Select Zodiac"}
                 </Text>
                 <ChevronDown size={20} color={mutedColor} />
@@ -353,7 +345,7 @@ export default function CreateCharacterScreen() {
             <Pressable className="flex-row items-center justify-between py-3 border-b border-border">
               <Text className="text-foreground font-medium">Language</Text>
               <View className="flex-row items-center">
-                <Text className="text-muted-foreground mr-2">English</Text>
+                <Text className="text-muted mr-2">English</Text>
                 <ChevronRight size={20} color={mutedColor} />
               </View>
             </Pressable>
@@ -361,7 +353,7 @@ export default function CreateCharacterScreen() {
             <Pressable className="flex-row items-center justify-between py-3 border-b border-border">
               <Text className="text-foreground font-medium">Voice</Text>
               <View className="flex-row items-center">
-                <Text className="text-muted-foreground mr-2">Default</Text>
+                <Text className="text-muted mr-2">Default</Text>
                 <ChevronRight size={20} color={mutedColor} />
               </View>
             </Pressable>

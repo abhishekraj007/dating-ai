@@ -67,7 +67,7 @@ export default function ExploreScreen() {
             <Text className="text-foreground text-xl font-semibold mb-2">
               No Profiles Found
             </Text>
-            <Text className="text-muted-foreground text-center">
+            <Text className="text-muted text-center">
               {gender === "female" ? "Female" : "Male"} AI profiles will appear
               here once they are added.
             </Text>
@@ -86,4 +86,3 @@ export default function ExploreScreen() {
     </View>
   );
 }
-

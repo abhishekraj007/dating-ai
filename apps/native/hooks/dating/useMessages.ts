@@ -3,7 +3,10 @@ import { api } from "@dating-ai/backend";
 import { useMemo } from "react";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 
-const PAGE_SIZE = 50; // Load more messages for better UX
+const PAGE_SIZE = 10; // Load more messages for better UX
+
+// Global cache to store last known data for each query
+const dataCache = new Map<string, any>();
 
 interface ProcessedMessage {
   _id: string;
@@ -107,6 +110,7 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
 export function useMessages(conversationId: string | undefined) {
   // Stable reference for stream args
   const streamArgs = useMemo(() => ({ kind: "list" as const }), []);
+  const cacheKey = `messages:${conversationId}`;
 
   // Single query - Convex handles reactivity
   const messagesResult = useQuery(
@@ -120,23 +124,33 @@ export function useMessages(conversationId: string | undefined) {
       : "skip"
   );
 
+  // Update cache when we have data
+  if (messagesResult !== undefined && conversationId) {
+    dataCache.set(cacheKey, messagesResult);
+  }
+
+  // Use cached data if current result is undefined
+  const cachedData = conversationId ? dataCache.get(cacheKey) : undefined;
+  const effectiveResult = messagesResult ?? cachedData;
+
   // Process messages - only recalculate when data changes
   const messages = useMemo(() => {
-    if (!messagesResult?.page) return [];
+    if (!effectiveResult?.page) return [];
 
     const allMessages: ProcessedMessage[] = [];
-    messagesResult.page.forEach((msg: any, index: number) => {
+    effectiveResult.page.forEach((msg: any, index: number) => {
       const processed = processMessage(msg, index);
       allMessages.push(...processed);
     });
 
     return allMessages;
-  }, [messagesResult?.page]);
+  }, [effectiveResult?.page]);
 
   return {
     messages,
-    isLoading: messagesResult === undefined,
-    hasMore: messagesResult ? !messagesResult.isDone : false,
+    // Only show loading on true first load (no cached data at all)
+    isLoading: messagesResult === undefined && cachedData === undefined,
+    hasMore: effectiveResult ? !effectiveResult.isDone : false,
   };
 }
 
