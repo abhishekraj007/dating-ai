@@ -21,6 +21,8 @@ import {
   Paperclip,
   Camera,
   HelpCircle,
+  MessageSquare,
+  Lightbulb,
 } from "lucide-react-native";
 import { useState, useRef } from "react";
 import {
@@ -37,8 +39,11 @@ import {
   CompatibilityIndicator,
   ImageRequestSheet,
   MessageActionsSheet,
+  TopicsSheet,
+  SuggestionsSheet,
 } from "@/components/dating";
 import type { ImageRequestOptions } from "@/hooks/dating";
+import type { TopicId } from "@/components/dating";
 import { useThemeColor } from "heroui-native";
 
 export default function ChatScreen() {
@@ -88,6 +93,10 @@ export default function ChatScreen() {
     number | null
   >(null);
 
+  // Topics and suggestions sheets
+  const [isTopicsSheetOpen, setIsTopicsSheetOpen] = useState(false);
+  const [isSuggestionsSheetOpen, setIsSuggestionsSheetOpen] = useState(false);
+
   const [isSending, setIsSending] = useState(false);
 
   const handleSend = async () => {
@@ -127,7 +136,7 @@ export default function ChatScreen() {
       // Send a message to trigger the agent's quiz mode
       await sendMessage({
         conversationId: id as any,
-        content: "Let's play a quiz! Ask me questions about yourself.",
+        content: "Let's play quiz!",
       });
     } catch (error) {
       console.error("Failed to start quiz:", error);
@@ -178,6 +187,44 @@ export default function ChatScreen() {
       });
     } catch (error) {
       console.error("Failed to end quiz:", error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  // Handle topic selection - send the topic prompt as a message
+  const handleTopicSelect = async (topic: {
+    id: string;
+    label: string;
+    prompt: string;
+  }) => {
+    if (!id || isSending) return;
+    setIsTopicsSheetOpen(false);
+    setIsSending(true);
+    try {
+      await sendMessage({
+        conversationId: id as any,
+        content: topic.prompt,
+      });
+    } catch (error) {
+      console.error("Failed to send topic message:", error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  // Handle suggestion selection - send the suggestion as a message
+  const handleSuggestionSelect = async (suggestion: string) => {
+    if (!id || isSending) return;
+    setIsSuggestionsSheetOpen(false);
+    setIsSending(true);
+    try {
+      await sendMessage({
+        conversationId: id as any,
+        content: suggestion,
+      });
+    } catch (error) {
+      console.error("Failed to send suggestion message:", error);
     } finally {
       setIsSending(false);
     }
@@ -377,17 +424,25 @@ export default function ChatScreen() {
               onPress={handleStartQuiz}
               isDisabled={isSending}
             >
-              {isSending ? (
-                <Spinner size="sm" />
-              ) : (
-                <HelpCircle size={16} color={foregroundColor} />
-              )}
+              <HelpCircle size={16} color={foregroundColor} />
               <Button.Label>Quiz</Button.Label>
             </Button>
-            <Button variant="secondary" size="sm">
+            <Button
+              variant="secondary"
+              size="sm"
+              onPress={() => setIsTopicsSheetOpen(true)}
+              isDisabled={isSending}
+            >
+              <MessageSquare size={16} color={foregroundColor} />
               <Button.Label>Topic</Button.Label>
             </Button>
-            <Button variant="secondary" size="sm">
+            <Button
+              variant="secondary"
+              size="sm"
+              onPress={() => setIsSuggestionsSheetOpen(true)}
+              isDisabled={isSending}
+            >
+              <Lightbulb size={16} color={foregroundColor} />
               <Button.Label>Suggestion</Button.Label>
             </Button>
           </ScrollView>
@@ -441,6 +496,20 @@ export default function ChatScreen() {
         isOpen={isMessageActionsOpen}
         onClose={() => setIsMessageActionsOpen(false)}
         onDelete={handleDeleteMessage}
+      />
+
+      {/* Topics Sheet */}
+      <TopicsSheet
+        isOpen={isTopicsSheetOpen}
+        onClose={() => setIsTopicsSheetOpen(false)}
+        onSelectTopic={handleTopicSelect}
+      />
+
+      {/* Suggestions Sheet */}
+      <SuggestionsSheet
+        isOpen={isSuggestionsSheetOpen}
+        onClose={() => setIsSuggestionsSheetOpen(false)}
+        onSelectSuggestion={handleSuggestionSelect}
       />
     </SafeAreaView>
   );

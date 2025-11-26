@@ -17,3 +17,6 @@ export { QuizQuestionCard } from "./quiz-question-card";
 export type { QuizQuestion } from "./quiz-question-card";
 export { QuizFeedbackToast } from "./quiz-feedback-toast";
 export { MessageActionsSheet } from "./message-actions-sheet";
+export { TopicsSheet, CONVERSATION_TOPICS } from "./topics-sheet";
+export type { TopicId } from "./topics-sheet";
+export { SuggestionsSheet, DEFAULT_SUGGESTIONS } from "./suggestions-sheet";
