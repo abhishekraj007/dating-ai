@@ -20,7 +20,44 @@ export default defineSchema({
     ),
     premiumGrantedAt: v.optional(v.number()),
     premiumExpiresAt: v.optional(v.number()), // null = lifetime/subscription-based
+    // Onboarding status
+    hasCompletedOnboarding: v.optional(v.boolean()),
   }).index("by_auth_user_id", ["authUserId"]),
+
+  // User preferences for AI profile matching (from onboarding)
+  userPreferences: defineTable({
+    userId: v.string(), // Better Auth user ID
+    // Gender preference
+    genderPreference: v.union(
+      v.literal("female"),
+      v.literal("male"),
+      v.literal("both")
+    ),
+    // Age range preference
+    ageMin: v.number(), // Default: 18
+    ageMax: v.number(), // Default: 99
+    // Zodiac sign preferences (empty = no preference)
+    zodiacPreferences: v.array(v.string()),
+    // Interest preferences for matching (empty = no preference)
+    interestPreferences: v.array(v.string()),
+    // Updated timestamp
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  // Profile interactions - tracks likes/skips for For You feed
+  profileInteractions: defineTable({
+    userId: v.string(), // Better Auth user ID
+    aiProfileId: v.id("aiProfiles"),
+    action: v.union(
+      v.literal("like"), // Swiped right
+      v.literal("skip"), // Swiped left
+      v.literal("superlike") // Future: super like feature
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_profile", ["userId", "aiProfileId"])
+    .index("by_user_and_action", ["userId", "action"]),
 
   // Unified subscriptions table for both Polar (web) and RevenueCat (native)
   // Single source of truth for all subscription and premium status data

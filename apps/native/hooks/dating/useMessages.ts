@@ -147,8 +147,6 @@ export function useMessages(threadId: string | undefined) {
     { initialNumItems: PAGE_SIZE }
   );
 
-  console.log("useMessages results:", JSON.stringify(results, null, 2));
-
   // Get cached messages for this thread (computed once per threadId change)
   const cachedMessages = useMemo(() => {
     if (!threadId) return [];

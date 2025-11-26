@@ -18,3 +18,17 @@ export {
 } from "./useUserCreatedProfiles";
 export { useRequestChatImage } from "./useImageRequest";
 export type { ImageRequestOptions } from "./useImageRequest";
+export {
+  useForYouProfiles,
+  useUserPreferences,
+  useSavePreferences,
+  useProfileInteraction,
+  useLikedProfiles,
+  useOnboardingStatus,
+} from "./useForYou";
+export type {
+  GenderPreference,
+  InteractionAction,
+  UserPreferences,
+  ForYouProfile,
+} from "./useForYou";

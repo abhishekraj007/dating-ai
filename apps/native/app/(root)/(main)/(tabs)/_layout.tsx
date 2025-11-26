@@ -1,18 +1,23 @@
 import { Tabs } from "expo-router";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { TabBarIcon } from "@/components/tabbar-icon";
+import { useThemeColor } from "heroui-native";
 
 export default function TabsLayout() {
   const { isDark } = useAppTheme();
+  const accentColor = useThemeColor("accent");
+  const mutedColor = useThemeColor("muted");
+  const backgroundColor = useThemeColor("background");
+  const borderColor = useThemeColor("border");
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#EC4899", // Pink accent
-        tabBarInactiveTintColor: isDark ? "#9CA3AF" : "#6B7280",
+        tabBarActiveTintColor: accentColor,
+        tabBarInactiveTintColor: mutedColor,
         tabBarStyle: {
-          backgroundColor: isDark ? "#0A0A0A" : "#FFFFFF",
-          borderTopColor: isDark ? "#1F1F1F" : "#E5E7EB",
+          backgroundColor: backgroundColor,
+          borderTopColor: borderColor,
           borderTopWidth: 1,
           paddingTop: 8,
           paddingBottom: 8,
@@ -74,4 +79,3 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
-

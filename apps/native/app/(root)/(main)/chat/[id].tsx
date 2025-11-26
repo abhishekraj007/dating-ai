@@ -68,8 +68,6 @@ export default function ChatScreen() {
   } = useMessages(threadId);
   const { sendMessage } = useSendMessage();
 
-  console.log("Messages:", JSON.stringify(messages, null, 2));
-
   // Chat scroll behavior - WhatsApp-like
   const { shouldLoadMore } = useChatScroll({
     listRef,
