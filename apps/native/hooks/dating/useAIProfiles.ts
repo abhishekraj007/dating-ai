@@ -1,4 +1,4 @@
-import { useQuery } from "convex/react";
+import { useQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend";
 
 type Gender = "female" | "male";

@@ -272,6 +272,49 @@ export const getMessages = query({
 });
 
 /**
+ * List messages by threadId for use with useUIMessages hook.
+ * Validates that the user owns the conversation associated with this thread.
+ */
+export const listThreadMessages = query({
+  args: {
+    threadId: v.string(),
+    paginationOpts: paginationOptsValidator,
+    streamArgs: v.optional(vStreamArgs),
+  },
+  handler: async (ctx, { threadId, paginationOpts, streamArgs }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    // Verify the user owns the conversation with this thread
+    const conversation = await ctx.db
+      .query("aiConversations")
+      .withIndex("by_thread", (q) => q.eq("threadId", threadId))
+      .first();
+
+    if (!conversation || conversation.userId !== user._id) {
+      throw new Error("Unauthorized");
+    }
+
+    // Create args object for Agent component
+    const agentArgs = {
+      threadId,
+      paginationOpts,
+      streamArgs,
+    };
+
+    // Fetch regular messages using Agent component
+    const paginated = await listUIMessages(ctx, components.agent, agentArgs);
+
+    // Fetch streaming deltas for real-time updates
+    const streams = await syncStreams(ctx, components.agent, agentArgs);
+
+    return { ...paginated, streams };
+  },
+});
+
+/**
  * Admin: Get all system-created AI profiles (not user-created).
  * Returns profiles with signed image URLs.
  */

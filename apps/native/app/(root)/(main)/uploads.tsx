@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { View, Alert, Text, ScrollView } from "react-native";
 import { Image } from "expo-image";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
+import { useQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import * as ImagePicker from "expo-image-picker";
 import { Button, Card, Spinner } from "heroui-native";

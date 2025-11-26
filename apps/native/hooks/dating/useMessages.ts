@@ -1,12 +1,10 @@
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@dating-ai/backend";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
+import { useUIMessages } from "@convex-dev/agent/react";
 
-const PAGE_SIZE = 10; // Load more messages for better UX
-
-// Global cache to store last known data for each query
-const dataCache = new Map<string, any>();
+const PAGE_SIZE = 10;
 
 interface ProcessedMessage {
   _id: string;
@@ -59,7 +57,7 @@ function extractToolOutputs(msg: any): string[] {
  * A single agent message with multiple tool calls becomes multiple UI messages.
  */
 function processMessage(msg: any, index: number): ProcessedMessage[] {
-  const baseId = msg._id || msg.id || `msg-${index}`;
+  const baseId = msg._id || msg.id || msg.key || `msg-${index}`;
 
   // For user messages, just use text
   if (msg.role === "user") {
@@ -98,59 +96,55 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
       role: msg.role,
       content: msg.text || "",
       order: msg.order,
-      isStreaming: false,
+      isStreaming: msg.status === "streaming",
     },
   ];
 }
 
 /**
- * Simple hook for fetching messages without pagination.
- * Uses Convex's reactive queries for real-time updates.
+ * Hook for fetching messages with infinite scroll pagination.
+ * Uses the @convex-dev/agent/react useUIMessages hook for proper pagination.
+ *
+ * @param threadId - The thread ID from the conversation
  */
-export function useMessages(conversationId: string | undefined) {
-  // Stable reference for stream args
-  const streamArgs = useMemo(() => ({ kind: "list" as const }), []);
-  const cacheKey = `messages:${conversationId}`;
-
-  // Single query - Convex handles reactivity
-  const messagesResult = useQuery(
-    api.features.ai.queries.getMessages,
-    conversationId
-      ? {
-          conversationId: conversationId as any,
-          paginationOpts: { numItems: PAGE_SIZE, cursor: null },
-          streamArgs,
-        }
-      : "skip"
+export function useMessages(threadId: string | undefined) {
+  // Use the useUIMessages hook from @convex-dev/agent/react
+  // This handles pagination internally and accumulates pages
+  const { results, status, loadMore } = useUIMessages(
+    api.features.ai.queries.listThreadMessages,
+    threadId ? { threadId } : "skip",
+    { initialNumItems: PAGE_SIZE }
   );
 
-  // Update cache when we have data
-  if (messagesResult !== undefined && conversationId) {
-    dataCache.set(cacheKey, messagesResult);
-  }
-
-  // Use cached data if current result is undefined
-  const cachedData = conversationId ? dataCache.get(cacheKey) : undefined;
-  const effectiveResult = messagesResult ?? cachedData;
-
-  // Process messages - only recalculate when data changes
+  // Process all accumulated messages
   const messages = useMemo(() => {
-    if (!effectiveResult?.page) return [];
+    if (!results) return [];
 
     const allMessages: ProcessedMessage[] = [];
-    effectiveResult.page.forEach((msg: any, index: number) => {
+    results.forEach((msg: any, index: number) => {
       const processed = processMessage(msg, index);
       allMessages.push(...processed);
     });
 
+    // Sort by order to ensure correct sequence
+    allMessages.sort((a, b) => a.order - b.order);
+
     return allMessages;
-  }, [effectiveResult?.page]);
+  }, [results]);
+
+  // Memoized loadMore function
+  const handleLoadMore = useCallback(() => {
+    if (status === "CanLoadMore") {
+      loadMore(PAGE_SIZE);
+    }
+  }, [status, loadMore]);
 
   return {
     messages,
-    // Only show loading on true first load (no cached data at all)
-    isLoading: messagesResult === undefined && cachedData === undefined,
-    hasMore: effectiveResult ? !effectiveResult.isDone : false,
+    isLoading: status === "LoadingFirstPage",
+    isLoadingMore: status === "LoadingMore",
+    hasMore: status === "CanLoadMore",
+    loadMore: handleLoadMore,
   };
 }
 

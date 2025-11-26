@@ -39,7 +39,6 @@ import type * as model_user from "../model/user.js";
 import type * as privateData from "../privateData.js";
 import type * as purchases from "../purchases.js";
 import type * as pushNotifications from "../pushNotifications.js";
-import type * as todos from "../todos.js";
 import type * as uploads from "../uploads.js";
 import type * as user from "../user.js";
 import type * as util from "../util.js";
@@ -90,7 +89,6 @@ declare const fullApi: ApiFromModules<{
   privateData: typeof privateData;
   purchases: typeof purchases;
   pushNotifications: typeof pushNotifications;
-  todos: typeof todos;
   uploads: typeof uploads;
   user: typeof user;
   util: typeof util;

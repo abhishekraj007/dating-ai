@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@better-auth/expo": "1.3.27",
+    "@convex-dev/agent": "^0.3.0",
     "@convex-dev/better-auth": "^0.9.1",
     "@dating-ai/backend": "workspace:*",
     "@expo-google-fonts/inter": "^0.4.2",
@@ -29,6 +30,7 @@
     "babel-preset-expo": "^54.0.6",
     "better-auth": "1.3.27",
     "convex": "^1.27.0",
+    "convex-helpers": "^0.1.106",
     "expo": "^54.0.1",
     "expo-apple-authentication": "~8.0.7",
     "expo-constants": "~18.0.8",
