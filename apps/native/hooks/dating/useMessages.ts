@@ -4,7 +4,7 @@ import { useMemo, useCallback, useEffect } from "react";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { useUIMessages } from "@convex-dev/agent/react";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 interface ProcessedMessage {
   _id: string;
@@ -266,4 +266,28 @@ export function useDeleteMessage() {
   };
 
   return { deleteMessage };
+}
+
+export function useClearChat() {
+  const clearChatMutation = useMutation(api.features.ai.mutations.clearChat);
+
+  const clearChat = async (conversationId: string, threadId?: string) => {
+    // Clear local cache for the old thread if provided
+    if (threadId) {
+      messagesCache.delete(threadId);
+    }
+
+    const result = await clearChatMutation({
+      conversationId: conversationId as Id<"aiConversations">,
+    });
+
+    // Also clear cache for the new thread (in case there's stale data)
+    if (result.newThreadId) {
+      messagesCache.delete(result.newThreadId);
+    }
+
+    return result;
+  };
+
+  return { clearChat };
 }

@@ -1051,3 +1051,122 @@ export const deleteMessage = mutation({
     return { success: true };
   },
 });
+
+/**
+ * Clear all messages and images from a conversation.
+ * This resets the conversation to its initial state.
+ */
+export const clearChat = mutation({
+  args: {
+    conversationId: v.id("aiConversations"),
+  },
+  returns: v.object({ success: v.boolean(), newThreadId: v.string() }),
+  handler: async (ctx, { conversationId }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    const conversation = await ctx.db.get(conversationId);
+    if (!conversation || conversation.userId !== user._id) {
+      throw new Error("Conversation not found");
+    }
+
+    // Get the AI profile
+    const profile = await ctx.db.get(conversation.aiProfileId);
+    if (!profile) {
+      throw new Error("Profile not found");
+    }
+
+    const oldThreadId = conversation.threadId;
+
+    // Delete the old thread completely (messages, streams, embeddings, etc.)
+    // This is async and will continue in the background, but starts immediately
+    let deleteResult = await ctx.runMutation(
+      components.agent.threads.deleteAllForThreadIdAsync,
+      { threadId: oldThreadId }
+    );
+
+    // Keep calling until deletion is complete
+    while (!deleteResult.isDone) {
+      deleteResult = await ctx.runMutation(
+        components.agent.threads.deleteAllForThreadIdAsync,
+        { threadId: oldThreadId }
+      );
+    }
+
+    // Create a new thread for fresh conversation
+    const newThreadId = await createThread(ctx, components.agent, {
+      userId: user._id,
+      title: `Chat with ${profile.name}`,
+      summary: `Conversation with AI profile ${profile.name}`,
+    });
+
+    // Delete all chat images for this conversation
+    console.log(
+      "[clearChat] Querying chatImages for conversationId:",
+      conversationId
+    );
+    const chatImages = await ctx.db
+      .query("chatImages")
+      .withIndex("by_conversation", (q) =>
+        q.eq("conversationId", conversationId)
+      )
+      .collect();
+
+    console.log(
+      "[clearChat] Found chatImages:",
+      chatImages.length,
+      chatImages.map((img) => ({ id: img._id, imageKey: img.imageKey }))
+    );
+
+    for (const image of chatImages) {
+      console.log(
+        "[clearChat] Processing image:",
+        image._id,
+        "imageKey:",
+        image.imageKey
+      );
+      // Delete from R2 if there's an imageKey
+      if (image.imageKey) {
+        try {
+          console.log("[clearChat] Deleting R2 object:", image.imageKey);
+          await r2.deleteObject(ctx, image.imageKey);
+          console.log("[clearChat] R2 delete success for:", image.imageKey);
+        } catch (error) {
+          console.error(
+            "[clearChat] Failed to delete R2 object:",
+            image.imageKey,
+            error
+          );
+        }
+      }
+      console.log("[clearChat] Deleting DB record:", image._id);
+      await ctx.db.delete(image._id);
+      console.log("[clearChat] DB delete success for:", image._id);
+    }
+
+    // Delete all quiz sessions for this conversation
+    const quizSessions = await ctx.db
+      .query("quizSessions")
+      .withIndex("by_conversation", (q) =>
+        q.eq("conversationId", conversationId)
+      )
+      .collect();
+
+    for (const session of quizSessions) {
+      await ctx.db.delete(session._id);
+    }
+
+    // Update conversation with new thread and reset to initial state
+    await ctx.db.patch(conversationId, {
+      threadId: newThreadId,
+      messageCount: 0,
+      relationshipLevel: 1,
+      compatibilityScore: 60,
+      lastMessageAt: Date.now(),
+    });
+
+    return { success: true, newThreadId };
+  },
+});

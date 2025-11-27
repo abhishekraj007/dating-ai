@@ -5,11 +5,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
+  Pressable,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, Avatar, Skeleton, Spinner } from "heroui-native";
+import { Button, Avatar, Skeleton, Spinner, Popover } from "heroui-native";
 import {
   ChevronLeft,
   Phone,
@@ -23,13 +25,15 @@ import {
   HelpCircle,
   MessageSquare,
   Lightbulb,
+  Trash2,
 } from "lucide-react-native";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   useConversation,
   useMessages,
   useSendMessage,
   useDeleteMessage,
+  useClearChat,
   useRequestChatImage,
   useChatScroll,
 } from "@/hooks/dating";
@@ -84,6 +88,9 @@ export default function ChatScreen() {
   const [isRequestingImage, setIsRequestingImage] = useState(false);
   const { requestImage } = useRequestChatImage();
   const { deleteMessage } = useDeleteMessage();
+  const { clearChat } = useClearChat();
+  const [isClearing, setIsClearing] = useState(false);
+  const popoverRef = useRef<any>(null);
 
   // Message actions sheet
   const [isMessageActionsOpen, setIsMessageActionsOpen] = useState(false);
@@ -228,6 +235,34 @@ export default function ChatScreen() {
     }
   };
 
+  // Handle clear chat with confirmation
+  const handleClearChat = useCallback(() => {
+    popoverRef.current?.close();
+    Alert.alert(
+      "Clear Chat",
+      `Are you sure you want to delete all messages and images with ${profile?.name ?? "this AI"}? This action cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: async () => {
+            if (!id) return;
+            setIsClearing(true);
+            try {
+              await clearChat(id, threadId);
+            } catch (error) {
+              console.error("Failed to clear chat:", error);
+              Alert.alert("Error", "Failed to clear chat. Please try again.");
+            } finally {
+              setIsClearing(false);
+            }
+          },
+        },
+      ]
+    );
+  }, [id, threadId, profile?.name, clearChat]);
+
   const renderMessage = ({ item }: { item: any }) => {
     const isUser = item.role === "user";
     return (
@@ -297,9 +332,36 @@ export default function ChatScreen() {
             <Button variant="tertiary" size="sm" isIconOnly>
               <Video size={20} color={foregroundColor} />
             </Button>
-            <Button variant="tertiary" size="sm" isIconOnly>
-              <MoreVertical size={20} color={foregroundColor} />
-            </Button>
+            <Popover>
+              <Popover.Trigger ref={popoverRef} asChild>
+                <Button variant="tertiary" size="sm" isIconOnly>
+                  {isClearing ? (
+                    <Spinner size="sm" />
+                  ) : (
+                    <MoreVertical size={20} color={foregroundColor} />
+                  )}
+                </Button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Overlay />
+                <Popover.Content
+                  placement="bottom"
+                  align="end"
+                  className="rounded-xl p-2"
+                  width={180}
+                >
+                  <Pressable
+                    onPress={handleClearChat}
+                    className="flex-row items-center gap-3 px-3 py-3 rounded-lg active:bg-surface"
+                  >
+                    <Trash2 size={20} color="#ef4444" />
+                    <Text className="text-red-500 text-base font-medium">
+                      Clear Chat
+                    </Text>
+                  </Pressable>
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover>
           </View>
         </View>
 

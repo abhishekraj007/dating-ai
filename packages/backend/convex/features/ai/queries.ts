@@ -316,8 +316,15 @@ export const listThreadMessages = query({
       .withIndex("by_thread", (q) => q.eq("threadId", threadId))
       .first();
 
+    // If thread doesn't exist (e.g., after clear chat), return empty result
+    // This prevents errors during the transition to a new thread
     if (!conversation || conversation.userId !== user._id) {
-      throw new Error("Unauthorized");
+      return {
+        page: [],
+        continueCursor: "",
+        isDone: true,
+        streams: { deltas: [], cursors: {} },
+      };
     }
 
     // Create args object for Agent component

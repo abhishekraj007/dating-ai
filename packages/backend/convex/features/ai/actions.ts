@@ -12,6 +12,135 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
+// Check if we're in development mode based on Convex deployment URL
+// Dev deployments typically have animal-based names like "cheery-akita"
+const isDev = process.env.CONVEX_CLOUD_URL?.includes("cheery-akita") ?? false;
+
+/**
+ * Image generation result type
+ */
+type ImageGenerationResult =
+  | {
+      success: true;
+      imageUrl: string;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+/**
+ * Generate image using placeholder service (for development).
+ * Returns a random image - fast and free for testing.
+ */
+async function generateImageDev(): Promise<ImageGenerationResult> {
+  try {
+    // Use picsum.photos - reliable placeholder image service
+    // Generate a random ID to get different images each time
+    const randomId = Math.floor(Math.random() * 1000);
+    const width = 512;
+    const height = 768; // Portrait aspect ratio
+
+    // Get image info first to get the actual download URL
+    const infoResponse = await fetch(
+      `https://picsum.photos/id/${randomId}/info`
+    );
+
+    if (!infoResponse.ok) {
+      // If specific ID fails, use random endpoint
+      const imageUrl = `https://picsum.photos/${width}/${height}?random=${Date.now()}`;
+      console.log("[Dev] Generated image URL (random):", imageUrl);
+      return { success: true, imageUrl };
+    }
+
+    const info = await infoResponse.json();
+    const imageUrl = `https://picsum.photos/id/${info.id}/${width}/${height}`;
+    console.log("[Dev] Generated image URL:", imageUrl);
+
+    return { success: true, imageUrl };
+  } catch (error) {
+    console.error("[Dev] Image generation failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Generate image using Replicate's Flux model (for production).
+ * Uses the profile's avatar as reference for character consistency.
+ */
+async function generateImageProd(
+  prompt: string,
+  referenceImageUrl: string | null
+): Promise<ImageGenerationResult> {
+  try {
+    // Build input parameters for Flux
+    const fluxInput: Record<string, unknown> = {
+      prompt,
+      go_fast: true,
+      guidance: 3.5,
+      num_outputs: 1,
+      aspect_ratio: "9:16", // Portrait aspect ratio for selfies
+      output_format: "webp",
+      output_quality: 90,
+      num_inference_steps: 28,
+    };
+
+    // Add reference image if available for character consistency
+    if (referenceImageUrl) {
+      fluxInput.image = referenceImageUrl;
+      fluxInput.prompt_strength = 0.75;
+    } else {
+      fluxInput.prompt_strength = 0.8;
+    }
+
+    console.log("[Prod] Generating image with Replicate Flux");
+
+    const output = await replicate.run("black-forest-labs/flux-dev", {
+      input: fluxInput,
+    });
+
+    console.log(
+      "[Prod] Replicate output type:",
+      typeof output,
+      Array.isArray(output) ? "array" : "not array"
+    );
+
+    // Extract URL from FileOutput object
+    const fileOutput = Array.isArray(output) ? output[0] : output;
+
+    let imageUrl: string;
+    if (
+      fileOutput &&
+      typeof fileOutput === "object" &&
+      "url" in fileOutput &&
+      typeof fileOutput.url === "function"
+    ) {
+      const urlResult = fileOutput.url();
+      imageUrl = urlResult.toString();
+    } else if (typeof fileOutput === "string") {
+      imageUrl = fileOutput;
+    } else {
+      throw new Error(`Unexpected output format: ${typeof fileOutput}`);
+    }
+
+    if (!imageUrl) {
+      throw new Error("No image URL returned from Replicate");
+    }
+
+    console.log("[Prod] Generated image URL:", imageUrl);
+    return { success: true, imageUrl };
+  } catch (error) {
+    console.error("[Prod] Image generation failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
 /**
  * Generate AI response asynchronously with streaming.
  * Called after user sends a message.
@@ -217,9 +346,9 @@ async function getProfileAvatarUrl(
 }
 
 /**
- * Generate a custom chat image using Replicate's Flux model.
- * Uses the profile's avatar as input_images for reference-based generation
- * to maintain character consistency.
+ * Generate a custom chat image.
+ * Uses Nekos API in development (fast, free) and Replicate Flux in production.
+ * In production, uses the profile's avatar as reference for character consistency.
  */
 export const generateChatImage = internalAction({
   args: {
@@ -272,85 +401,45 @@ export const generateChatImage = internalAction({
     }
 
     try {
-      // Build the prompt based on profile and requested style
-      const prompt = buildImagePrompt(
-        {
-          name: profile.name,
-          gender: profile.gender,
-          age: profile.age,
-        },
-        request.styleOptions ?? {}
-      );
+      console.log("Generating image, isDev:", isDev);
 
-      console.log("Generating image with prompt:", prompt);
+      let imageResult: ImageGenerationResult;
 
-      // Get the profile's avatar URL as reference image for consistency
-      let referenceImageUrl: string | null = null;
-      if (profile.avatarImageKey) {
-        referenceImageUrl = await r2.getUrl(profile.avatarImageKey);
-        console.log("Using reference image:", referenceImageUrl ? "yes" : "no");
-      }
-
-      // Build input parameters for Flux
-      const fluxInput: Record<string, unknown> = {
-        prompt,
-        go_fast: true,
-        guidance: 3.5,
-        num_outputs: 1,
-        aspect_ratio: "9:16", // Portrait aspect ratio for selfies
-        output_format: "webp",
-        output_quality: 90,
-        num_inference_steps: 28,
-      };
-
-      // Add reference image if available for character consistency
-      // This uses Flux's image-to-image capability with the profile's avatar
-      if (referenceImageUrl) {
-        fluxInput.image = referenceImageUrl;
-        fluxInput.prompt_strength = 0.75; // Balance between reference and prompt
+      if (isDev) {
+        // Use Nekos API for development (fast and free)
+        imageResult = await generateImageDev();
       } else {
-        fluxInput.prompt_strength = 0.8;
+        // Use Replicate Flux for production
+        const prompt = buildImagePrompt(
+          {
+            name: profile.name,
+            gender: profile.gender,
+            age: profile.age,
+          },
+          request.styleOptions ?? {}
+        );
+
+        console.log("Generating image with prompt:", prompt);
+
+        // Get the profile's avatar URL as reference image for consistency
+        let referenceImageUrl: string | null = null;
+        if (profile.avatarImageKey) {
+          referenceImageUrl = await r2.getUrl(profile.avatarImageKey);
+          console.log(
+            "Using reference image:",
+            referenceImageUrl ? "yes" : "no"
+          );
+        }
+
+        imageResult = await generateImageProd(prompt, referenceImageUrl);
       }
 
-      // Use Flux-dev for high-quality image generation
-      // Use replicate.run() which handles waiting for completion automatically
-      const output = await replicate.run("black-forest-labs/flux-dev", {
-        input: fluxInput,
-      });
-
-      console.log(
-        "Replicate output type:",
-        typeof output,
-        Array.isArray(output) ? "array" : "not array"
-      );
-
-      // The output is an array of FileOutput objects (ReadableStream with url() method)
-      // We need to extract the URL from the FileOutput object
-      const fileOutput = Array.isArray(output) ? output[0] : output;
-
-      // FileOutput has a url() method that returns the URL
-      let imageUrl: string;
-      if (
-        fileOutput &&
-        typeof fileOutput === "object" &&
-        "url" in fileOutput &&
-        typeof fileOutput.url === "function"
-      ) {
-        // It's a FileOutput object with url() method
-        const urlResult = fileOutput.url();
-        imageUrl = urlResult.toString();
-      } else if (typeof fileOutput === "string") {
-        // It's already a string URL
-        imageUrl = fileOutput;
-      } else {
-        throw new Error(`Unexpected output format: ${typeof fileOutput}`);
+      if (!imageResult.success) {
+        throw new Error(imageResult.error);
       }
 
+      const imageUrl = imageResult.imageUrl;
       console.log("Image URL:", imageUrl);
-
-      if (!imageUrl) {
-        throw new Error("No image URL returned from Replicate");
-      }
 
       // Download the image and upload to R2
       const imageResponse = await fetch(imageUrl);
@@ -363,8 +452,17 @@ export const generateChatImage = internalAction({
       const imageBlob = await imageResponse.blob();
       const imageBuffer = await imageBlob.arrayBuffer();
 
+      // Determine file extension based on content type
+      const contentType =
+        imageResponse.headers.get("content-type") || "image/webp";
+      const ext = contentType.includes("png")
+        ? "png"
+        : contentType.includes("jpeg") || contentType.includes("jpg")
+          ? "jpg"
+          : "webp";
+
       // Generate a unique key for R2 storage
-      const imageKey = `chatImages/${request.userId}/${request.aiProfileId}/${requestId}.webp`;
+      const imageKey = `chatImages/${request.userId}/${request.aiProfileId}/${requestId}.${ext}`;
 
       // Upload to R2 directly from the action
       const imageUint8Array = new Uint8Array(imageBuffer);

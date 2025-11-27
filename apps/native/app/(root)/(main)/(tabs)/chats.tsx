@@ -3,17 +3,60 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Avatar, Skeleton } from "heroui-native";
+import { Image } from "lucide-react-native";
 import { Header } from "@/components";
 import { GenderTabs, LevelBadge } from "@/components/dating";
 import { useConversations } from "@/hooks/dating";
 import { formatDistanceToNow } from "date-fns";
+import { useThemeColor } from "heroui-native";
 
 type TabValue = "chats" | "calls";
+
+/**
+ * Format the last message content for display in the chat list.
+ * Handles special message types like image_response, quiz, etc.
+ */
+function formatLastMessage(content: string | null | undefined): {
+  text: string;
+  isImage: boolean;
+} {
+  if (!content) {
+    return { text: "Start a conversation", isImage: false };
+  }
+
+  // Try to parse as JSON to detect special message types
+  try {
+    const parsed = JSON.parse(content);
+
+    if (parsed.type === "image_response") {
+      return { text: "Sent a photo", isImage: true };
+    }
+    if (parsed.type === "image_request") {
+      return { text: "Requested a photo", isImage: true };
+    }
+    if (parsed.type === "quiz_question" || parsed.type === "quiz_start") {
+      return { text: "Started a quiz", isImage: false };
+    }
+    if (parsed.type === "quiz_end") {
+      return { text: "Quiz completed", isImage: false };
+    }
+    if (parsed.type === "quiz_answer_result") {
+      return { text: "Quiz answer", isImage: false };
+    }
+
+    // Unknown structured type, show generic message
+    return { text: content, isImage: false };
+  } catch {
+    // Not JSON, return as plain text
+    return { text: content, isImage: false };
+  }
+}
 
 export default function ChatsScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabValue>("chats");
   const { conversations, isLoading } = useConversations();
+  const mutedColor = useThemeColor("muted");
 
   const handleConversationPress = (conversationId: string) => {
     router.push(`/(root)/(main)/chat/${conversationId}`);
@@ -44,36 +87,43 @@ export default function ChatsScreen() {
     }
   };
 
-  const renderConversation = ({ item }: { item: any }) => (
-    <Pressable
-      className="flex-row items-center px-4 py-3 border-b border-border"
-      onPress={() => handleConversationPress(item._id)}
-    >
-      <Avatar alt="" size="md">
-        {item.profile?.avatarUrl ? (
-          <Avatar.Image source={{ uri: item.profile.avatarUrl }} />
-        ) : (
-          <Avatar.Fallback>{item.profile?.name?.[0] ?? "AI"}</Avatar.Fallback>
-        )}
-      </Avatar>
+  const renderConversation = ({ item }: { item: any }) => {
+    const lastMessage = formatLastMessage(item.lastMessage?.content);
 
-      <View className="flex-1 ml-3">
-        <View className="flex-row items-center gap-2">
-          <Text className="text-foreground font-semibold">
-            {item.profile?.name ?? "AI Profile"}
-          </Text>
-          <LevelBadge level={item.relationshipLevel} size="sm" />
+    return (
+      <Pressable
+        className="flex-row items-center px-4 py-3 border-b border-border"
+        onPress={() => handleConversationPress(item._id)}
+      >
+        <Avatar alt="" size="md">
+          {item.profile?.avatarUrl ? (
+            <Avatar.Image source={{ uri: item.profile.avatarUrl }} />
+          ) : (
+            <Avatar.Fallback>{item.profile?.name?.[0] ?? "AI"}</Avatar.Fallback>
+          )}
+        </Avatar>
+
+        <View className="flex-1 ml-3">
+          <View className="flex-row items-center gap-2">
+            <Text className="text-foreground font-semibold">
+              {item.profile?.name ?? "AI Profile"}
+            </Text>
+            <LevelBadge level={item.relationshipLevel} size="sm" />
+          </View>
+          <View className="flex-row items-center gap-1 mt-0.5">
+            {lastMessage.isImage && <Image size={14} color={mutedColor} />}
+            <Text className="text-muted text-sm flex-1" numberOfLines={1}>
+              {lastMessage.text}
+            </Text>
+          </View>
         </View>
-        <Text className="text-muted text-sm mt-0.5" numberOfLines={1}>
-          {item.lastMessage?.content ?? "Start a conversation"}
-        </Text>
-      </View>
 
-      <Text className="text-muted text-xs">
-        {formatTime(item.lastMessageAt)}
-      </Text>
-    </Pressable>
-  );
+        <Text className="text-muted text-xs">
+          {formatTime(item.lastMessageAt)}
+        </Text>
+      </Pressable>
+    );
+  };
 
   const renderSkeleton = () => (
     <View>
