@@ -48,6 +48,17 @@ export default function MainLayout() {
         }}
       />
 
+      {/* Filter screen */}
+      <Stack.Screen
+        name="filter"
+        options={{
+          ...standard,
+          title: "Filter",
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+
       {/* Legacy/utility screens */}
       <Stack.Screen
         name="index"

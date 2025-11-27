@@ -56,7 +56,12 @@ export default function ForYouScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <SafeAreaView className="flex-1" edges={["top"]}>
+      <SafeAreaView
+        style={{
+          flex: 1,
+        }}
+        edges={["top"]}
+      >
         {/* Header */}
         <View className="flex-row items-center justify-between px-4 py-2">
           <Button variant="tertiary" size="sm" isIconOnly>
@@ -69,12 +74,15 @@ export default function ForYouScreen() {
             isIconOnly
             onPress={handleFilterPress}
           >
-            <SlidersHorizontal size={24} color={foregroundColor} />
+            <SlidersHorizontal size={20} color={foregroundColor} />
           </Button>
         </View>
 
         {/* Card Stack */}
-        <GestureHandlerRootView style={styles.cardContainer}>
+        <GestureHandlerRootView
+          style={styles.cardContainer}
+          // height={cardHeight}
+        >
           {isLoading ? (
             <View className="flex-1 items-center justify-center px-4">
               <Skeleton
@@ -84,10 +92,10 @@ export default function ForYouScreen() {
             </View>
           ) : currentIndex >= profiles.length ? (
             <View className="flex-1 items-center justify-center px-6">
-              <Text className="text-foreground text-xl font-semibold mb-2">
+              <Text className="text-xl font-semibold mb-2">
                 No more profiles
               </Text>
-              <Text className="text-muted text-center mb-6">
+              <Text className="text-center mb-6">
                 You've seen all available profiles. Adjust your filters or check
                 back later!
               </Text>

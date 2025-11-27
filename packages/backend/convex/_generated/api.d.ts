@@ -19,6 +19,7 @@ import type * as features_ai_seed from "../features/ai/seed.js";
 import type * as features_credits_index from "../features/credits/index.js";
 import type * as features_credits_mutations from "../features/credits/mutations.js";
 import type * as features_credits_queries from "../features/credits/queries.js";
+import type * as features_filters_queries from "../features/filters/queries.js";
 import type * as features_preferences_queries from "../features/preferences/queries.js";
 import type * as features_premium_admin from "../features/premium/admin.js";
 import type * as features_premium_guards from "../features/premium/guards.js";
@@ -71,6 +72,7 @@ declare const fullApi: ApiFromModules<{
   "features/credits/index": typeof features_credits_index;
   "features/credits/mutations": typeof features_credits_mutations;
   "features/credits/queries": typeof features_credits_queries;
+  "features/filters/queries": typeof features_filters_queries;
   "features/preferences/queries": typeof features_preferences_queries;
   "features/premium/admin": typeof features_premium_admin;
   "features/premium/guards": typeof features_premium_guards;

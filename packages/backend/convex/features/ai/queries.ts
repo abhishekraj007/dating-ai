@@ -9,13 +9,15 @@ import { authComponent } from "../../lib/betterAuth";
 /**
  * Get all active AI profiles with optional gender filter.
  * Returns profiles with signed image URLs.
+ * Can optionally exclude profiles the user already has conversations with.
  */
 export const getProfiles = query({
   args: {
     gender: v.optional(v.union(v.literal("female"), v.literal("male"))),
     limit: v.optional(v.number()),
+    excludeExistingConversations: v.optional(v.boolean()),
   },
-  handler: async (ctx, { gender, limit }) => {
+  handler: async (ctx, { gender, limit, excludeExistingConversations }) => {
     let profilesQuery = ctx.db
       .query("aiProfiles")
       .withIndex("by_status_and_gender", (q) => {
@@ -25,7 +27,28 @@ export const getProfiles = query({
         return q.eq("status", "active");
       });
 
-    const profiles = await profilesQuery.take(limit ?? 50);
+    let profiles = await profilesQuery.take(limit ?? 50);
+
+    // Optionally filter out profiles the user already has conversations with
+    if (excludeExistingConversations) {
+      const user = await authComponent.safeGetAuthUser(ctx);
+      if (user) {
+        // Get all conversations for this user
+        const conversations = await ctx.db
+          .query("aiConversations")
+          .withIndex("by_user", (q) => q.eq("userId", user._id))
+          .collect();
+
+        const conversationProfileIds = new Set(
+          conversations.map((c) => c.aiProfileId.toString())
+        );
+
+        // Filter out profiles that already have conversations
+        profiles = profiles.filter(
+          (p) => !conversationProfileIds.has(p._id.toString())
+        );
+      }
+    }
 
     // Generate signed URLs for avatars
     return Promise.all(

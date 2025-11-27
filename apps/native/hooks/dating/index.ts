@@ -32,3 +32,11 @@ export type {
   UserPreferences,
   ForYouProfile,
 } from "./useForYou";
+export { useFilterOptions } from "./useFilterOptions";
+export type {
+  AgeRangeOption,
+  GenderOption,
+  ZodiacOption,
+  InterestOption,
+  FilterOptions,
+} from "./useFilterOptions";

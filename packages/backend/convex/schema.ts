@@ -237,4 +237,25 @@ export default defineSchema({
     .index("by_conversation", ["conversationId"])
     .index("by_user", ["userId"])
     .index("by_conversation_status", ["conversationId", "status"]),
+
+  // Dynamic filter options - managed via admin, no app update needed
+  // Stores all selectable options for each filter category
+  filterOptions: defineTable({
+    // Filter category: zodiac, interest, age_range, gender, etc.
+    // Add new types here when you want new filter categories
+    type: v.string(), // e.g., "zodiac", "interest", "age_range", "gender"
+    value: v.string(), // Internal value used for matching/storage
+    label: v.string(), // Display label
+    emoji: v.optional(v.string()), // Optional emoji for display
+    // For range types like age
+    minValue: v.optional(v.number()),
+    maxValue: v.optional(v.number()),
+    isActive: v.boolean(), // Can be disabled without deletion
+    order: v.number(), // Display order
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_type", ["type"])
+    .index("by_type_active", ["type", "isActive"])
+    .index("by_type_order", ["type", "order"]),
 });

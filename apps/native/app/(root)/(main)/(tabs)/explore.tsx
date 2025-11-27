@@ -13,7 +13,11 @@ const cardWidth = (screenWidth - 48) / 2; // 2 columns with padding
 export default function ExploreScreen() {
   const router = useRouter();
   const [gender, setGender] = useState<"female" | "male">("female");
-  const { profiles, isLoading } = useAIProfiles(gender, 50);
+  const { profiles, isLoading } = useAIProfiles({
+    gender,
+    limit: 50,
+    excludeExistingConversations: true,
+  });
 
   const handleProfilePress = (profileId: string) => {
     router.push(`/(root)/(main)/profile/${profileId}`);
@@ -78,7 +82,10 @@ export default function ExploreScreen() {
             renderItem={renderProfile}
             keyExtractor={(item) => item._id}
             numColumns={2}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingBottom: 140,
+            }}
             showsVerticalScrollIndicator={false}
           />
         )}
