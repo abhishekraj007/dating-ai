@@ -36,3 +36,7 @@ export {
   adminGenerateUploadUrl,
   adminDeleteProfileImage,
 } from "./mutations";
+
+// Seed functions
+export { seedAIProfiles, triggerSeed } from "./seed";
+export { triggerGenZSeed, getGenZProfileCount } from "./seed_genz";

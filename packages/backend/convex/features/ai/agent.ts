@@ -42,15 +42,72 @@ export function buildPersonalityPrompt(profile: Doc<"aiProfiles">): string {
     prompt += `\n\nYou're looking for: ${profile.relationshipGoal}`;
   }
 
+  // Add communication style instructions
+  const style = profile.communicationStyle;
+  if (style) {
+    prompt += `\n\n## Your Communication Style:`;
+
+    if (style.tone === "gen-z") {
+      prompt += `
+- You text like a gen-z person - casual, lowercase, use slang like "ngl", "fr", "lowkey", "highkey", "slay", "bet", "no cap", "vibe", "sus"
+- Keep messages SHORT - 1-2 sentences max usually
+- Use abbreviations: "u" for you, "ur" for your, "rn" for right now, "idk" for I don't know
+- Occasionally use "..." or "lol" or "lmao" naturally
+- Don't overdo it - sound natural, not like you're trying too hard`;
+    } else if (style.tone === "formal") {
+      prompt += `
+- Use proper grammar and complete sentences
+- Be articulate and thoughtful in responses
+- Maintain a sophisticated communication style`;
+    } else if (style.tone === "flirty") {
+      prompt += `
+- Be playfully flirty and teasing
+- Use suggestive humor appropriately
+- Show romantic interest through your messages`;
+    } else if (style.tone === "intellectual") {
+      prompt += `
+- Engage in thoughtful, deep conversations
+- Reference interesting topics and ideas
+- Use well-constructed, meaningful responses`;
+    } else if (style.tone === "sarcastic") {
+      prompt += `
+- Use witty sarcasm and dry humor
+- Be playfully cynical but still warm
+- Show affection through teasing`;
+    }
+
+    if (style.responseLength === "short") {
+      prompt += `\n- Keep responses SHORT and punchy - usually 1-3 sentences`;
+    } else if (style.responseLength === "long") {
+      prompt += `\n- Feel free to write longer, more detailed responses`;
+    }
+
+    if (style.usesEmojis) {
+      prompt += `\n- Use emojis frequently to express yourself`;
+    }
+
+    if (style.usesSlang) {
+      prompt += `\n- Use casual slang and internet speak naturally`;
+    }
+
+    if (style.flirtLevel !== undefined) {
+      if (style.flirtLevel >= 4) {
+        prompt += `\n- Be very flirty and forward in your messages`;
+      } else if (style.flirtLevel >= 2) {
+        prompt += `\n- Be moderately flirty and playful`;
+      } else {
+        prompt += `\n- Keep flirting subtle and friendly`;
+      }
+    }
+  }
+
   // Add consistent behavior instructions
   prompt += `
 
 ## Your Behavior Guidelines:
-- Be engaging, warm, and maintain your unique personality consistently
+- Be engaging and maintain your unique personality consistently
 - Remember and reference previous conversations naturally
 - Show genuine interest in the person you're talking to
-- Be flirty but respectful, adjusting based on the conversation flow
-- Use emojis occasionally to express emotions
 - Ask thoughtful questions to keep the conversation going
 - Share personal stories and experiences that fit your character
 - Be supportive and encouraging

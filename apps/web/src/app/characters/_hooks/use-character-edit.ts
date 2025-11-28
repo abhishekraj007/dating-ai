@@ -4,9 +4,18 @@ import { api } from "@dating-ai/backend/convex/_generated/api";
 import type { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { toast } from "sonner";
 
+export type CommunicationStyle = {
+  tone?: string;
+  responseLength?: string;
+  usesEmojis?: boolean;
+  usesSlang?: boolean;
+  flirtLevel?: number;
+};
+
 export type AIProfile = {
   _id: Id<"aiProfiles">;
   name: string;
+  username?: string;
   gender: "female" | "male";
   avatarUrl: string | null;
   profileImageUrls: string[];
@@ -21,10 +30,12 @@ export type AIProfile = {
   status: "active" | "pending" | "archived";
   avatarImageKey?: string;
   profileImageKeys?: string[];
+  communicationStyle?: CommunicationStyle;
 };
 
 export type CharacterFormData = {
   name: string;
+  username: string;
   gender: "female" | "male";
   age: string;
   zodiacSign: string;
@@ -34,10 +45,18 @@ export type CharacterFormData = {
   language: string;
   voiceId: string;
   status: "active" | "pending" | "archived";
+  communicationStyle: {
+    tone: string;
+    responseLength: string;
+    usesEmojis: boolean;
+    usesSlang: boolean;
+    flirtLevel: string;
+  };
 };
 
 const initialFormData: CharacterFormData = {
   name: "",
+  username: "",
   gender: "female",
   age: "",
   zodiacSign: "",
@@ -47,6 +66,13 @@ const initialFormData: CharacterFormData = {
   language: "en",
   voiceId: "",
   status: "active",
+  communicationStyle: {
+    tone: "",
+    responseLength: "medium",
+    usesEmojis: false,
+    usesSlang: false,
+    flirtLevel: "3",
+  },
 };
 
 export function useCharacterEdit() {
@@ -79,6 +105,7 @@ export function useCharacterEdit() {
     setSelectedProfile(profile);
     setFormData({
       name: profile.name,
+      username: profile.username ?? "",
       gender: profile.gender,
       age: profile.age?.toString() ?? "",
       zodiacSign: profile.zodiacSign ?? "",
@@ -88,6 +115,13 @@ export function useCharacterEdit() {
       language: profile.language ?? "en",
       voiceId: profile.voiceId ?? "",
       status: profile.status,
+      communicationStyle: {
+        tone: profile.communicationStyle?.tone ?? "",
+        responseLength: profile.communicationStyle?.responseLength ?? "medium",
+        usesEmojis: profile.communicationStyle?.usesEmojis ?? false,
+        usesSlang: profile.communicationStyle?.usesSlang ?? false,
+        flirtLevel: profile.communicationStyle?.flirtLevel?.toString() ?? "3",
+      },
     });
     setIsSheetOpen(true);
   };
@@ -221,6 +255,7 @@ export function useCharacterEdit() {
       await updateProfile({
         profileId: selectedProfile._id,
         name: formData.name,
+        username: formData.username || undefined,
         gender: formData.gender,
         age: formData.age ? parseInt(formData.age, 10) : undefined,
         zodiacSign: formData.zodiacSign || undefined,
@@ -231,6 +266,15 @@ export function useCharacterEdit() {
         language: formData.language || undefined,
         voiceId: formData.voiceId || undefined,
         status: formData.status,
+        communicationStyle: formData.communicationStyle.tone
+          ? {
+              tone: formData.communicationStyle.tone,
+              responseLength: formData.communicationStyle.responseLength,
+              usesEmojis: formData.communicationStyle.usesEmojis,
+              usesSlang: formData.communicationStyle.usesSlang,
+              flirtLevel: parseInt(formData.communicationStyle.flirtLevel, 10),
+            }
+          : undefined,
       });
       toast.success("Character updated successfully");
       handleClose();

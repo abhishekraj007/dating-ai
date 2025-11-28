@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/sheet";
 import { Plus, X, ImagePlus, Loader2 } from "lucide-react";
 import { GalleryUpload } from "@/components/gallery-upload";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import type {
   AIProfile,
   CharacterFormData,
@@ -39,6 +41,21 @@ const ZODIAC_SIGNS = [
   "Capricorn",
   "Aquarius",
   "Pisces",
+];
+
+const COMMUNICATION_TONES = [
+  { value: "gen-z", label: "Gen-Z (casual, slang)" },
+  { value: "formal", label: "Formal (proper grammar)" },
+  { value: "flirty", label: "Flirty (playful, teasing)" },
+  { value: "intellectual", label: "Intellectual (thoughtful)" },
+  { value: "casual", label: "Casual (friendly)" },
+  { value: "sarcastic", label: "Sarcastic (witty, dry)" },
+];
+
+const RESPONSE_LENGTHS = [
+  { value: "short", label: "Short (1-2 sentences)" },
+  { value: "medium", label: "Medium (2-4 sentences)" },
+  { value: "long", label: "Long (detailed)" },
 ];
 
 interface EditCharacterSheetProps {
@@ -162,6 +179,27 @@ export function EditCharacterSheet({
                   onFormChange({ ...formData, name: e.target.value })
                 }
               />
+            </div>
+
+            {/* Username */}
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <div className="flex items-center">
+                <span className="text-muted-foreground mr-1">@</span>
+                <Input
+                  id="username"
+                  value={formData.username}
+                  onChange={(e) =>
+                    onFormChange({
+                      ...formData,
+                      username: e.target.value
+                        .toLowerCase()
+                        .replace(/[^a-z0-9_]/g, ""),
+                    })
+                  }
+                  placeholder="unique_handle"
+                />
+              </div>
             </div>
 
             {/* Age */}
@@ -326,6 +364,128 @@ export function EditCharacterSheet({
                   <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Communication Style Section */}
+            <div className="space-y-4 border-t pt-6">
+              <h3 className="font-semibold text-sm">Communication Style</h3>
+
+              {/* Tone */}
+              <div className="space-y-2">
+                <Label>Tone</Label>
+                <Select
+                  value={formData.communicationStyle.tone}
+                  onValueChange={(value) =>
+                    onFormChange({
+                      ...formData,
+                      communicationStyle: {
+                        ...formData.communicationStyle,
+                        tone: value,
+                      },
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select tone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COMMUNICATION_TONES.map((tone) => (
+                      <SelectItem key={tone.value} value={tone.value}>
+                        {tone.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Response Length */}
+              <div className="space-y-2">
+                <Label>Response Length</Label>
+                <Select
+                  value={formData.communicationStyle.responseLength}
+                  onValueChange={(value) =>
+                    onFormChange({
+                      ...formData,
+                      communicationStyle: {
+                        ...formData.communicationStyle,
+                        responseLength: value,
+                      },
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RESPONSE_LENGTHS.map((len) => (
+                      <SelectItem key={len.value} value={len.value}>
+                        {len.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Uses Emojis */}
+              <div className="flex items-center justify-between">
+                <Label htmlFor="usesEmojis">Uses Emojis</Label>
+                <Switch
+                  id="usesEmojis"
+                  checked={formData.communicationStyle.usesEmojis}
+                  onCheckedChange={(checked) =>
+                    onFormChange({
+                      ...formData,
+                      communicationStyle: {
+                        ...formData.communicationStyle,
+                        usesEmojis: checked,
+                      },
+                    })
+                  }
+                />
+              </div>
+
+              {/* Uses Slang */}
+              <div className="flex items-center justify-between">
+                <Label htmlFor="usesSlang">Uses Slang</Label>
+                <Switch
+                  id="usesSlang"
+                  checked={formData.communicationStyle.usesSlang}
+                  onCheckedChange={(checked) =>
+                    onFormChange({
+                      ...formData,
+                      communicationStyle: {
+                        ...formData.communicationStyle,
+                        usesSlang: checked,
+                      },
+                    })
+                  }
+                />
+              </div>
+
+              {/* Flirt Level */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Flirt Level</Label>
+                  <span className="text-sm text-muted-foreground">
+                    {formData.communicationStyle.flirtLevel}/5
+                  </span>
+                </div>
+                <Slider
+                  value={[parseInt(formData.communicationStyle.flirtLevel, 10)]}
+                  min={1}
+                  max={5}
+                  step={1}
+                  onValueChange={([value]) =>
+                    onFormChange({
+                      ...formData,
+                      communicationStyle: {
+                        ...formData.communicationStyle,
+                        flirtLevel: value.toString(),
+                      },
+                    })
+                  }
+                />
+              </div>
             </div>
 
             {/* Gallery Images */}

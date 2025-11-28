@@ -16,6 +16,7 @@ import { InterestChip, CompatibilityIndicator } from "@/components/dating";
 import { useState, useCallback } from "react";
 import { Text } from "@/components";
 import { LinearGradient } from "expo-linear-gradient";
+import { useConvexAuth } from "convex/react";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const photoWidth = (screenWidth - 48) / 2;
@@ -31,6 +32,7 @@ export default function ProfileDetailScreen() {
   const { profile, isLoading } = useAIProfile(id);
   const { conversation } = useConversationByProfile(id);
   const { startConversation } = useStartConversation();
+  const { isAuthenticated } = useConvexAuth();
   const [isStartingChat, setIsStartingChat] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
@@ -40,6 +42,12 @@ export default function ProfileDetailScreen() {
 
   const handleChat = async () => {
     if (!id) return;
+
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+      router.push("/(root)/(auth)");
+      return;
+    }
 
     setIsStartingChat(true);
 
@@ -232,6 +240,11 @@ export default function ProfileDetailScreen() {
           <Text className="text-foreground text-2xl font-bold">
             {profile.name}
           </Text>
+          {profile.username && (
+            <Text variant="muted" className="text-sm mt-1">
+              @{profile.username}
+            </Text>
+          )}
 
           <View className="flex-row flex-wrap gap-2 mt-3">
             {profile.age && (
@@ -251,6 +264,11 @@ export default function ProfileDetailScreen() {
                 <Chip.Label>{profile.occupation}</Chip.Label>
               </Chip>
             )}
+            {profile.mbtiType && (
+              <Chip variant="secondary" size="sm">
+                <Chip.Label>{profile.mbtiType}</Chip.Label>
+              </Chip>
+            )}
           </View>
         </View>
 
@@ -261,6 +279,34 @@ export default function ProfileDetailScreen() {
             <Text variant="muted" className="leading-6">
               {profile.bio}
             </Text>
+          </View>
+        )}
+
+        {/* Relationship Goal */}
+        {profile.relationshipGoal && (
+          <View className="px-4 mt-6">
+            <Text className="text-foreground font-semibold mb-2">
+              Looking for
+            </Text>
+            <Text variant="muted" className="leading-6">
+              {profile.relationshipGoal}
+            </Text>
+          </View>
+        )}
+
+        {/* Personality Traits */}
+        {profile.personalityTraits && profile.personalityTraits.length > 0 && (
+          <View className="px-4 mt-6">
+            <Text className="text-foreground font-semibold mb-2">
+              Personality
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {profile.personalityTraits.map((trait, index) => (
+                <Chip key={index} variant="secondary" size="sm">
+                  <Chip.Label>{trait}</Chip.Label>
+                </Chip>
+              ))}
+            </View>
           </View>
         )}
 

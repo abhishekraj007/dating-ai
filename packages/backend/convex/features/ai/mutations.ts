@@ -299,6 +299,7 @@ export const adminUpdateProfile = mutation({
   args: {
     profileId: v.id("aiProfiles"),
     name: v.optional(v.string()),
+    username: v.optional(v.string()),
     gender: v.optional(v.union(v.literal("female"), v.literal("male"))),
     avatarImageKey: v.optional(v.string()),
     age: v.optional(v.number()),
@@ -312,6 +313,15 @@ export const adminUpdateProfile = mutation({
     voiceId: v.optional(v.string()),
     status: v.optional(
       v.union(v.literal("active"), v.literal("pending"), v.literal("archived"))
+    ),
+    communicationStyle: v.optional(
+      v.object({
+        tone: v.optional(v.string()),
+        responseLength: v.optional(v.string()),
+        usesEmojis: v.optional(v.boolean()),
+        usesSlang: v.optional(v.boolean()),
+        flirtLevel: v.optional(v.number()),
+      })
     ),
   },
   handler: async (ctx, { profileId, ...updates }) => {

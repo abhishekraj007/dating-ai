@@ -135,6 +135,7 @@ export default defineSchema({
   aiProfiles: defineTable({
     // Required fields
     name: v.string(),
+    username: v.optional(v.string()), // Unique handle like @username
     gender: v.union(v.literal("female"), v.literal("male")),
     avatarImageKey: v.optional(v.string()), // R2 key for main avatar (optional for seed data)
     isUserCreated: v.boolean(),
@@ -158,10 +159,21 @@ export default defineSchema({
     voiceType: v.optional(v.string()), // Voice type description (legacy)
     createdAt: v.optional(v.number()), // Creation timestamp (legacy)
     createdByUserId: v.optional(v.string()), // Better Auth user ID if user-created
+    // Communication style for AI responses
+    communicationStyle: v.optional(
+      v.object({
+        tone: v.optional(v.string()), // "gen-z", "formal", "flirty", "intellectual", "casual", "sarcastic"
+        responseLength: v.optional(v.string()), // "short", "medium", "long"
+        usesEmojis: v.optional(v.boolean()), // Whether to use emojis frequently
+        usesSlang: v.optional(v.boolean()), // Gen-Z slang, abbreviations
+        flirtLevel: v.optional(v.number()), // 1-5, how flirty the responses are
+      })
+    ),
   })
     .index("by_gender", ["gender"])
     .index("by_user", ["createdByUserId"])
-    .index("by_status_and_gender", ["status", "gender"]),
+    .index("by_status_and_gender", ["status", "gender"])
+    .index("by_username", ["username"]),
 
   // Conversation metadata - links Agent threads to AI profiles
   aiConversations: defineTable({
