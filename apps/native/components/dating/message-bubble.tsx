@@ -54,6 +54,7 @@ interface MessageBubbleProps {
   timestamp: number;
   avatarUrl?: string | null;
   profileName?: string;
+  isQuizActive?: boolean;
   onQuizAnswer?: (answer: string) => void;
   onEndQuiz?: () => void;
   onLongPress?: () => void;
@@ -81,6 +82,7 @@ export const MessageBubble = ({
   timestamp,
   avatarUrl,
   profileName,
+  isQuizActive = false,
   onQuizAnswer,
   onEndQuiz,
   onLongPress,
@@ -182,6 +184,32 @@ export const MessageBubble = ({
     switch (structuredContent.type) {
       case "quiz_question": {
         const quizData = structuredContent as QuizQuestionData;
+
+        // For past quiz questions (not active), show only the question text
+        // This saves space and bandwidth - no need for disabled options
+        if (!isQuizActive) {
+          return (
+            <View className="flex-row mb-3 px-4">
+              <Avatar alt="" size="sm" className="mr-2">
+                {avatarUrl ? (
+                  <Avatar.Image source={{ uri: avatarUrl }} />
+                ) : (
+                  <Avatar.Fallback>{profileName?.[0] ?? "AI"}</Avatar.Fallback>
+                )}
+              </Avatar>
+              <View className="max-w-[75%]">
+                <View className="bg-surface rounded-2xl rounded-tl-sm px-4 py-3">
+                  <Markdown style={markdownStyles}>
+                    {quizData.question}
+                  </Markdown>
+                </View>
+                <Text className="text-muted text-xs mt-1">{time}</Text>
+              </View>
+            </View>
+          );
+        }
+
+        // Active quiz question - show options
         return (
           <View className="flex-row mb-3 px-4">
             <Avatar alt="" size="sm" className="mr-2">
@@ -197,14 +225,14 @@ export const MessageBubble = ({
                 <Markdown style={markdownStyles}>{quizData.question}</Markdown>
               </View>
 
-              {/* Answer options as clickable chips */}
+              {/* Answer options - only shown for active quiz */}
               <View className="flex-row flex-wrap gap-2 mb-2">
                 {quizData.options.map((option, index) => {
                   const optionLabel = String.fromCharCode(65 + index); // A, B, C, D
                   return (
                     <Pressable
                       key={index}
-                      onPress={() => onQuizAnswer?.(`${optionLabel}`)}
+                      onPress={() => onQuizAnswer?.(option)}
                       className="bg-surface border border-border rounded-full px-4 py-2 active:bg-pink-500/20 active:border-pink-500"
                     >
                       <Text className="text-foreground">

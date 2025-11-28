@@ -27,7 +27,7 @@ import {
   Lightbulb,
   Trash2,
 } from "lucide-react-native";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import {
   useConversation,
   useMessages,
@@ -70,6 +70,7 @@ export default function ChatScreen() {
     hasMore,
     loadMore,
   } = useMessages(threadId);
+
   const { sendMessage } = useSendMessage();
 
   // Chat scroll behavior - WhatsApp-like
@@ -263,8 +264,60 @@ export default function ChatScreen() {
     );
   }, [id, threadId, profile?.name, clearChat]);
 
+  // Determine which quiz question (if any) should be interactive
+  // A quiz question is interactive if it's the last one and has no answer after it
+  const interactiveQuizQuestionId = useMemo(() => {
+    if (!messages.length) return null;
+
+    let lastQuizQuestionId: string | null = null;
+    let lastQuizQuestionIndex = -1;
+
+    // Find the last quiz_question
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.role !== "user") {
+        try {
+          const parsed = JSON.parse(msg.content);
+          if (parsed.type === "quiz_question") {
+            lastQuizQuestionId = msg._id;
+            lastQuizQuestionIndex = i;
+            break;
+          }
+        } catch {
+          // Not JSON
+        }
+      }
+    }
+
+    if (!lastQuizQuestionId || lastQuizQuestionIndex === -1) return null;
+
+    // Check if there's a user response or quiz_answer_result after it
+    for (let i = lastQuizQuestionIndex + 1; i < messages.length; i++) {
+      const msg = messages[i];
+      // User answered
+      if (msg.role === "user") return null;
+      // AI gave a result (means question was answered)
+      try {
+        const parsed = JSON.parse(msg.content);
+        if (
+          parsed.type === "quiz_answer_result" ||
+          parsed.type === "quiz_end"
+        ) {
+          return null;
+        }
+      } catch {
+        // Not JSON
+      }
+    }
+
+    return lastQuizQuestionId;
+  }, [messages]);
+
   const renderMessage = ({ item }: { item: any }) => {
     const isUser = item.role === "user";
+    // A quiz question is interactive only if it's the last unanswered question
+    const isInteractiveQuizQuestion = item._id === interactiveQuizQuestionId;
+
     return (
       <MessageBubble
         content={item.content || ""}
@@ -272,6 +325,7 @@ export default function ChatScreen() {
         timestamp={item._creationTime}
         avatarUrl={!isUser ? profile?.avatarUrl : undefined}
         profileName={profile?.name}
+        isQuizActive={isInteractiveQuizQuestion}
         onQuizAnswer={handleQuizAnswer}
         onEndQuiz={handleEndQuiz}
         onLongPress={

@@ -21,8 +21,6 @@ export {
   getConversationByProfile,
   getMessages,
   getSystemProfiles,
-  getActiveQuiz,
-  getQuiz,
 } from "./queries";
 
 // Public mutations
@@ -37,7 +35,4 @@ export {
   adminUpdateProfile,
   adminGenerateUploadUrl,
   adminDeleteProfileImage,
-  startQuiz,
-  answerQuizQuestion,
-  endQuiz,
 } from "./mutations";
