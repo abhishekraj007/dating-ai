@@ -361,7 +361,16 @@ export default function ChatScreen() {
                 </View>
               </>
             ) : (
-              <>
+              <Pressable
+                onPress={() => {
+                  if (conversation?.aiProfileId) {
+                    router.push(
+                      `/(root)/(main)/profile/${conversation.aiProfileId}`
+                    );
+                  }
+                }}
+                className="flex-row items-center gap-2 active:opacity-70"
+              >
                 <Avatar size="sm" alt={profile?.name ?? "AI"}>
                   {profile?.avatarUrl ? (
                     <Avatar.Image source={{ uri: profile.avatarUrl }} />
@@ -376,7 +385,7 @@ export default function ChatScreen() {
                     {profile?.name ?? "AI"}
                   </Text>
                 </View>
-              </>
+              </Pressable>
             )}
           </View>
           <View className="flex-row gap-1">

@@ -13,7 +13,9 @@
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F @dating-ai/backend dev",
-    "dev:setup": "turbo -F @dating-ai/backend dev:setup"
+    "dev:setup": "turbo -F @dating-ai/backend dev:setup",
+    "ios": "turbo -F native ios",
+    "android": "turbo -F native android"
   },
   "dependencies": {},
   "devDependencies": {
