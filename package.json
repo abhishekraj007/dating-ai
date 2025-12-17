@@ -11,6 +11,7 @@
     "build": "turbo build",
     "check-types": "turbo check-types",
     "dev:native": "turbo -F native dev",
+    "dev:admin": "turbo -F admin dev",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F @dating-ai/backend dev",
     "dev:setup": "turbo -F @dating-ai/backend dev:setup",

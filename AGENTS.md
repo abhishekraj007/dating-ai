@@ -12,7 +12,8 @@
 - Prefer heroui-native components over native components when available (Button over Pressable, TextField over TextInput, Avatar for avatars, Card for cards, etc.)
 - Use heroui-native list_components tool to see all available components before implementing UI
 - **ALWAYS use expo-image for images in native apps** - provides caching, prefetching, and better performance. Use `cachePolicy="memory-disk"`, `contentFit="cover"`, and `transition` for smooth loading.
-- use shadcn-ui for web components and screens development
+- **ALWAYS check heroui-react MCP server for available components before using shadcn-ui components**
+- use heroui-react and shadcn-ui for web components and screens development
 - use Use shadcn CLI for installing any new web components
 - never create markdown (`.md`) files after you're done unless it's a big feature and planning is required. NEVER!
 - never user emojis in your replies.

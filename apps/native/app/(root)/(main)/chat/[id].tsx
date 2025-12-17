@@ -1,12 +1,12 @@
 import {
   View,
   Text,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Alert,
   Pressable,
+  Keyboard,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,10 +17,6 @@ import {
   Phone,
   Video,
   MoreVertical,
-  Send,
-  Smile,
-  Mic,
-  Paperclip,
   Camera,
   HelpCircle,
   MessageSquare,
@@ -45,6 +41,7 @@ import {
   MessageActionsSheet,
   TopicsSheet,
   SuggestionsSheet,
+  ChatInputBox,
 } from "@/components/dating";
 import type { ImageRequestOptions } from "@/hooks/dating";
 import type { TopicId } from "@/components/dating";
@@ -493,6 +490,9 @@ export default function ChatScreen() {
                 paddingVertical: 16,
               }}
               showsVerticalScrollIndicator={false}
+              keyboardDismissMode="on-drag"
+              keyboardShouldPersistTaps="handled"
+              onScrollBeginDrag={Keyboard.dismiss}
               onStartReached={() => {
                 // Don't load more during initial scroll or if already loading
                 if (!shouldLoadMore() || !hasMore || isLoadingMore) {
@@ -572,37 +572,12 @@ export default function ChatScreen() {
         </View>
 
         {/* Input area */}
-        <View className="flex-row items-center px-4 py-3 border-t border-border gap-2">
-          <Button variant="tertiary" size="sm" isIconOnly>
-            <Smile size={24} color={mutedColor} />
-          </Button>
-          <View className="flex-1 flex-row items-center bg-surface rounded-full px-4 py-2">
-            <TextInput
-              className="flex-1 text-foreground"
-              placeholder="Type a message ..."
-              placeholderTextColor={mutedColor}
-              value={message}
-              onChangeText={setMessage}
-              onSubmitEditing={handleSend}
-              returnKeyType="send"
-            />
-          </View>
-          <Button variant="tertiary" size="sm" isIconOnly>
-            <Mic size={24} color={mutedColor} />
-          </Button>
-          <Button variant="tertiary" size="sm" isIconOnly>
-            <Paperclip size={24} color={mutedColor} />
-          </Button>
-          <Button
-            size="sm"
-            isIconOnly
-            className="rounded-full"
-            onPress={handleSend}
-            isDisabled={!message.trim() || isSending}
-          >
-            <Send size={20} color="white" />
-          </Button>
-        </View>
+        <ChatInputBox
+          message={message}
+          onChangeText={setMessage}
+          onSend={handleSend}
+          isSending={isSending}
+        />
       </KeyboardAvoidingView>
 
       {/* Image Request Sheet */}

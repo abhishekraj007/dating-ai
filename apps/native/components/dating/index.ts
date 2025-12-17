@@ -17,3 +17,4 @@ export { TopicsSheet, CONVERSATION_TOPICS } from "./topics-sheet";
 export type { TopicId } from "./topics-sheet";
 export { SuggestionsSheet, DEFAULT_SUGGESTIONS } from "./suggestions-sheet";
 export { ProfileSwipeCard } from "./profile-swipe-card";
+export { ChatInputBox } from "./chat-input-box";
