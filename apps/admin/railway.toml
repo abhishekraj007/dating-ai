@@ -1,7 +1,7 @@
 [build]
 builder = "RAILPACK"
 buildCommand = "pnpm --filter admin build"
-watchPatterns = ["apps/admin/**", "packages/**"]
+watchPatterns = ["apps/admin/**"]
 
 [deploy]
 startCommand = "pnpm --filter admin start"

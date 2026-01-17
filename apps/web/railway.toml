@@ -1,7 +1,7 @@
 [build]
 builder = "RAILPACK"
 buildCommand = "pnpm --filter web build"
-watchPatterns = ["apps/web/**", "packages/**"]
+watchPatterns = ["apps/web/**"]
 
 [deploy]
 startCommand = "pnpm --filter web start"
