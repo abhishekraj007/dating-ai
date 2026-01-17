@@ -10,8 +10,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "convex-starter",
-  description: "convex-starter",
+  title: "dating-ai",
+  description: "dating-ai",
 };
 
 export default function RootLayout({

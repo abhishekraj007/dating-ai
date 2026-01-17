@@ -1,7 +1,7 @@
 import { View, ScrollView, Alert, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "@convex-starter/backend/convex/_generated/api";
+import { api } from "@dating-ai/backend/convex/_generated/api";
 import { Button, Card, Spinner, TextField } from "heroui-native";
 import { useState, useEffect } from "react";
 import * as Notifications from "expo-notifications";

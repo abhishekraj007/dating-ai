@@ -7,12 +7,18 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "prebuild": "expo prebuild",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:ios": "eas build --platform ios --profile production --local",
+    "build:ios:dev": "eas build --platform ios --profile development --local",
+    "build:android": "eas build --platform android --profile production --local",
+    "build:android:remote": "eas build --platform android --profile production",
+    "build:android:dev": "eas build --platform android --profile development --local",
+    "clean": "git clean -xdf .expo node_modules"
   },
   "dependencies": {
     "@better-auth/expo": "1.3.27",
     "@convex-dev/better-auth": "^0.9.1",
-    "@convex-starter/backend": "workspace:*",
+    "@dating-ai/backend": "workspace:*",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo/html-elements": "^0.10.1",
     "@expo/vector-icons": "^15.0.2",
@@ -28,6 +34,7 @@
     "babel-preset-expo": "^54.0.6",
     "better-auth": "1.3.27",
     "convex": "^1.27.0",
+    "date-fns": "^4.1.0",
     "expo": "^54.0.1",
     "expo-apple-authentication": "~8.0.7",
     "expo-constants": "~18.0.8",

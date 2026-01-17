@@ -5,7 +5,7 @@ import UserMenu from "./user-menu";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
-import { api } from "@convex-starter/backend/convex/_generated/api";
+import { api } from "@dating-ai/backend/convex/_generated/api";
 import { CreditsModal } from "./credits-modal";
 import { Coins, Menu } from "lucide-react";
 import { useState } from "react";

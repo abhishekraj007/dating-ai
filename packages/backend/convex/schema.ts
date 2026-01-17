@@ -98,4 +98,78 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_key", ["key"]),
+
+  // AI Dating Profiles - both pre-seeded and user-created
+  aiProfiles: defineTable({
+    name: v.string(),
+    age: v.number(),
+    gender: v.union(v.literal("male"), v.literal("female")),
+    zodiacSign: v.optional(v.string()),
+    occupation: v.optional(v.string()),
+    bio: v.string(),
+    interests: v.array(v.string()),
+    personalityTraits: v.array(v.string()),
+    avatarImageKey: v.optional(v.string()), // R2 key
+    profileImageKeys: v.array(v.string()), // Array of R2 keys
+    relationshipGoal: v.optional(v.string()),
+    mbtiType: v.optional(v.string()),
+    language: v.optional(v.string()),
+    voiceType: v.optional(v.string()),
+    isUserCreated: v.boolean(),
+    createdByUserId: v.optional(v.string()),
+    status: v.union(
+      v.literal("active"),
+      v.literal("pending"),
+      v.literal("archived")
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_gender", ["gender"])
+    .index("by_status", ["status"])
+    .index("by_created_by_user_id", ["createdByUserId"])
+    .index("by_gender_and_status", ["gender", "status"])
+    .index("by_is_user_created", ["isUserCreated"]),
+
+  // Dating conversations - maps to Agent threads
+  // Uses Agent component threads internally, this stores dating-specific metadata
+  conversations: defineTable({
+    userId: v.string(), // Better Auth user ID
+    aiProfileId: v.id("aiProfiles"),
+    threadId: v.string(), // Agent thread ID from @convex-dev/agent
+    relationshipLevel: v.number(), // 1-5
+    compatibilityScore: v.number(), // 0-100
+    lastMessageAt: v.optional(v.number()),
+    messageCount: v.number(),
+    totalTokensUsed: v.number(),
+    status: v.union(v.literal("active"), v.literal("archived")),
+    createdAt: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_ai_profile_id", ["aiProfileId"])
+    .index("by_user_id_and_status", ["userId", "status"])
+    .index("by_user_id_and_ai_profile_id", ["userId", "aiProfileId"])
+    .index("by_thread_id", ["threadId"]),
+
+  // Custom selfie generation requests
+  selfieRequests: defineTable({
+    conversationId: v.id("conversations"),
+    userId: v.string(),
+    aiProfileId: v.id("aiProfiles"),
+    prompt: v.string(),
+    styleOptions: v.any(), // JSON object with hairstyle, clothing, scene
+    imageKey: v.optional(v.string()), // R2 key
+    status: v.union(
+      v.literal("pending"),
+      v.literal("completed"),
+      v.literal("failed")
+    ),
+    replicateJobId: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_conversation_id", ["conversationId"])
+    .index("by_user_id", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_replicate_job_id", ["replicateJobId"]),
 });

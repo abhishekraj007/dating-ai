@@ -5,7 +5,7 @@ import { Pressable, Text, View } from "react-native";
 import { Crown, Coins, Settings } from "lucide-react-native";
 import { useConvexAuth, useQuery } from "convex/react";
 import { usePurchases } from "@/contexts/purchases-context";
-import { api } from "@convex-starter/backend";
+import { api } from "@dating-ai/backend";
 
 export const Header = () => {
   const foregroundColor = useThemeColor("foreground");
