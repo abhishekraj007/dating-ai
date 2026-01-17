@@ -1,273 +1,382 @@
 import {
   View,
-  Text,
   ScrollView,
-  Image as RNImage,
   Dimensions,
+  Pressable,
+  StatusBar,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Image } from "expo-image";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@dating-ai/backend";
-import { Button, Spinner, Card, Chip, Avatar } from "heroui-native";
-import { ArrowLeft, MessageCircle, Heart } from "lucide-react-native";
+import { Button, Chip, Skeleton, useThemeColor } from "heroui-native";
+import { X, Share2, MoreVertical } from "lucide-react-native";
+import { useAIProfile } from "@/hooks/dating";
+import { useStartConversation, useConversationByProfile } from "@/hooks/dating";
 import { InterestChip, CompatibilityIndicator } from "@/components/dating";
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { Text } from "@/components";
+import { LinearGradient } from "expo-linear-gradient";
+import { useConvexAuth } from "convex/react";
+import { isAndroid } from "@/utils";
 
-const { width } = Dimensions.get("window");
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+const photoWidth = (screenWidth - 48) / 2;
+const heroImageHeight = screenHeight * 0.45;
 
-export default function ProfileDetailPage() {
-  const router = useRouter();
+export default function ProfileDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const foregroundColor = useThemeColor("foreground");
+  const surfaceColor = useThemeColor("surface");
+  const backgroundColor = useThemeColor("background");
+  const { profile, isLoading } = useAIProfile(id);
+  const { conversation } = useConversationByProfile(id);
+  const { startConversation } = useStartConversation();
+  const { isAuthenticated } = useConvexAuth();
+  const [isStartingChat, setIsStartingChat] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
 
-  const profile = useQuery(
-    api.features.ai.profiles.getAIProfile,
-    id ? { profileId: id } : "skip"
-  );
+  const handleImageLoad = useCallback(() => {
+    setIsImageLoaded(true);
+  }, []);
 
-  const startConversation = useMutation(api.datingAgent.startConversation);
-
-  const handleStartChat = async () => {
+  const handleChat = async () => {
     if (!id) return;
 
-    try {
-      const conversationId = await startConversation({ aiProfileId: id });
-      router.push(`/(root)/(main)/chat/${conversationId}`);
-    } catch (error) {
-      console.error("Failed to start conversation:", error);
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+      router.push("/(root)/(auth)");
+      return;
     }
+
+    setIsStartingChat(true);
+
+    // If conversation exists, navigate to it
+    if (conversation) {
+      router.push(`/(root)/(main)/chat/${conversation._id}`);
+      setIsStartingChat(false);
+      return;
+    }
+
+    // Start new conversation
+    const conversationId = await startConversation({
+      aiProfileId: id as any,
+    });
+
+    router.push(`/(root)/(main)/chat/${conversationId}`);
+    setIsStartingChat(false);
   };
 
-  if (profile === undefined) {
+  if (isLoading) {
     return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <Spinner size="lg" />
+      <View style={{ flex: 1 }} className="bg-background">
+        <StatusBar barStyle="light-content" />
+        {/* Header buttons - absolute positioned */}
+        <View
+          style={{
+            position: "absolute",
+            top: 16,
+            left: 0,
+            right: 0,
+            zIndex: 10,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            paddingHorizontal: 16,
+          }}
+        >
+          <Button
+            variant="tertiary"
+            size="sm"
+            isIconOnly
+            style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+            onPress={() => router.back()}
+          >
+            <X size={24} color="#fff" />
+          </Button>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Button
+              variant="tertiary"
+              size="sm"
+              isIconOnly
+              style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+            >
+              <Share2 size={20} color="#fff" />
+            </Button>
+            <Button
+              variant="tertiary"
+              size="sm"
+              isIconOnly
+              style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+            >
+              <MoreVertical size={20} color="#fff" />
+            </Button>
+          </View>
+        </View>
+        <View className="px-4" style={{ paddingTop: insets.top }}>
+          <Skeleton
+            style={{ width: "100%", height: heroImageHeight }}
+            className="rounded-none mb-4"
+          />
+          <Skeleton className="h-8 w-32 rounded-lg mb-2" />
+          <Skeleton className="h-4 w-full rounded-lg mb-4" />
+          <Skeleton className="h-20 w-full rounded-lg" />
+        </View>
       </View>
     );
   }
 
-  if (profile === null) {
+  if (!profile) {
     return (
-      <View className="flex-1 bg-background items-center justify-center px-8">
-        <Text className="text-lg font-semibold text-foreground mb-2">
-          Profile Not Found
-        </Text>
-        <Text className="text-center text-muted-foreground mb-6">
-          This profile may have been removed or doesn't exist.
-        </Text>
-        <Button onPress={() => router.back()} variant="primary">
-          <Button.Label>Go Back</Button.Label>
-        </Button>
+      <View style={{ flex: 1 }} className="bg-background">
+        <StatusBar barStyle="light-content" />
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingTop: insets.top,
+          }}
+        >
+          <Text className="text-foreground text-xl font-semibold">
+            Profile not found
+          </Text>
+          <Button className="mt-4" onPress={() => router.back()}>
+            <Button.Label>Go Back</Button.Label>
+          </Button>
+        </View>
       </View>
     );
   }
 
-  const images = profile.profileImageUrls || [];
-  const displayImages =
-    images.length > 0 ? images : profile.avatarUrl ? [profile.avatarUrl] : [];
+  const genderSymbol = profile.gender === "female" ? "\u2640" : "\u2642";
 
   return (
-    <View className="flex-1 bg-background">
-      <SafeAreaView edges={["top"]} className="absolute top-0 left-0 right-0 z-10">
-        <View className="flex-row items-center justify-between px-4 py-3">
-          <Button
-            onPress={() => router.back()}
-            variant="ghost"
-            isIconOnly
-            className="bg-black/30"
-          >
-            <Button.Label>
-              <ArrowLeft size={24} color="#FFFFFF" />
-            </Button.Label>
-          </Button>
+    <View style={{ flex: 1 }} className="bg-background">
+      <StatusBar barStyle="light-content" />
 
-          {profile.conversation && (
-            <CompatibilityIndicator
-              score={profile.conversation.compatibilityScore}
+      {/* Header buttons - absolute positioned over image */}
+      <View
+        style={{
+          position: "absolute",
+          top: isAndroid ? insets.top + 16 : 16,
+          paddingHorizontal: 16,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          flexDirection: "row",
+          justifyContent: "space-between",
+        }}
+      >
+        <Button
+          variant="tertiary"
+          size="sm"
+          isIconOnly
+          style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+          onPress={() => router.back()}
+        >
+          <X size={24} color="#fff" />
+        </Button>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <Button
+            variant="tertiary"
+            size="sm"
+            isIconOnly
+            style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+          >
+            <Share2 size={20} color="#fff" />
+          </Button>
+          <Button
+            variant="tertiary"
+            size="sm"
+            isIconOnly
+            style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+          >
+            <MoreVertical size={20} color="#fff" />
+          </Button>
+        </View>
+      </View>
+
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
+        {/* Hero image - edge to edge */}
+        <View style={{ width: screenWidth, height: heroImageHeight }}>
+          {/* Gradient skeleton background using theme colors */}
+          {!isImageLoaded && (
+            <LinearGradient
+              colors={[surfaceColor, backgroundColor, surfaceColor]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                position: "absolute",
+                width: "100%",
+                height: "100%",
+              }}
             />
           )}
+          <Image
+            source={
+              profile.avatarUrl
+                ? { uri: profile.avatarUrl }
+                : require("@/assets/images/login-bg.jpeg")
+            }
+            style={{
+              width: "100%",
+              height: "100%",
+              opacity: isImageLoaded ? 1 : 0,
+            }}
+            contentFit="cover"
+            contentPosition="top"
+            cachePolicy="memory-disk"
+            transition={300}
+            onLoad={handleImageLoad}
+          />
         </View>
-      </SafeAreaView>
 
-      <ScrollView className="flex-1">
-        {/* Hero Image Carousel */}
-        {displayImages.length > 0 && (
-          <View>
-            <ScrollView
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onScroll={(e) => {
-                const offsetX = e.nativeEvent.contentOffset.x;
-                const index = Math.round(offsetX / width);
-                setActiveImageIndex(index);
-              }}
-              scrollEventThrottle={16}
-            >
-              {displayImages.map((url, index) => (
-                <RNImage
-                  key={index}
-                  source={{ uri: url }}
-                  style={{ width, height: width * 1.2 }}
-                  resizeMode="cover"
-                />
-              ))}
-            </ScrollView>
+        {/* Name and badges */}
+        <View className="px-4 mt-4">
+          <Text className="text-foreground text-2xl font-bold">
+            {profile.name}
+          </Text>
+          {profile.username && (
+            <Text variant="muted" className="text-sm mt-1">
+              @{profile.username}
+            </Text>
+          )}
 
-            {/* Pagination Dots */}
-            {displayImages.length > 1 && (
-              <View className="absolute bottom-4 left-0 right-0 flex-row justify-center gap-2">
-                {displayImages.map((_, index) => (
-                  <View
-                    key={index}
-                    className={`w-2 h-2 rounded-full ${
-                      index === activeImageIndex ? "bg-white" : "bg-white/40"
-                    }`}
-                  />
-                ))}
-              </View>
+          <View className="flex-row flex-wrap gap-2 mt-3">
+            {profile.age && (
+              <Chip variant="secondary" size="sm">
+                <Chip.Label>
+                  {genderSymbol} {profile.age}
+                </Chip.Label>
+              </Chip>
             )}
+            {profile.zodiacSign && (
+              <Chip variant="secondary" size="sm">
+                <Chip.Label>{profile.zodiacSign}</Chip.Label>
+              </Chip>
+            )}
+            {profile.occupation && (
+              <Chip variant="secondary" size="sm">
+                <Chip.Label>{profile.occupation}</Chip.Label>
+              </Chip>
+            )}
+            {profile.mbtiType && (
+              <Chip variant="secondary" size="sm">
+                <Chip.Label>{profile.mbtiType}</Chip.Label>
+              </Chip>
+            )}
+          </View>
+        </View>
+
+        {/* About me */}
+        {profile.bio && (
+          <View className="px-4 mt-6">
+            <Text className="text-foreground font-semibold mb-2">About me</Text>
+            <Text variant="muted" className="leading-6">
+              {profile.bio}
+            </Text>
           </View>
         )}
 
-        {/* Profile Info */}
-        <View className="p-4 gap-4">
-          {/* Name and Age */}
-          <View className="flex-row items-center gap-3">
-            <Avatar size="md" alt={profile.name}>
-              {profile.avatarUrl ? (
-                <Avatar.Image source={{ uri: profile.avatarUrl }} />
-              ) : (
-                <Avatar.Fallback>{profile.name[0]}</Avatar.Fallback>
-              )}
-            </Avatar>
+        {/* Relationship Goal */}
+        {profile.relationshipGoal && (
+          <View className="px-4 mt-6">
+            <Text className="text-foreground font-semibold mb-2">
+              Looking for
+            </Text>
+            <Text variant="muted" className="leading-6">
+              {profile.relationshipGoal}
+            </Text>
+          </View>
+        )}
 
-            <View className="flex-1">
-              <View className="flex-row items-center gap-2">
-                <Text className="text-2xl font-bold text-foreground">
-                  {profile.name}
-                </Text>
-                <Text className="text-xl text-muted-foreground">
-                  {profile.age}
-                </Text>
-              </View>
-
-              <View className="flex-row items-center gap-2 mt-1">
-                <Chip size="sm" variant="secondary">
-                  <Chip.Label>{profile.zodiacSign}</Chip.Label>
+        {/* Personality Traits */}
+        {profile.personalityTraits && profile.personalityTraits.length > 0 && (
+          <View className="px-4 mt-6">
+            <Text className="text-foreground font-semibold mb-2">
+              Personality
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {profile.personalityTraits.map((trait, index) => (
+                <Chip key={index} variant="secondary" size="sm">
+                  <Chip.Label>{trait}</Chip.Label>
                 </Chip>
-                {profile.mbtiType && (
-                  <Chip size="sm" variant="secondary">
-                    <Chip.Label>{profile.mbtiType}</Chip.Label>
-                  </Chip>
-                )}
-              </View>
+              ))}
             </View>
           </View>
+        )}
 
-          {/* About Me */}
-          <Card className="p-4">
-            <Text className="text-lg font-semibold text-foreground mb-2">
-              About me
+        {/* Interests */}
+        {profile.interests && profile.interests.length > 0 && (
+          <View className="px-4 mt-6">
+            <Text className="text-foreground font-semibold mb-2">
+              Interests
             </Text>
-            <Text className="text-base text-muted-foreground leading-6">
-              {profile.bio}
+            <View className="flex-row flex-wrap gap-2">
+              {profile.interests.map((interest, index) => (
+                <InterestChip key={index} interest={interest} />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Photos grid */}
+        {profile.profileImageUrls && profile.profileImageUrls.length > 0 && (
+          <View className="px-4 mt-6">
+            <Text className="text-foreground font-semibold mb-2">Photos</Text>
+            <View className="flex-row flex-wrap gap-2">
+              {profile.profileImageUrls.map((url, index) => (
+                <Pressable
+                  key={index}
+                  style={{ width: photoWidth, height: photoWidth }}
+                >
+                  <Image
+                    source={{ uri: url }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: 12,
+                    }}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    transition={200}
+                  />
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Compatibility indicator if conversation exists */}
+        {conversation && (
+          <View className="px-4 mt-6 items-center">
+            <Text className="text-foreground font-semibold mb-2">
+              Compatibility
             </Text>
-          </Card>
+            <CompatibilityIndicator
+              score={conversation.compatibilityScore}
+              size="lg"
+            />
+          </View>
+        )}
 
-          {/* Occupation */}
-          {profile.occupation && (
-            <Card className="p-4">
-              <Text className="text-sm text-muted-foreground mb-1">
-                Occupation
-              </Text>
-              <Text className="text-base font-medium text-foreground">
-                {profile.occupation}
-              </Text>
-            </Card>
-          )}
-
-          {/* Interests */}
-          {profile.interests && profile.interests.length > 0 && (
-            <Card className="p-4">
-              <Text className="text-lg font-semibold text-foreground mb-3">
-                Interests
-              </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {profile.interests.map((interest, index) => (
-                  <InterestChip key={index} interest={interest} />
-                ))}
-              </View>
-            </Card>
-          )}
-
-          {/* Personality Traits */}
-          {profile.personalityTraits && profile.personalityTraits.length > 0 && (
-            <Card className="p-4">
-              <Text className="text-lg font-semibold text-foreground mb-3">
-                Personality
-              </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {profile.personalityTraits.map((trait, index) => (
-                  <Chip key={index} variant="secondary">
-                    <Chip.Label>{trait}</Chip.Label>
-                  </Chip>
-                ))}
-              </View>
-            </Card>
-          )}
-
-          {/* Relationship Goal */}
-          {profile.relationshipGoal && (
-            <Card className="p-4">
-              <Text className="text-sm text-muted-foreground mb-1">
-                Looking for
-              </Text>
-              <Text className="text-base font-medium text-foreground">
-                {profile.relationshipGoal}
-              </Text>
-            </Card>
-          )}
-
-          {/* Language */}
-          {profile.language && (
-            <Card className="p-4">
-              <Text className="text-sm text-muted-foreground mb-1">
-                Language
-              </Text>
-              <Text className="text-base font-medium text-foreground">
-                {profile.language}
-              </Text>
-            </Card>
-          )}
-
-          {/* Bottom spacing for button */}
-          <View className="h-20" />
-        </View>
+        <View className="h-24" />
       </ScrollView>
 
-      {/* Chat Button */}
-      <SafeAreaView
-        edges={["bottom"]}
-        className="absolute bottom-0 left-0 right-0 bg-background border-t border-border"
+      {/* Chat button */}
+      <View
+        className="absolute left-0 right-0 px-4 pb-4 pt-2"
+        style={{ bottom: insets.bottom }}
       >
-        <View className="px-4 py-3">
-          <Button
-            onPress={handleStartChat}
-            variant="primary"
-            size="lg"
-            className="flex-row items-center justify-center gap-2"
-          >
-            <Button.Label>
-              <MessageCircle size={20} color="#FFFFFF" />
-              <Text className="text-white font-semibold text-base ml-2">
-                {profile.conversation ? "Continue Chat" : "Start Chat"}
-              </Text>
-            </Button.Label>
-          </Button>
-        </View>
-      </SafeAreaView>
+        <Button onPress={handleChat} isDisabled={isStartingChat}>
+          <Button.Label>{isStartingChat ? "Starting..." : "Chat"}</Button.Label>
+        </Button>
+      </View>
     </View>
   );
 }

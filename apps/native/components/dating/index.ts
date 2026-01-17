@@ -1,8 +1,20 @@
-export * from "./profile-card";
-export * from "./level-badge";
-export * from "./interest-chip";
-export * from "./message-bubble";
-export * from "./compatibility-indicator";
-export * from "./action-button";
-export * from "./selfie-request-sheet";
+// Dating AI Components
+// Reusable UI components for the dating AI feature
 
+export { ProfileCard } from "./profile-card";
+export { MessageBubble } from "./message-bubble";
+export { VoiceMessagePlayer } from "./voice-message-player";
+export { ImageMessage } from "./image-message";
+export { CompatibilityIndicator } from "./compatibility-indicator";
+export { LevelBadge } from "./level-badge";
+export { PhotoUploadSlot } from "./photo-upload-slot";
+export { GenderTabs } from "./gender-tabs";
+export { InterestChip } from "./interest-chip";
+export { ImageRequestSheet } from "./image-request-sheet";
+export type { ImageRequestOptions } from "./image-request-sheet";
+export { MessageActionsSheet } from "./message-actions-sheet";
+export { TopicsSheet, CONVERSATION_TOPICS } from "./topics-sheet";
+export type { TopicId } from "./topics-sheet";
+export { SuggestionsSheet, DEFAULT_SUGGESTIONS } from "./suggestions-sheet";
+export { ProfileSwipeCard } from "./profile-swipe-card";
+export { ChatInputBox } from "./chat-input-box";

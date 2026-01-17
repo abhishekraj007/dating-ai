@@ -10,13 +10,13 @@ const nativeAppUrl = process.env.NATIVE_APP_URL || "datingai://";
 
 export function createAuth(
   ctx: GenericCtx<DataModel>,
-  { optionsOnly }: { optionsOnly?: boolean } = { optionsOnly: false }
+  { optionsOnly }: { optionsOnly?: boolean } = { optionsOnly: false },
 ) {
   return betterAuth({
     logger: {
       disabled: optionsOnly,
     },
-    // baseURL: "http://localhost:3004", // enable this for web login
+    // baseURL: "http://localhost:3005", // enable this for web login
     baseURL: siteUrl, // enable this for mobile login
     trustedOrigins: [siteUrl, nativeAppUrl, "http://localhost:3004"],
     database: authComponent.adapter(ctx),

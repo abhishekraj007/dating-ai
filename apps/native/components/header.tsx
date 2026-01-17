@@ -1,13 +1,26 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Button, useThemeColor } from "heroui-native";
-import { Pressable, Text, View } from "react-native";
-import { Crown, Coins, Settings } from "lucide-react-native";
-import { useConvexAuth, useQuery } from "convex/react";
+import { Text, View } from "react-native";
+import { Crown, Coins, Settings, Search } from "lucide-react-native";
+import { useConvexAuth } from "convex/react";
+import { useQuery } from "convex-helpers/react/cache";
 import { usePurchases } from "@/contexts/purchases-context";
 import { api } from "@dating-ai/backend";
+import { AppLogo } from "./app-logo";
 
-export const Header = () => {
+interface HeaderProps {
+  title?: string;
+  showSearch?: boolean;
+  showSettings?: boolean;
+  rightContent?: React.ReactNode;
+}
+
+export const Header = ({
+  title,
+  showSearch = false,
+  showSettings = true,
+  rightContent,
+}: HeaderProps) => {
   const foregroundColor = useThemeColor("foreground");
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
@@ -15,12 +28,29 @@ export const Header = () => {
   const userData = useQuery(api.user.fetchUserAndProfile);
 
   return (
-    <View className="flex-row items-center justify-between px-4">
-      <View>
-        <Text className="text-foreground">Logo</Text>
+    <View className="flex-row items-center justify-between px-4 py-2">
+      <View className="flex-row items-center gap-2">
+        <AppLogo size={28} />
+        {title && (
+          <Text className="text-foreground text-xl font-bold">{title}</Text>
+        )}
       </View>
 
       <View className="flex-row items-center justify-between gap-2">
+        {rightContent}
+        {showSearch && (
+          <Button
+            variant="tertiary"
+            size="sm"
+            isIconOnly
+            className="rounded-full"
+            onPress={() => {
+              // TODO: Implement search
+            }}
+          >
+            <Search size={20} color={foregroundColor} />
+          </Button>
+        )}
         {isAuthenticated ? (
           <>
             <Button
@@ -42,21 +72,23 @@ export const Header = () => {
             >
               <Coins size={16} color={foregroundColor} />
               <Text className="text-foreground font-medium">
-                {userData?.profile?.credits}
+                {userData?.profile?.credits ?? 0}
               </Text>
             </Button>
 
-            <Button
-              variant="tertiary"
-              size="sm"
-              isIconOnly
-              className="rounded-full"
-              onPress={() => {
-                router.navigate("/settings");
-              }}
-            >
-              <Settings size={16} color={foregroundColor} />
-            </Button>
+            {showSettings && (
+              <Button
+                variant="tertiary"
+                size="sm"
+                isIconOnly
+                className="rounded-full"
+                onPress={() => {
+                  router.navigate("/settings");
+                }}
+              >
+                <Settings size={16} color={foregroundColor} />
+              </Button>
+            )}
           </>
         ) : (
           <Button

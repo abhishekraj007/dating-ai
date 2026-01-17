@@ -1,88 +1,125 @@
-import { View, Text, ActivityIndicator, Image as RNImage } from "react-native";
-import { Avatar } from "heroui-native";
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
+import {
+  parseStructuredContent,
+  type QuizQuestionData,
+  type QuizAnswerResultData,
+  type ImageRequestData,
+  type ImageResponseData,
+} from "./bubbles";
+import { QuizQuestionBubble } from "./bubbles/QuizQuestionBubble";
+import { QuizResultBubble } from "./bubbles/QuizResultBubble";
+import { QuizStartBubble } from "./bubbles/QuizStartBubble";
+import { ImageRequestBubble, ImageResponseBubble } from "./bubbles/ImageBubble";
+import {
+  AITextBubble,
+  UserTextBubble,
+  UserImageRequestBubble,
+} from "./bubbles/TextBubble";
 
 interface MessageBubbleProps {
-  role?: "user" | "ai";
   content: string;
-  createdAt?: number;
-  timestamp?: number;
-  avatarUrl?: string;
-  imageUrls?: string[];
-  isUser?: boolean;
-  isStreaming?: boolean;
-  streamingText?: string;
+  isUser: boolean;
+  timestamp: number;
+  avatarUrl?: string | null;
+  profileName?: string;
+  isQuizActive?: boolean;
+  onQuizAnswer?: (answer: string) => void;
+  onEndQuiz?: () => void;
+  onLongPress?: () => void;
 }
 
-export function MessageBubble({
-  role,
+/**
+ * Message bubble router - delegates to specialized bubble components.
+ * Keeps this file small and maintainable.
+ */
+export const MessageBubble = ({
   content,
-  createdAt,
+  isUser,
   timestamp,
   avatarUrl,
-  imageUrls,
-  isUser: isUserProp,
-  isStreaming = false,
-  streamingText,
-}: MessageBubbleProps) {
-  const isUser = isUserProp ?? role === "user";
-  const time = timestamp || createdAt || Date.now();
-  const displayContent = isStreaming && streamingText ? streamingText : content;
+  profileName,
+  isQuizActive = false,
+  onQuizAnswer,
+  onEndQuiz,
+  onLongPress,
+}: MessageBubbleProps) => {
+  const time = format(new Date(timestamp), "HH:mm");
+  const structuredContent = parseStructuredContent(content);
+  const bubbleProps = { avatarUrl, profileName, time };
 
-  return (
-    <View className={`flex-row gap-2 mb-4 ${isUser ? "flex-row-reverse" : ""}`}>
-      {/* Avatar for AI messages */}
-      {!isUser && (
-        <Avatar size="md" alt="AI Avatar" className="w-10 h-10">
-          {avatarUrl ? (
-            <Avatar.Image source={{ uri: avatarUrl }} />
-          ) : (
-            <Avatar.Fallback>💕</Avatar.Fallback>
-          )}
-        </Avatar>
-      )}
+  // User messages
+  if (isUser) {
+    if (structuredContent?.type === "image_request") {
+      return (
+        <UserImageRequestBubble
+          data={structuredContent as ImageRequestData}
+          time={time}
+          onLongPress={onLongPress}
+        />
+      );
+    }
+    return (
+      <UserTextBubble content={content} time={time} onLongPress={onLongPress} />
+    );
+  }
 
-      <View className={`flex-1 ${isUser ? "items-end" : "items-start"}`}>
-        {/* Message bubble */}
-        <View
-          className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${
-            isUser ? "bg-pink-500 rounded-tr-sm" : "bg-muted rounded-tl-sm"
-          }`}
-        >
-          <View className="flex-row items-start gap-2">
-            <Text
-              className={`text-base flex-1 ${isUser ? "text-white" : "text-foreground"}`}
-            >
-              {displayContent}
-            </Text>
-            {isStreaming && (
-              <ActivityIndicator
-                size="small"
-                color={isUser ? "#FFFFFF" : "#FF3B8E"}
-              />
-            )}
-          </View>
+  // AI structured messages
+  if (structuredContent) {
+    switch (structuredContent.type) {
+      case "quiz_question":
+        return (
+          <QuizQuestionBubble
+            data={structuredContent as QuizQuestionData}
+            isActive={isQuizActive}
+            onAnswer={onQuizAnswer}
+            onEndQuiz={onEndQuiz}
+            {...bubbleProps}
+          />
+        );
 
-          {/* Images */}
-          {imageUrls && imageUrls.length > 0 && (
-            <View className="mt-2 gap-2">
-              {imageUrls.map((url, index) => (
-                <RNImage
-                  key={index}
-                  source={{ uri: url }}
-                  className="w-full h-48 rounded-lg"
-                  resizeMode="cover"
-                />
-              ))}
-            </View>
-          )}
-        </View>
+      case "quiz_answer_result":
+        return (
+          <QuizResultBubble
+            data={structuredContent as QuizAnswerResultData}
+            {...bubbleProps}
+          />
+        );
 
-        {/* Timestamp */}
-        <Text className="text-xs text-muted-foreground mt-1 px-1">
-          {formatDistanceToNow(new Date(time), { addSuffix: true })}
-        </Text>
-      </View>
-    </View>
-  );
-}
+      case "quiz_start":
+        return (
+          <QuizStartBubble
+            message={structuredContent.message}
+            {...bubbleProps}
+          />
+        );
+
+      case "quiz_end":
+      case "quiz_answer_check":
+        return (
+          <AITextBubble
+            content={structuredContent.message || content}
+            {...bubbleProps}
+          />
+        );
+
+      case "image_request":
+        return (
+          <ImageRequestBubble
+            data={structuredContent as ImageRequestData}
+            {...bubbleProps}
+          />
+        );
+
+      case "image_response":
+        return (
+          <ImageResponseBubble
+            data={structuredContent as ImageResponseData}
+            {...bubbleProps}
+          />
+        );
+    }
+  }
+
+  // Default: AI text message
+  return <AITextBubble content={content} {...bubbleProps} />;
+};

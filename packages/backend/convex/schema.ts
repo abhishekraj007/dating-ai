@@ -7,6 +7,8 @@ export default defineSchema({
     name: v.optional(v.string()),
     authUserId: v.string(),
     credits: v.optional(v.number()),
+    // Admin status - can only be set manually in database
+    isAdmin: v.optional(v.boolean()),
     // Premium status - can be granted manually or via subscription
     isPremium: v.optional(v.boolean()),
     premiumGrantedBy: v.optional(
@@ -18,9 +20,44 @@ export default defineSchema({
     ),
     premiumGrantedAt: v.optional(v.number()),
     premiumExpiresAt: v.optional(v.number()), // null = lifetime/subscription-based
-    // Active thread for English tutor (syncs across devices)
-    activeTutorThreadId: v.optional(v.string()),
+    // Onboarding status
+    hasCompletedOnboarding: v.optional(v.boolean()),
   }).index("by_auth_user_id", ["authUserId"]),
+
+  // User preferences for AI profile matching (from onboarding)
+  userPreferences: defineTable({
+    userId: v.string(), // Better Auth user ID
+    // Gender preference
+    genderPreference: v.union(
+      v.literal("female"),
+      v.literal("male"),
+      v.literal("both")
+    ),
+    // Age range preference
+    ageMin: v.number(), // Default: 18
+    ageMax: v.number(), // Default: 99
+    // Zodiac sign preferences (empty = no preference)
+    zodiacPreferences: v.array(v.string()),
+    // Interest preferences for matching (empty = no preference)
+    interestPreferences: v.array(v.string()),
+    // Updated timestamp
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  // Profile interactions - tracks likes/skips for For You feed
+  profileInteractions: defineTable({
+    userId: v.string(), // Better Auth user ID
+    aiProfileId: v.id("aiProfiles"),
+    action: v.union(
+      v.literal("like"), // Swiped right
+      v.literal("skip"), // Swiped left
+      v.literal("superlike") // Future: super like feature
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_profile", ["userId", "aiProfileId"])
+    .index("by_user_and_action", ["userId", "action"]),
 
   // Unified subscriptions table for both Polar (web) and RevenueCat (native)
   // Single source of truth for all subscription and premium status data
@@ -64,11 +101,6 @@ export default defineSchema({
       "platformSubscriptionId",
     ]),
 
-  todos: defineTable({
-    text: v.string(),
-    completed: v.boolean(),
-  }),
-
   // Orders table for tracking one-time purchases (credit purchases)
   orders: defineTable({
     userId: v.string(), // Better Auth user ID (stored as string)
@@ -99,77 +131,143 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_key", ["key"]),
 
-  // AI Dating Profiles - both pre-seeded and user-created
+  // AI Profiles - pre-seeded + user-created AI characters
   aiProfiles: defineTable({
+    // Required fields
     name: v.string(),
-    age: v.number(),
-    gender: v.union(v.literal("male"), v.literal("female")),
-    zodiacSign: v.optional(v.string()),
-    occupation: v.optional(v.string()),
-    bio: v.string(),
-    interests: v.array(v.string()),
-    personalityTraits: v.array(v.string()),
-    avatarImageKey: v.optional(v.string()), // R2 key
-    profileImageKeys: v.array(v.string()), // Array of R2 keys
-    relationshipGoal: v.optional(v.string()),
-    mbtiType: v.optional(v.string()),
-    language: v.optional(v.string()),
-    voiceType: v.optional(v.string()),
+    username: v.optional(v.string()), // Unique handle like @username
+    gender: v.union(v.literal("female"), v.literal("male")),
+    avatarImageKey: v.optional(v.string()), // R2 key for main avatar (optional for seed data)
     isUserCreated: v.boolean(),
-    createdByUserId: v.optional(v.string()),
     status: v.union(
       v.literal("active"),
       v.literal("pending"),
       v.literal("archived")
     ),
-    createdAt: v.number(),
+    // Optional profile fields - AI adapts if missing
+    age: v.optional(v.number()),
+    zodiacSign: v.optional(v.string()),
+    occupation: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    interests: v.optional(v.array(v.string())),
+    personalityTraits: v.optional(v.array(v.string())),
+    profileImageKeys: v.optional(v.array(v.string())), // Additional R2 keys
+    relationshipGoal: v.optional(v.string()),
+    mbtiType: v.optional(v.string()),
+    language: v.optional(v.string()), // defaults to "en"
+    voiceId: v.optional(v.string()), // ElevenLabs voice ID
+    voiceType: v.optional(v.string()), // Voice type description (legacy)
+    createdAt: v.optional(v.number()), // Creation timestamp (legacy)
+    createdByUserId: v.optional(v.string()), // Better Auth user ID if user-created
+    // Communication style for AI responses
+    communicationStyle: v.optional(
+      v.object({
+        tone: v.optional(v.string()), // "gen-z", "formal", "flirty", "intellectual", "casual", "sarcastic"
+        responseLength: v.optional(v.string()), // "short", "medium", "long"
+        usesEmojis: v.optional(v.boolean()), // Whether to use emojis frequently
+        usesSlang: v.optional(v.boolean()), // Gen-Z slang, abbreviations
+        flirtLevel: v.optional(v.number()), // 1-5, how flirty the responses are
+      })
+    ),
   })
     .index("by_gender", ["gender"])
-    .index("by_status", ["status"])
-    .index("by_created_by_user_id", ["createdByUserId"])
-    .index("by_gender_and_status", ["gender", "status"])
-    .index("by_is_user_created", ["isUserCreated"]),
+    .index("by_user", ["createdByUserId"])
+    .index("by_status_and_gender", ["status", "gender"])
+    .index("by_username", ["username"]),
 
-  // Dating conversations - maps to Agent threads
-  // Uses Agent component threads internally, this stores dating-specific metadata
-  conversations: defineTable({
+  // Conversation metadata - links Agent threads to AI profiles
+  aiConversations: defineTable({
+    threadId: v.string(), // Agent component thread ID
     userId: v.string(), // Better Auth user ID
     aiProfileId: v.id("aiProfiles"),
-    threadId: v.string(), // Agent thread ID from @convex-dev/agent
-    relationshipLevel: v.number(), // 1-5
-    compatibilityScore: v.number(), // 0-100
-    lastMessageAt: v.optional(v.number()),
-    messageCount: v.number(),
-    totalTokensUsed: v.number(),
-    status: v.union(v.literal("active"), v.literal("archived")),
-    createdAt: v.number(),
+    relationshipLevel: v.number(), // 1-5, default 1
+    compatibilityScore: v.number(), // 0-100, default 60
+    messageCount: v.number(), // default 0
+    lastMessageAt: v.number(),
   })
-    .index("by_user_id", ["userId"])
-    .index("by_ai_profile_id", ["aiProfileId"])
-    .index("by_user_id_and_status", ["userId", "status"])
-    .index("by_user_id_and_ai_profile_id", ["userId", "aiProfileId"])
-    .index("by_thread_id", ["threadId"]),
+    .index("by_user", ["userId"])
+    .index("by_user_and_profile", ["userId", "aiProfileId"])
+    .index("by_thread", ["threadId"])
+    .index("by_user_and_last_message", ["userId", "lastMessageAt"]),
 
-  // Custom selfie generation requests
-  selfieRequests: defineTable({
-    conversationId: v.id("conversations"),
+  // Chat image generation requests (selfies, custom images, etc.)
+  chatImages: defineTable({
+    conversationId: v.id("aiConversations"),
     userId: v.string(),
     aiProfileId: v.id("aiProfiles"),
     prompt: v.string(),
-    styleOptions: v.any(), // JSON object with hairstyle, clothing, scene
-    imageKey: v.optional(v.string()), // R2 key
+    styleOptions: v.optional(
+      v.object({
+        hairstyle: v.optional(v.string()),
+        clothing: v.optional(v.string()),
+        scene: v.optional(v.string()),
+      })
+    ),
+    imageKey: v.optional(v.string()), // R2 key when complete
     status: v.union(
       v.literal("pending"),
+      v.literal("processing"),
       v.literal("completed"),
       v.literal("failed")
     ),
     replicateJobId: v.optional(v.string()),
     errorMessage: v.optional(v.string()),
-    createdAt: v.number(),
+    creditsCharged: v.number(),
+  })
+    .index("by_conversation", ["conversationId"])
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"]),
+
+  // Quiz sessions for interactive quizzes in chat
+  quizSessions: defineTable({
+    conversationId: v.id("aiConversations"),
+    userId: v.string(),
+    aiProfileId: v.id("aiProfiles"),
+    status: v.union(
+      v.literal("active"),
+      v.literal("completed"),
+      v.literal("cancelled")
+    ),
+    // Quiz questions and answers
+    questions: v.array(
+      v.object({
+        id: v.string(),
+        question: v.string(),
+        options: v.array(v.string()), // ["A) Paris", "B) Rome", ...]
+        correctIndex: v.number(), // 0-3
+        userAnswer: v.optional(v.number()), // User's selected index
+        isCorrect: v.optional(v.boolean()),
+      })
+    ),
+    currentQuestionIndex: v.number(),
+    score: v.number(), // Correct answers count
+    totalQuestions: v.number(),
+    compatibilityBonus: v.number(), // Bonus earned from this quiz (max 10%)
+    startedAt: v.number(),
     completedAt: v.optional(v.number()),
   })
-    .index("by_conversation_id", ["conversationId"])
-    .index("by_user_id", ["userId"])
-    .index("by_status", ["status"])
-    .index("by_replicate_job_id", ["replicateJobId"]),
+    .index("by_conversation", ["conversationId"])
+    .index("by_user", ["userId"])
+    .index("by_conversation_status", ["conversationId", "status"]),
+
+  // Dynamic filter options - managed via admin, no app update needed
+  // Stores all selectable options for each filter category
+  filterOptions: defineTable({
+    // Filter category: zodiac, interest, age_range, gender, etc.
+    // Add new types here when you want new filter categories
+    type: v.string(), // e.g., "zodiac", "interest", "age_range", "gender"
+    value: v.string(), // Internal value used for matching/storage
+    label: v.string(), // Display label
+    emoji: v.optional(v.string()), // Optional emoji for display
+    // For range types like age
+    minValue: v.optional(v.number()),
+    maxValue: v.optional(v.number()),
+    isActive: v.boolean(), // Can be disabled without deletion
+    order: v.number(), // Display order
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_type", ["type"])
+    .index("by_type_active", ["type", "isActive"])
+    .index("by_type_order", ["type", "order"]),
 });

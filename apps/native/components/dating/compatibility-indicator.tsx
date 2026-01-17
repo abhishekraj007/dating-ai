@@ -1,47 +1,68 @@
 import { View, Text } from "react-native";
 import { Heart } from "lucide-react-native";
-import { useEffect } from "react";
 import Animated, {
   useAnimatedStyle,
   withSpring,
   useSharedValue,
+  withSequence,
+  withTiming,
 } from "react-native-reanimated";
+import { useEffect } from "react";
 
 interface CompatibilityIndicatorProps {
-  score: number;
+  score: number; // 0-100
+  size?: "sm" | "md" | "lg";
 }
 
-export function CompatibilityIndicator({ score }: CompatibilityIndicatorProps) {
+const sizes = {
+  sm: { container: 48, heart: 32, text: 10 },
+  md: { container: 64, heart: 44, text: 12 },
+  lg: { container: 80, heart: 56, text: 14 },
+};
+
+export const CompatibilityIndicator = ({
+  score,
+  size = "md",
+}: CompatibilityIndicatorProps) => {
   const scale = useSharedValue(1);
+  const { container, heart, text } = sizes[size];
+
+  useEffect(() => {
+    // Pulse animation when score changes
+    scale.value = withSequence(
+      withSpring(1.2, { damping: 10 }),
+      withSpring(1, { damping: 10 })
+    );
+  }, [score]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
-  // Animate on score change
-  useEffect(() => {
-    scale.value = withSpring(1.2, {}, () => {
-      scale.value = withSpring(1);
-    });
-  }, [score, scale]);
-
   return (
     <Animated.View
-      className="absolute top-4 right-4 bg-white/90 dark:bg-black/90 rounded-full p-3 items-center justify-center"
       style={[
         animatedStyle,
         {
-          shadowColor: "#FF3B8E",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 8,
+          width: container,
+          height: container,
         },
       ]}
+      className="items-center justify-center"
     >
-      <Heart size={24} color="#FF3B8E" fill="#FF3B8E" />
-      <Text className="text-pink-500 font-bold text-sm mt-1">{score}%</Text>
+      {/* Background heart */}
+      <View className="absolute">
+        <Heart size={heart} color="#EC4899" fill="#EC4899" />
+      </View>
+
+      {/* Score text */}
+      <Text
+        className="text-white font-bold"
+        style={{ fontSize: text }}
+      >
+        {score}%
+      </Text>
     </Animated.View>
   );
-}
+};
 

@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { View, Alert, Image as RNImage, Text, ScrollView } from "react-native";
-import { useQuery, useMutation } from "convex/react";
+import { View, Alert, Text, ScrollView } from "react-native";
+import { Image } from "expo-image";
+import { useMutation } from "convex/react";
+import { useQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import * as ImagePicker from "expo-image-picker";
 import { Button, Card, Spinner } from "heroui-native";
@@ -140,10 +142,12 @@ export default function UploadsScreen() {
 
             {selectedImage && (
               <View className="rounded-xl overflow-hidden">
-                <RNImage
+                <Image
                   source={{ uri: selectedImage }}
-                  className="w-full h-48"
-                  resizeMode="cover"
+                  style={{ width: "100%", height: 192 }}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  transition={200}
                 />
               </View>
             )}
@@ -225,10 +229,17 @@ export default function UploadsScreen() {
                 {uploads.map((upload) => (
                   <Card key={upload._id} variant="secondary">
                     {isImage(upload.contentType) && upload.url ? (
-                      <RNImage
+                      <Image
                         source={{ uri: upload.url }}
-                        className="w-full h-48 rounded-t-xl"
-                        resizeMode="cover"
+                        style={{
+                          width: "100%",
+                          height: 192,
+                          borderTopLeftRadius: 12,
+                          borderTopRightRadius: 12,
+                        }}
+                        contentFit="cover"
+                        cachePolicy="memory-disk"
+                        transition={200}
                       />
                     ) : (
                       <View className="w-full h-48 bg-surface-quaternary rounded-t-xl items-center justify-center">

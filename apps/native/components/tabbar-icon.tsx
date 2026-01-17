@@ -1,8 +1,40 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { View } from "react-native";
+import {
+  Heart,
+  Compass,
+  MessageCircle,
+  Sparkles,
+  User,
+} from "lucide-react-native";
 
-export const TabBarIcon = (props: {
-	name: React.ComponentProps<typeof FontAwesome>["name"];
+type TabName = "for-you" | "explore" | "chats" | "my-creation" | "account";
+
+interface TabBarIconProps {
+  name: TabName;
 	color: string;
-}) => {
-	return <FontAwesome size={24} style={{ marginBottom: -3 }} {...props} />;
+  focused: boolean;
+}
+
+const icons: Record<TabName, typeof Heart> = {
+  "for-you": Heart,
+  explore: Compass,
+  chats: MessageCircle,
+  "my-creation": Sparkles,
+  account: User,
+};
+
+export const TabBarIcon = ({ name, color, focused }: TabBarIconProps) => {
+  const IconComponent = icons[name];
+  const size = 24;
+
+  return (
+    <View className="items-center justify-center">
+      <IconComponent
+        size={size}
+        color={color}
+        fill={focused && name === "for-you" ? color : "transparent"}
+        strokeWidth={focused ? 2.5 : 2}
+      />
+    </View>
+  );
 };

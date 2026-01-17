@@ -1,6 +1,7 @@
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { useAppTheme } from "@/contexts/app-theme-context";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useConvexAuth } from "convex/react";
+import { useQuery } from "convex-helpers/react/cache";
 import { Stack } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { Platform } from "react-native";

@@ -1,6 +1,42 @@
-// Export AI profiles queries (non-agent related)
-export * from "./profiles";
-export * from "./r2Helpers";
+// AI Dating Feature
+// Exports all AI profile and conversation related functions
 
-// Dating agent functions are in datingAgent.ts at root level
-// Import from: api.datingAgent.*
+// Agent utilities
+export {
+  buildPersonalityPrompt,
+  createAIProfileAgent,
+  getVoiceId,
+  calculateRelationshipLevel,
+  calculateCompatibilityScore,
+  DEFAULT_VOICES,
+} from "./agent";
+
+// Public queries
+export {
+  getProfiles,
+  getProfile,
+  getUserCreatedProfiles,
+  getUserConversations,
+  getConversation,
+  getConversationByProfile,
+  getMessages,
+  getSystemProfiles,
+} from "./queries";
+
+// Public mutations
+export {
+  startConversation,
+  sendMessage,
+  deleteMessage,
+  createAIProfile,
+  updateAIProfile,
+  archiveAIProfile,
+  requestChatImage,
+  adminUpdateProfile,
+  adminGenerateUploadUrl,
+  adminDeleteProfileImage,
+} from "./mutations";
+
+// Seed functions
+export { seedAIProfiles, triggerSeed } from "./seed";
+export { triggerGenZSeed, getGenZProfileCount } from "./seed_genz";

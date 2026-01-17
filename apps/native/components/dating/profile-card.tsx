@@ -1,72 +1,103 @@
-import { View, Text, Image, Pressable } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { PressableFeedback, Chip, Button } from "heroui-native";
 import { MoreVertical } from "lucide-react-native";
 
 interface ProfileCardProps {
   name: string;
-  age: number;
+  age?: number;
   zodiacSign?: string;
-  avatarUrl?: string;
+  avatarUrl: string | null;
+  gender: "female" | "male";
   onPress?: () => void;
-  showMenu?: boolean;
   onMenuPress?: () => void;
+  showChatButton?: boolean;
+  onChatPress?: () => void;
 }
 
-export function ProfileCard({
+export const ProfileCard = ({
   name,
   age,
   zodiacSign,
   avatarUrl,
+  gender,
   onPress,
-  showMenu = false,
   onMenuPress,
-}: ProfileCardProps) {
+  showChatButton = false,
+  onChatPress,
+}: ProfileCardProps) => {
+  const genderSymbol = gender === "female" ? "\u2640" : "\u2642";
+
   return (
-    <Pressable
-      onPress={onPress}
-      className="rounded-2xl overflow-hidden aspect-[3/4] bg-muted"
-    >
-      {avatarUrl ? (
+    <PressableFeedback onPress={onPress}>
+      <View className="rounded-2xl overflow-hidden bg-surface aspect-[3/4]">
         <Image
-          source={{ uri: avatarUrl }}
-          className="w-full h-full"
-          resizeMode="cover"
+          source={
+            avatarUrl
+              ? { uri: avatarUrl }
+              : require("@/assets/images/login-bg.jpeg")
+          }
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={200}
         />
-      ) : (
-        <View className="w-full h-full bg-muted items-center justify-center">
-          <Text className="text-6xl">{name[0]}</Text>
-        </View>
-      )}
-      
-      {/* Gradient overlay */}
-      <LinearGradient
-        colors={["transparent", "rgba(0,0,0,0.8)"]}
-        className="absolute bottom-0 left-0 right-0 h-24"
-      />
-      
-      {/* Profile info */}
-      <View className="absolute bottom-3 left-3 right-3">
-        <View className="flex-row items-center justify-between">
-          <View>
-            <Text className="text-white text-lg font-bold">
-              {name}, {age}
-            </Text>
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0.8)"]}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 0, y: 1 }}
+        />
+
+        {/* Menu button */}
+        {onMenuPress && (
+          <View className="absolute top-2 right-2">
+            <Button
+              variant="tertiary"
+              size="sm"
+              isIconOnly
+              className="bg-black/30 rounded-full"
+              onPress={onMenuPress}
+            >
+              <MoreVertical size={18} color="white" />
+            </Button>
+          </View>
+        )}
+
+        {/* Content at bottom */}
+        <View className="absolute bottom-0 left-0 right-0 p-3">
+          <Text className="text-white text-lg font-bold mb-2">{name}</Text>
+
+          <View className="flex-row gap-2">
+            {age && (
+              <Chip size="sm" variant="tertiary">
+                <Chip.Label className="text-white text-xs">
+                  {genderSymbol} {age}
+                </Chip.Label>
+              </Chip>
+            )}
             {zodiacSign && (
-              <Text className="text-white/80 text-sm">{zodiacSign}</Text>
+              <Chip size="sm" variant="tertiary">
+                <Chip.Label className="text-white text-xs">
+                  {zodiacSign}
+                </Chip.Label>
+              </Chip>
             )}
           </View>
-          
-          {showMenu && (
-            <Pressable
-              onPress={onMenuPress}
-              className="w-8 h-8 bg-white/20 rounded-full items-center justify-center"
+
+          {showChatButton && (
+            <Button
+              size="sm"
+              className="mt-3"
+              onPress={onChatPress}
             >
-              <MoreVertical size={18} color="#FFFFFF" />
-            </Pressable>
+              <Button.Label>Chat</Button.Label>
+            </Button>
           )}
         </View>
       </View>
-    </Pressable>
+    </PressableFeedback>
   );
-}
+};
 

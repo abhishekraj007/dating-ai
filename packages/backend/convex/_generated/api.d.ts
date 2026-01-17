@@ -8,17 +8,22 @@
  * @module
  */
 
-import type * as aiProfiles_seedProfiles from "../aiProfiles/seedProfiles.js";
 import type * as auth from "../auth.js";
-import type * as datingAgent from "../datingAgent.js";
-import type * as englishTutor from "../englishTutor.js";
+import type * as features_ai_actions from "../features/ai/actions.js";
+import type * as features_ai_agent from "../features/ai/agent.js";
+import type * as features_ai_genz_profiles_data from "../features/ai/genz_profiles_data.js";
+import type * as features_ai_genz_profiles_male from "../features/ai/genz_profiles_male.js";
 import type * as features_ai_index from "../features/ai/index.js";
-import type * as features_ai_profiles from "../features/ai/profiles.js";
-import type * as features_ai_r2Helpers from "../features/ai/r2Helpers.js";
+import type * as features_ai_internalQueries from "../features/ai/internalQueries.js";
+import type * as features_ai_mutations from "../features/ai/mutations.js";
+import type * as features_ai_queries from "../features/ai/queries.js";
+import type * as features_ai_seed from "../features/ai/seed.js";
+import type * as features_ai_seed_genz from "../features/ai/seed_genz.js";
 import type * as features_credits_index from "../features/credits/index.js";
 import type * as features_credits_mutations from "../features/credits/mutations.js";
-import type * as features_credits_pricing from "../features/credits/pricing.js";
 import type * as features_credits_queries from "../features/credits/queries.js";
+import type * as features_filters_queries from "../features/filters/queries.js";
+import type * as features_preferences_queries from "../features/preferences/queries.js";
 import type * as features_premium_admin from "../features/premium/admin.js";
 import type * as features_premium_guards from "../features/premium/guards.js";
 import type * as features_premium_index from "../features/premium/index.js";
@@ -33,13 +38,13 @@ import type * as http from "../http.js";
 import type * as lib_betterAuth_component from "../lib/betterAuth/component.js";
 import type * as lib_betterAuth_createAuth from "../lib/betterAuth/createAuth.js";
 import type * as lib_betterAuth_index from "../lib/betterAuth/index.js";
+import type * as lib_constants from "../lib/constants.js";
 import type * as lib_revenuecatWebhooks from "../lib/revenuecatWebhooks.js";
 import type * as migrations_addCreditsToProfiles from "../migrations/addCreditsToProfiles.js";
 import type * as model_user from "../model/user.js";
 import type * as privateData from "../privateData.js";
 import type * as purchases from "../purchases.js";
 import type * as pushNotifications from "../pushNotifications.js";
-import type * as todos from "../todos.js";
 import type * as uploads from "../uploads.js";
 import type * as user from "../user.js";
 import type * as util from "../util.js";
@@ -50,26 +55,23 @@ import type {
   FunctionReference,
 } from "convex/server";
 
-/**
- * A utility for referencing Convex functions in your app's API.
- *
- * Usage:
- * ```js
- * const myFunctionReference = api.myModule.myFunction;
- * ```
- */
 declare const fullApi: ApiFromModules<{
-  "aiProfiles/seedProfiles": typeof aiProfiles_seedProfiles;
   auth: typeof auth;
-  datingAgent: typeof datingAgent;
-  englishTutor: typeof englishTutor;
+  "features/ai/actions": typeof features_ai_actions;
+  "features/ai/agent": typeof features_ai_agent;
+  "features/ai/genz_profiles_data": typeof features_ai_genz_profiles_data;
+  "features/ai/genz_profiles_male": typeof features_ai_genz_profiles_male;
   "features/ai/index": typeof features_ai_index;
-  "features/ai/profiles": typeof features_ai_profiles;
-  "features/ai/r2Helpers": typeof features_ai_r2Helpers;
+  "features/ai/internalQueries": typeof features_ai_internalQueries;
+  "features/ai/mutations": typeof features_ai_mutations;
+  "features/ai/queries": typeof features_ai_queries;
+  "features/ai/seed": typeof features_ai_seed;
+  "features/ai/seed_genz": typeof features_ai_seed_genz;
   "features/credits/index": typeof features_credits_index;
   "features/credits/mutations": typeof features_credits_mutations;
-  "features/credits/pricing": typeof features_credits_pricing;
   "features/credits/queries": typeof features_credits_queries;
+  "features/filters/queries": typeof features_filters_queries;
+  "features/preferences/queries": typeof features_preferences_queries;
   "features/premium/admin": typeof features_premium_admin;
   "features/premium/guards": typeof features_premium_guards;
   "features/premium/index": typeof features_premium_index;
@@ -84,25 +86,41 @@ declare const fullApi: ApiFromModules<{
   "lib/betterAuth/component": typeof lib_betterAuth_component;
   "lib/betterAuth/createAuth": typeof lib_betterAuth_createAuth;
   "lib/betterAuth/index": typeof lib_betterAuth_index;
+  "lib/constants": typeof lib_constants;
   "lib/revenuecatWebhooks": typeof lib_revenuecatWebhooks;
   "migrations/addCreditsToProfiles": typeof migrations_addCreditsToProfiles;
   "model/user": typeof model_user;
   privateData: typeof privateData;
   purchases: typeof purchases;
   pushNotifications: typeof pushNotifications;
-  todos: typeof todos;
   uploads: typeof uploads;
   user: typeof user;
   util: typeof util;
 }>;
-declare const fullApiWithMounts: typeof fullApi;
 
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
 export declare const api: FilterApi<
-  typeof fullApiWithMounts,
+  typeof fullApi,
   FunctionReference<any, "public">
 >;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
 export declare const internal: FilterApi<
-  typeof fullApiWithMounts,
+  typeof fullApi,
   FunctionReference<any, "internal">
 >;
 
@@ -246,10 +264,6 @@ export declare const components: {
                   lastRequest?: null | number;
                 };
                 model: "rateLimit";
-              }
-            | {
-                data: { count: number; key: string; lastRequest: number };
-                model: "ratelimit";
               };
           onCreateHandle?: string;
           select?: Array<string>;
@@ -604,32 +618,6 @@ export declare const components: {
               }
             | {
                 model: "rateLimit";
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field: "key" | "count" | "lastRequest" | "_id";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
-                model: "ratelimit";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field: "key" | "count" | "lastRequest" | "_id";
@@ -1037,32 +1025,6 @@ export declare const components: {
                     | Array<number>
                     | null;
                 }>;
-              }
-            | {
-                model: "ratelimit";
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field: "key" | "count" | "lastRequest" | "_id";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
               };
           onDeleteHandle?: string;
         },
@@ -1084,8 +1046,7 @@ export declare const components: {
             | "oauthAccessToken"
             | "oauthConsent"
             | "jwks"
-            | "rateLimit"
-            | "ratelimit";
+            | "rateLimit";
           offset?: number;
           paginationOpts: {
             cursor: string | null;
@@ -1137,8 +1098,7 @@ export declare const components: {
             | "oauthAccessToken"
             | "oauthConsent"
             | "jwks"
-            | "rateLimit"
-            | "ratelimit";
+            | "rateLimit";
           select?: Array<string>;
           where?: Array<{
             connector?: "AND" | "OR";
@@ -1647,33 +1607,6 @@ export declare const components: {
                     | Array<number>
                     | null;
                 }>;
-              }
-            | {
-                model: "ratelimit";
-                update: { count?: number; key?: string; lastRequest?: number };
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field: "key" | "count" | "lastRequest" | "_id";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
               };
           onUpdateHandle?: string;
           paginationOpts: {
@@ -2139,33 +2072,6 @@ export declare const components: {
                   key?: null | string;
                   lastRequest?: null | number;
                 };
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field: "key" | "count" | "lastRequest" | "_id";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
-                model: "ratelimit";
-                update: { count?: number; key?: string; lastRequest?: number };
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field: "key" | "count" | "lastRequest" | "_id";
@@ -3495,12 +3401,6 @@ export declare const components: {
         },
         null
       >;
-      getMessageSearchFields: FunctionReference<
-        "query",
-        "internal",
-        { messageId: string },
-        { embedding?: Array<number>; embeddingModel?: string; text?: string }
-      >;
       getMessagesByIds: FunctionReference<
         "query",
         "internal",
@@ -3767,6 +3667,12 @@ export declare const components: {
             | { message: string; type: "other" }
           >;
         }>
+      >;
+      getMessageSearchFields: FunctionReference<
+        "query",
+        "internal",
+        { messageId: string },
+        { embedding?: Array<number>; embeddingModel?: string; text?: string }
       >;
       listMessagesByThreadId: FunctionReference<
         "query",

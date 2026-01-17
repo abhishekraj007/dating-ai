@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Button } from "heroui-native";
-import { Text, View, ActivityIndicator, ImageBackground } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Text, View, ActivityIndicator, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import { useConvexAuth } from "convex/react";
 import { useEffect, useState } from "react";
 import { useAppleAuth, useGoogleAuth } from "@/lib/betterAuth/oauth";
@@ -37,12 +37,14 @@ export default function Landing() {
 
   return (
     <>
-      <ImageBackground
+      <View style={{ flex: 1 }}>
+        <Image
         source={require("@/assets/images/login-bg.jpeg")}
-        style={{ flex: 1 }}
-        resizeMode="cover"
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
         blurRadius={8}
-      >
+          cachePolicy="memory-disk"
+        />
         {/* Dark overlay */}
         <View
           style={{
@@ -95,7 +97,7 @@ export default function Landing() {
             <Text className="text-white/80 text-xs">privacy policy</Text>
           </View>
         </View>
-      </ImageBackground>
+      </View>
 
       {/* Loading overlay */}
       {isLoading && (

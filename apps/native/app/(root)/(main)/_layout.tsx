@@ -1,127 +1,111 @@
-import { Tabs } from "expo-router";
+import { Stack } from "expo-router";
+import { useNavigationOptions } from "@/hooks/useNavigationOptions";
 import { useAppTheme } from "@/contexts/app-theme-context";
-import { Home, Compass, MessageCircle, Sparkles, User } from "lucide-react-native";
 
 export default function MainLayout() {
+  const { standard } = useNavigationOptions();
   const { isDark } = useAppTheme();
 
-  const activeColor = "#FF3B8E"; // Pink color for active tabs
-  const inactiveColor = isDark ? "#888888" : "#999999";
-
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF",
-          borderTopColor: isDark ? "#2A2A2A" : "#EEEEEE",
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
-        },
-        tabBarActiveTintColor: activeColor,
-        tabBarInactiveTintColor: inactiveColor,
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: "600",
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="for-you"
+    <Stack initialRouteName="(tabs)">
+      {/* Tab navigator as the main screen */}
+      <Stack.Screen
+        name="(tabs)"
         options={{
-          title: "For You",
-          tabBarIcon: ({ color, size }) => (
-            <Home color={color} size={size} />
-          ),
+          headerShown: false,
         }}
       />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: "Explore",
-          tabBarIcon: ({ color, size }) => (
-            <Compass color={color} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="chats"
-        options={{
-          title: "Chats",
-          tabBarIcon: ({ color, size }) => (
-            <MessageCircle color={color} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="my-creation"
-        options={{
-          title: "My Creation",
-          tabBarIcon: ({ color, size }) => (
-            <Sparkles color={color} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="account"
-        options={{
-          title: "Account",
-          tabBarIcon: ({ color, size }) => (
-            <User color={color} size={size} />
-          ),
-        }}
-      />
-      
-      {/* Hidden screens */}
-      <Tabs.Screen
+
+      {/* Profile detail screen */}
+      <Stack.Screen
         name="profile/[id]"
         options={{
-          href: null, // Hide from tab bar
+          ...standard,
+          title: "Profile",
+          presentation: "modal",
+          headerShown: false,
         }}
       />
-      <Tabs.Screen
-        name="chat/[conversationId]"
+
+      {/* Chat screen */}
+      <Stack.Screen
+        name="chat/[id]"
         options={{
-          href: null,
+          ...standard,
+          title: "Chat",
+          headerShown: false,
         }}
       />
-      <Tabs.Screen
+
+      {/* Create character modal */}
+      <Stack.Screen
         name="create-character"
         options={{
-          href: null,
+          ...standard,
+          title: "Create New AI Character",
+          presentation: "modal",
+          headerShown: false,
         }}
       />
-      <Tabs.Screen
+
+      {/* Filter screen */}
+      <Stack.Screen
+        name="filter"
+        options={{
+          ...standard,
+          title: "Filter",
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+
+      {/* Legacy/utility screens */}
+      <Stack.Screen
         name="index"
         options={{
-          href: null, // Hide old index
+          ...standard,
+          title: "Home",
+          headerTitle: "",
+          headerShown: false,
         }}
       />
-      <Tabs.Screen
+      <Stack.Screen
         name="buy-credits"
         options={{
-          href: null,
+          title: "",
+          presentation: "modal",
+          headerTitle: "",
+          headerBackTitle: "Back",
+          ...standard,
         }}
       />
-      <Tabs.Screen
+      <Stack.Screen
         name="settings"
         options={{
-          href: null,
+          title: "Settings",
+          presentation: "modal",
+          headerBackButtonDisplayMode: "generic",
+          headerBlurEffect: isDark ? "dark" : "light",
+          headerBackTitle: "Back",
+          ...standard,
         }}
       />
-      <Tabs.Screen
+      <Stack.Screen
         name="uploads"
         options={{
-          href: null,
+          title: "Uploads",
+          headerBackTitle: "Back",
+          ...standard,
         }}
       />
-      <Tabs.Screen
+      <Stack.Screen
         name="notifications"
         options={{
-          href: null,
+          title: "Notifications",
+          headerBackTitle: "Back",
+          ...standard,
         }}
       />
-    </Tabs>
+    </Stack>
   );
 }

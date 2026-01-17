@@ -5,7 +5,8 @@ import Purchases, {
   PurchasesStoreProduct,
 } from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
+import { useQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend";
 import { getAPIKey } from "@/utils/payment";
 

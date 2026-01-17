@@ -1,19 +1,16 @@
 {
   "expo": {
     "name": "dating-ai",
-    "slug": "datingai",
+    "slug": "dating-ai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "datingai",
+    "scheme": "quotes",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.noosperai.datingai",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+      "bundleIdentifier": "com.noosperai.quotes"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +21,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.noosperai.datingai"
+      "package": "com.noosperai.quotes"
     },
     "web": {
       "output": "static",
@@ -63,9 +60,8 @@
       },
       "router": {},
       "eas": {
-        "projectId": "30076408-2843-4f4f-9288-b94bd6ff262e"
+        "projectId": "10557409-a012-4b82-ae6c-a8c0cf6e970b"
       }
-    },
-    "owner": "abhishekrajemail"
+    }
   }
 }

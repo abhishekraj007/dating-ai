@@ -45,6 +45,23 @@ export const { generateUploadUrl, syncMetadata, onSyncMetadata } = r2.clientApi(
         return;
       }
 
+      // Check if this is an AI profile image upload
+      // Format: aiProfiles/{profileId}/{type}/{uuid}
+      if (args.key.startsWith("aiProfiles/")) {
+        const parts = args.key.split("/");
+        const profileId = parts[1];
+        const type = parts[2]; // "avatar" or "gallery"
+
+        if (profileId && type) {
+          await ctx.runMutation(internal.uploads.updateAIProfileImage, {
+            profileId: profileId as any,
+            key: args.key,
+            type: type as "avatar" | "gallery",
+          });
+        }
+        return;
+      }
+
       // Extract userId from key (format: userId/uuid)
       const userId = args.key.split("/")[0];
       if (!userId) {
@@ -217,5 +234,37 @@ export const deleteUpload = mutation({
 
     // Delete from database
     await ctx.db.delete(upload._id);
+  },
+});
+
+// Internal mutation to update AI profile with new image
+export const updateAIProfileImage = internalMutation({
+  args: {
+    profileId: v.id("aiProfiles"),
+    key: v.string(),
+    type: v.union(v.literal("avatar"), v.literal("gallery")),
+  },
+  handler: async (ctx, { profileId, key, type }) => {
+    const profile = await ctx.db.get(profileId);
+    if (!profile) {
+      console.error("AI profile not found:", profileId);
+      return;
+    }
+
+    if (type === "avatar") {
+      // If there's an existing avatar, we could delete it here
+      // For now, just update the key
+      await ctx.db.patch(profileId, { avatarImageKey: key });
+    } else {
+      // Gallery image - append to the array
+      const currentKeys = profile.profileImageKeys ?? [];
+      if (currentKeys.length >= 10) {
+        console.error("Gallery image limit reached for profile:", profileId);
+        return;
+      }
+      await ctx.db.patch(profileId, {
+        profileImageKeys: [...currentKeys, key],
+      });
+    }
   },
 });
