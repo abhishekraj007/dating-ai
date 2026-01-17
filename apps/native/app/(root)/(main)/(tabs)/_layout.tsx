@@ -2,13 +2,20 @@ import { Tabs } from "expo-router";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { TabBarIcon } from "@/components/tabbar-icon";
 import { useThemeColor } from "heroui-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Platform } from "react-native";
 
 export default function TabsLayout() {
   const { isDark } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const accentColor = useThemeColor("accent");
   const mutedColor = useThemeColor("muted");
   const backgroundColor = useThemeColor("background");
   const borderColor = useThemeColor("border");
+
+  // Calculate proper bottom padding for Android navigation bar
+  const bottomPadding = Platform.OS === "android" ? Math.max(insets.bottom, 8) : 8;
+  const tabBarHeight = 60 + bottomPadding + 8; // base height + bottom padding + top padding
 
   return (
     <Tabs
@@ -20,8 +27,8 @@ export default function TabsLayout() {
           borderTopColor: borderColor,
           borderTopWidth: 1,
           paddingTop: 8,
-          paddingBottom: 8,
-          height: 85,
+          paddingBottom: bottomPadding,
+          height: tabBarHeight,
         },
         tabBarLabelStyle: {
           fontSize: 11,

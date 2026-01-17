@@ -1,20 +1,31 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Button } from "heroui-native";
-import { Text, View, ActivityIndicator, StyleSheet } from "react-native";
+import { Text, View, ActivityIndicator, StyleSheet, Platform } from "react-native";
 import { Image } from "expo-image";
 import { useConvexAuth } from "convex/react";
 import { useEffect, useState } from "react";
 import { useAppleAuth, useGoogleAuth } from "@/lib/betterAuth/oauth";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { X } from "lucide-react-native";
+import { isAndroid } from "@/utils";
 
 export default function Landing() {
-  // const { colors } = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { isAuthenticated } = useConvexAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const { signIn: signInWithGoogle, isLoading: isGoogleLoading } =
     useGoogleAuth();
   const { signIn: signInWithApple, isLoading: isAppleLoading } = useAppleAuth();
+
+  const handleClose = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(root)/(main)");
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true);
@@ -39,10 +50,10 @@ export default function Landing() {
     <>
       <View style={{ flex: 1 }}>
         <Image
-        source={require("@/assets/images/login-bg.jpeg")}
+          source={require("@/assets/images/login-bg.jpeg")}
           style={StyleSheet.absoluteFill}
           contentFit="cover"
-        blurRadius={8}
+          blurRadius={8}
           cachePolicy="memory-disk"
         />
         {/* Dark overlay */}
@@ -57,7 +68,27 @@ export default function Landing() {
           }}
         />
 
-        <View className="flex-1 justify-end gap-3 p-6">
+        {/* Close button - absolute positioned at top right */}
+        <Button
+          variant="tertiary"
+          size="sm"
+          isIconOnly
+          onPress={handleClose}
+          style={{
+            position: "absolute",
+            top: insets.top,
+            right: 16,
+            zIndex: 10,
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            borderRadius: 20,
+            width: 40,
+            height: 40,
+          }}
+        >
+          <X size={20} color="white" />
+        </Button>
+
+        <View className={`flex-1 justify-end gap-3 p-6 `} style={{ paddingBottom:  insets.bottom + 12}}>
           <View className="flex-1 justify-end">
             <Text className="font-extrabold text-6xl text-white/90">
               StatusAI
