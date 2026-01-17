@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "@dating-ai/backend";
 import type { Id } from "@dating-ai/backend";
 
@@ -57,39 +57,67 @@ export function useUserPreferences() {
 
 /**
  * Hook to save user preferences.
+ * Only saves to the database if the user is authenticated.
+ * For unauthenticated users, the filter is applied locally without persistence.
  */
 export function useSavePreferences() {
-  const savePreferences = useMutation(
+  const { isAuthenticated } = useConvexAuth();
+  const savePreferencesMutation = useMutation(
     api.features.preferences.queries.saveUserPreferences
   );
 
-  return { savePreferences };
+  const savePreferences = async (preferences: UserPreferences) => {
+    // Only save to database if user is authenticated
+    if (isAuthenticated) {
+      return savePreferencesMutation(preferences);
+    }
+    // For unauthenticated users, just return without saving
+    // The filter will be applied locally in the UI
+    return null;
+  };
+
+  return { savePreferences, isAuthenticated };
 }
 
 /**
  * Hook to record profile interactions (like/skip).
+ * Returns requiresAuth: true if user needs to login to perform the action.
  */
 export function useProfileInteraction() {
+  const { isAuthenticated } = useConvexAuth();
   const recordInteraction = useMutation(
     api.features.preferences.queries.recordProfileInteraction
   );
 
   const likeProfile = async (aiProfileId: Id<"aiProfiles">) => {
-    return recordInteraction({ aiProfileId, action: "like" });
+    if (!isAuthenticated) {
+      return { requiresAuth: true };
+    }
+    await recordInteraction({ aiProfileId, action: "like" });
+    return { requiresAuth: false };
   };
 
   const skipProfile = async (aiProfileId: Id<"aiProfiles">) => {
-    return recordInteraction({ aiProfileId, action: "skip" });
+    if (!isAuthenticated) {
+      return { requiresAuth: true };
+    }
+    await recordInteraction({ aiProfileId, action: "skip" });
+    return { requiresAuth: false };
   };
 
   const superlikeProfile = async (aiProfileId: Id<"aiProfiles">) => {
-    return recordInteraction({ aiProfileId, action: "superlike" });
+    if (!isAuthenticated) {
+      return { requiresAuth: true };
+    }
+    await recordInteraction({ aiProfileId, action: "superlike" });
+    return { requiresAuth: false };
   };
 
   return {
     likeProfile,
     skipProfile,
     superlikeProfile,
+    isAuthenticated,
   };
 }
 

@@ -21,20 +21,26 @@ export default function ForYouScreen() {
   const { height } = useWindowDimensions();
 
   const { profiles, isLoading } = useForYouProfiles(20);
-  const { likeProfile, skipProfile } = useProfileInteraction();
+  const { likeProfile, skipProfile, isAuthenticated } = useProfileInteraction();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const currentProfile = profiles[currentIndex];
   const nextProfile = profiles[currentIndex + 1];
 
+  const navigateToLogin = useCallback(() => {
+    router.push("/(root)/(auth)");
+  }, [router]);
+
   const handleSwipeLeft = useCallback(async () => {
     if (!currentProfile) return;
+    // Auth check is done in the card component - this only gets called if authenticated
     await skipProfile(currentProfile._id as Id<"aiProfiles">);
     setCurrentIndex((prev) => prev + 1);
   }, [currentProfile, skipProfile]);
 
   const handleSwipeRight = useCallback(async () => {
     if (!currentProfile) return;
+    // Auth check is done in the card component - this only gets called if authenticated
     await likeProfile(currentProfile._id as Id<"aiProfiles">);
     // Navigate to profile detail or start chat
     router.push(`/profile/${currentProfile._id}`);
@@ -115,6 +121,7 @@ export default function ForYouScreen() {
                   onPress={() => {}}
                   isFirst={false}
                   cardHeight={cardHeight}
+                  isAuthenticated={isAuthenticated}
                 />
               )}
               {/* Current card (front) */}
@@ -125,8 +132,10 @@ export default function ForYouScreen() {
                   onSwipeLeft={handleSwipeLeft}
                   onSwipeRight={handleSwipeRight}
                   onPress={handleCardPress}
+                  onAuthRequired={navigateToLogin}
                   isFirst={true}
                   cardHeight={cardHeight}
+                  isAuthenticated={isAuthenticated}
                 />
               )}
             </>

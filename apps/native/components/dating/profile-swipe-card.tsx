@@ -1,4 +1,4 @@
-import { View, Pressable, useWindowDimensions, StyleSheet } from "react-native";
+import { View, useWindowDimensions, StyleSheet, Pressable } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Button, useThemeColor } from "heroui-native";
 import { Image } from "expo-image";
@@ -13,11 +13,7 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from "react-native-reanimated";
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import type { ForYouProfile } from "@/hooks/dating/useForYou";
 
 const SWIPE_THRESHOLD = 120;
@@ -27,8 +23,10 @@ interface ProfileSwipeCardProps {
   onSwipeLeft: () => void;
   onSwipeRight: () => void;
   onPress: () => void;
+  onAuthRequired?: () => void;
   isFirst?: boolean;
   cardHeight?: number;
+  isAuthenticated?: boolean;
 }
 
 export function ProfileSwipeCard({
@@ -36,8 +34,10 @@ export function ProfileSwipeCard({
   onSwipeLeft,
   onSwipeRight,
   onPress,
+  onAuthRequired,
   isFirst = false,
   cardHeight: propCardHeight,
+  isAuthenticated = true,
 }: ProfileSwipeCardProps) {
   const { width, height } = useWindowDimensions();
   // Front card is slightly narrower to show peek of behind card on sides
@@ -58,6 +58,12 @@ export function ProfileSwipeCard({
   const rotation = useSharedValue(0);
   const scale = useSharedValue(1);
 
+  const handleAuthRequired = () => {
+    if (onAuthRequired) {
+      onAuthRequired();
+    }
+  };
+
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
       translateX.value = event.translationX;
@@ -65,13 +71,25 @@ export function ProfileSwipeCard({
       rotation.value = (event.translationX / width) * 15;
     })
     .onEnd((event) => {
-      if (event.translationX > SWIPE_THRESHOLD) {
+      const swipedRight = event.translationX > SWIPE_THRESHOLD;
+      const swipedLeft = event.translationX < -SWIPE_THRESHOLD;
+
+      // If not authenticated and user swiped, snap back and prompt login
+      if (!isAuthenticated && (swipedRight || swipedLeft)) {
+        translateX.value = withSpring(0);
+        translateY.value = withSpring(0);
+        rotation.value = withSpring(0);
+        runOnJS(handleAuthRequired)();
+        return;
+      }
+
+      if (swipedRight) {
         // Swipe right - like
         translateX.value = withTiming(width * 1.5, { duration: 300 }, () => {
           runOnJS(onSwipeRight)();
         });
         rotation.value = withTiming(30);
-      } else if (event.translationX < -SWIPE_THRESHOLD) {
+      } else if (swipedLeft) {
         // Swipe left - skip
         translateX.value = withTiming(-width * 1.5, { duration: 300 }, () => {
           runOnJS(onSwipeLeft)();
@@ -85,11 +103,8 @@ export function ProfileSwipeCard({
       }
     });
 
-  const tapGesture = Gesture.Tap().onEnd(() => {
-    runOnJS(onPress)();
-  });
-
-  const composedGesture = Gesture.Race(panGesture, tapGesture);
+  // Only use pan gesture - taps are handled by Pressable on the image area
+  const composedGesture = panGesture;
 
   const animatedStyle = useAnimatedStyle(() => {
     if (!isFirst) {
@@ -158,6 +173,12 @@ export function ProfileSwipeCard({
           colors={["transparent", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.8)"]}
           locations={[0.4, 0.65, 1]}
           style={styles.gradient}
+        />
+
+        {/* Tap overlay for profile navigation - covers upper portion only */}
+        <Pressable
+          style={styles.tapOverlay}
+          onPress={onPress}
         />
 
         {/* Like Indicator */}
@@ -244,6 +265,13 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: "50%",
+  },
+  tapOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 180, // Leave room for the info container at bottom
   },
   infoContainer: {
     position: "absolute",

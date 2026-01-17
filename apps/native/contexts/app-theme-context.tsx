@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { Uniwind, useUniwind } from "uniwind";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setAndroidNavigationBar } from "@/lib/android-navigation-bar";
 
 type ThemeName =
   | "light"
@@ -48,15 +49,20 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
         if (savedTheme) {
           // User has a saved theme preference
           Uniwind.setTheme(savedTheme as ThemeName);
+          // Set Android navigation bar based on theme
+          const isDarkTheme = savedTheme === "dark" || savedTheme.endsWith("-dark");
+          setAndroidNavigationBar(isDarkTheme ? "dark" : "light");
         } else {
           // No saved theme, set default to dark
           Uniwind.setTheme("dark");
           await AsyncStorage.setItem(THEME_STORAGE_KEY, "dark");
+          setAndroidNavigationBar("dark");
         }
       } catch (error) {
         console.log("Error loading theme:", error);
         // Fallback to dark theme
         Uniwind.setTheme("dark");
+        setAndroidNavigationBar("dark");
       } finally {
         setIsThemeLoaded(true);
       }
@@ -77,6 +83,9 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       Uniwind.setTheme(newTheme);
       await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme);
+      // Update Android navigation bar based on theme
+      const isDarkTheme = newTheme === "dark" || newTheme.endsWith("-dark");
+      setAndroidNavigationBar(isDarkTheme ? "dark" : "light");
     } catch (error) {
       console.log("Error saving theme:", error);
     }

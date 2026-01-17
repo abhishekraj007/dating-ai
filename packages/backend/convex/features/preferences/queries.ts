@@ -124,6 +124,7 @@ export const recordProfileInteraction = mutation({
 /**
  * Get profiles for the "For You" feed based on user preferences.
  * Excludes profiles the user has already interacted with.
+ * For unauthenticated users, returns profiles with default preferences.
  */
 export const getForYouProfiles = query({
   args: {
@@ -131,78 +132,90 @@ export const getForYouProfiles = query({
   },
   handler: async (ctx, { limit = 20 }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) {
-      return null;
+
+    // Default preferences
+    let genderPreference: "female" | "male" | "both" = "female";
+    let ageMin = 18;
+    let ageMax = 99;
+    let zodiacPreferences: string[] = [];
+    let interestPreferences: string[] = [];
+    let interactedProfileIds = new Set<string>();
+    let conversationProfileIds = new Set<string>();
+    let userId: string | null = null;
+
+    // If user is authenticated, load their preferences and exclusions
+    if (user) {
+      userId = user._id;
+
+      // Get user preferences
+      const preferences = await ctx.db
+        .query("userPreferences")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .unique();
+
+      // Override defaults with user preferences if set
+      genderPreference = preferences?.genderPreference ?? "female";
+      ageMin = preferences?.ageMin ?? 18;
+      ageMax = preferences?.ageMax ?? 99;
+      zodiacPreferences = preferences?.zodiacPreferences ?? [];
+      interestPreferences = preferences?.interestPreferences ?? [];
+
+      // Get all profile IDs the user has already interacted with
+      const interactions = await ctx.db
+        .query("profileInteractions")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .collect();
+
+      interactedProfileIds = new Set(
+        interactions.map((i) => i.aiProfileId.toString())
+      );
+
+      // Get all profile IDs the user already has conversations with
+      const conversations = await ctx.db
+        .query("aiConversations")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .collect();
+
+      conversationProfileIds = new Set(
+        conversations.map((c) => c.aiProfileId.toString())
+      );
     }
-
-    // Get user preferences
-    const preferences = await ctx.db
-      .query("userPreferences")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .unique();
-
-    // Default preferences if not set
-    const genderPreference = preferences?.genderPreference ?? "female";
-    const ageMin = preferences?.ageMin ?? 18;
-    const ageMax = preferences?.ageMax ?? 99;
-    const zodiacPreferences = preferences?.zodiacPreferences ?? [];
-    const interestPreferences = preferences?.interestPreferences ?? [];
-
-    // Get all profile IDs the user has already interacted with
-    const interactions = await ctx.db
-      .query("profileInteractions")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-
-    const interactedProfileIds = new Set(
-      interactions.map((i) => i.aiProfileId.toString())
-    );
-
-    // Get all profile IDs the user already has conversations with
-    const conversations = await ctx.db
-      .query("aiConversations")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-
-    const conversationProfileIds = new Set(
-      conversations.map((c) => c.aiProfileId.toString())
-    );
 
     // Query profiles based on gender preference
-    let profilesQuery = ctx.db.query("aiProfiles");
-
-    if (genderPreference !== "both") {
-      profilesQuery = ctx.db
-        .query("aiProfiles")
-        .withIndex("by_status_and_gender", (q) =>
-          q.eq("status", "active").eq("gender", genderPreference)
-        );
-    } else {
-      profilesQuery = ctx.db
-        .query("aiProfiles")
-        .withIndex("by_status_and_gender", (q) => q.eq("status", "active"));
-    }
-
-    const allProfiles = await profilesQuery.collect();
+    const allProfiles =
+      genderPreference !== "both"
+        ? await ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_and_gender", (q) =>
+              q.eq("status", "active").eq("gender", genderPreference)
+            )
+            .collect()
+        : await ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_and_gender", (q) => q.eq("status", "active"))
+            .collect();
 
     // Filter profiles
     const filteredProfiles = allProfiles.filter((profile) => {
-      // Exclude already interacted profiles
-      if (interactedProfileIds.has(profile._id.toString())) {
-        return false;
+      // Only apply user-specific filters if authenticated
+      if (user) {
+        // Exclude already interacted profiles
+        if (interactedProfileIds.has(profile._id.toString())) {
+          return false;
+        }
+
+        // Exclude profiles user already has conversations with
+        if (conversationProfileIds.has(profile._id.toString())) {
+          return false;
+        }
+
+        // Exclude user's own created profiles
+        if (profile.createdByUserId === userId) {
+          return false;
+        }
       }
 
-      // Exclude profiles user already has conversations with
-      if (conversationProfileIds.has(profile._id.toString())) {
-        return false;
-      }
-
-      // Exclude user's own created profiles
-      if (profile.createdByUserId === user._id) {
-        return false;
-      }
-
-      // Age filter
+      // Age filter (applies to all users)
       if (profile.age) {
         if (profile.age < ageMin || profile.age > ageMax) {
           return false;
