@@ -1,5 +1,5 @@
 import { type GenericCtx } from "@convex-dev/better-auth";
-import { convex } from "@convex-dev/better-auth/plugins";
+import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
 import { expo } from "@better-auth/expo";
 import type { DataModel } from "../../_generated/dataModel";
 import { betterAuth } from "better-auth";
@@ -16,9 +16,17 @@ export function createAuth(
     logger: {
       disabled: optionsOnly,
     },
-    // baseURL: "http://localhost:3005", // enable this for web login
-    baseURL: siteUrl, // enable this for mobile login
-    trustedOrigins: [siteUrl, nativeAppUrl, "http://localhost:3004"],
+    baseURL: siteUrl,
+    trustedOrigins: [
+      siteUrl,
+      nativeAppUrl,
+      // Local development
+      "http://localhost:3004", // admin local
+      "http://localhost:3005", // web local
+      // Production (Railway)
+      "https://admin-dating.up.railway.app",
+      "https://web-dating.up.railway.app",
+    ],
     database: authComponent.adapter(ctx),
     user: {
       deleteUser: {
@@ -36,6 +44,7 @@ export function createAuth(
         clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       },
     },
-    plugins: [expo(), convex()],
+    // crossDomain plugin enables multi-app OAuth by skipping state cookie check
+    plugins: [expo(), convex(), crossDomain({ siteUrl })],
   });
 }

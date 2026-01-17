@@ -23,9 +23,12 @@ export default function AuthScreen() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
+    const callbackURL =
+      typeof window !== "undefined" ? `${window.location.origin}/` : "/";
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/",
+      // Must be absolute URL for multi-app auth
+      callbackURL,
     });
   };
 
@@ -50,7 +53,7 @@ export default function AuthScreen() {
             toast.error(error.error.message || "Failed to sign in");
             setIsLoading(false);
           },
-        }
+        },
       );
     },
     validators: {
@@ -71,9 +74,7 @@ export default function AuthScreen() {
           <CardTitle className="text-3xl font-bold tracking-tight">
             Admin Portal
           </CardTitle>
-          <CardDescription>
-            Sign in with your admin credentials
-          </CardDescription>
+          <CardDescription>Sign in with your admin credentials</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button
@@ -175,13 +176,13 @@ export default function AuthScreen() {
                   className="w-full"
                   disabled={!state.canSubmit || state.isSubmitting || isLoading}
                 >
-                  {state.isSubmitting || isLoading ? "Signing in..." : "Sign In"}
+                  {state.isSubmitting || isLoading
+                    ? "Signing in..."
+                    : "Sign In"}
                 </Button>
               )}
             </form.Subscribe>
           </form>
-
-        
         </CardContent>
       </Card>
     </div>
