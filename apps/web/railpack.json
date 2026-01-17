@@ -2,10 +2,16 @@
   "$schema": "https://schema.railpack.com",
   "steps": {
     "install": {
-      "commands": ["pnpm install --no-frozen-lockfile"]
+      "inputs": [{ "local": true, "include": ["."] }],
+      "commands": [
+        "pnpm install --no-frozen-lockfile"
+      ]
     },
     "build": {
-      "commands": ["...", "pnpm --filter web build"]
+      "commands": [
+        "...",
+        "pnpm --filter web build"
+      ]
     }
   },
   "deploy": {
