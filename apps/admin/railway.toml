@@ -1,8 +1,10 @@
 [build]
 builder = "RAILPACK"
-watchPatterns = ["apps/admin/**"]
+buildCommand = "pnpm --filter admin build"
+watchPatterns = ["apps/admin/**", "packages/**"]
 
 [deploy]
+startCommand = "pnpm --filter admin start"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
