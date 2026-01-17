@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { action } from "../../_generated/server";
 import { internal } from "../../_generated/api";
-import { Id } from "../../_generated/dataModel";
+import type { Id } from "../../_generated/dataModel";
 
 /**
  * Server-side actions for webhook handlers
@@ -27,7 +27,7 @@ export const upsertSubscriptionFromWebhook = action({
       v.literal("canceled"),
       v.literal("expired"),
       v.literal("past_due"),
-      v.literal("trialing")
+      v.literal("trialing"),
     ),
     productType: v.optional(v.string()),
     currentPeriodStart: v.optional(v.number()),
@@ -41,7 +41,7 @@ export const upsertSubscriptionFromWebhook = action({
   }),
   handler: async (
     ctx,
-    args
+    args,
   ): Promise<{
     subscriptionId: Id<"subscriptions">;
     isNew: boolean;
@@ -54,7 +54,7 @@ export const upsertSubscriptionFromWebhook = action({
       isRenewal: boolean;
     } = await ctx.runMutation(
       internal.features.subscriptions.mutations.upsertSubscription,
-      args
+      args,
     );
     return result;
   },
@@ -74,7 +74,7 @@ export const syncPremiumFromWebhook = action({
   handler: async (ctx, args): Promise<{ success: boolean }> => {
     const result: { success: boolean } = await ctx.runMutation(
       internal.features.premium.mutations.syncPremiumFromSubscription,
-      args
+      args,
     );
     return result;
   },
@@ -94,14 +94,14 @@ export const addBonusCreditsFromWebhook = action({
   }),
   handler: async (
     ctx,
-    args
+    args,
   ): Promise<{ success: boolean; newCredits: number }> => {
     console.log("addBonusCreditsFromWebhook called with args:", args);
 
     const result: { success: boolean; newCredits: number } =
       await ctx.runMutation(
         internal.features.credits.mutations.addBonusCredits,
-        args
+        args,
       );
     return result;
   },
@@ -121,13 +121,13 @@ export const addCreditsFromWebhook = action({
   }),
   handler: async (
     ctx,
-    args
+    args,
   ): Promise<{ success: boolean; newCredits: number }> => {
     console.log("addCreditsFromWebhook called with args:", args);
     const result: { success: boolean; newCredits: number } =
       await ctx.runMutation(
         internal.features.credits.mutations.addCreditsToUser,
-        args
+        args,
       );
     return result;
   },
@@ -147,7 +147,7 @@ export const insertOrderFromWebhook = action({
       v.literal("paid"),
       v.literal("pending"),
       v.literal("failed"),
-      v.literal("refunded")
+      v.literal("refunded"),
     ),
   },
   returns: v.id("orders"),
@@ -155,7 +155,7 @@ export const insertOrderFromWebhook = action({
     console.log("insertOrderFromWebhook called with args:", args);
     const result: Id<"orders"> = await ctx.runMutation(
       internal.features.subscriptions.mutations.insertOrder,
-      args
+      args,
     );
     return result;
   },
@@ -184,7 +184,7 @@ export const getSubscriptionByPlatformId = action({
         v.literal("canceled"),
         v.literal("expired"),
         v.literal("past_due"),
-        v.literal("trialing")
+        v.literal("trialing"),
       ),
       productType: v.optional(v.string()),
       currentPeriodStart: v.optional(v.number()),
@@ -193,11 +193,11 @@ export const getSubscriptionByPlatformId = action({
       createdAt: v.number(),
       updatedAt: v.number(),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (
     ctx,
-    args
+    args,
   ): Promise<{
     _id: Id<"subscriptions">;
     _creationTime: number;
@@ -219,7 +219,7 @@ export const getSubscriptionByPlatformId = action({
     const result = await ctx.runQuery(
       internal.features.subscriptions.queries
         .getSubscriptionByPlatformSubscriptionId,
-      args
+      args,
     );
     return result;
   },
@@ -245,15 +245,15 @@ export const getOrderByPlatformId = action({
         v.literal("paid"),
         v.literal("pending"),
         v.literal("failed"),
-        v.literal("refunded")
+        v.literal("refunded"),
       ),
       createdAt: v.number(),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (
     ctx,
-    args
+    args,
   ): Promise<{
     _id: Id<"orders">;
     _creationTime: number;
@@ -267,7 +267,7 @@ export const getOrderByPlatformId = action({
   } | null> => {
     const result = await ctx.runQuery(
       internal.features.subscriptions.queries.getOrderByPlatformOrderId,
-      args
+      args,
     );
     return result;
   },

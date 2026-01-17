@@ -103,9 +103,10 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
 
 export function useMessages(threadId: string | undefined) {
   const { results, status, loadMore } = useUIMessages(
-    api.features.ai.queries.listThreadMessages,
+    // Type assertion needed due to library version type mismatch
+    api.features.ai.queries.listThreadMessages as any,
     threadId ? { threadId } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: PAGE_SIZE },
   );
 
   const messages = useMemo(() => {
@@ -145,12 +146,12 @@ export function useSendMessage() {
 
 export function useDeleteMessage() {
   const deleteMessageMutation = useMutation(
-    api.features.ai.mutations.deleteMessage
+    api.features.ai.mutations.deleteMessage,
   );
 
   const deleteMessage = async (
     conversationId: string,
-    messageOrder: number
+    messageOrder: number,
   ) => {
     return await deleteMessageMutation({
       conversationId: conversationId as Id<"aiConversations">,
