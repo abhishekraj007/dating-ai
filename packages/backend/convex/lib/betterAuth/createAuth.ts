@@ -1,7 +1,7 @@
 import { type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { expo } from "@better-auth/expo";
-import { DataModel } from "../../_generated/dataModel";
+import type { DataModel } from "../../_generated/dataModel";
 import { betterAuth } from "better-auth";
 import { authComponent } from "./component";
 

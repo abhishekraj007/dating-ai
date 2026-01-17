@@ -146,7 +146,7 @@ export default function ChatPage({ params }: ChatPageProps) {
             profile && router.push(`/profile/${conversation.aiProfileId}`)
           }
         >
-          <AvatarImage src={profile?.avatarUrl} />
+          <AvatarImage src={profile?.avatarUrl ?? undefined} />
           <AvatarFallback>{profile?.name?.[0] ?? "?"}</AvatarFallback>
         </Avatar>
         <div
@@ -193,7 +193,7 @@ export default function ChatPage({ params }: ChatPageProps) {
                 >
                   {!isUser && (
                     <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarImage src={profile?.avatarUrl} />
+                      <AvatarImage src={profile?.avatarUrl ?? undefined} />
                       <AvatarFallback>
                         {profile?.name?.[0] ?? "?"}
                       </AvatarFallback>
@@ -204,7 +204,7 @@ export default function ChatPage({ params }: ChatPageProps) {
                       "max-w-[70%] rounded-2xl px-4 py-2",
                       isUser
                         ? "bg-primary text-primary-foreground rounded-br-sm"
-                        : "bg-muted rounded-bl-sm"
+                        : "bg-muted rounded-bl-sm",
                     )}
                   >
                     {parsed.type === "image" ? (
@@ -241,7 +241,7 @@ export default function ChatPage({ params }: ChatPageProps) {
                         "text-xs mt-1",
                         isUser
                           ? "text-primary-foreground/70"
-                          : "text-muted-foreground"
+                          : "text-muted-foreground",
                       )}
                     >
                       {formatTime(msg._creationTime)}

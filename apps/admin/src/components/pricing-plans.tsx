@@ -1,6 +1,5 @@
 "use client";
 
-import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -55,14 +54,8 @@ const CREDIT_PACKAGES = [
 
 export function PricingPlans() {
   const handleCheckout = async (slug: string) => {
-    try {
-      await authClient.checkout({
-        slug,
-      });
-    } catch (error) {
-      console.error("Checkout error:", error);
-      toast.error("Failed to start checkout");
-    }
+    // TODO: Implement checkout when polar client is configured
+    toast.info(`Checkout for ${slug} - Coming soon`);
   };
 
   return (

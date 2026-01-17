@@ -22,7 +22,7 @@ export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<Tab>(
-    pathname.includes("/explore") ? "explore" : "chats"
+    pathname.includes("/explore") ? "explore" : "chats",
   );
 
   const userData = useQuery(api.user.fetchUserAndProfile);
@@ -57,7 +57,7 @@ export function Sidebar() {
     const date = new Date(timestamp);
     const now = new Date();
     const diffDays = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
     );
 
     if (diffDays === 0) {
@@ -97,7 +97,7 @@ export function Sidebar() {
           variant={activeTab === "chats" ? "default" : "ghost"}
           className={cn(
             "flex-1 gap-2",
-            activeTab === "chats" && "bg-primary text-primary-foreground"
+            activeTab === "chats" && "bg-primary text-primary-foreground",
           )}
           onClick={() => handleTabChange("chats")}
         >
@@ -108,7 +108,7 @@ export function Sidebar() {
           variant={activeTab === "explore" ? "default" : "ghost"}
           className={cn(
             "flex-1 gap-2",
-            activeTab === "explore" && "bg-primary text-primary-foreground"
+            activeTab === "explore" && "bg-primary text-primary-foreground",
           )}
           onClick={() => handleTabChange("explore")}
         >
@@ -142,36 +142,38 @@ export function Sidebar() {
             </div>
           ) : (
             <div className="p-1">
-              {conversations.map((conv) => (
-                <button
-                  key={conv._id}
-                  className={cn(
-                    "w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors text-left",
-                    pathname.includes(conv._id) && "bg-accent"
-                  )}
-                  onClick={() => handleConversationClick(conv._id)}
-                >
-                  <Avatar>
-                    <AvatarImage src={conv.profile?.avatarUrl} />
-                    <AvatarFallback>
-                      {conv.profile?.name?.[0] ?? "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium truncate">
-                        {conv.profile?.name ?? "AI"}
+              {conversations
+                .filter((c): c is NonNullable<typeof c> => c !== null)
+                .map((conv) => (
+                  <button
+                    key={conv._id}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors text-left",
+                      pathname.includes(conv._id) && "bg-accent",
+                    )}
+                    onClick={() => handleConversationClick(conv._id)}
+                  >
+                    <Avatar>
+                      <AvatarImage src={conv.profile?.avatarUrl ?? undefined} />
+                      <AvatarFallback>
+                        {conv.profile?.name?.[0] ?? "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium truncate">
+                          {conv.profile?.name ?? "AI"}
+                        </p>
+                        <span className="text-xs text-muted-foreground">
+                          {formatTime(conv.lastMessageAt)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {conv.lastMessage?.content || "Start a conversation"}
                       </p>
-                      <span className="text-xs text-muted-foreground">
-                        {formatTime(conv.lastMessageAt)}
-                      </span>
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {conv.lastMessage?.content || "Start a conversation"}
-                    </p>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                ))}
             </div>
           )
         ) : // Profiles List (for Explore tab in sidebar)
@@ -198,12 +200,12 @@ export function Sidebar() {
                 key={profile._id}
                 className={cn(
                   "w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors text-left",
-                  pathname.includes(profile._id) && "bg-accent"
+                  pathname.includes(profile._id) && "bg-accent",
                 )}
                 onClick={() => handleProfileClick(profile._id)}
               >
                 <Avatar>
-                  <AvatarImage src={profile.avatarUrl} />
+                  <AvatarImage src={profile.avatarUrl ?? undefined} />
                   <AvatarFallback>{profile.name[0]}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">

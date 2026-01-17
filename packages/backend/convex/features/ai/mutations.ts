@@ -35,7 +35,7 @@ export const startConversation = mutation({
     const existingConversation = await ctx.db
       .query("aiConversations")
       .withIndex("by_user_and_profile", (q) =>
-        q.eq("userId", user._id).eq("aiProfileId", aiProfileId)
+        q.eq("userId", user._id).eq("aiProfileId", aiProfileId),
       )
       .first();
 
@@ -119,7 +119,7 @@ export const sendMessage = mutation({
     const newLevel = calculateRelationshipLevel(newMessageCount);
     const newScore = calculateCompatibilityScore(
       conversation.compatibilityScore,
-      newMessageCount
+      newMessageCount,
     );
 
     await ctx.db.patch(conversationId, {
@@ -136,7 +136,7 @@ export const sendMessage = mutation({
       {
         conversationId,
         promptMessageId: messageId,
-      }
+      },
     );
 
     return { messageId };
@@ -312,7 +312,7 @@ export const adminUpdateProfile = mutation({
     language: v.optional(v.string()),
     voiceId: v.optional(v.string()),
     status: v.optional(
-      v.union(v.literal("active"), v.literal("pending"), v.literal("archived"))
+      v.union(v.literal("active"), v.literal("pending"), v.literal("archived")),
     ),
     communicationStyle: v.optional(
       v.object({
@@ -321,7 +321,7 @@ export const adminUpdateProfile = mutation({
         usesEmojis: v.optional(v.boolean()),
         usesSlang: v.optional(v.boolean()),
         flirtLevel: v.optional(v.number()),
-      })
+      }),
     ),
   },
   handler: async (ctx, { profileId, ...updates }) => {
@@ -473,12 +473,12 @@ export const createChatImageRequestInternal = internalMutation({
         clothing: v.optional(v.string()),
         scene: v.optional(v.string()),
         description: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (
     ctx,
-    { conversationId, userId, aiProfileId, prompt, styleOptions }
+    { conversationId, userId, aiProfileId, prompt, styleOptions },
   ) => {
     // Get user profile to check/deduct credits
     const profile = await ctx.db
@@ -528,7 +528,7 @@ export const createChatImageRequestInternal = internalMutation({
       internal.features.ai.actions.generateChatImage,
       {
         requestId,
-      }
+      },
     );
 
     console.log("Created agent-initiated image request:", requestId);
@@ -548,7 +548,7 @@ export const requestChatImage = mutation({
         hairstyle: v.optional(v.string()),
         clothing: v.optional(v.string()),
         scene: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (ctx, { conversationId, prompt, styleOptions }) => {
@@ -629,7 +629,7 @@ export const requestChatImage = mutation({
       internal.features.ai.actions.generateChatImage,
       {
         requestId,
-      }
+      },
     );
 
     return requestId;
@@ -646,7 +646,7 @@ export const updateChatImageRequest = internalMutation({
       v.literal("pending"),
       v.literal("processing"),
       v.literal("completed"),
-      v.literal("failed")
+      v.literal("failed"),
     ),
     imageKey: v.optional(v.string()),
     replicateJobId: v.optional(v.string()),
@@ -692,7 +692,7 @@ export const updateChatImageRequest = internalMutation({
                 prompt: request.prompt,
               }),
             },
-            agentName: agent.name,
+            agentName: profile.name,
           });
         }
       }
@@ -725,7 +725,7 @@ export const updateChatImageRequest = internalMutation({
               content:
                 "Oops, I couldn't take that photo right now 😅 My camera seems to be acting up! Can you ask me something else instead?",
             },
-            agentName: agent.name,
+            agentName: profile.name,
           });
         }
       }
@@ -817,14 +817,14 @@ export const clearChat = mutation({
     // This is async and will continue in the background, but starts immediately
     let deleteResult = await ctx.runMutation(
       components.agent.threads.deleteAllForThreadIdAsync,
-      { threadId: oldThreadId }
+      { threadId: oldThreadId },
     );
 
     // Keep calling until deletion is complete
     while (!deleteResult.isDone) {
       deleteResult = await ctx.runMutation(
         components.agent.threads.deleteAllForThreadIdAsync,
-        { threadId: oldThreadId }
+        { threadId: oldThreadId },
       );
     }
 
@@ -838,19 +838,19 @@ export const clearChat = mutation({
     // Delete all chat images for this conversation
     console.log(
       "[clearChat] Querying chatImages for conversationId:",
-      conversationId
+      conversationId,
     );
     const chatImages = await ctx.db
       .query("chatImages")
       .withIndex("by_conversation", (q) =>
-        q.eq("conversationId", conversationId)
+        q.eq("conversationId", conversationId),
       )
       .collect();
 
     console.log(
       "[clearChat] Found chatImages:",
       chatImages.length,
-      chatImages.map((img) => ({ id: img._id, imageKey: img.imageKey }))
+      chatImages.map((img) => ({ id: img._id, imageKey: img.imageKey })),
     );
 
     for (const image of chatImages) {
@@ -858,7 +858,7 @@ export const clearChat = mutation({
         "[clearChat] Processing image:",
         image._id,
         "imageKey:",
-        image.imageKey
+        image.imageKey,
       );
       // Delete from R2 if there's an imageKey
       if (image.imageKey) {
@@ -870,7 +870,7 @@ export const clearChat = mutation({
           console.error(
             "[clearChat] Failed to delete R2 object:",
             image.imageKey,
-            error
+            error,
           );
         }
       }
@@ -883,7 +883,7 @@ export const clearChat = mutation({
     const quizSessions = await ctx.db
       .query("quizSessions")
       .withIndex("by_conversation", (q) =>
-        q.eq("conversationId", conversationId)
+        q.eq("conversationId", conversationId),
       )
       .collect();
 

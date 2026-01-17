@@ -1,7 +1,7 @@
 import { stat } from "fs";
 import { internal } from "../_generated/api";
 import { httpAction } from "../_generated/server";
-import { Id } from "../_generated/dataModel";
+import type { Id } from "../_generated/dataModel";
 
 /**
  * RevenueCat Webhook Handlers
@@ -114,7 +114,7 @@ function validateUserId(userIdString: string): string {
 export const handleRevenueCatWebhook = httpAction(async (ctx, request) => {
   console.log(
     "[REVENUECAT WEBHOOK] Received webhook",
-    JSON.stringify(request.headers, null, 2)
+    JSON.stringify(request.headers, null, 2),
   );
 
   try {
@@ -194,7 +194,7 @@ export const handleRevenueCatWebhook = httpAction(async (ctx, request) => {
 async function handleInitialPurchase(
   ctx: any,
   event: RevenueCatEvent["event"],
-  userId: string
+  userId: string,
 ) {
   console.log("[REVENUECAT] Processing initial purchase");
 
@@ -211,7 +211,7 @@ async function handleInitialPurchase(
       {
         userId,
         hasActiveSubscription: true,
-      }
+      },
     );
 
     // Add bonus credits for new subscriptions
@@ -221,7 +221,7 @@ async function handleInitialPurchase(
       {
         platformSubscriptionId:
           event.original_transaction_id || event.transaction_id || productId,
-      }
+      },
     );
 
     if (!existingSubscription) {
@@ -230,7 +230,7 @@ async function handleInitialPurchase(
         {
           userId,
           bonusCredits: 1000,
-        }
+        },
       );
       console.log("[REVENUECAT] Added 1000 bonus credits for new subscription");
     }
@@ -246,7 +246,7 @@ async function handleInitialPurchase(
 async function handleRenewal(
   ctx: any,
   event: RevenueCatEvent["event"],
-  userId: string
+  userId: string,
 ) {
   console.log("[REVENUECAT] Processing renewal");
 
@@ -258,7 +258,7 @@ async function handleRenewal(
     {
       userId,
       hasActiveSubscription: true,
-    }
+    },
   );
 
   // Add bonus credits for renewal
@@ -275,7 +275,7 @@ async function handleRenewal(
 async function handleCancellation(
   ctx: any,
   event: RevenueCatEvent["event"],
-  userId: string
+  userId: string,
 ) {
   console.log("[REVENUECAT] Processing cancellation");
   console.log("[REVENUECAT] Cancel reason:", event.cancel_reason);
@@ -287,7 +287,7 @@ async function handleCancellation(
   // We'll revoke it in the EXPIRATION event
   console.log(
     "[REVENUECAT] Subscription canceled, will expire at:",
-    new Date(event.expiration_at_ms)
+    new Date(event.expiration_at_ms),
   );
 }
 
@@ -297,7 +297,7 @@ async function handleCancellation(
 async function handleUncancellation(
   ctx: any,
   event: RevenueCatEvent["event"],
-  userId: string
+  userId: string,
 ) {
   console.log("[REVENUECAT] Processing uncancellation");
 
@@ -309,7 +309,7 @@ async function handleUncancellation(
     {
       userId,
       hasActiveSubscription: true,
-    }
+    },
   );
 }
 
@@ -319,7 +319,7 @@ async function handleUncancellation(
 async function handleNonRenewingPurchase(
   ctx: any,
   event: RevenueCatEvent["event"],
-  userId: string
+  userId: string,
 ) {
   console.log("[REVENUECAT] Processing non-renewing purchase");
 
@@ -332,7 +332,7 @@ async function handleNonRenewingPurchase(
 async function handleExpiration(
   ctx: any,
   event: RevenueCatEvent["event"],
-  userId: string
+  userId: string,
 ) {
   console.log("[REVENUECAT] Processing expiration");
 
@@ -344,7 +344,7 @@ async function handleExpiration(
     {
       userId,
       hasActiveSubscription: false,
-    }
+    },
   );
 
   console.log("[REVENUECAT] Subscription expired - premium revoked");
@@ -356,7 +356,7 @@ async function handleExpiration(
 async function handleBillingIssue(
   ctx: any,
   event: RevenueCatEvent["event"],
-  userId: string
+  userId: string,
 ) {
   console.log("[REVENUECAT] Processing billing issue");
 
@@ -365,7 +365,7 @@ async function handleBillingIssue(
   // Optionally revoke premium immediately or wait for grace period
   // For now, we'll keep premium active during grace period
   console.log(
-    "[REVENUECAT] Billing issue detected - subscription in grace period"
+    "[REVENUECAT] Billing issue detected - subscription in grace period",
   );
 }
 
@@ -375,7 +375,7 @@ async function handleBillingIssue(
 async function handleProductChange(
   ctx: any,
   event: RevenueCatEvent["event"],
-  userId: string
+  userId: string,
 ) {
   console.log("[REVENUECAT] Processing product change");
 
@@ -387,7 +387,7 @@ async function handleProductChange(
     {
       userId,
       hasActiveSubscription: true,
-    }
+    },
   );
 }
 
@@ -398,7 +398,7 @@ async function createOrUpdateSubscription(
   ctx: any,
   event: RevenueCatEvent["event"],
   userId: string,
-  status: "active" | "canceled" | "expired" | "past_due"
+  status: "active" | "canceled" | "expired" | "past_due",
 ) {
   const productType = getProductKey(event.product_id);
 
@@ -427,7 +427,7 @@ async function createOrUpdateSubscription(
       currentPeriodStart: event.purchased_at_ms,
       currentPeriodEnd: event.expiration_at_ms,
       canceledAt: status === "canceled" ? Date.now() : undefined,
-    }
+    },
   );
 }
 
@@ -437,7 +437,7 @@ async function createOrUpdateSubscription(
 async function handleCreditPurchase(
   ctx: any,
   event: RevenueCatEvent["event"],
-  userId: string
+  userId: string,
 ) {
   const productId = event.product_id;
   const creditAmount = getCreditAmount(productId);
@@ -454,7 +454,7 @@ async function handleCreditPurchase(
     internal.features.subscriptions.queries.getOrderByPlatformOrderId,
     {
       platformOrderId: orderId,
-    }
+    },
   );
 
   if (existingOrder) {
