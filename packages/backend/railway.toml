@@ -1,6 +1,4 @@
 [build]
 builder = "RAILPACK"
+installCommand = "pnpm install --no-frozen-lockfile"
 watchPatterns = ["packages/backend/**"]
-
-[variables]
-RAILPACK_INSTALL_CMD = "pnpm install --no-frozen-lockfile"
