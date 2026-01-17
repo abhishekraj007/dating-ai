@@ -1,4 +1,3 @@
 [build]
 builder = "RAILPACK"
-installCommand = "pnpm install --no-frozen-lockfile"
 watchPatterns = ["packages/backend/**"]

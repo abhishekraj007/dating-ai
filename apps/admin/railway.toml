@@ -1,6 +1,5 @@
 [build]
 builder = "RAILPACK"
-installCommand = "pnpm install --no-frozen-lockfile"
 buildCommand = "pnpm --filter admin build"
 watchPatterns = ["apps/admin/**"]
 
