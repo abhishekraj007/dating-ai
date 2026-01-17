@@ -1,8 +1,10 @@
 [build]
 builder = "RAILPACK"
-watchPatterns = ["apps/web/**"]
+buildCommand = "pnpm --filter web build"
+watchPatterns = ["apps/web/**", "packages/**"]
 
 [deploy]
+startCommand = "pnpm --filter web start"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
