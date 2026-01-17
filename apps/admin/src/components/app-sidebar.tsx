@@ -43,11 +43,6 @@ import { Skeleton } from "./ui/skeleton";
 
 const menuItems = [
   {
-    title: "Home",
-    url: "/",
-    icon: Home,
-  },
-  {
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
@@ -61,11 +56,6 @@ const menuItems = [
     title: "Uploads",
     url: "/uploads",
     icon: Upload,
-  },
-  {
-    title: "Pricing",
-    url: "/pricing",
-    icon: CreditCard,
   },
 ];
 

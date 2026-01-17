@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LoginModal } from "@/components/login-modal";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -97,10 +98,38 @@ export default function PricingPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-          <p className="mt-4 text-muted-foreground">Loading pricing...</p>
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-4">Choose Your Plan</h1>
+          <p className="text-xl text-muted-foreground">
+            Select the perfect plan for your needs
+          </p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="relative">
+              <CardHeader>
+                <Skeleton className="h-7 w-32 mb-2" />
+                <Skeleton className="h-4 w-48" />
+              </CardHeader>
+              <CardContent>
+                <div className="mb-6">
+                  <Skeleton className="h-10 w-24" />
+                </div>
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((j) => (
+                    <div key={j} className="flex items-center gap-2">
+                      <Skeleton className="h-5 w-5 rounded-full" />
+                      <Skeleton className="h-4 w-full" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Skeleton className="h-10 w-full" />
+              </CardFooter>
+            </Card>
+          ))}
         </div>
       </div>
     );

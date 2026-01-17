@@ -17,6 +17,7 @@ import { useState, useCallback } from "react";
 import { Text } from "@/components";
 import { LinearGradient } from "expo-linear-gradient";
 import { useConvexAuth } from "convex/react";
+import { isAndroid } from "@/utils";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const photoWidth = (screenWidth - 48) / 2;
@@ -75,7 +76,7 @@ export default function ProfileDetailScreen() {
         <View
           style={{
             position: "absolute",
-            top: insets.top + 8,
+            top: 16,
             left: 0,
             right: 0,
             zIndex: 10,
@@ -158,13 +159,13 @@ export default function ProfileDetailScreen() {
       <View
         style={{
           position: "absolute",
-          top: insets.top + 8,
+          top: isAndroid ? insets.top + 16 : 16,
+          paddingHorizontal: 16,
           left: 0,
           right: 0,
           zIndex: 10,
           flexDirection: "row",
           justifyContent: "space-between",
-          paddingHorizontal: 16,
         }}
       >
         <Button
@@ -369,7 +370,7 @@ export default function ProfileDetailScreen() {
 
       {/* Chat button */}
       <View
-        className="absolute left-0 right-0 px-4 pb-4 pt-2 bg-background"
+        className="absolute left-0 right-0 px-4 pb-4 pt-2"
         style={{ bottom: insets.bottom }}
       >
         <Button onPress={handleChat} isDisabled={isStartingChat}>

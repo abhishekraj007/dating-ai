@@ -22,6 +22,7 @@ import {
   CreditCard,
   ExternalLink,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -102,6 +103,8 @@ export default function SettingsPage() {
       })
     : "";
 
+  const isLoading = userData === undefined;
+
   return (
     <ProtectedRoute>
       <div className="container max-w-4xl mx-auto py-8 px-4">
@@ -134,7 +137,11 @@ export default function SettingsPage() {
                 <User className="h-5 w-5 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Name</p>
-                  <p className="text-sm text-muted-foreground">{userName}</p>
+                  {isLoading ? (
+                    <Skeleton className="h-4 w-32 mt-1" />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{userName}</p>
+                  )}
                 </div>
               </div>
 
@@ -144,7 +151,11 @@ export default function SettingsPage() {
                 <Mail className="h-5 w-5 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Email</p>
-                  <p className="text-sm text-muted-foreground">{userEmail}</p>
+                  {isLoading ? (
+                    <Skeleton className="h-4 w-48 mt-1" />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{userEmail}</p>
+                  )}
                 </div>
               </div>
 
@@ -154,7 +165,11 @@ export default function SettingsPage() {
                 <Calendar className="h-5 w-5 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Member Since</p>
-                  <p className="text-sm text-muted-foreground">{joinedDate}</p>
+                  {isLoading ? (
+                    <Skeleton className="h-4 w-36 mt-1" />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{joinedDate}</p>
+                  )}
                 </div>
               </div>
             </CardContent>

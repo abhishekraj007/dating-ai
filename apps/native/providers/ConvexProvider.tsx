@@ -9,8 +9,7 @@ if (!process.env.EXPO_PUBLIC_CONVEX_URL) {
 }
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL, {
-  // Optionally pause queries until the user is authenticated
-  expectAuth: true,
+  // Don't pause queries - allow public queries for unauthenticated users
   unsavedChangesWarning: false,
   verbose: false, //  __DEV__,
 });

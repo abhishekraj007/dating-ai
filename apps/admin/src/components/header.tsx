@@ -26,10 +26,10 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const links = [
-    { to: "/", label: "Home" },
     { to: "/dashboard", label: "Dashboard" },
-    { to: "/pricing", label: "Pricing" },
-    { to: "/components", label: "Components" },
+    { to: "/characters", label: "Characters" },
+    { to: "/uploads", label: "Uploads" },
+    { to: "/settings", label: "Settings" },
   ] as const;
 
   return (
@@ -117,7 +117,7 @@ export default function Header() {
           {userData ? (
             <UserMenu isPremium={premiumStatus?.isPremium ?? false} />
           ) : (
-            <Button onClick={() => router.push("/auth")} size="sm">
+            <Button onClick={() => router.push("/")} size="sm">
               Login
             </Button>
           )}
