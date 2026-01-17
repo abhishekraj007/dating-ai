@@ -1,8 +1,11 @@
 {
-  "$schema": "https://railpack.com/schema.json",
-  "steps": {
-    "install": {
-      "commands": ["corepack enable", "pnpm install --no-frozen-lockfile"]
+    "$schema": "https://railpack.com/schema.json",
+    "steps": {
+        "install": {
+            "commands": [
+                "corepack enable",
+                "pnpm install --no-frozen-lockfile"
+            ]
+        }
     }
-  }
 }
