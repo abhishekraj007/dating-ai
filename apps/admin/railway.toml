@@ -1,14 +1,9 @@
 [build]
 builder = "RAILPACK"
-buildCommand = "pnpm --filter admin build"
 watchPatterns = ["apps/admin/**"]
 
 [deploy]
-startCommand = "pnpm --filter admin start"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
-
-[variables]
-RAILPACK_INSTALL_COMMAND = "corepack enable && pnpm install --no-frozen-lockfile"
