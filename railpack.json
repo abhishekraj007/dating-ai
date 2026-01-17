@@ -3,7 +3,7 @@
     "steps": {
         "install": {
             "commands": [
-                "corepack enable",
+                "npm install -g pnpm",
                 "pnpm install --no-frozen-lockfile"
             ]
         }

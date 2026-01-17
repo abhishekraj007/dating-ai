@@ -2,7 +2,7 @@
   "$schema": "https://schema.railpack.com",
   "steps": {
     "install": {
-      "commands": ["corepack enable", "pnpm install --no-frozen-lockfile"]
+      "commands": ["npm install -g pnpm", "pnpm install --no-frozen-lockfile"]
     },
     "build": {
       "commands": ["...", "pnpm --filter admin build"]
