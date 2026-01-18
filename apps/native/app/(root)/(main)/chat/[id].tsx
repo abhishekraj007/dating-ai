@@ -1,13 +1,8 @@
+import { View, Text, ScrollView, Alert, Pressable } from "react-native";
 import {
-  View,
-  Text,
   KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Alert,
-  Pressable,
-  Keyboard,
-} from "react-native";
+  KeyboardGestureArea,
+} from "react-native-keyboard-controller";
 import { FlashList } from "@shopify/flash-list";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -67,6 +62,8 @@ export default function ChatScreen() {
     hasMore,
     loadMore,
   } = useMessages(threadId);
+
+  console.log("messages", messages);
 
   const { sendMessage } = useSendMessage();
 
@@ -257,7 +254,7 @@ export default function ChatScreen() {
             }
           },
         },
-      ]
+      ],
     );
   }, [id, threadId, profile?.name, clearChat]);
 
@@ -336,7 +333,7 @@ export default function ChatScreen() {
     <SafeAreaView style={{ flex: 1 }} className="bg-background" edges={["top"]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior="padding"
         keyboardVerticalOffset={0}
       >
         {/* Header */}
@@ -362,7 +359,7 @@ export default function ChatScreen() {
                 onPress={() => {
                   if (conversation?.aiProfileId) {
                     router.push(
-                      `/(root)/(main)/profile/${conversation.aiProfileId}`
+                      `/(root)/(main)/profile/${conversation.aiProfileId}`,
                     );
                   }
                 }}
@@ -425,8 +422,8 @@ export default function ChatScreen() {
           </View>
         </View>
 
-        {/* Messages */}
-        <View style={{ flex: 1, position: "relative" }}>
+        {/* Messages - wrapped with KeyboardGestureArea for interactive dismissal */}
+        <KeyboardGestureArea interpolator="ios" style={{ flex: 1 }}>
           {isLoadingConversation || isLoadingMessages ? (
             // Skeleton messages while loading
             <View className="flex-1 p-4 gap-4">
@@ -490,9 +487,8 @@ export default function ChatScreen() {
                 paddingVertical: 16,
               }}
               showsVerticalScrollIndicator={false}
-              keyboardDismissMode="on-drag"
+              keyboardDismissMode="interactive"
               keyboardShouldPersistTaps="handled"
-              onScrollBeginDrag={Keyboard.dismiss}
               onStartReached={() => {
                 // Don't load more during initial scroll or if already loading
                 if (!shouldLoadMore() || !hasMore || isLoadingMore) {
@@ -501,10 +497,6 @@ export default function ChatScreen() {
                 loadMore();
               }}
               onStartReachedThreshold={0.3}
-              maintainVisibleContentPosition={{
-                minIndexForVisible: 1,
-              }}
-              estimatedItemSize={80}
               ListHeaderComponent={
                 isLoadingMore ? (
                   <View className="py-4 items-center">
@@ -514,7 +506,7 @@ export default function ChatScreen() {
               }
             />
           )}
-        </View>
+        </KeyboardGestureArea>
 
         {/* Action buttons */}
         <View className="border-t border-border">

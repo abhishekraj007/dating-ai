@@ -1,5 +1,6 @@
 import { Slot } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import "../global.css";
 import { HeroUINativeProvider } from "heroui-native";
 import { AppThemeProvider, useAppTheme } from "@/contexts/app-theme-context";
@@ -42,15 +43,17 @@ function ThemedLayout() {
 export default function Layout() {
   return (
     <GestureHandlerRootView className="flex-1">
-      <ConvexProvider>
-        <SplashScreenProvider>
-          <AppThemeProvider>
-            <PurchasesProvider>
-              <ThemedLayout />
-            </PurchasesProvider>
-          </AppThemeProvider>
-        </SplashScreenProvider>
-      </ConvexProvider>
+      <KeyboardProvider>
+        <ConvexProvider>
+          <SplashScreenProvider>
+            <AppThemeProvider>
+              <PurchasesProvider>
+                <ThemedLayout />
+              </PurchasesProvider>
+            </AppThemeProvider>
+          </SplashScreenProvider>
+        </ConvexProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

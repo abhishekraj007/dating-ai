@@ -40,12 +40,12 @@ export const getProfiles = query({
           .collect();
 
         const conversationProfileIds = new Set(
-          conversations.map((c) => c.aiProfileId.toString())
+          conversations.map((c) => c.aiProfileId.toString()),
         );
 
         // Filter out profiles that already have conversations
         profiles = profiles.filter(
-          (p) => !conversationProfileIds.has(p._id.toString())
+          (p) => !conversationProfileIds.has(p._id.toString()),
         );
       }
     }
@@ -60,7 +60,7 @@ export const getProfiles = query({
           ...profile,
           avatarUrl,
         };
-      })
+      }),
     );
   },
 });
@@ -131,7 +131,7 @@ export const getUserCreatedProfiles = query({
           ...profile,
           avatarUrl,
         };
-      })
+      }),
     );
   },
 });
@@ -170,7 +170,7 @@ export const getUserConversations = query({
             threadId: conv.threadId,
             order: "desc",
             paginationOpts: { numItems: 1, cursor: null },
-          }
+          },
         );
 
         const lastMessage = messagesResult.page[0];
@@ -190,7 +190,7 @@ export const getUserConversations = query({
               }
             : null,
         };
-      })
+      }),
     ).then((results) => results.filter(Boolean));
   },
 });
@@ -248,7 +248,7 @@ export const getConversationByProfile = query({
     const conversation = await ctx.db
       .query("aiConversations")
       .withIndex("by_user_and_profile", (q) =>
-        q.eq("userId", user._id).eq("aiProfileId", aiProfileId)
+        q.eq("userId", user._id).eq("aiProfileId", aiProfileId),
       )
       .first();
 
@@ -366,7 +366,7 @@ export const getSystemProfiles = query({
 
         const profileImageUrls = profile.profileImageKeys
           ? await Promise.all(
-              profile.profileImageKeys.map((key) => r2.getUrl(key))
+              profile.profileImageKeys.map((key) => r2.getUrl(key)),
             )
           : [];
 
@@ -375,7 +375,38 @@ export const getSystemProfiles = query({
           avatarUrl,
           profileImageUrls,
         };
-      })
+      }),
     );
+  },
+});
+
+/**
+ * Get a fresh signed URL for a chat image using its permanent imageKey.
+ * Used when displaying images in chat to avoid expired URL issues.
+ */
+export const getChatImageUrl = query({
+  args: {
+    imageKey: v.string(),
+  },
+  handler: async (ctx, { imageKey }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      return null;
+    }
+
+    // Verify the imageKey belongs to this user's chat images
+    // imageKey format: chatImages/{userId}/{profileId}/{requestId}.jpg
+    const keyParts = imageKey.split("/");
+    if (keyParts[0] !== "chatImages" || keyParts.length < 4) {
+      return null; // Invalid key format
+    }
+
+    // Generate fresh signed URL
+    try {
+      const signedUrl = await r2.getUrl(imageKey);
+      return signedUrl;
+    } catch {
+      return null;
+    }
   },
 });

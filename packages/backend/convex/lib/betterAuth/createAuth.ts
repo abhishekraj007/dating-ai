@@ -26,6 +26,7 @@ export function createAuth(
       // Production (Railway)
       "https://admin-dating.up.railway.app",
       "https://web-dating.up.railway.app",
+      "https://admin-dating-dev.up.railway.app",
     ],
     database: authComponent.adapter(ctx),
     user: {
