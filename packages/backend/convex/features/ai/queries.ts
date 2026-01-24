@@ -323,7 +323,7 @@ export const listThreadMessages = query({
         page: [],
         continueCursor: "",
         isDone: true,
-        streams: { deltas: [], cursors: {} },
+        streams: { kind: "deltas" as const, deltas: [], cursors: {} },
       };
     }
 

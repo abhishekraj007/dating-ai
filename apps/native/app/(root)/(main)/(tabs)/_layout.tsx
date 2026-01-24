@@ -14,7 +14,10 @@ export default function TabsLayout() {
   const borderColor = useThemeColor("border");
 
   // Calculate proper bottom padding for Android navigation bar
-  const bottomPadding = Platform.OS === "android" ? Math.max(insets.bottom, 8) : 8;
+  const bottomPadding =
+    Platform.OS === "android" ? Math.max(insets.bottom, 8) : 24;
+  // const bottomPadding =
+  //   Platform.OS === "android" ? Math.max(insets.bottom, 8) : 24;
   const tabBarHeight = 60 + bottomPadding + 8; // base height + bottom padding + top padding
 
   return (

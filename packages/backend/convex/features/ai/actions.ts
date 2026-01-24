@@ -43,7 +43,7 @@ async function generateImageDev(): Promise<ImageGenerationResult> {
 
     // Get image info first to get the actual download URL
     const infoResponse = await fetch(
-      `https://picsum.photos/id/${randomId}/info`
+      `https://picsum.photos/id/${randomId}/info`,
     );
 
     if (!infoResponse.ok) {
@@ -73,7 +73,7 @@ async function generateImageDev(): Promise<ImageGenerationResult> {
  */
 async function generateImageProd(
   prompt: string,
-  referenceImageUrl: string | null
+  referenceImageUrl: string | null,
 ): Promise<ImageGenerationResult> {
   try {
     // Build input parameters for Flux
@@ -105,7 +105,7 @@ async function generateImageProd(
     console.log(
       "[Prod] Replicate output type:",
       typeof output,
-      Array.isArray(output) ? "array" : "not array"
+      Array.isArray(output) ? "array" : "not array",
     );
 
     // Extract URL from FileOutput object
@@ -150,27 +150,43 @@ export const generateResponse = internalAction({
   args: {
     conversationId: v.id("aiConversations"),
     promptMessageId: v.string(),
+    // Pre-fetched data to avoid redundant queries (optional for backwards compat)
+    threadId: v.optional(v.string()),
+    userId: v.optional(v.string()),
+    aiProfileId: v.optional(v.id("aiProfiles")),
   },
-  handler: async (ctx, { conversationId, promptMessageId }) => {
-    // Get conversation
-    const conversation = await ctx.runQuery(
-      internal.features.ai.internalQueries.getConversationInternal,
-      { conversationId }
-    );
+  handler: async (
+    ctx,
+    { conversationId, promptMessageId, threadId, userId, aiProfileId },
+  ) => {
+    // Use pre-fetched data if available, otherwise fetch (backwards compatibility)
+    let convThreadId = threadId;
+    let convUserId = userId;
+    let profileId = aiProfileId;
 
-    if (!conversation) {
-      console.error("Conversation not found:", conversationId);
-      return null;
+    if (!convThreadId || !convUserId || !profileId) {
+      const conversation = await ctx.runQuery(
+        internal.features.ai.internalQueries.getConversationInternal,
+        { conversationId },
+      );
+
+      if (!conversation) {
+        console.error("Conversation not found:", conversationId);
+        return null;
+      }
+      convThreadId = conversation.threadId;
+      convUserId = conversation.userId;
+      profileId = conversation.aiProfileId;
     }
 
-    // Get AI profile
+    // Get AI profile (still needed for building agent prompt)
     const profile = await ctx.runQuery(
       internal.features.ai.internalQueries.getProfileInternal,
-      { profileId: conversation.aiProfileId }
+      { profileId: profileId! },
     );
 
     if (!profile) {
-      console.error("Profile not found:", conversation.aiProfileId);
+      console.error("Profile not found:", profileId);
       return null;
     }
 
@@ -180,9 +196,9 @@ export const generateResponse = internalAction({
     // Generate streaming response
     const result = await agent.streamText(
       ctx,
-      { threadId: conversation.threadId, userId: conversation.userId },
+      { threadId: convThreadId!, userId: convUserId! },
       { promptMessageId },
-      { saveStreamDeltas: true }
+      { saveStreamDeltas: true },
     );
 
     // Wait for the stream to complete by awaiting the text
@@ -208,10 +224,10 @@ export const generateResponse = internalAction({
     const messagesResult = await ctx.runQuery(
       components.agent.messages.listMessagesByThreadId,
       {
-        threadId: conversation.threadId,
+        threadId: convThreadId!,
         order: "desc",
         paginationOpts: { numItems: 5, cursor: null },
-      }
+      },
     );
 
     console.log("Thread messages count:", messagesResult.page.length);
@@ -249,8 +265,8 @@ export const generateResponse = internalAction({
                 internal.features.ai.mutations.createChatImageRequestInternal,
                 {
                   conversationId,
-                  userId: conversation.userId,
-                  aiProfileId: conversation.aiProfileId,
+                  userId: convUserId!,
+                  aiProfileId: profileId!,
                   prompt: args.description || "A selfie",
                   styleOptions: {
                     hairstyle: args.hairstyle,
@@ -258,7 +274,7 @@ export const generateResponse = internalAction({
                     scene: args.scene,
                     description: args.description,
                   },
-                }
+                },
               );
               console.log("Image request created successfully");
               // Only create one image request per response
@@ -266,7 +282,7 @@ export const generateResponse = internalAction({
             } catch (error) {
               console.error(
                 "Failed to create image request from agent:",
-                error
+                error,
               );
             }
           }
@@ -288,7 +304,7 @@ function buildImagePrompt(
     clothing?: string;
     scene?: string;
     description?: string;
-  }
+  },
 ): string {
   const baseDescription = [
     `A photorealistic selfie of a ${profile.age ?? 25}-year-old`,
@@ -329,7 +345,7 @@ async function getProfileAvatarUrl(
       ? (...args: A) => R
       : never;
   },
-  avatarImageKey: string | undefined
+  avatarImageKey: string | undefined,
 ): Promise<string | null> {
   if (!avatarImageKey) {
     return null;
@@ -356,7 +372,7 @@ export const generateChatImage = internalAction({
   },
   handler: async (
     ctx,
-    { requestId }
+    { requestId },
   ): Promise<
     | { success: true; imageKey: string }
     | { success: false; error: string }
@@ -368,13 +384,13 @@ export const generateChatImage = internalAction({
       {
         requestId,
         status: "processing",
-      }
+      },
     );
 
     // Get request details
     const request = await ctx.runQuery(
       internal.features.ai.internalQueries.getChatImageRequestInternal,
-      { requestId }
+      { requestId },
     );
 
     if (!request) {
@@ -385,7 +401,7 @@ export const generateChatImage = internalAction({
     // Get AI profile for reference image and details
     const profile = await ctx.runQuery(
       internal.features.ai.internalQueries.getProfileInternal,
-      { profileId: request.aiProfileId }
+      { profileId: request.aiProfileId },
     );
 
     if (!profile) {
@@ -395,7 +411,7 @@ export const generateChatImage = internalAction({
           requestId,
           status: "failed",
           errorMessage: "Profile not found",
-        }
+        },
       );
       return null;
     }
@@ -416,7 +432,7 @@ export const generateChatImage = internalAction({
             gender: profile.gender,
             age: profile.age,
           },
-          request.styleOptions ?? {}
+          request.styleOptions ?? {},
         );
 
         console.log("Generating image with prompt:", prompt);
@@ -427,7 +443,7 @@ export const generateChatImage = internalAction({
           referenceImageUrl = await r2.getUrl(profile.avatarImageKey);
           console.log(
             "Using reference image:",
-            referenceImageUrl ? "yes" : "no"
+            referenceImageUrl ? "yes" : "no",
           );
         }
 
@@ -445,7 +461,7 @@ export const generateChatImage = internalAction({
       const imageResponse = await fetch(imageUrl);
       if (!imageResponse.ok) {
         throw new Error(
-          `Failed to fetch generated image: ${imageResponse.status}`
+          `Failed to fetch generated image: ${imageResponse.status}`,
         );
       }
 
@@ -475,7 +491,7 @@ export const generateChatImage = internalAction({
           requestId,
           status: "completed",
           imageKey,
-        }
+        },
       );
 
       console.log("Image generated and saved successfully:", imageKey);
@@ -491,7 +507,7 @@ export const generateChatImage = internalAction({
           status: "failed",
           errorMessage:
             error instanceof Error ? error.message : "Unknown error occurred",
-        }
+        },
       );
 
       return { success: false, error: String(error) };
@@ -512,7 +528,7 @@ export const generateVoiceMessage = internalAction({
     // Get conversation
     const conversation = await ctx.runQuery(
       internal.features.ai.internalQueries.getConversationInternal,
-      { conversationId }
+      { conversationId },
     );
 
     if (!conversation) {
@@ -523,7 +539,7 @@ export const generateVoiceMessage = internalAction({
     // Get AI profile for voice ID
     const profile = await ctx.runQuery(
       internal.features.ai.internalQueries.getProfileInternal,
-      { profileId: conversation.aiProfileId }
+      { profileId: conversation.aiProfileId },
     );
 
     if (!profile) {

@@ -107,6 +107,12 @@ export const sendMessage = mutation({
       credits: currentCredits - messageCost,
     });
 
+    // Get AI profile data now to pass to action (avoids re-fetch)
+    const aiProfile = await ctx.db.get(conversation.aiProfileId);
+    if (!aiProfile) {
+      throw new Error("AI profile not found");
+    }
+
     // Save user message using Agent component
     const { messageId } = await saveMessage(ctx, components.agent, {
       threadId: conversation.threadId,
@@ -129,13 +135,16 @@ export const sendMessage = mutation({
       compatibilityScore: newScore,
     });
 
-    // Schedule async AI response generation
+    // Schedule async AI response generation with pre-fetched data
     await ctx.scheduler.runAfter(
       0,
       internal.features.ai.actions.generateResponse,
       {
         conversationId,
         promptMessageId: messageId,
+        threadId: conversation.threadId,
+        userId: user._id,
+        aiProfileId: conversation.aiProfileId,
       },
     );
 

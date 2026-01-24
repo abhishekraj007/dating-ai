@@ -1,10 +1,13 @@
 import { useMutation } from "convex/react";
 import { api } from "@dating-ai/backend";
-import { useMemo, useCallback, useEffect } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { useUIMessages } from "@convex-dev/agent/react";
 
 const PAGE_SIZE = 20;
+
+// Store for optimistic messages per thread (triggers re-render via useState)
+type OptimisticMessage = ProcessedMessage & { isOptimistic: true };
 
 interface ProcessedMessage {
   _id: string;
@@ -131,6 +134,26 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
   ];
 }
 
+// Global state for optimistic messages - shared across hook instances
+let optimisticMessagesMap: Map<string, ProcessedMessage[]> = new Map();
+let optimisticListeners: Map<string, Set<() => void>> = new Map();
+
+function addOptimisticMessage(threadId: string, message: ProcessedMessage) {
+  const current = optimisticMessagesMap.get(threadId) ?? [];
+  optimisticMessagesMap.set(threadId, [...current, message]);
+  // Notify listeners
+  optimisticListeners.get(threadId)?.forEach((cb) => cb());
+}
+
+function clearOptimisticMessages(threadId: string) {
+  optimisticMessagesMap.set(threadId, []);
+  optimisticListeners.get(threadId)?.forEach((cb) => cb());
+}
+
+function getOptimisticMessages(threadId: string): ProcessedMessage[] {
+  return optimisticMessagesMap.get(threadId) ?? [];
+}
+
 /**
  * Hook for fetching messages with infinite scroll pagination.
  * Uses the @convex-dev/agent/react useUIMessages hook for proper pagination.
@@ -139,12 +162,28 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
  * @param threadId - The thread ID from the conversation
  */
 export function useMessages(threadId: string | undefined) {
+  // Local state to trigger re-renders when optimistic messages change
+  const [optimisticVersion, setOptimisticVersion] = useState(0);
+
+  // Subscribe to optimistic message changes for this thread
+  useEffect(() => {
+    if (!threadId) return;
+    const listener = () => setOptimisticVersion((v) => v + 1);
+    if (!optimisticListeners.has(threadId)) {
+      optimisticListeners.set(threadId, new Set());
+    }
+    optimisticListeners.get(threadId)!.add(listener);
+    return () => {
+      optimisticListeners.get(threadId)?.delete(listener);
+    };
+  }, [threadId]);
+
   // Use the useUIMessages hook from @convex-dev/agent/react
   // This handles pagination internally and accumulates pages
   const { results, status, loadMore } = useUIMessages(
     api.features.ai.queries.listThreadMessages,
     threadId ? { threadId } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: PAGE_SIZE },
   );
 
   // Get cached messages for this thread (computed once per threadId change)
@@ -154,11 +193,26 @@ export function useMessages(threadId: string | undefined) {
   }, [threadId]);
 
   // Process all accumulated messages from the query
-  const processedMessages = useMemo(() => {
-    if (!results || results.length === 0) return [];
+  const { processedMessages, hasStreamingMessage } = useMemo(() => {
+    if (!results || results.length === 0) {
+      return { processedMessages: [], hasStreamingMessage: false };
+    }
 
     const allMessages: ProcessedMessage[] = [];
+    let streaming = false;
+
     results.forEach((msg: any, index: number) => {
+      // Track streaming status
+      if (msg.status === "streaming" || msg.status === "pending") {
+        streaming = true;
+      }
+
+      // Skip ALL assistant messages with empty content (prevents empty bubbles)
+      // These appear briefly before content arrives via streaming
+      if (msg.role === "assistant" && (!msg.text || msg.text.trim() === "")) {
+        return; // Skip - typing indicator will show instead
+      }
+
       const processed = processMessage(msg, index);
       allMessages.push(...processed);
     });
@@ -166,49 +220,70 @@ export function useMessages(threadId: string | undefined) {
     // Sort by order to ensure correct sequence
     allMessages.sort((a, b) => a.order - b.order);
 
-    return allMessages;
+    return { processedMessages: allMessages, hasStreamingMessage: streaming };
   }, [results]);
 
-  // Merge fresh messages with cached messages
-  // This ensures we don't lose older messages when returning to the screen
+  // Get optimistic messages for this thread
+  const optimisticMessages = useMemo(() => {
+    if (!threadId) return [];
+    return getOptimisticMessages(threadId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threadId, optimisticVersion]);
+
+  // Clear optimistic messages when real messages arrive with matching content
+  useEffect(() => {
+    if (!threadId || processedMessages.length === 0) return;
+    const optimistic = getOptimisticMessages(threadId);
+    if (optimistic.length === 0) return;
+
+    // Check if any optimistic message content now exists in real messages
+    const realContents = new Set(
+      processedMessages.filter((m) => m.role === "user").map((m) => m.content),
+    );
+    const hasMatchingReal = optimistic.some((o) => realContents.has(o.content));
+
+    if (hasMatchingReal) {
+      clearOptimisticMessages(threadId);
+    }
+  }, [threadId, processedMessages]);
+
+  // Merge fresh messages with cached messages and optimistic messages
   const messages = useMemo(() => {
     if (!threadId) return [];
 
+    // Start with base messages
+    let baseMessages: ProcessedMessage[] = [];
+
     // If still loading first page, show cached messages
     if (status === "LoadingFirstPage") {
-      return cachedMessages;
+      baseMessages = cachedMessages;
+    } else if (processedMessages.length === 0) {
+      baseMessages = cachedMessages;
+    } else if (cachedMessages.length <= processedMessages.length) {
+      baseMessages = processedMessages;
+    } else {
+      // Merge cache with fresh
+      const oldestFreshOrder = Math.min(
+        ...processedMessages.map((m) => m.order),
+      );
+      const olderFromCache = cachedMessages.filter(
+        (m) => m.order < oldestFreshOrder,
+      );
+      baseMessages = [...olderFromCache, ...processedMessages];
     }
 
-    // If no fresh messages yet, return cache
-    if (processedMessages.length === 0) {
-      return cachedMessages;
-    }
-
-    // If cache is empty or smaller, just use fresh messages
-    if (cachedMessages.length <= processedMessages.length) {
-      return processedMessages;
-    }
-
-    // IMPORTANT: Cache has MORE messages than current query results
-    // This happens when user loaded older messages, left, and came back
-    // We need to merge: use fresh data for recent messages, cache for older ones
-
-    // Find the oldest message in fresh data
-    const oldestFreshOrder = Math.min(...processedMessages.map((m) => m.order));
-
-    // Get older messages from cache that aren't in fresh data
-    const olderFromCache = cachedMessages.filter(
-      (m) => m.order < oldestFreshOrder
-    );
-
-    // Combine: older cached messages + fresh messages
-    const merged = [...olderFromCache, ...processedMessages];
+    // Add optimistic messages (they have higher order numbers)
+    const allMessages = [...baseMessages, ...optimisticMessages];
 
     // Sort by order
-    merged.sort((a, b) => a.order - b.order);
+    allMessages.sort((a, b) => a.order - b.order);
 
-    return merged;
-  }, [threadId, processedMessages, status, cachedMessages]);
+    // Final filter: remove any assistant messages with empty content
+    // This catches edge cases from cache or merged results
+    return allMessages.filter(
+      (m) => m.role === "user" || (m.content && m.content.trim() !== ""),
+    );
+  }, [threadId, processedMessages, status, cachedMessages, optimisticMessages]);
 
   // Update cache whenever we have messages to cache
   // This happens after messages are computed to include merged results
@@ -241,23 +316,54 @@ export function useMessages(threadId: string | undefined) {
     isLoadingMore: status === "LoadingMore",
     hasMore: status === "CanLoadMore",
     loadMore: handleLoadMore,
+    isAITyping: hasStreamingMessage,
   };
 }
 
 export function useSendMessage() {
   const sendMessage = useMutation(api.features.ai.mutations.sendMessage);
 
-  return { sendMessage };
+  // Enhanced send with local optimistic update for instant feedback
+  const sendMessageWithOptimistic = (
+    args: { conversationId: Id<"aiConversations">; content: string },
+    threadId?: string,
+  ) => {
+    // Add optimistic message immediately for instant UI feedback
+    if (threadId) {
+      const cachedMessages = getCachedMessages(threadId) ?? [];
+      const maxOrder =
+        cachedMessages.length > 0
+          ? Math.max(...cachedMessages.map((m) => m.order)) + 1
+          : 0;
+
+      const optimisticMessage: ProcessedMessage = {
+        _id: `optimistic-${Date.now()}`,
+        _creationTime: Date.now(),
+        role: "user",
+        content: args.content,
+        order: maxOrder + 0.5, // Use .5 to ensure it sorts after real messages with same order
+        isStreaming: false,
+      };
+
+      // Add to optimistic messages (triggers re-render via listener)
+      addOptimisticMessage(threadId, optimisticMessage);
+    }
+
+    // Fire mutation (don't await - let it run in background)
+    sendMessage(args);
+  };
+
+  return { sendMessage, sendMessageWithOptimistic };
 }
 
 export function useDeleteMessage() {
   const deleteMessageMutation = useMutation(
-    api.features.ai.mutations.deleteMessage
+    api.features.ai.mutations.deleteMessage,
   );
 
   const deleteMessage = async (
     conversationId: string,
-    messageOrder: number
+    messageOrder: number,
   ) => {
     return await deleteMessageMutation({
       conversationId: conversationId as Id<"aiConversations">,

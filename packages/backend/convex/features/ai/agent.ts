@@ -208,13 +208,13 @@ export const generateImageTool = createTool({
       .string()
       .optional()
       .describe(
-        "Clothing/outfit for the image (e.g., 'Casual outfit', 'Summer dress')"
+        "Clothing/outfit for the image (e.g., 'Casual outfit', 'Summer dress')",
       ),
     scene: z
       .string()
       .optional()
       .describe(
-        "Scene/background for the image (e.g., 'Beach', 'Coffee shop')"
+        "Scene/background for the image (e.g., 'Beach', 'Coffee shop')",
       ),
   }),
   handler: async (ctx, args): Promise<string> => {
@@ -259,7 +259,7 @@ Ask questions one at a time, wait for answers, give feedback, then continue.`,
     action: z
       .enum(["start", "question", "check_answer", "end"])
       .describe(
-        "The action to perform: 'start' to begin, 'question' to ask a new question, 'check_answer' to evaluate user's answer, 'end' to finish the quiz"
+        "The action to perform: 'start' to begin, 'question' to ask a new question, 'check_answer' to evaluate user's answer, 'end' to finish the quiz",
       ),
     question: z
       .string()
@@ -360,7 +360,7 @@ Ask questions one at a time, wait for answers, give feedback, then continue.`,
 export function createAIProfileAgent(profile: Doc<"aiProfiles">) {
   return new Agent(components.agent, {
     name: profile.name,
-    languageModel: "google/gemini-3-pro-preview",
+    languageModel: "google/gemini-3-flash",
     textEmbeddingModel: "openai/text-embedding-3-small",
     instructions: buildPersonalityPrompt(profile),
     tools: {
@@ -409,7 +409,7 @@ export function calculateRelationshipLevel(messageCount: number): number {
 export function calculateCompatibilityScore(
   currentScore: number,
   messageCount: number,
-  _mentionedSharedInterests: boolean = false
+  _mentionedSharedInterests: boolean = false,
 ): number {
   // Base score starts at 60
   let score = Math.max(currentScore, 60);

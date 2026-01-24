@@ -9,6 +9,7 @@ export {
   UserTextBubble,
   UserImageRequestBubble,
 } from "./TextBubble";
+export { TypingIndicator } from "./TypingIndicator";
 
 // Types and utilities
 export * from "./message-types";
