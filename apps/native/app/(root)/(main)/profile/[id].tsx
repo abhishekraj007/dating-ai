@@ -6,6 +6,7 @@ import {
   StatusBar,
 } from "react-native";
 import { Image } from "expo-image";
+import { ZoomableImage } from "@/components/zoomable-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Chip, Skeleton, useThemeColor } from "heroui-native";
@@ -217,7 +218,7 @@ export default function ProfileDetailScreen() {
               }}
             />
           )}
-          <Image
+          <ZoomableImage
             source={
               profile.avatarUrl
                 ? { uri: profile.avatarUrl }
@@ -331,22 +332,18 @@ export default function ProfileDetailScreen() {
             <Text className="text-foreground font-semibold mb-2">Photos</Text>
             <View className="flex-row flex-wrap gap-2">
               {profile.profileImageUrls.map((url, index) => (
-                <Pressable
+                <ZoomableImage
                   key={index}
-                  style={{ width: photoWidth, height: photoWidth }}
-                >
-                  <Image
-                    source={{ uri: url }}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      borderRadius: 12,
-                    }}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
-                    transition={200}
-                  />
-                </Pressable>
+                  source={{ uri: url }}
+                  style={{
+                    width: photoWidth,
+                    height: photoWidth,
+                    borderRadius: 12,
+                  }}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  transition={200}
+                />
               ))}
             </View>
           </View>

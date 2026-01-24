@@ -1,11 +1,11 @@
 import { View, Text } from "react-native";
-import { Image } from "expo-image";
 import Markdown from "react-native-markdown-display";
 import { useQuery } from "convex/react";
 import { api } from "@dating-ai/backend";
 import { AIBubbleWrapper } from "./AIBubbleWrapper";
 import { useMarkdownStyles } from "./useMarkdownStyles";
 import { Skeleton } from "heroui-native";
+import { ZoomableImage } from "@/components/zoomable-image";
 import type {
   AIBubbleProps,
   ImageRequestData,
@@ -76,12 +76,12 @@ export function ImageResponseBubble({
         {!imageUrl ? (
           <Skeleton style={{ width: 250, height: 350 }} />
         ) : (
-          <Image
+          <ZoomableImage
             source={{ uri: imageUrl }}
             style={{ width: 250, height: 350 }}
             contentFit="cover"
             transition={200}
-            cachePolicy="memory-disk"
+            cachePolicy="disk"
           />
         )}
       </View>
