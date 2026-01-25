@@ -80,6 +80,13 @@ export default function ChatScreen() {
     loadMore,
     shouldLoadMore,
 
+    // Scroll handlers
+    handleScroll,
+    viewabilityConfig,
+    onViewableItemsChanged,
+    initialScrollIndex,
+    initialScrollIndexParams,
+
     // Keyboard state
     composerHeight,
     setComposerHeight,
@@ -245,6 +252,16 @@ export default function ChatScreen() {
             data={messages}
             renderItem={renderMessage}
             keyExtractor={(item) => item._id}
+            initialScrollIndex={
+              typeof initialScrollIndex === "number" && messages.length > 0
+                ? initialScrollIndex
+                : undefined
+            }
+            initialScrollIndexParams={
+              typeof initialScrollIndex === "number" && messages.length > 0
+                ? initialScrollIndexParams
+                : undefined
+            }
             contentContainerStyle={{
               paddingTop: 16,
               paddingBottom: totalBottomInset + 16,
@@ -252,6 +269,10 @@ export default function ChatScreen() {
             showsVerticalScrollIndicator={false}
             keyboardDismissMode="interactive"
             keyboardShouldPersistTaps="handled"
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            viewabilityConfig={viewabilityConfig}
+            onViewableItemsChanged={onViewableItemsChanged}
             onStartReached={() => {
               if (!shouldLoadMore() || !hasMore || isLoadingMore) {
                 return;

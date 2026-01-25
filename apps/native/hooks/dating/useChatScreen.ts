@@ -44,9 +44,17 @@ export function useChatScreen() {
   const { sendMessage, sendMessageWithOptimistic } = useSendMessage();
 
   // Chat scroll behavior
-  const { shouldLoadMore } = useChatScroll({
+  const {
+    shouldLoadMore,
+    handleScroll,
+    scrollToBottom,
+    viewabilityConfig,
+    onViewableItemsChanged,
+    initialScrollIndex,
+    initialScrollIndexParams,
+  } = useChatScroll({
     listRef,
-    messagesLength: messages.length,
+    messages,
     conversationId: id,
     isLoading: isLoadingMessages,
   });
@@ -118,15 +126,21 @@ export function useChatScreen() {
         threadId,
       );
 
-      requestAnimationFrame(() => {
-        listRef.current?.scrollToEnd({ animated: true });
-      });
+      // Scroll to bottom when user sends message
+      scrollToBottom(true);
 
       setTimeout(() => {
         setIsSending(false);
       }, 10000);
     },
-    [id, isSending, messages, sendMessageWithOptimistic, threadId],
+    [
+      id,
+      isSending,
+      messages,
+      sendMessageWithOptimistic,
+      threadId,
+      scrollToBottom,
+    ],
   );
 
   const handleImageRequest = useCallback(
@@ -347,6 +361,13 @@ export function useChatScreen() {
     hasMore,
     loadMore,
     shouldLoadMore,
+
+    // Scroll handlers
+    handleScroll,
+    viewabilityConfig,
+    onViewableItemsChanged,
+    initialScrollIndex,
+    initialScrollIndexParams,
 
     // Keyboard state
     composerHeight,

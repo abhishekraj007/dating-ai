@@ -32,7 +32,7 @@ export default function CharactersPage() {
     handleGalleryUpload,
     handleDeleteImage,
     handleSave,
-  } = useCharacterEdit();
+  } = useCharacterEdit(profiles);
 
   const loader = () => {
     return (

@@ -1,8 +1,9 @@
-import { View, Text, FlatList, Dimensions } from "react-native";
+import { View, Text, FlatList, Dimensions, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Skeleton } from "heroui-native";
+import { Button, Skeleton, useThemeColor } from "heroui-native";
+import { SlidersHorizontal } from "lucide-react-native";
 import { Header } from "@/components";
 import { ProfileCard, GenderTabs } from "@/components/dating";
 import { useAIProfiles } from "@/hooks/dating";
@@ -13,6 +14,11 @@ const cardWidth = (screenWidth - 48) / 2; // 2 columns with padding
 export default function ExploreScreen() {
   const router = useRouter();
   const [gender, setGender] = useState<"female" | "male">("female");
+  const foregroundColor = useThemeColor("foreground");
+
+  const handleFilterPress = () => {
+    router.push("/filter");
+  };
   const { profiles, isLoading } = useAIProfiles({
     gender,
     limit: 50,
@@ -58,9 +64,20 @@ export default function ExploreScreen() {
       <SafeAreaView className="flex-1" edges={["top"]}>
         <Header title="Explore" showSearch />
 
-        {/* Gender tabs */}
-        <View className="px-4 py-3">
-          <GenderTabs value={gender} onChange={setGender} />
+        {/* Gender tabs and Filter */}
+        <View className="px-4 py-3 flex-row items-center gap-3">
+          <View className="flex-1">
+            <GenderTabs value={gender} onChange={setGender} />
+          </View>
+          <Button
+            variant="tertiary"
+            size="sm"
+            isIconOnly
+            onPress={handleFilterPress}
+            className="bg-surface rounded-full"
+          >
+            <SlidersHorizontal size={20} color={foregroundColor} />
+          </Button>
         </View>
 
         {/* Profile grid */}

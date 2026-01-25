@@ -1,9 +1,15 @@
-import { View, useWindowDimensions, StyleSheet, Pressable } from "react-native";
-import { Text } from "@/components/ui/text";
-import { Button, useThemeColor } from "heroui-native";
+import {
+  View,
+  useWindowDimensions,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+  Text,
+} from "react-native";
+// import { Text } from "@/components/ui/text";
+import { Chip } from "heroui-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { MessageCircle } from "lucide-react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -12,6 +18,7 @@ import Animated, {
   runOnJS,
   interpolate,
   Extrapolation,
+  type SharedValue,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import type { ForYouProfile } from "@/hooks/dating/useForYou";
@@ -24,6 +31,8 @@ interface ProfileSwipeCardProps {
   onSwipeRight: () => void;
   onPress: () => void;
   onAuthRequired?: () => void;
+  dragX?: SharedValue<number>;
+  bottomUiHeight?: number;
   isFirst?: boolean;
   cardHeight?: number;
   isAuthenticated?: boolean;
@@ -35,23 +44,17 @@ export function ProfileSwipeCard({
   onSwipeRight,
   onPress,
   onAuthRequired,
+  dragX,
+  bottomUiHeight,
   isFirst = false,
   cardHeight: propCardHeight,
   isAuthenticated = true,
 }: ProfileSwipeCardProps) {
   const { width, height } = useWindowDimensions();
-  // Front card is slightly narrower to show peek of behind card on sides
-  const cardWidth = isFirst ? width - 40 : width - 32;
-  // Use provided card height or calculate from window dimensions
-  // Front card is slightly shorter so behind card peeks from top
-  const cardHeight = propCardHeight
-    ? isFirst
-      ? propCardHeight - 16
-      : propCardHeight
-    : height * 0.65;
+  const cardWidth = width;
+  const cardHeight = propCardHeight ?? height;
 
-  const accentColor = useThemeColor("accent");
-  const foregroundColor = useThemeColor("foreground");
+  const reservedBottomUi = bottomUiHeight ?? 220;
 
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -67,8 +70,22 @@ export function ProfileSwipeCard({
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
       translateX.value = event.translationX;
-      translateY.value = event.translationY * 0.3;
+      translateY.value = event.translationY;
       rotation.value = (event.translationX / width) * 15;
+
+      if (dragX) dragX.value = event.translationX;
+
+      // Scale down based on drag distance (both X and Y)
+      const dragDistance = Math.sqrt(
+        event.translationX ** 2 + event.translationY ** 2,
+      );
+      const newScale = interpolate(
+        dragDistance,
+        [0, 200],
+        [1, 0.85],
+        Extrapolation.CLAMP,
+      );
+      scale.value = newScale;
     })
     .onEnd((event) => {
       const swipedRight = event.translationX > SWIPE_THRESHOLD;
@@ -79,27 +96,35 @@ export function ProfileSwipeCard({
         translateX.value = withSpring(0);
         translateY.value = withSpring(0);
         rotation.value = withSpring(0);
+        scale.value = withSpring(1);
+        if (dragX) dragX.value = withSpring(0);
         runOnJS(handleAuthRequired)();
         return;
       }
 
       if (swipedRight) {
         // Swipe right - like
+        if (dragX) dragX.value = withTiming(0, { duration: 150 });
         translateX.value = withTiming(width * 1.5, { duration: 300 }, () => {
           runOnJS(onSwipeRight)();
         });
         rotation.value = withTiming(30);
+        scale.value = withTiming(0.8);
       } else if (swipedLeft) {
         // Swipe left - skip
+        if (dragX) dragX.value = withTiming(0, { duration: 150 });
         translateX.value = withTiming(-width * 1.5, { duration: 300 }, () => {
           runOnJS(onSwipeLeft)();
         });
         rotation.value = withTiming(-30);
+        scale.value = withTiming(0.8);
       } else {
         // Snap back
         translateX.value = withSpring(0);
         translateY.value = withSpring(0);
         rotation.value = withSpring(0);
+        scale.value = withSpring(1);
+        if (dragX) dragX.value = withSpring(0);
       }
     });
 
@@ -108,19 +133,20 @@ export function ProfileSwipeCard({
 
   const animatedStyle = useAnimatedStyle(() => {
     if (!isFirst) {
-      // Background card - no transforms, just sits behind
+      // Background card - stays centered
       return {
         transform: [],
       };
     }
-    // Front card - offset down slightly so behind card peeks from top
+    // Front card - follows drag with scale and rotation
     return {
       transform: [
         { translateX: translateX.value },
-        { translateY: translateY.value + 20 }, // Offset down to show behind card
+        { translateY: translateY.value },
         { rotate: `${rotation.value}deg` },
         { scale: scale.value },
       ],
+      borderRadius: interpolate(scale.value, [0.85, 1], [24, 0]),
     };
   });
 
@@ -130,7 +156,7 @@ export function ProfileSwipeCard({
       translateX.value,
       [0, SWIPE_THRESHOLD],
       [0, 1],
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
     return { opacity };
   });
@@ -140,7 +166,7 @@ export function ProfileSwipeCard({
       translateX.value,
       [-SWIPE_THRESHOLD, 0],
       [1, 0],
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
     return { opacity };
   });
@@ -164,7 +190,7 @@ export function ProfileSwipeCard({
           source={{ uri: profile.avatarUrl ?? undefined }}
           style={styles.image}
           contentFit="cover"
-          cachePolicy="memory-disk"
+          cachePolicy="disk"
           transition={200}
         />
 
@@ -177,7 +203,7 @@ export function ProfileSwipeCard({
 
         {/* Tap overlay for profile navigation - covers upper portion only */}
         <Pressable
-          style={styles.tapOverlay}
+          style={[styles.tapOverlay, { bottom: reservedBottomUi + 60 }]}
           onPress={onPress}
         />
 
@@ -185,7 +211,10 @@ export function ProfileSwipeCard({
         <Animated.View
           style={[styles.indicator, styles.likeIndicator, likeIndicatorStyle]}
         >
-          <Text className="text-green-500 text-3xl font-bold border-4 border-green-500 px-4 py-2 rounded-lg">
+          <Text
+            className="font-bold rounded-lg"
+            style={[styles.indicatorText, styles.likeIndicator]}
+          >
             LIKE
           </Text>
         </Animated.View>
@@ -194,40 +223,62 @@ export function ProfileSwipeCard({
         <Animated.View
           style={[styles.indicator, styles.skipIndicator, skipIndicatorStyle]}
         >
-          <Text className="text-red-500 text-3xl font-bold border-4 border-red-500 px-4 py-2 rounded-lg">
-            NOPE
+          <Text
+            className="font-bold rounded-lg"
+            style={[styles.indicatorText, styles.skipIndicator]}
+          >
+            SKIP
           </Text>
         </Animated.View>
 
         {/* Profile Info */}
-        <View style={styles.infoContainer}>
-          <Text className="text-white text-3xl font-bold mb-2">
+        <View
+          style={[styles.infoContainer, { paddingBottom: reservedBottomUi }]}
+        >
+          <Text className="text-white text-3xl font-bold">
             {profile.name}
+            {profile.age ? `, ${profile.age}` : ""}
           </Text>
 
-          <View className="flex-row items-center gap-2 mb-4">
-            {profile.age && (
-              <View className="flex-row items-center bg-white/20 px-3 py-1.5 rounded-full">
-                <Text className="text-white text-sm">♀ {profile.age}</Text>
-              </View>
-            )}
-            {profile.zodiacSign && (
-              <View className="flex-row items-center bg-white/20 px-3 py-1.5 rounded-full">
-                <Text className="text-white text-sm">{profile.zodiacSign}</Text>
-              </View>
-            )}
-          </View>
+          {profile.bio && (
+            <Text className="text-white/80 text-base mt-2" numberOfLines={2}>
+              {profile.bio}
+            </Text>
+          )}
 
-          {/* Chat Button */}
-          <Button
-            size="lg"
-            className="rounded-full px-8"
-            style={{ backgroundColor: accentColor }}
-            onPress={onPress}
-          >
-            <MessageCircle size={18} color="white" />
-            <Button.Label className="text-white">Chat</Button.Label>
-          </Button>
+          {/* Interest Tags */}
+          {profile.interests && profile.interests.length > 0 && (
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                gap: 8,
+                marginTop: 12,
+                flexWrap: "wrap",
+              }}
+              // horizontal
+              // showsHorizontalScrollIndicator={false}
+              // contentContainerStyle={{ gap: 8, marginTop: 12 }}
+            >
+              {profile.interests.slice(0, 5).map((interest, index) => {
+                const colors = ["accent", "success", "warning"] as const;
+                const color = colors[index % colors.length];
+                return (
+                  <Chip
+                    // style={{
+
+                    // }}
+                    key={index}
+                    size="md"
+                    variant={"soft"}
+                    color={color}
+                  >
+                    <Chip.Label>{interest}</Chip.Label>
+                  </Chip>
+                );
+              })}
+            </View>
+          )}
         </View>
       </Animated.View>
     </GestureDetector>
@@ -237,7 +288,7 @@ export function ProfileSwipeCard({
 const styles = StyleSheet.create({
   cardContainer: {
     position: "absolute",
-    borderRadius: 20,
+    borderRadius: 0,
     overflow: "hidden",
     backgroundColor: "#1a1a1a",
   },
@@ -271,7 +322,6 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    bottom: 180, // Leave room for the info container at bottom
   },
   infoContainer: {
     position: "absolute",
@@ -284,13 +334,29 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 50,
     zIndex: 10,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  indicatorText: {
+    fontSize: 48,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 6,
+    borderRadius: 20,
   },
   likeIndicator: {
     left: 20,
+    color: "#15ed4f",
+    borderColor: "#15ed4f",
     transform: [{ rotate: "-15deg" }],
   },
   skipIndicator: {
     right: 20,
+    color: "#333",
+    borderColor: "#333",
     transform: [{ rotate: "15deg" }],
   },
 });

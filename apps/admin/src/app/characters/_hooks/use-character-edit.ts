@@ -75,24 +75,26 @@ const initialFormData: CharacterFormData = {
   },
 };
 
-export function useCharacterEdit() {
+export function useCharacterEdit(profiles: AIProfile[] | undefined) {
   const updateProfile = useMutation(
-    api.features.ai.mutations.adminUpdateProfile
+    api.features.ai.mutations.adminUpdateProfile,
   );
   const generateUploadUrl = useMutation(
-    api.features.ai.mutations.adminGenerateUploadUrl
+    api.features.ai.mutations.adminGenerateUploadUrl,
   );
   const deleteProfileImage = useMutation(
-    api.features.ai.mutations.adminDeleteProfileImage
+    api.features.ai.mutations.adminDeleteProfileImage,
   );
   const syncMetadata = useMutation(api.uploads.syncMetadata);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
-  const [selectedProfile, setSelectedProfile] = useState<AIProfile | null>(
-    null
-  );
+  // Store only the ID - derive the profile from the reactive query
+  const [selectedProfileId, setSelectedProfileId] =
+    useState<Id<"aiProfiles"> | null>(null);
+  const selectedProfile =
+    profiles?.find((p) => p._id === selectedProfileId) ?? null;
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -102,7 +104,7 @@ export function useCharacterEdit() {
   const [newInterest, setNewInterest] = useState("");
 
   const handleEdit = (profile: AIProfile) => {
-    setSelectedProfile(profile);
+    setSelectedProfileId(profile._id);
     setFormData({
       name: profile.name,
       username: profile.username ?? "",
@@ -128,7 +130,7 @@ export function useCharacterEdit() {
 
   const handleClose = () => {
     setIsSheetOpen(false);
-    setSelectedProfile(null);
+    setSelectedProfileId(null);
     setNewInterest("");
   };
 
@@ -183,7 +185,7 @@ export function useCharacterEdit() {
   };
 
   const handleGalleryUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = e.target.files;
     if (!files || files.length === 0 || !selectedProfile) return;
@@ -214,7 +216,7 @@ export function useCharacterEdit() {
         await syncMetadata({ key });
       }
       toast.success(
-        `${files.length} image${files.length > 1 ? "s" : ""} uploaded`
+        `${files.length} image${files.length > 1 ? "s" : ""} uploaded`,
       );
     } catch (error) {
       toast.error("Failed to upload images");
@@ -227,7 +229,7 @@ export function useCharacterEdit() {
 
   const handleDeleteImage = async (
     imageKey: string,
-    type: "avatar" | "gallery"
+    type: "avatar" | "gallery",
   ) => {
     if (!selectedProfile) return;
 
