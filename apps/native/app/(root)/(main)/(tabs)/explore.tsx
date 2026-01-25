@@ -1,111 +1,143 @@
-import { View, Text, FlatList, Dimensions, Pressable } from "react-native";
+import { View, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Button, Skeleton, useThemeColor } from "heroui-native";
+import { Button, Skeleton, useThemeColor, ScrollShadow } from "heroui-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { SlidersHorizontal } from "lucide-react-native";
+import { ProfileCard } from "@/components/dating";
+import { useExploreProfiles } from "@/hooks/dating";
+import { Text } from "@/components/ui/text";
 import { Header } from "@/components";
-import { ProfileCard, GenderTabs } from "@/components/dating";
-import { useAIProfiles } from "@/hooks/dating";
-
-const { width: screenWidth } = Dimensions.get("window");
-const cardWidth = (screenWidth - 48) / 2; // 2 columns with padding
+import { FlashList } from "@shopify/flash-list";
 
 export default function ExploreScreen() {
   const router = useRouter();
-  const [gender, setGender] = useState<"female" | "male">("female");
   const foregroundColor = useThemeColor("foreground");
 
   const handleFilterPress = () => {
     router.push("/filter");
   };
-  const { profiles, isLoading } = useAIProfiles({
-    gender,
-    limit: 50,
-    excludeExistingConversations: true,
-  });
+  const { profiles, isLoading } = useExploreProfiles(50);
 
   const handleProfilePress = (profileId: string) => {
     router.push(`/(root)/(main)/profile/${profileId}`);
   };
 
-  const renderProfile = ({ item, index }: { item: any; index: number }) => (
-    <View
-      style={{ width: cardWidth, marginLeft: index % 2 === 0 ? 0 : 8 }}
-      className="mb-3"
-    >
-      <ProfileCard
-        name={item.name}
-        age={item.age}
-        zodiacSign={item.zodiacSign}
-        avatarUrl={item.avatarUrl}
-        gender={item.gender}
-        onPress={() => handleProfilePress(item._id)}
-      />
+  const renderProfile = ({ item, index }: { item: any; index: number }) => {
+    // 2 columns
+    const isLeft = index % 2 === 0;
+    const GAP = 12; // Adjusted gap for better spacing
+    return (
+      <View
+        style={{
+          flex: 1,
+          paddingLeft: isLeft ? 16 : GAP / 2,
+          paddingRight: isLeft ? GAP / 2 : 16,
+        }}
+      >
+        <ProfileCard
+          name={item.name}
+          age={item.age}
+          zodiacSign={item.zodiacSign}
+          avatarUrl={item.avatarUrl}
+          gender={item.gender}
+          onPress={() => handleProfilePress(item._id)}
+        />
+      </View>
+    );
+  };
+
+  const renderSkeleton = () => (
+    <View className="flex-row flex-wrap">
+      {[1, 2, 3, 4, 5, 6].map((i, index) => {
+        const isLeft = index % 2 === 0;
+        const GAP = 12;
+        return (
+          <View
+            key={i}
+            style={{
+              width: "50%",
+              paddingLeft: isLeft ? 16 : GAP / 2,
+              paddingRight: isLeft ? GAP / 2 : 16,
+              marginBottom: 16,
+            }}
+          >
+            <View className="bg-surface rounded-2xl overflow-hidden aspect-[3/4]">
+              <Skeleton className="w-full h-full" />
+              <View className="absolute bottom-0 left-0 right-0 p-3 z-10">
+                <Skeleton className="h-6 w-3/4 rounded-lg mb-2" />
+                <View className="flex-row gap-2">
+                  <Skeleton className="h-5 w-12 rounded-full" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </View>
+              </View>
+            </View>
+          </View>
+        );
+      })}
     </View>
   );
 
-  const renderSkeleton = () => (
-    <View className="flex-row flex-wrap px-4">
-      {[1, 2, 3, 4, 5, 6].map((i) => (
-        <View
-          key={i}
-          style={{ width: cardWidth, marginLeft: i % 2 === 0 ? 8 : 0 }}
-          className="mb-3"
-        >
-          <Skeleton className="rounded-2xl aspect-[3/4]" />
-        </View>
-      ))}
-    </View>
-  );
+  const renderEmpty = () => {
+    if (isLoading) {
+      return renderSkeleton();
+    }
+
+    return (
+      <View className="flex-1 items-center justify-center px-6">
+        <Text className="text-foreground text-xl font-semibold mb-2">
+          No Profiles Found
+        </Text>
+        <Text className="text-muted text-center">
+          Try adjusting your filters to see more profiles.
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <View className="flex-1 bg-background">
-      <SafeAreaView className="flex-1" edges={["top"]}>
-        <Header title="Explore" showSearch />
-
-        {/* Gender tabs and Filter */}
-        <View className="px-4 py-3 flex-row items-center gap-3">
-          <View className="flex-1">
-            <GenderTabs value={gender} onChange={setGender} />
-          </View>
-          <Button
-            variant="tertiary"
-            size="sm"
-            isIconOnly
-            onPress={handleFilterPress}
-            className="bg-surface rounded-full"
-          >
-            <SlidersHorizontal size={20} color={foregroundColor} />
-          </Button>
-        </View>
+      <SafeAreaView
+        style={{
+          flex: 1,
+        }}
+        edges={["top"]}
+      >
+        <Header
+          title="Explore"
+          showSettings={false}
+          hidePaywall
+          hideCredits
+          rightContent={
+            <Button
+              variant="tertiary"
+              size="sm"
+              isIconOnly
+              onPress={handleFilterPress}
+              className="bg-surface rounded-full"
+            >
+              <SlidersHorizontal size={20} color={foregroundColor} />
+            </Button>
+          }
+        />
 
         {/* Profile grid */}
-        {isLoading ? (
-          renderSkeleton()
-        ) : profiles.length === 0 ? (
-          <View className="flex-1 items-center justify-center px-6">
-            <Text className="text-foreground text-xl font-semibold mb-2">
-              No Profiles Found
-            </Text>
-            <Text className="text-muted text-center">
-              {gender === "female" ? "Female" : "Male"} AI profiles will appear
-              here once they are added.
-            </Text>
-          </View>
-        ) : (
-          <FlatList
+        <ScrollShadow
+          size={20}
+          LinearGradientComponent={LinearGradient}
+          style={{ flex: 1 }}
+        >
+          <FlashList
             data={profiles}
             renderItem={renderProfile}
             keyExtractor={(item) => item._id}
             numColumns={2}
-            contentContainerStyle={{
-              paddingHorizontal: 16,
-              paddingBottom: 140,
-            }}
+            style={{ flex: 1 }}
             showsVerticalScrollIndicator={false}
+            ListEmptyComponent={renderEmpty}
+            ItemSeparatorComponent={() => <View className="h-4" />}
           />
-        )}
+        </ScrollShadow>
       </SafeAreaView>
     </View>
   );

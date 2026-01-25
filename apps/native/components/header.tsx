@@ -13,6 +13,9 @@ interface HeaderProps {
   showSearch?: boolean;
   showSettings?: boolean;
   rightContent?: React.ReactNode;
+  showLogo?: boolean;
+  hideCredits?: boolean;
+  hidePaywall?: boolean;
 }
 
 export const Header = ({
@@ -20,6 +23,9 @@ export const Header = ({
   showSearch = false,
   showSettings = true,
   rightContent,
+  showLogo = false,
+  hideCredits = false,
+  hidePaywall = false,
 }: HeaderProps) => {
   const foregroundColor = useThemeColor("foreground");
   const router = useRouter();
@@ -30,9 +36,9 @@ export const Header = ({
   return (
     <View className="flex-row items-center justify-between px-4 py-2">
       <View className="flex-row items-center gap-2">
-        <AppLogo size={28} />
+        {showLogo && <AppLogo size={28} />}
         {title && (
-          <Text className="text-foreground text-xl font-bold">{title}</Text>
+          <Text className="text-foreground text-2xl font-bold">{title}</Text>
         )}
       </View>
 
@@ -53,28 +59,31 @@ export const Header = ({
         )}
         {isAuthenticated ? (
           <>
-            <Button
-              variant="tertiary"
-              size="sm"
-              isIconOnly
-              className="rounded-full bg-pink-500"
-              onPress={presentPaywall}
-            >
-              <Crown size={16} color={foregroundColor} />
-            </Button>
-
-            <Button
-              variant="primary"
-              size="sm"
-              onPress={() => {
-                router.push("/buy-credits");
-              }}
-            >
-              <Coins size={16} color={foregroundColor} />
-              <Text className="text-foreground font-medium">
-                {userData?.profile?.credits ?? 0}
-              </Text>
-            </Button>
+            {!hidePaywall && (
+              <Button
+                variant="tertiary"
+                size="sm"
+                isIconOnly
+                className="rounded-full bg-pink-500"
+                onPress={presentPaywall}
+              >
+                <Crown size={16} color={foregroundColor} />
+              </Button>
+            )}
+            {!hideCredits && (
+              <Button
+                variant="primary"
+                size="sm"
+                onPress={() => {
+                  router.push("/buy-credits");
+                }}
+              >
+                <Coins size={16} color={foregroundColor} />
+                <Text className="text-foreground font-medium">
+                  {userData?.profile?.credits ?? 0}
+                </Text>
+              </Button>
+            )}
 
             {showSettings && (
               <Button

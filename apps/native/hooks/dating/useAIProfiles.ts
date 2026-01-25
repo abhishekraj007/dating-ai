@@ -11,7 +11,7 @@ interface UseAIProfilesOptions {
 
 export function useAIProfiles(
   genderOrOptions?: Gender | UseAIProfilesOptions,
-  limit?: number
+  limit?: number,
 ) {
   // Support both old signature (gender, limit) and new options object
   const options: UseAIProfilesOptions =
@@ -31,10 +31,25 @@ export function useAIProfiles(
   };
 }
 
+/**
+ * Hook to get profiles for the Explore screen with user preference filtering.
+ */
+export function useExploreProfiles(limit?: number) {
+  const profiles = useQuery(
+    api.features.preferences.queries.getExploreProfiles,
+    { limit },
+  );
+
+  return {
+    profiles: profiles ?? [],
+    isLoading: profiles === undefined,
+  };
+}
+
 export function useAIProfile(profileId: string | undefined) {
   const profile = useQuery(
     api.features.ai.queries.getProfile,
-    profileId ? { profileId: profileId as any } : "skip"
+    profileId ? { profileId: profileId as any } : "skip",
   );
 
   return {

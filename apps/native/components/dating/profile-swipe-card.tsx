@@ -196,7 +196,7 @@ export function ProfileSwipeCard({
 
         {/* Gradient Overlay */}
         <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.8)"]}
+          colors={["transparent", "rgba(0,0,0,0.3)", "rgba(0,0,0,1)"]}
           locations={[0.4, 0.65, 1]}
           style={styles.gradient}
         />
@@ -256,23 +256,12 @@ export function ProfileSwipeCard({
                 marginTop: 12,
                 flexWrap: "wrap",
               }}
-              // horizontal
-              // showsHorizontalScrollIndicator={false}
-              // contentContainerStyle={{ gap: 8, marginTop: 12 }}
             >
               {profile.interests.slice(0, 5).map((interest, index) => {
                 const colors = ["accent", "success", "warning"] as const;
                 const color = colors[index % colors.length];
                 return (
-                  <Chip
-                    // style={{
-
-                    // }}
-                    key={index}
-                    size="md"
-                    variant={"soft"}
-                    color={color}
-                  >
+                  <Chip key={index} size="md" variant={"primary"} color={color}>
                     <Chip.Label>{interest}</Chip.Label>
                   </Chip>
                 );

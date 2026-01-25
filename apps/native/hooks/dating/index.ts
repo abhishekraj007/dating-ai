@@ -1,7 +1,11 @@
 // Dating AI Hooks
 // Custom hooks for managing dating AI state and API calls
 
-export { useAIProfiles, useAIProfile } from "./useAIProfiles";
+export {
+  useAIProfiles,
+  useAIProfile,
+  useExploreProfiles,
+} from "./useAIProfiles";
 export {
   useConversations,
   useConversation,

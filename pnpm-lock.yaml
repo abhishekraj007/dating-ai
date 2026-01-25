@@ -4,6 +4,24 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@convex-dev/better-auth':
+      specifier: ^0.9.1
+      version: 0.9.11
+    '@types/node':
+      specifier: ^20
+      version: 20.19.30
+    better-auth:
+      specifier: 1.3.27
+      version: 1.3.27
+    convex:
+      specifier: ^1.27.0
+      version: 1.31.5
+    typescript:
+      specifier: ^5
+      version: 5.9.3
+
 importers:
 
   .:
@@ -140,7 +158,7 @@ importers:
     dependencies:
       '@better-auth/expo':
         specifier: 1.3.27
-        version: 1.3.27(better-auth@1.3.27(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(expo-constants@18.0.13)(expo-crypto@15.0.8(expo@54.0.31))(expo-linking@8.0.11)(expo-secure-store@15.0.8(expo@54.0.31))(expo-web-browser@15.0.10(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0)))
+        version: 1.3.27(better-auth@1.3.27(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(svelte@5.46.4))(expo-constants@18.0.13)(expo-crypto@15.0.8(expo@54.0.31))(expo-linking@8.0.11)(expo-secure-store@15.0.8(expo@54.0.31))(expo-web-browser@15.0.10(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0)))
       '@convex-dev/agent':
         specifier: ^0.3.0
         version: 0.3.2(@ai-sdk/provider-utils@3.0.20(zod@3.25.76))(ai@5.0.121(zod@3.25.76))(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.5(react@19.1.0))(hono@4.11.4)(react@19.1.0)(typescript@5.9.3)(zod@3.25.76))(convex@1.31.5(react@19.1.0))(react@19.1.0)
@@ -200,7 +218,7 @@ importers:
         version: 54.0.9(@babel/core@7.28.6)(@babel/runtime@7.28.6)(expo@54.0.31)(react-refresh@0.14.2)
       better-auth:
         specifier: 1.3.27
-        version: 1.3.27(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 1.3.27(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(svelte@5.46.4)
       convex:
         specifier: ^1.27.0
         version: 1.31.5(react@19.1.0)
@@ -213,6 +231,9 @@ importers:
       expo-apple-authentication:
         specifier: ~8.0.7
         version: 8.0.8(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))
+      expo-blur:
+        specifier: ^15.0.8
+        version: 15.0.8(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       expo-constants:
         specifier: ~18.0.8
         version: 18.0.13(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))
@@ -5602,6 +5623,13 @@ packages:
       react: '*'
       react-native: '*'
 
+  expo-blur@15.0.8:
+    resolution: {integrity: sha512-rWyE1NBRZEu9WD+X+5l7gyPRszw7n12cW3IRNAb5i6KFzaBp8cxqT5oeaphJapqURvcqhkOZn2k5EtBSbsuU7w==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
+      react-native: '*'
+
   expo-constants@18.0.13:
     resolution: {integrity: sha512-FnZn12E1dRYKDHlAdIyNFhBurKTS3F9CrfrBDJI5m3D7U17KBHMQ6JEfYlSj7LG7t+Ulr+IKaj58L1k5gBwTcQ==}
     peerDependencies:
@@ -10086,17 +10114,6 @@ snapshots:
       expo-web-browser: 15.0.10(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))
       zod: 4.3.5
 
-  '@better-auth/expo@1.3.27(better-auth@1.3.27(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(expo-constants@18.0.13)(expo-crypto@15.0.8(expo@54.0.31))(expo-linking@8.0.11)(expo-secure-store@15.0.8(expo@54.0.31))(expo-web-browser@15.0.10(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0)))':
-    dependencies:
-      '@better-fetch/fetch': 1.1.18
-      better-auth: 1.3.27(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      expo-constants: 18.0.13(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))
-      expo-crypto: 15.0.8(expo@54.0.31)
-      expo-linking: 8.0.11(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
-      expo-secure-store: 15.0.8(expo@54.0.31)
-      expo-web-browser: 15.0.10(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))
-      zod: 4.3.5
-
   '@better-auth/utils@0.3.0': {}
 
   '@better-fetch/fetch@1.1.18': {}
@@ -10147,7 +10164,7 @@ snapshots:
 
   '@convex-dev/better-auth@0.9.11(@standard-schema/spec@1.1.0)(better-auth@1.3.27(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(convex@1.31.5(react@19.1.0))(hono@4.11.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)':
     dependencies:
-      better-auth: 1.3.27(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      better-auth: 1.3.27(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(svelte@5.46.4)
       common-tags: 1.8.2
       convex: 1.31.5(react@19.1.0)
       convex-helpers: 0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.5(react@19.1.0))(hono@4.11.4)(react@19.1.0)(typescript@5.9.3)(zod@3.25.76)
@@ -15207,25 +15224,6 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
       svelte: 5.46.4
 
-  better-auth@1.3.27(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
-    dependencies:
-      '@better-auth/core': 1.3.27
-      '@better-auth/utils': 0.3.0
-      '@better-fetch/fetch': 1.1.18
-      '@noble/ciphers': 2.1.1
-      '@noble/hashes': 2.0.1
-      '@simplewebauthn/browser': 13.2.2
-      '@simplewebauthn/server': 13.2.2
-      better-call: 1.0.19
-      defu: 6.1.4
-      jose: 6.1.3
-      kysely: 0.28.9
-      nanostores: 1.1.0
-      zod: 4.3.5
-    optionalDependencies:
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
-
   better-call@1.0.19:
     dependencies:
       '@better-auth/utils': 0.3.0
@@ -16247,6 +16245,12 @@ snapshots:
       react-native: 0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0)
     transitivePeerDependencies:
       - supports-color
+
+  expo-blur@15.0.8(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0):
+    dependencies:
+      expo: 54.0.31(@babel/core@7.28.6)(@expo/metro-runtime@6.1.2)(expo-router@6.0.21)(graphql@16.12.0)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      react: 19.1.0
+      react-native: 0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0)
 
   expo-constants@18.0.13(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0)):
     dependencies:

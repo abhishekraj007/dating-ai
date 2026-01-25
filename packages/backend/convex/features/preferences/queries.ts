@@ -42,7 +42,7 @@ export const saveUserPreferences = mutation({
     genderPreference: v.union(
       v.literal("female"),
       v.literal("male"),
-      v.literal("both")
+      v.literal("both"),
     ),
     ageMin: v.number(),
     ageMax: v.number(),
@@ -85,7 +85,7 @@ export const recordProfileInteraction = mutation({
     action: v.union(
       v.literal("like"),
       v.literal("skip"),
-      v.literal("superlike")
+      v.literal("superlike"),
     ),
   },
   handler: async (ctx, { aiProfileId, action }) => {
@@ -98,7 +98,7 @@ export const recordProfileInteraction = mutation({
     const existingInteraction = await ctx.db
       .query("profileInteractions")
       .withIndex("by_user_and_profile", (q) =>
-        q.eq("userId", user._id).eq("aiProfileId", aiProfileId)
+        q.eq("userId", user._id).eq("aiProfileId", aiProfileId),
       )
       .unique();
 
@@ -167,7 +167,7 @@ export const getForYouProfiles = query({
         .collect();
 
       interactedProfileIds = new Set(
-        interactions.map((i) => i.aiProfileId.toString())
+        interactions.map((i) => i.aiProfileId.toString()),
       );
 
       // Get all profile IDs the user already has conversations with
@@ -177,7 +177,7 @@ export const getForYouProfiles = query({
         .collect();
 
       conversationProfileIds = new Set(
-        conversations.map((c) => c.aiProfileId.toString())
+        conversations.map((c) => c.aiProfileId.toString()),
       );
     }
 
@@ -187,7 +187,7 @@ export const getForYouProfiles = query({
         ? await ctx.db
             .query("aiProfiles")
             .withIndex("by_status_and_gender", (q) =>
-              q.eq("status", "active").eq("gender", genderPreference)
+              q.eq("status", "active").eq("gender", genderPreference),
             )
             .collect()
         : await ctx.db
@@ -232,7 +232,7 @@ export const getForYouProfiles = query({
       // Interest filter (if preferences set) - match at least one
       if (interestPreferences.length > 0 && profile.interests) {
         const hasMatchingInterest = profile.interests.some((interest) =>
-          interestPreferences.includes(interest)
+          interestPreferences.includes(interest),
         );
         if (!hasMatchingInterest) {
           return false;
@@ -255,7 +255,7 @@ export const getForYouProfiles = query({
           ...profile,
           avatarUrl,
         };
-      })
+      }),
     );
   },
 });
@@ -274,7 +274,7 @@ export const getLikedProfiles = query({
     const likes = await ctx.db
       .query("profileInteractions")
       .withIndex("by_user_and_action", (q) =>
-        q.eq("userId", user._id).eq("action", "like")
+        q.eq("userId", user._id).eq("action", "like"),
       )
       .collect();
 
@@ -292,10 +292,114 @@ export const getLikedProfiles = query({
           avatarUrl,
           likedAt: like.createdAt,
         };
-      })
+      }),
     );
 
     return profiles.filter(Boolean);
+  },
+});
+
+/**
+ * Get profiles for the Explore screen based on user preferences.
+ * Does NOT exclude profiles the user has interacted with (unlike For You).
+ * For unauthenticated users, returns profiles with default preferences.
+ */
+export const getExploreProfiles = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, { limit = 50 }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+
+    // Default preferences
+    let genderPreference: "female" | "male" | "both" = "female";
+    let ageMin = 18;
+    let ageMax = 99;
+    let zodiacPreferences: string[] = [];
+    let interestPreferences: string[] = [];
+    let userId: string | null = null;
+
+    // If user is authenticated, load their preferences
+    if (user) {
+      userId = user._id;
+
+      // Get user preferences
+      const preferences = await ctx.db
+        .query("userPreferences")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .unique();
+
+      // Override defaults with user preferences if set
+      genderPreference = preferences?.genderPreference ?? "female";
+      ageMin = preferences?.ageMin ?? 18;
+      ageMax = preferences?.ageMax ?? 99;
+      zodiacPreferences = preferences?.zodiacPreferences ?? [];
+      interestPreferences = preferences?.interestPreferences ?? [];
+    }
+
+    // Query profiles based on gender preference
+    const allProfiles =
+      genderPreference !== "both"
+        ? await ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_and_gender", (q) =>
+              q.eq("status", "active").eq("gender", genderPreference),
+            )
+            .collect()
+        : await ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_and_gender", (q) => q.eq("status", "active"))
+            .collect();
+
+    // Filter profiles
+    const filteredProfiles = allProfiles.filter((profile) => {
+      // Exclude user's own created profiles
+      if (user && profile.createdByUserId === userId) {
+        return false;
+      }
+
+      // Age filter (applies to all users)
+      if (profile.age) {
+        if (profile.age < ageMin || profile.age > ageMax) {
+          return false;
+        }
+      }
+
+      // Zodiac filter (if preferences set)
+      if (zodiacPreferences.length > 0 && profile.zodiacSign) {
+        if (!zodiacPreferences.includes(profile.zodiacSign)) {
+          return false;
+        }
+      }
+
+      // Interest filter (if preferences set) - match at least one
+      if (interestPreferences.length > 0 && profile.interests) {
+        const hasMatchingInterest = profile.interests.some((interest) =>
+          interestPreferences.includes(interest),
+        );
+        if (!hasMatchingInterest) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    // Take limited number and generate signed URLs
+    const limitedProfiles = filteredProfiles.slice(0, limit);
+
+    return Promise.all(
+      limitedProfiles.map(async (profile) => {
+        const avatarUrl = profile.avatarImageKey
+          ? await r2.getUrl(profile.avatarImageKey)
+          : null;
+
+        return {
+          ...profile,
+          avatarUrl,
+        };
+      }),
+    );
   },
 });
 

@@ -23,7 +23,7 @@ export default function RootLayout() {
   // Fetch user data when authenticated
   const userData = useQuery(
     api.user.fetchUserAndProfile,
-    isAuthenticated ? {} : "skip"
+    isAuthenticated ? {} : "skip",
   );
 
   // Register for push notifications when user is authenticated

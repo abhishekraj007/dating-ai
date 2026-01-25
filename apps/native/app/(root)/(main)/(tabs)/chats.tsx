@@ -2,7 +2,7 @@ import { View, Text, FlatList, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Avatar, Skeleton } from "heroui-native";
+import { Avatar, ScrollShadow, Skeleton } from "heroui-native";
 import { Image } from "lucide-react-native";
 import { Image as ExpoImage } from "expo-image";
 import { Header } from "@/components";
@@ -12,6 +12,7 @@ import { useLikedProfiles } from "@/hooks/dating/useForYou";
 import { formatDistanceToNow } from "date-fns";
 import { useThemeColor } from "heroui-native";
 import type { Id } from "@dating-ai/backend";
+import { LinearGradient } from "expo-linear-gradient";
 
 type TabValue = "chats" | "calls";
 
@@ -211,46 +212,19 @@ export default function ChatsScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <SafeAreaView className="flex-1" edges={["top"]}>
-        <Header title="Chats" showSearch />
-
-        {/* Tabs */}
-        <View className="px-4 py-3">
-          <View className="flex-row bg-surface rounded-full p-1">
-            <Pressable
-              onPress={() => setActiveTab("chats")}
-              className={`flex-1 py-3 items-center rounded-full ${
-                activeTab === "chats" ? "bg-pink-500" : ""
-              }`}
-            >
-              <Text
-                className={`font-semibold ${
-                  activeTab === "chats" ? "text-white" : "text-foreground"
-                }`}
-              >
-                Chats
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setActiveTab("calls")}
-              className={`flex-1 py-3 items-center rounded-full ${
-                activeTab === "calls" ? "bg-pink-500" : ""
-              }`}
-            >
-              <Text
-                className={`font-semibold ${
-                  activeTab === "calls" ? "text-white" : "text-foreground"
-                }`}
-              >
-                Calls
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Content */}
-        {activeTab === "chats" ? (
-          isLoading ? (
+      <SafeAreaView
+        style={{
+          flex: 1,
+        }}
+        edges={["top"]}
+      >
+        <Header title="Chats" showSettings={false} />
+        <ScrollShadow
+          size={20}
+          LinearGradientComponent={LinearGradient}
+          style={{ flex: 1 }}
+        >
+          {isLoading ? (
             renderSkeleton()
           ) : conversations.length === 0 && newMatches.length === 0 ? (
             <View className="flex-1 items-center justify-center px-6">
@@ -269,17 +243,8 @@ export default function ChatsScreen() {
               showsVerticalScrollIndicator={false}
               ListHeaderComponent={renderNewMatches}
             />
-          )
-        ) : (
-          <View className="flex-1 items-center justify-center px-6">
-            <Text className="text-foreground text-xl font-semibold mb-2">
-              Calls Coming Soon
-            </Text>
-            <Text className="text-muted text-center">
-              Voice and video calls will be available in a future update.
-            </Text>
-          </View>
-        )}
+          )}
+        </ScrollShadow>
       </SafeAreaView>
     </View>
   );

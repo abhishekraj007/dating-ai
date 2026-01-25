@@ -50,7 +50,7 @@ export default function ForYouScreen() {
   const bottomPadding =
     Platform.OS === "android" ? Math.max(insets.bottom, 8) : 24;
   const actionButtonsBottom = bottomPadding;
-  const bottomUiHeight = 220;
+  const bottomUiHeight = actionButtonsBottom + 120;
 
   // Animated styles for buttons
   const skipButtonStyle = useAnimatedStyle(() => {
@@ -158,18 +158,31 @@ export default function ForYouScreen() {
   }, [currentProfile, router]);
 
   // Full screen card (tab bar overlays)
-  const cardHeight = height;
+  const cardHeight = height - insets.bottom - 40;
 
   return (
     <View className="flex-1 bg-background">
       {/* Card Stack - Full Screen */}
       <GestureHandlerRootView style={styles.cardContainer}>
         {isLoading ? (
-          <View className="flex-1 items-center justify-center px-4">
-            <Skeleton
-              className="rounded-2xl"
-              style={{ width: "100%", height: cardHeight }}
-            />
+          <View className="flex-1 items-center justify-center  w-full">
+            {/* Card Skeleton */}
+            <View
+              className="w-full relative bg-background overflow-hidden"
+              style={{ height: cardHeight }}
+            >
+              <Skeleton className="w-full h-full" />
+
+              {/* Content Overlay Skeleton */}
+              <View className="absolute bottom-28 left-0 right-0 p-6 z-10">
+                <Skeleton className="h-8 w-3/4 rounded-lg mb-3" />
+                <View className="flex-row gap-2">
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                  <Skeleton className="h-6 w-14 rounded-full" />
+                </View>
+              </View>
+            </View>
           </View>
         ) : currentIndex >= profiles.length ? (
           <View className="flex-1 items-center justify-center px-6">
@@ -191,6 +204,7 @@ export default function ForYouScreen() {
                 isFirst={false}
                 cardHeight={cardHeight}
                 isAuthenticated={isAuthenticated}
+                bottomUiHeight={bottomUiHeight}
               />
             )}
             {/* Current card (front) */}
@@ -223,6 +237,7 @@ export default function ForYouScreen() {
         >
           <Animated.View style={skipButtonStyle}>
             <Pressable
+              disabled={isLoading}
               onPress={handleSkipPress}
               style={[styles.actionButton, styles.skipButton]}
             >
@@ -232,6 +247,7 @@ export default function ForYouScreen() {
 
           <Animated.View style={likeButtonStyle}>
             <Pressable
+              disabled={isLoading}
               onPress={handleLikePress}
               style={[styles.actionButton, styles.likeButton]}
             >
