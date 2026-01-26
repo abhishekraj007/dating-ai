@@ -53,7 +53,7 @@ export default function FilterScreen() {
     setSelectedZodiacs((prev) =>
       prev.includes(zodiac)
         ? prev.filter((z) => z !== zodiac)
-        : [...prev, zodiac]
+        : [...prev, zodiac],
     );
   };
 
@@ -61,7 +61,7 @@ export default function FilterScreen() {
     setSelectedInterests((prev) =>
       prev.includes(interest)
         ? prev.filter((i) => i !== interest)
-        : [...prev, interest]
+        : [...prev, interest],
     );
   };
 
@@ -100,6 +100,7 @@ export default function FilterScreen() {
             size="sm"
             isIconOnly
             onPress={() => router.back()}
+            className="rounded-full"
           >
             <X size={24} color={foregroundColor} />
           </Button>
@@ -116,10 +117,45 @@ export default function FilterScreen() {
             contentContainerStyle={{ paddingBottom: 16, paddingTop: 8 }}
             showsVerticalScrollIndicator={false}
           >
+            {/* Gender Preference */}
+            <View className="px-4 mb-6">
+              <Text className="text-foreground font-semibold mb-2">
+                Interested In
+              </Text>
+              <View className="flex-row gap-2 flex-wrap">
+                {isLoadingOptions ? (
+                  <>
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-8 w-20 rounded-full" />
+                    ))}
+                  </>
+                ) : (
+                  options.genders.map((gender) => (
+                    <Chip
+                      key={gender.value}
+                      size="md"
+                      variant={
+                        genderPreference === gender.value
+                          ? "primary"
+                          : "secondary"
+                      }
+                      color={
+                        genderPreference === gender.value ? "accent" : "default"
+                      }
+                      onPress={() =>
+                        setGenderPreference(gender.value as GenderPreference)
+                      }
+                    >
+                      <Chip.Label>{gender.label}</Chip.Label>
+                    </Chip>
+                  ))
+                )}
+              </View>
+            </View>
             {/* Age Range */}
             <View className="px-4 mb-6">
               <View className="flex-row justify-between mb-2">
-                <Text className="text-foreground font-semibold">Age Range</Text>
+                <Text className="text-foreground font-semibold">Age</Text>
               </View>
               <View className="flex-row gap-2 flex-wrap">
                 {isLoadingOptions ? (
@@ -147,50 +183,6 @@ export default function FilterScreen() {
                     >
                       <Chip.Label>{range.label}</Chip.Label>
                     </Chip>
-                  ))
-                )}
-              </View>
-            </View>
-
-            {/* Gender Preference */}
-            <View className="px-4 mb-6">
-              <Text className="text-foreground font-semibold mb-2">
-                Show me
-              </Text>
-              <View className="flex-row gap-4">
-                {isLoadingOptions ? (
-                  <>
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-6 w-16 rounded-full" />
-                    ))}
-                  </>
-                ) : (
-                  options.genders.map((gender) => (
-                    <Pressable
-                      key={gender.value}
-                      onPress={() =>
-                        setGenderPreference(gender.value as GenderPreference)
-                      }
-                      className="flex-row items-center gap-2"
-                    >
-                      <View
-                        className="w-5 h-5 rounded-full border-2 items-center justify-center"
-                        style={{
-                          borderColor:
-                            genderPreference === gender.value
-                              ? accentColor
-                              : borderColor,
-                        }}
-                      >
-                        {genderPreference === gender.value && (
-                          <View
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: accentColor }}
-                          />
-                        )}
-                      </View>
-                      <Text className="text-foreground">{gender.label}</Text>
-                    </Pressable>
                   ))
                 )}
               </View>

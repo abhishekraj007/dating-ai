@@ -13,6 +13,7 @@ import { FlashList } from "@shopify/flash-list";
 export default function ExploreScreen() {
   const router = useRouter();
   const foregroundColor = useThemeColor("foreground");
+  const { height } = Dimensions.get("window");
 
   const handleFilterPress = () => {
     router.push("/filter");
@@ -84,11 +85,16 @@ export default function ExploreScreen() {
     }
 
     return (
-      <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-foreground text-xl font-semibold mb-2">
+      <View
+        className="flex-1 items-center justify-center px-6"
+        style={{
+          minHeight: height - 200,
+        }}
+      >
+        <Text size="lg" variant="default" weight="semibold">
           No Profiles Found
         </Text>
-        <Text className="text-muted text-center">
+        <Text size="sm" variant="muted">
           Try adjusting your filters to see more profiles.
         </Text>
       </View>

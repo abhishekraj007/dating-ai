@@ -1,5 +1,6 @@
 import { useQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend";
+import { useUserPreferences } from "./useForYou";
 
 type Gender = "female" | "male";
 
@@ -35,9 +36,25 @@ export function useAIProfiles(
  * Hook to get profiles for the Explore screen with user preference filtering.
  */
 export function useExploreProfiles(limit?: number) {
+  const { preferences } = useUserPreferences();
+
+  // Extract only the allowed args to avoid sending system fields like _id, _creationTime
+  const filterArgs = preferences
+    ? {
+        genderPreference: preferences.genderPreference,
+        ageMin: preferences.ageMin,
+        ageMax: preferences.ageMax,
+        zodiacPreferences: preferences.zodiacPreferences,
+        interestPreferences: preferences.interestPreferences,
+      }
+    : {};
+
   const profiles = useQuery(
     api.features.preferences.queries.getExploreProfiles,
-    { limit },
+    {
+      limit,
+      ...filterArgs,
+    },
   );
 
   return {

@@ -5,6 +5,7 @@ import {
   Pressable,
   StyleSheet,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import {
   KeyboardAwareWrapper,
@@ -53,6 +54,8 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const foregroundColor = useThemeColor("foreground");
   const mutedColor = useThemeColor("muted");
+  const { height } = useWindowDimensions();
+  const emptyHeight = height - 350;
 
   const {
     // Navigation
@@ -157,6 +160,7 @@ export default function ChatScreen() {
             size="sm"
             isIconOnly
             onPress={() => router.back()}
+            className="rounded-full"
           >
             <ChevronLeft size={24} color={foregroundColor} />
           </Button>
@@ -196,15 +200,14 @@ export default function ChatScreen() {
           )}
         </View>
         <View className="flex-row gap-1">
-          <Button variant="tertiary" size="sm" isIconOnly>
-            <Phone size={20} color={foregroundColor} />
-          </Button>
-          <Button variant="tertiary" size="sm" isIconOnly>
-            <Video size={20} color={foregroundColor} />
-          </Button>
           <Popover>
             <Popover.Trigger ref={popoverRef} asChild>
-              <Button variant="tertiary" size="sm" isIconOnly>
+              <Button
+                variant="tertiary"
+                size="sm"
+                isIconOnly
+                className="rounded-full"
+              >
                 {isClearing ? (
                   <Spinner size="sm" />
                 ) : (
@@ -320,7 +323,12 @@ export default function ChatScreen() {
                   </View>
                 </View>
               ) : !conversation ? (
-                <View className="flex-1 items-center justify-center px-6 pt-20">
+                <View
+                  className="flex-1 items-center justify-center px-6 pt-20"
+                  style={{
+                    height: emptyHeight,
+                  }}
+                >
                   <Text className="text-foreground text-lg font-semibold mb-2">
                     Conversation not found
                   </Text>
@@ -329,7 +337,12 @@ export default function ChatScreen() {
                   </Button>
                 </View>
               ) : (
-                <View className="flex-1 items-center justify-center px-6 pt-20">
+                <View
+                  className="flex-1 items-center justify-center px-6 pt-20"
+                  style={{
+                    height: emptyHeight,
+                  }}
+                >
                   <Text className="text-foreground text-lg font-semibold mb-2">
                     Start a conversation
                   </Text>

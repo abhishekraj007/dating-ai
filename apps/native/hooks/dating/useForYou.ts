@@ -2,6 +2,10 @@ import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "@dating-ai/backend";
 import type { Id } from "@dating-ai/backend";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
+
 export type GenderPreference = "female" | "male" | "both";
 export type InteractionAction = "like" | "skip" | "superlike";
 
@@ -32,7 +36,7 @@ export function useForYouProfiles(limit?: number) {
     api.features.preferences.queries.getForYouProfiles,
     {
       limit,
-    }
+    },
   );
 
   return {
@@ -41,17 +45,43 @@ export function useForYouProfiles(limit?: number) {
   };
 }
 
-/**
- * Hook to get user preferences.
- */
 export function useUserPreferences() {
-  const preferences = useQuery(
-    api.features.preferences.queries.getUserPreferences
+  const { isAuthenticated } = useConvexAuth();
+  const convexPreferences = useQuery(
+    api.features.preferences.queries.getUserPreferences,
+  );
+
+  const [localPreferences, setLocalPreferences] =
+    useState<UserPreferences | null>(null);
+  const [isLoadingLocal, setIsLoadingLocal] = useState(true);
+
+  const loadLocalPreferences = useCallback(async () => {
+    try {
+      const json = await AsyncStorage.getItem("user_preferences");
+      if (json) {
+        setLocalPreferences(JSON.parse(json));
+      }
+    } catch (e) {
+      console.error("Failed to load local preferences", e);
+    } finally {
+      setIsLoadingLocal(false);
+    }
+  }, []);
+
+  // Reload local preferences when screen focuses (to catch updates from Filter screen)
+  useFocusEffect(
+    useCallback(() => {
+      if (!isAuthenticated) {
+        loadLocalPreferences();
+      }
+    }, [isAuthenticated, loadLocalPreferences]),
   );
 
   return {
-    preferences,
-    isLoading: preferences === undefined,
+    preferences: isAuthenticated ? convexPreferences : localPreferences,
+    isLoading: isAuthenticated
+      ? convexPreferences === undefined
+      : isLoadingLocal,
   };
 }
 
@@ -63,7 +93,7 @@ export function useUserPreferences() {
 export function useSavePreferences() {
   const { isAuthenticated } = useConvexAuth();
   const savePreferencesMutation = useMutation(
-    api.features.preferences.queries.saveUserPreferences
+    api.features.preferences.queries.saveUserPreferences,
   );
 
   const savePreferences = async (preferences: UserPreferences) => {
@@ -71,8 +101,9 @@ export function useSavePreferences() {
     if (isAuthenticated) {
       return savePreferencesMutation(preferences);
     }
-    // For unauthenticated users, just return without saving
-    // The filter will be applied locally in the UI
+
+    // For unauthenticated users, save locally
+    await AsyncStorage.setItem("user_preferences", JSON.stringify(preferences));
     return null;
   };
 
@@ -86,7 +117,7 @@ export function useSavePreferences() {
 export function useProfileInteraction() {
   const { isAuthenticated } = useConvexAuth();
   const recordInteraction = useMutation(
-    api.features.preferences.queries.recordProfileInteraction
+    api.features.preferences.queries.recordProfileInteraction,
   );
 
   const likeProfile = async (aiProfileId: Id<"aiProfiles">) => {
@@ -138,10 +169,10 @@ export function useLikedProfiles() {
  */
 export function useOnboardingStatus() {
   const hasCompleted = useQuery(
-    api.features.preferences.queries.hasCompletedOnboarding
+    api.features.preferences.queries.hasCompletedOnboarding,
   );
   const completeOnboarding = useMutation(
-    api.features.preferences.queries.completeOnboarding
+    api.features.preferences.queries.completeOnboarding,
   );
 
   return {

@@ -350,7 +350,7 @@ export function useSendMessage() {
     }
 
     // Fire mutation (don't await - let it run in background)
-    sendMessage(args);
+    return sendMessage(args);
   };
 
   return { sendMessage, sendMessageWithOptimistic };

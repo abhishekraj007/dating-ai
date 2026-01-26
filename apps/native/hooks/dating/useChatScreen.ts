@@ -124,14 +124,24 @@ export function useChatScreen() {
       sendMessageWithOptimistic(
         { conversationId: id as Id<"aiConversations">, content },
         threadId,
-      );
+      ).catch((error) => {
+        if (error.message && error.message.includes("Insufficient credits")) {
+          // Reset sending state and redirect to buy credits
+          setIsSending(false);
+          router.push("/buy-credits");
+        } else {
+          console.error("Failed to send message:", error);
+          // Don't reset isSending automatically for other errors to avoid UI flicker,
+          // let the timeout handle it or user retry
+        }
+      });
 
       // Scroll to bottom when user sends message
       scrollToBottom(true);
 
       setTimeout(() => {
         setIsSending(false);
-      }, 10000);
+      }, 10000); // Timeout to reset sending state if no response
     },
     [
       id,
@@ -140,6 +150,7 @@ export function useChatScreen() {
       sendMessageWithOptimistic,
       threadId,
       scrollToBottom,
+      router,
     ],
   );
 

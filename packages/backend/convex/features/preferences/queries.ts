@@ -307,8 +307,25 @@ export const getLikedProfiles = query({
 export const getExploreProfiles = query({
   args: {
     limit: v.optional(v.number()),
+    genderPreference: v.optional(
+      v.union(v.literal("female"), v.literal("male"), v.literal("both")),
+    ),
+    ageMin: v.optional(v.number()),
+    ageMax: v.optional(v.number()),
+    zodiacPreferences: v.optional(v.array(v.string())),
+    interestPreferences: v.optional(v.array(v.string())),
   },
-  handler: async (ctx, { limit = 50 }) => {
+  handler: async (
+    ctx,
+    {
+      limit = 50,
+      genderPreference: overrideGender,
+      ageMin: overrideAgeMin,
+      ageMax: overrideAgeMax,
+      zodiacPreferences: overrideZodiac,
+      interestPreferences: overrideInterests,
+    },
+  ) => {
     const user = await authComponent.safeGetAuthUser(ctx);
 
     // Default preferences
@@ -318,6 +335,11 @@ export const getExploreProfiles = query({
     let zodiacPreferences: string[] = [];
     let interestPreferences: string[] = [];
     let userId: string | null = null;
+
+    // Filter precedence:
+    // 1. Explicit arguments (overrides)
+    // 2. Database preferences (if authenticated)
+    // 3. Defaults
 
     // If user is authenticated, load their preferences
     if (user) {
@@ -330,12 +352,21 @@ export const getExploreProfiles = query({
         .unique();
 
       // Override defaults with user preferences if set
-      genderPreference = preferences?.genderPreference ?? "female";
-      ageMin = preferences?.ageMin ?? 18;
-      ageMax = preferences?.ageMax ?? 99;
-      zodiacPreferences = preferences?.zodiacPreferences ?? [];
-      interestPreferences = preferences?.interestPreferences ?? [];
+      if (preferences) {
+        genderPreference = preferences.genderPreference;
+        ageMin = preferences.ageMin;
+        ageMax = preferences.ageMax;
+        zodiacPreferences = preferences.zodiacPreferences;
+        interestPreferences = preferences.interestPreferences;
+      }
     }
+
+    // Apply strict overrides if provided (e.g. from unauthenticated client state)
+    if (overrideGender) genderPreference = overrideGender;
+    if (overrideAgeMin !== undefined) ageMin = overrideAgeMin;
+    if (overrideAgeMax !== undefined) ageMax = overrideAgeMax;
+    if (overrideZodiac) zodiacPreferences = overrideZodiac;
+    if (overrideInterests) interestPreferences = overrideInterests;
 
     // Query profiles based on gender preference
     const allProfiles =
