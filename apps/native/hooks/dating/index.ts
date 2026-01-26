@@ -27,6 +27,8 @@ export {
 } from "./useUserCreatedProfiles";
 export { useRequestChatImage } from "./useImageRequest";
 export type { ImageRequestOptions } from "./useImageRequest";
+export { useCredits, CREDIT_COSTS } from "./useCredits";
+export type { CreditAction } from "./useCredits";
 export {
   useForYouProfiles,
   useUserPreferences,

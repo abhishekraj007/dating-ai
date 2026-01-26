@@ -10,6 +10,8 @@ import {
   useClearChat,
   useRequestChatImage,
   useChatScroll,
+  useCredits,
+  CREDIT_COSTS,
 } from "@/hooks/dating";
 import type { ImageRequestOptions } from "@/hooks/dating";
 
@@ -42,6 +44,9 @@ export function useChatScreen() {
   } = useMessages(threadId);
 
   const { sendMessage, sendMessageWithOptimistic } = useSendMessage();
+
+  // Credits for client-side checking
+  const { credits, hasEnoughCredits } = useCredits();
 
   // Chat scroll behavior
   const {
@@ -111,6 +116,12 @@ export function useChatScreen() {
     (text: string) => {
       if (!text.trim() || !id || isSending) return;
 
+      // Client-side credit check for text messages (1 credit)
+      if (!hasEnoughCredits("TEXT_MESSAGE")) {
+        router.push("/buy-credits");
+        return;
+      }
+
       const content = text.trim();
 
       setBlurTrigger(Date.now());
@@ -131,8 +142,6 @@ export function useChatScreen() {
           router.push("/buy-credits");
         } else {
           console.error("Failed to send message:", error);
-          // Don't reset isSending automatically for other errors to avoid UI flicker,
-          // let the timeout handle it or user retry
         }
       });
 
@@ -151,39 +160,62 @@ export function useChatScreen() {
       threadId,
       scrollToBottom,
       router,
+      hasEnoughCredits,
     ],
   );
 
   const handleImageRequest = useCallback(
     async (options: ImageRequestOptions) => {
       if (!id) return;
+
+      // Client-side credit check for image requests (5 credits)
+      if (!hasEnoughCredits("IMAGE_REQUEST")) {
+        router.push("/buy-credits");
+        return;
+      }
+
       setIsRequestingImage(true);
       try {
         await requestImage(id, options);
         setIsImageSheetOpen(false);
-      } catch (error) {
-        console.error("Failed to request image:", error);
+      } catch (error: any) {
+        if (error.message && error.message.includes("Insufficient credits")) {
+          router.push("/buy-credits");
+        } else {
+          console.error("Failed to request image:", error);
+        }
       } finally {
         setIsRequestingImage(false);
       }
     },
-    [id, requestImage],
+    [id, requestImage, hasEnoughCredits, router],
   );
 
   const handleStartQuiz = useCallback(async () => {
     if (!id || isSending) return;
+
+    // Client-side credit check for text messages (1 credit)
+    if (!hasEnoughCredits("TEXT_MESSAGE")) {
+      router.push("/buy-credits");
+      return;
+    }
+
     setIsSending(true);
     try {
       await sendMessage({
         conversationId: id as any,
         content: "Let's play quiz!",
       });
-    } catch (error) {
-      console.error("Failed to start quiz:", error);
+    } catch (error: any) {
+      if (error.message?.includes("Insufficient credits")) {
+        router.push("/buy-credits");
+      } else {
+        console.error("Failed to start quiz:", error);
+      }
     } finally {
       setIsSending(false);
     }
-  }, [id, isSending, sendMessage]);
+  }, [id, isSending, sendMessage, hasEnoughCredits, router]);
 
   const handleOpenMessageActions = useCallback((messageOrder: number) => {
     setSelectedMessageOrder(messageOrder);
@@ -203,39 +235,68 @@ export function useChatScreen() {
   const handleQuizAnswer = useCallback(
     async (answer: string) => {
       if (!id || isSending) return;
+
+      // Client-side credit check for text messages (1 credit)
+      if (!hasEnoughCredits("TEXT_MESSAGE")) {
+        router.push("/buy-credits");
+        return;
+      }
+
       setIsSending(true);
       try {
         await sendMessage({
           conversationId: id as any,
           content: answer,
         });
-      } catch (error) {
-        console.error("Failed to send quiz answer:", error);
+      } catch (error: any) {
+        if (error.message?.includes("Insufficient credits")) {
+          router.push("/buy-credits");
+        } else {
+          console.error("Failed to send quiz answer:", error);
+        }
       } finally {
         setIsSending(false);
       }
     },
-    [id, isSending, sendMessage],
+    [id, isSending, sendMessage, hasEnoughCredits, router],
   );
 
   const handleEndQuiz = useCallback(async () => {
     if (!id || isSending) return;
+
+    // Client-side credit check for text messages (1 credit)
+    if (!hasEnoughCredits("TEXT_MESSAGE")) {
+      router.push("/buy-credits");
+      return;
+    }
+
     setIsSending(true);
     try {
       await sendMessage({
         conversationId: id as any,
         content: "End the quiz",
       });
-    } catch (error) {
-      console.error("Failed to end quiz:", error);
+    } catch (error: any) {
+      if (error.message?.includes("Insufficient credits")) {
+        router.push("/buy-credits");
+      } else {
+        console.error("Failed to end quiz:", error);
+      }
     } finally {
       setIsSending(false);
     }
-  }, [id, isSending, sendMessage]);
+  }, [id, isSending, sendMessage, hasEnoughCredits, router]);
 
   const handleTopicSelect = useCallback(
     async (topic: { id: string; label: string; prompt: string }) => {
       if (!id || isSending) return;
+
+      // Client-side credit check for text messages (1 credit)
+      if (!hasEnoughCredits("TEXT_MESSAGE")) {
+        router.push("/buy-credits");
+        return;
+      }
+
       setIsTopicsSheetOpen(false);
       setIsSending(true);
       try {
@@ -243,18 +304,29 @@ export function useChatScreen() {
           conversationId: id as any,
           content: topic.prompt,
         });
-      } catch (error) {
-        console.error("Failed to send topic message:", error);
+      } catch (error: any) {
+        if (error.message?.includes("Insufficient credits")) {
+          router.push("/buy-credits");
+        } else {
+          console.error("Failed to send topic message:", error);
+        }
       } finally {
         setIsSending(false);
       }
     },
-    [id, isSending, sendMessage],
+    [id, isSending, sendMessage, hasEnoughCredits, router],
   );
 
   const handleSuggestionSelect = useCallback(
     async (suggestion: string) => {
       if (!id || isSending) return;
+
+      // Client-side credit check for text messages (1 credit)
+      if (!hasEnoughCredits("TEXT_MESSAGE")) {
+        router.push("/buy-credits");
+        return;
+      }
+
       setIsSuggestionsSheetOpen(false);
       setIsSending(true);
       try {
@@ -262,13 +334,17 @@ export function useChatScreen() {
           conversationId: id as any,
           content: suggestion,
         });
-      } catch (error) {
-        console.error("Failed to send suggestion message:", error);
+      } catch (error: any) {
+        if (error.message?.includes("Insufficient credits")) {
+          router.push("/buy-credits");
+        } else {
+          console.error("Failed to send suggestion message:", error);
+        }
       } finally {
         setIsSending(false);
       }
     },
-    [id, isSending, sendMessage],
+    [id, isSending, sendMessage, hasEnoughCredits, router],
   );
 
   const handleClearChat = useCallback(() => {
