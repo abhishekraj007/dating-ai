@@ -11,9 +11,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Chip, Skeleton, useThemeColor } from "heroui-native";
 import { X, Share2, MoreVertical } from "lucide-react-native";
-import { useAIProfile } from "@/hooks/dating";
+import { useAIProfile, useCredits } from "@/hooks/dating";
 import { useStartConversation, useConversationByProfile } from "@/hooks/dating";
-import { InterestChip, CompatibilityIndicator } from "@/components/dating";
+import {
+  InterestChip,
+  CompatibilityIndicator,
+  BlurredPremiumImage,
+} from "@/components/dating";
 import { useState, useCallback } from "react";
 import { Text } from "@/components";
 import { LinearGradient } from "expo-linear-gradient";
@@ -35,6 +39,7 @@ export default function ProfileDetailScreen() {
   const { conversation } = useConversationByProfile(id);
   const { startConversation } = useStartConversation();
   const { isAuthenticated } = useConvexAuth();
+  const { isPremium } = useCredits();
   const [isStartingChat, setIsStartingChat] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
@@ -331,20 +336,32 @@ export default function ProfileDetailScreen() {
           <View className="px-4 mt-6">
             <Text className="text-foreground font-semibold mb-2">Photos</Text>
             <View className="flex-row flex-wrap gap-2">
-              {profile.profileImageUrls.map((url, index) => (
-                <ZoomableImage
-                  key={index}
-                  source={{ uri: url }}
-                  style={{
-                    width: photoWidth,
-                    height: photoWidth,
-                    borderRadius: 12,
-                  }}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  transition={200}
-                />
-              ))}
+              {profile.profileImageUrls.map((url, index) =>
+                isPremium ? (
+                  <ZoomableImage
+                    key={index}
+                    source={{ uri: url }}
+                    style={{
+                      width: photoWidth,
+                      height: photoWidth,
+                      borderRadius: 12,
+                    }}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    transition={200}
+                  />
+                ) : (
+                  <BlurredPremiumImage
+                    key={index}
+                    imageUrl={url}
+                    width={photoWidth}
+                    height={photoWidth}
+                    profileName={profile.name}
+                    profileAvatar={profile.avatarUrl}
+                    borderRadius={12}
+                  />
+                ),
+              )}
             </View>
           </View>
         )}

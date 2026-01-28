@@ -6,6 +6,8 @@ import { AIBubbleWrapper } from "./AIBubbleWrapper";
 import { useMarkdownStyles } from "./useMarkdownStyles";
 import { Skeleton } from "heroui-native";
 import { ZoomableImage } from "@/components/zoomable-image";
+import { BlurredPremiumImage } from "../blurred-premium-image";
+import { useCredits } from "@/hooks/dating/useCredits";
 import type {
   AIBubbleProps,
   ImageRequestData,
@@ -56,6 +58,8 @@ export function ImageResponseBubble({
   profileName,
   time,
 }: ResponseProps) {
+  const { isPremium } = useCredits();
+
   // Fetch fresh signed URL using permanent imageKey
   // This prevents expired URL issues
   const freshUrl = useQuery(
@@ -75,13 +79,22 @@ export function ImageResponseBubble({
       <View className="bg-surface rounded-2xl rounded-tl-sm overflow-hidden">
         {!imageUrl ? (
           <Skeleton style={{ width: 250, height: 350 }} />
-        ) : (
+        ) : isPremium ? (
           <ZoomableImage
             source={{ uri: imageUrl }}
             style={{ width: 250, height: 350 }}
             contentFit="cover"
             transition={200}
             cachePolicy="disk"
+          />
+        ) : (
+          <BlurredPremiumImage
+            imageUrl={imageUrl}
+            width={250}
+            height={350}
+            profileName={profileName}
+            profileAvatar={avatarUrl}
+            borderRadius={0}
           />
         )}
       </View>

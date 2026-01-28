@@ -2,18 +2,17 @@ import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
+import { useConversation } from "./useConversations";
 import {
-  useConversation,
   useMessages,
   useSendMessage,
   useDeleteMessage,
   useClearChat,
-  useRequestChatImage,
-  useChatScroll,
-  useCredits,
-  CREDIT_COSTS,
-} from "@/hooks/dating";
-import type { ImageRequestOptions } from "@/hooks/dating";
+} from "./useMessages";
+import { useRequestChatImage } from "./useImageRequest";
+import type { ImageRequestOptions } from "./useImageRequest";
+import { useChatScroll } from "./useChatScroll";
+import { useCredits, CREDIT_COSTS } from "./useCredits";
 
 export function useChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

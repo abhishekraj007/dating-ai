@@ -20,3 +20,4 @@ export { ProfileSwipeCard } from "./profile-swipe-card";
 export { MatchModal } from "./match-modal";
 export { ChatInputBox } from "./chat-input-box";
 export { TypingIndicator } from "./bubbles";
+export { BlurredPremiumImage } from "./blurred-premium-image";

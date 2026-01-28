@@ -32,6 +32,7 @@ export const Header = ({
   const { isAuthenticated } = useConvexAuth();
   const { presentPaywall } = usePurchases();
   const userData = useQuery(api.user.fetchUserAndProfile);
+  const isPremium = userData?.profile?.isPremium;
 
   return (
     <View className="flex-row items-center justify-between px-4 py-2">
@@ -59,7 +60,7 @@ export const Header = ({
         )}
         {isAuthenticated ? (
           <>
-            {!hidePaywall && (
+            {!hidePaywall && !isPremium && (
               <Button
                 variant="tertiary"
                 size="sm"
@@ -70,6 +71,7 @@ export const Header = ({
                 <Crown size={16} color={foregroundColor} />
               </Button>
             )}
+
             {!hideCredits && (
               <Button
                 variant="primary"

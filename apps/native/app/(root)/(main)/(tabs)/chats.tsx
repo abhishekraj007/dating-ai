@@ -175,7 +175,8 @@ export default function ChatsScreen() {
             <Text className="text-foreground font-semibold">
               {item.profile?.name ?? "AI Profile"}
             </Text>
-            <LevelBadge level={item.relationshipLevel} size="sm" />
+            {/* Hide level badge */}
+            {/* <LevelBadge level={item.relationshipLevel} size="sm" /> */}
           </View>
           <View className="flex-row items-center gap-1 mt-0.5">
             {lastMessage.isImage && <Image size={14} color={mutedColor} />}
