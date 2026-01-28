@@ -7,7 +7,6 @@
 - Write layout and components that should work in both light and dark mode.
 - Layout and components should be mobile first and responsive.
 - Do not write documentation .md file untill neccessary and it's a big feature.
-- use heroui-native https://github.com/heroui-inc/heroui-native for native app components and screens development
 - **ALWAYS check heroui-native MCP server for available components before using native React Native components**
 - Prefer heroui-native components over native components when available (Button over Pressable, TextField over TextInput, Avatar for avatars, Card for cards, etc.)
 - Use heroui-native list_components tool to see all available components before implementing UI

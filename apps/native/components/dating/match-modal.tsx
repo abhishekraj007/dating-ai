@@ -203,18 +203,19 @@ export function MatchModal({
           >
             <Button
               size="lg"
-              variant="secondary"
+              variant="ghost"
               className="rounded-full"
               style={styles.skipButton}
               onPress={onSkipForNow}
             >
               <Button.Label style={styles.skipButtonText}>
-                Skip for Now
+                Keep Swiping
               </Button.Label>
             </Button>
 
             <Button
               size="lg"
+              variant="ghost"
               className="rounded-full"
               style={styles.chatButton}
               onPress={onStartChatting}

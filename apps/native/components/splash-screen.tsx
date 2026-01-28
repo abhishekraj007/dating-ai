@@ -3,7 +3,7 @@ import { View, Text, ActivityIndicator, ImageBackground } from "react-native";
 export function SplashScreen() {
   return (
     <ImageBackground
-      source={require("@/assets/images/login-bg.jpeg")}
+      source={require("@/assets/images/welcome.png")}
       style={{ flex: 1 }}
       resizeMode="cover"
       blurRadius={8}

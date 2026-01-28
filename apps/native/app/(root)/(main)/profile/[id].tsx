@@ -52,6 +52,7 @@ export default function ProfileDetailScreen() {
 
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
+      router.back();
       router.push("/(root)/(auth)");
       return;
     }
@@ -92,32 +93,15 @@ export default function ProfileDetailScreen() {
           }}
         >
           <Button
-            variant="tertiary"
+            variant="ghost"
             size="sm"
             isIconOnly
+            className="rounded-full"
             style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
             onPress={() => router.back()}
           >
-            <X size={24} color="#fff" />
+            <X color="#fff" />
           </Button>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <Button
-              variant="tertiary"
-              size="sm"
-              isIconOnly
-              style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
-            >
-              <Share2 size={20} color="#fff" />
-            </Button>
-            <Button
-              variant="tertiary"
-              size="sm"
-              isIconOnly
-              style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
-            >
-              <MoreVertical size={20} color="#fff" />
-            </Button>
-          </View>
         </View>
         <View className="px-4" style={{ paddingTop: insets.top }}>
           <Skeleton
@@ -175,15 +159,17 @@ export default function ProfileDetailScreen() {
         }}
       >
         <Button
-          variant="tertiary"
+          variant="secondary"
           size="sm"
           isIconOnly
-          style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
           onPress={() => router.back()}
+          className="rounded-full"
         >
-          <X size={24} color="#fff" />
+          <X size={20} color="#fff" />
         </Button>
-        <View style={{ flexDirection: "row", gap: 8 }}>
+        {/* Hide for now */}
+        {/* <View style={{ flexDirection: "row", gap: 8 }}>
           <Button
             variant="tertiary"
             size="sm"
@@ -200,7 +186,7 @@ export default function ProfileDetailScreen() {
           >
             <MoreVertical size={20} color="#fff" />
           </Button>
-        </View>
+        </View> */}
       </View>
 
       <ScrollView
