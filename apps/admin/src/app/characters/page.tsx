@@ -1,15 +1,32 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CharacterCard } from "./_components/character-card";
 import { EditCharacterSheet } from "./_components/edit-character-sheet";
 import { useCharacterEdit } from "./_hooks/use-character-edit";
 import { ProtectedRoute } from "@/components/protected-route";
+import { useCharacterGeneration } from "./_hooks/use-character-generation";
+import { CharacterGenerationPanel } from "./_components/character-generation-panel";
 
 export default function CharactersPage() {
-  const profiles = useQuery(api.features.ai.queries.getSystemProfiles);
+  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
+  const userData = useQuery(api.user.fetchUserAndProfile, isAuthenticated ? {} : "skip");
+  const canQueryProfiles = isAuthenticated && userData?.profile?.isAdmin === true;
+  const profiles = useQuery(
+    api.features.ai.queries.getSystemProfiles,
+    canQueryProfiles ? {} : "skip",
+  );
+  const {
+    isGenerating,
+    triggerGeneration,
+    retryGeneration,
+    runningCount,
+    completedCount,
+    failedCount,
+    jobs,
+  } = useCharacterGeneration();
   const {
     selectedProfile,
     isSheetOpen,
@@ -59,16 +76,20 @@ export default function CharactersPage() {
 
   return (
     <ProtectedRoute>
-      {!profiles ? (
+      {authLoading || (isAuthenticated && userData === undefined) || profiles === undefined ? (
         loader()
       ) : (
         <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold">Characters</h1>
-            <p className="text-muted-foreground text-sm">
-              {profiles.length} system characters
-            </p>
-          </div>
+          <CharacterGenerationPanel
+            totalCharacters={profiles.length}
+            isGenerating={isGenerating}
+            runningCount={runningCount}
+            completedCount={completedCount}
+            failedCount={failedCount}
+            jobs={jobs}
+            onRetryFailed={retryGeneration}
+            onGenerate={triggerGeneration}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {profiles.map((profile) => (

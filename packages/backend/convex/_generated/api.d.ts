@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as crons from "../crons.js";
 import type * as features_ai_actions from "../features/ai/actions.js";
 import type * as features_ai_agent from "../features/ai/agent.js";
 import type * as features_ai_genz_profiles_data from "../features/ai/genz_profiles_data.js";
@@ -16,6 +17,8 @@ import type * as features_ai_genz_profiles_male from "../features/ai/genz_profil
 import type * as features_ai_index from "../features/ai/index.js";
 import type * as features_ai_internalQueries from "../features/ai/internalQueries.js";
 import type * as features_ai_mutations from "../features/ai/mutations.js";
+import type * as features_ai_profileGeneration from "../features/ai/profileGeneration.js";
+import type * as features_ai_profileGenerationActions from "../features/ai/profileGenerationActions.js";
 import type * as features_ai_queries from "../features/ai/queries.js";
 import type * as features_ai_seed from "../features/ai/seed.js";
 import type * as features_ai_seed_genz from "../features/ai/seed_genz.js";
@@ -57,6 +60,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  crons: typeof crons;
   "features/ai/actions": typeof features_ai_actions;
   "features/ai/agent": typeof features_ai_agent;
   "features/ai/genz_profiles_data": typeof features_ai_genz_profiles_data;
@@ -64,6 +68,8 @@ declare const fullApi: ApiFromModules<{
   "features/ai/index": typeof features_ai_index;
   "features/ai/internalQueries": typeof features_ai_internalQueries;
   "features/ai/mutations": typeof features_ai_mutations;
+  "features/ai/profileGeneration": typeof features_ai_profileGeneration;
+  "features/ai/profileGenerationActions": typeof features_ai_profileGenerationActions;
   "features/ai/queries": typeof features_ai_queries;
   "features/ai/seed": typeof features_ai_seed;
   "features/ai/seed_genz": typeof features_ai_seed_genz;

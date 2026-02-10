@@ -12,11 +12,13 @@
 - Use heroui-native list_components tool to see all available components before implementing UI
 - **ALWAYS use expo-image for images in native apps** - provides caching, prefetching, and better performance. Use `cachePolicy="memory-disk"`, `contentFit="cover"`, and `transition` for smooth loading.
 - **ALWAYS check relevant skills before starting any related task:**
-  - For React Native/Expo UI work: check `building-native-ui`, `react-native-best-practices`, `vercel-react-native-skills`
-  - For Convex backend work: check `convex`, `convex-functions`, `convex-agents`, `convex-best-practices`, and other convex-\* skills
-  - For web UI work: check `web-design-guidelines`, `vercel-react-best-practices`
-  - For feature planning: check `avoid-feature-creep`
-  - Skills are located in `.agent/skills/` - read the SKILL.md file for each relevant skill
+  - For React Native/Expo UI work: check `building-native-ui`, `vercel-react-native-skills`
+  - For Convex backend work: check `convex` (index skill that routes to sub-skills like convex-functions, convex-schema-validator, convex-agents, convex-best-practices, etc.)
+  - For React/Next.js web development: check `vercel-react-best-practices`
+  - For web UI design, accessibility, and UX audits: check `web-design-guidelines`
+  - For building visually polished web interfaces, landing pages, or dashboards: check `frontend-design`
+  - For upgrading Expo SDK or fixing dependency issues: check `upgrading-expo`
+  - Skills are located in `.agent/skills/` - read the SKILL.md file for each relevant skill before implementing
 - **ALWAYS check heroui-react MCP server for available components before using shadcn-ui components**
 - use heroui-react and shadcn-ui for web components and screens development
 - use Use shadcn CLI for installing any new web components

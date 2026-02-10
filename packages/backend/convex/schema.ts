@@ -218,6 +218,30 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_status", ["status"]),
 
+  // System AI profile generation jobs (manual + cron)
+  profileGenerationJobs: defineTable({
+    source: v.union(v.literal("manual"), v.literal("cron")),
+    status: v.union(
+      v.literal("queued"),
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("failed")
+    ),
+    triggeredByUserId: v.optional(v.string()),
+    selectedGender: v.optional(v.union(v.literal("female"), v.literal("male"))),
+    attempts: v.optional(v.number()),
+    createdProfileId: v.optional(v.id("aiProfiles")),
+    errorMessage: v.optional(v.string()),
+    retriedAt: v.optional(v.number()),
+    startedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_created_at", ["createdAt"])
+    .index("by_status", ["status"])
+    .index("by_source_and_status", ["source", "status"]),
+
   // Quiz sessions for interactive quizzes in chat
   quizSessions: defineTable({
     conversationId: v.id("aiConversations"),

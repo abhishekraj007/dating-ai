@@ -40,3 +40,10 @@ export {
 // Seed functions
 export { seedAIProfiles, triggerSeed } from "./seed";
 export { triggerGenZSeed, getGenZProfileCount } from "./seed_genz";
+export {
+  adminGenerateSystemProfile,
+  adminRetryProfileGeneration,
+  enqueueCronProfileGeneration,
+  getProfileGenerationJobs,
+} from "./profileGeneration";
+export { runSystemProfileGeneration } from "./profileGenerationActions";

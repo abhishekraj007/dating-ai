@@ -2,7 +2,7 @@ import { api, useConvexAuth, useQuery } from "@dating-ai/backend";
 import {
   Button,
   Card,
-  Divider,
+  Separator,
   Spinner,
   Surface,
   Switch,
@@ -120,14 +120,14 @@ export default function SettingsRoute() {
           "Error",
           error instanceof Error
             ? error.message
-            : "Failed to enable notifications"
+            : "Failed to enable notifications",
         );
       }
     } else {
       Alert.alert(
         "Disable Notifications",
         "To disable notifications, please go to your device settings.",
-        [{ text: "OK" }]
+        [{ text: "OK" }],
       );
     }
   };
@@ -155,7 +155,7 @@ export default function SettingsRoute() {
           console.error(ctx.error);
           Alert.alert("Error", ctx.error.message || "Failed to delete user");
         },
-      }
+      },
     );
   };
 
@@ -176,7 +176,7 @@ export default function SettingsRoute() {
         {/* User Profile Section */}
         <Surface className="p-5 gap-4">
           <Text className="text-xl font-semibold text-foreground">Profile</Text>
-          <Divider />
+          <Separator />
 
           <View className="gap-3">
             <View className="flex-row items-center gap-3">
@@ -211,7 +211,7 @@ export default function SettingsRoute() {
               Appearance
             </Text>
           </View>
-          <Divider />
+          <Separator />
 
           {/* Theme Mode Toggle */}
           <View className="gap-2">
@@ -265,7 +265,7 @@ export default function SettingsRoute() {
               Notifications
             </Text>
           </View>
-          <Divider />
+          <Separator />
 
           <View className="flex-row items-center justify-between">
             <View className="flex-1 gap-1">
@@ -289,7 +289,7 @@ export default function SettingsRoute() {
         {/* Danger Zone */}
         <Surface className="p-5 gap-4">
           <Text className="text-xl font-semibold text-danger">Danger Zone</Text>
-          <Divider />
+          <Separator />
 
           <View className="gap-3">
             <Text className="text-sm text-muted">
@@ -315,7 +315,7 @@ export default function SettingsRoute() {
                       style: "destructive",
                       onPress: handleDeleteUser,
                     },
-                  ]
+                  ],
                 );
               }}
             >
@@ -351,7 +351,7 @@ const SignOutButton = () => {
           Alert.alert("Error", ctx.error.message || "Failed to sign out");
           setIsSigningOut(false);
         },
-      }
+      },
     );
 
     console.log(data, error);

@@ -351,11 +351,30 @@ export const listThreadMessages = query({
 export const getSystemProfiles = query({
   args: {},
   handler: async (ctx) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    const userProfile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
+      .unique();
+
+    if (!userProfile?.isAdmin) {
+      throw new Error("Admin access required");
+    }
+
     // Get all profiles that are not user-created
     const profiles = await ctx.db.query("aiProfiles").collect();
 
     // Filter to only system profiles (not user-created)
-    const systemProfiles = profiles.filter((p) => !p.isUserCreated);
+    const systemProfiles = profiles
+      .filter((p) => !p.isUserCreated)
+      .sort(
+        (a, b) =>
+          (b.createdAt ?? b._creationTime) - (a.createdAt ?? a._creationTime),
+      );
 
     // Generate signed URLs for avatars and gallery images
     return Promise.all(
