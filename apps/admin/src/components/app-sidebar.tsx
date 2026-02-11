@@ -3,14 +3,10 @@
 import * as React from "react";
 import {
   BookOpen,
-  Home,
   LayoutDashboard,
-  CheckSquare,
-  CreditCard,
   Settings,
   LogOut,
   ChevronUp,
-  User2,
   Upload,
   Users,
 } from "lucide-react";
@@ -78,7 +74,7 @@ export function AppSidebar({ isLoading = false }: { isLoading?: boolean }) {
             <BookOpen className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
-            <span className="font-semibold text-sm">Chating AI</span>
+            <span className="text-sm font-semibold">Chating AI</span>
             {premiumStatus?.isPremium && (
               <span className="text-xs text-muted-foreground">Premium</span>
             )}

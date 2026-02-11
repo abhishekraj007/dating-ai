@@ -15,6 +15,8 @@ import { Loader2, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { AddCharacterDialog } from "./add-character-dialog";
+import { StatChip } from "@/components/admin/stat-chip";
+import { StatusBadge } from "@/components/admin/status-badge";
 
 type GenerateCharacterInput = {
   preferredGender?: "female" | "male";
@@ -73,8 +75,18 @@ function getStepModel(
   return stepModels.find((entry) => entry.step === step)?.model ?? null;
 }
 
+function getJobDisplayStatus(
+  status: FailedJob["status"],
+  isRetried: boolean,
+): "queued" | "processing" | "completed" | "failed" | "retried" {
+  if (isRetried) return "retried";
+  if (status === "queued") return "queued";
+  if (status === "processing") return "processing";
+  if (status === "failed") return "failed";
+  return "completed";
+}
+
 interface CharacterGenerationPanelProps {
-  totalCharacters: number;
   isGenerating: boolean;
   runningCount: number;
   completedCount: number;
@@ -87,7 +99,6 @@ interface CharacterGenerationPanelProps {
 }
 
 export function CharacterGenerationPanel({
-  totalCharacters,
   isGenerating,
   runningCount,
   completedCount,
@@ -141,26 +152,29 @@ export function CharacterGenerationPanel({
   };
 
   return (
-    <div className="mb-6 flex flex-col gap-3">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <h1 className="text-2xl font-bold">Characters</h1>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-          <p className="text-sm text-muted-foreground sm:whitespace-nowrap">
-            {totalCharacters} system characters
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={hasRunningJobs ? "default" : "secondary"}>
-              {hasRunningJobs
-                ? `${runningCount} creating`
-                : "No active generation"}
-              {hasRunningJobs && <Spinner />}
-            </Badge>
-            <Badge variant="outline">{completedCount} completed</Badge>
-            {failedCount > 0 && (
-              <Badge variant="destructive">{failedCount} failed</Badge>
-            )}
-          </div>
+    <div className="mb-5 rounded-xl border border-border/60 bg-card/40 p-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant={hasRunningJobs ? "default" : "secondary"}>
+            {hasRunningJobs
+              ? `${runningCount} creating`
+              : "No active generation"}
+            {hasRunningJobs && <Spinner />}
+          </Badge>
+          <StatChip
+            label="completed"
+            value={completedCount}
+            variant="outline"
+          />
+          {failedCount > 0 ? (
+            <StatChip
+              label="failed"
+              value={failedCount}
+              variant="destructive"
+            />
+          ) : null}
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
           <Sheet open={isJobsOpen} onOpenChange={setIsJobsOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" className="w-full sm:w-auto">
@@ -221,7 +235,10 @@ export function CharacterGenerationPanel({
                         : "unknown time";
                       const isRunning =
                         job.status === "queued" || job.status === "processing";
-                      const statusLabel = job.status ?? "unknown";
+                      const displayStatus = getJobDisplayStatus(
+                        job.status,
+                        isRetried,
+                      );
                       const isExpanded = expandedJobIds[job._id] === true;
                       const hasProgress = Boolean(job.progress);
                       const completedStepCount =
@@ -238,22 +255,19 @@ export function CharacterGenerationPanel({
                           className="rounded border border-border/40 p-3 space-y-2"
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-medium">
-                              {job.source === "cron" ? "Cron" : "Manual"} •{" "}
-                              {created}
-                            </p>
-                            <Badge
-                              variant={
-                                isFailed && !isRetried
-                                  ? "destructive"
-                                  : isRunning
-                                    ? "default"
-                                    : "secondary"
-                              }
-                            >
-                              {isRetried ? "retried" : statusLabel}
+                            <div>
+                              <p className="text-sm font-medium">
+                                {job.source === "cron" ? "Cron" : "Manual"} •{" "}
+                                {created}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Gender: {job.selectedGender ?? "auto"}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <StatusBadge status={displayStatus} />
                               {isRunning && <Spinner />}
-                            </Badge>
+                            </div>
                           </div>
                           <p className="text-sm text-muted-foreground break-words">
                             {isFailed
@@ -262,13 +276,15 @@ export function CharacterGenerationPanel({
                                 : job.errorMessage ||
                                   "No error reason provided."
                               : isRunning
-                                ? job.progress?.message || "Generation in progress..."
+                                ? job.progress?.message ||
+                                  "Generation in progress..."
                                 : "Completed"}
                           </p>
                           {hasProgress && (
                             <div className="flex items-center justify-between gap-2">
                               <p className="text-xs text-muted-foreground">
-                                {progressSummary || "Progress details available"}
+                                {progressSummary ||
+                                  "Progress details available"}
                               </p>
                               <Button
                                 size="sm"
@@ -298,7 +314,9 @@ export function CharacterGenerationPanel({
                               <div className="space-y-1.5">
                                 {JOB_PROGRESS_STEPS.map((step) => {
                                   const isDone = Boolean(
-                                    job.progress?.completedSteps.includes(step.key),
+                                    job.progress?.completedSteps.includes(
+                                      step.key,
+                                    ),
                                   );
                                   const isCurrent =
                                     job.progress?.currentStep === step.key;
@@ -314,7 +332,9 @@ export function CharacterGenerationPanel({
                                       <div className="min-w-0">
                                         <p className="text-xs">{step.label}</p>
                                         <p className="text-[10px] text-muted-foreground break-words">
-                                          {model ? `Model: ${model}` : "Model: n/a"}
+                                          {model
+                                            ? `Model: ${model}`
+                                            : "Model: n/a"}
                                         </p>
                                       </div>
                                       <Badge

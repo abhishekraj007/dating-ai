@@ -349,8 +349,15 @@ export const listThreadMessages = query({
  * Returns profiles with signed image URLs.
  */
 export const getSystemProfiles = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    search: v.optional(v.string()),
+    statusFilter: v.optional(
+      v.union(v.literal("active"), v.literal("pending"), v.literal("archived")),
+    ),
+    recentOnly: v.optional(v.boolean()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new Error("Unauthorized");
@@ -365,16 +372,49 @@ export const getSystemProfiles = query({
       throw new Error("Admin access required");
     }
 
-    // Get all profiles that are not user-created
-    const profiles = await ctx.db.query("aiProfiles").collect();
+    const limit = Math.max(1, Math.min(args.limit ?? 80, 200));
+    const search = args.search?.trim().toLowerCase();
+    const hasSearch = Boolean(search);
+    const recentCutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const scanLimit = Math.max(limit * (hasSearch ? 8 : 2), 160);
 
-    // Filter to only system profiles (not user-created)
-    const systemProfiles = profiles
-      .filter((p) => !p.isUserCreated)
-      .sort(
-        (a, b) =>
-          (b.createdAt ?? b._creationTime) - (a.createdAt ?? a._creationTime),
-      );
+    const profiles = args.statusFilter
+      ? await ctx.db
+          .query("aiProfiles")
+          .withIndex("by_system_status_created_at", (q) =>
+            q.eq("isUserCreated", false).eq("status", args.statusFilter!),
+          )
+          .order("desc")
+          .take(scanLimit)
+      : await ctx.db
+          .query("aiProfiles")
+          .withIndex("by_system_created_at", (q) =>
+            q.eq("isUserCreated", false),
+          )
+          .order("desc")
+          .take(scanLimit);
+
+    const filteredProfiles = profiles.filter((profile) => {
+      if (args.recentOnly) {
+        const createdAt = profile.createdAt ?? profile._creationTime;
+        if (createdAt < recentCutoff) return false;
+      }
+
+      if (!hasSearch) return true;
+
+      const haystack = [
+        profile.name,
+        profile.occupation ?? "",
+        profile.bio ?? "",
+        ...(profile.interests ?? []),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(search!);
+    });
+
+    const systemProfiles = filteredProfiles.slice(0, limit);
 
     // Generate signed URLs for avatars and gallery images
     return Promise.all(

@@ -6,30 +6,57 @@ import { ProtectedRoute } from "@/components/protected-route";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileGeneratorButton } from "./_components/profile-generator-button";
 import { useProfileGenerator } from "./_hooks/use-profile-generator";
+import { PageShell } from "@/components/admin/page-shell";
+import { PageHeader } from "@/components/admin/page-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatChip } from "@/components/admin/stat-chip";
 
 export default function DashboardPage() {
   const userData = useQuery(api.user.fetchUserAndProfile);
+  const jobs = useQuery(
+    (api as any).features.ai.profileGeneration.getProfileGenerationJobs,
+    {},
+  ) as Array<{ status?: string }> | null | undefined;
   const { isGenerating, triggerProfileGeneration } = useProfileGenerator();
+  const runningCount =
+    jobs?.filter((job) => job.status === "queued" || job.status === "processing")
+      .length ?? 0;
+  const failedCount = jobs?.filter((job) => job.status === "failed").length ?? 0;
 
   return (
     <ProtectedRoute>
-      <div className="container mx-auto p-8">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-4xl font-bold">Dashboard</h1>
-          <ProfileGeneratorButton
-            isGenerating={isGenerating}
-            onGenerate={triggerProfileGeneration}
-          />
+      <PageShell>
+        <PageHeader
+          title="Dashboard"
+          subtitle="Overview of admin operations and profile generation health."
+          actions={
+            <ProfileGeneratorButton
+              isGenerating={isGenerating}
+              onGenerate={triggerProfileGeneration}
+            />
+          }
+        />
+        <div className="mb-6 flex flex-wrap gap-2">
+          <StatChip label="running jobs" value={runningCount} />
+          <StatChip label="failed jobs" value={failedCount} variant={failedCount > 0 ? "destructive" : "outline"} />
         </div>
         {userData === undefined ? (
           <Skeleton className="h-5 w-48" />
         ) : (
-          <p className="text-muted-foreground">
-            Welcome back,{" "}
-            {userData?.profile?.name || userData?.userMetadata?.name}!
-          </p>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">
+                Welcome back, {userData?.profile?.name || userData?.userMetadata?.name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Use this panel to trigger new profile generation manually and monitor generation quality from the Characters page.
+              </p>
+            </CardContent>
+          </Card>
         )}
-      </div>
+      </PageShell>
     </ProtectedRoute>
   );
 }

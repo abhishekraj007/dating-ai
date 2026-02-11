@@ -173,7 +173,9 @@ export default defineSchema({
     .index("by_gender", ["gender"])
     .index("by_user", ["createdByUserId"])
     .index("by_status_and_gender", ["status", "gender"])
-    .index("by_username", ["username"]),
+    .index("by_username", ["username"])
+    .index("by_system_created_at", ["isUserCreated", "createdAt"])
+    .index("by_system_status_created_at", ["isUserCreated", "status", "createdAt"]),
 
   // Conversation metadata - links Agent threads to AI profiles
   aiConversations: defineTable({

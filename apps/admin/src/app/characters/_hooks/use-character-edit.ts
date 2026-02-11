@@ -14,6 +14,7 @@ export type CommunicationStyle = {
 
 export type AIProfile = {
   _id: Id<"aiProfiles">;
+  _creationTime?: number;
   name: string;
   username?: string;
   gender: "female" | "male";
