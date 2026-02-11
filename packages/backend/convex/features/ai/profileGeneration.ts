@@ -7,6 +7,31 @@ import {
 } from "../../_generated/server";
 import { authComponent } from "../../lib/betterAuth";
 
+const PROFILE_OCCUPATION_OPTIONS = [
+  "Software Engineer",
+  "Product Designer",
+  "Data Scientist",
+  "Marketing Manager",
+  "Content Creator",
+  "Photographer",
+  "Nurse",
+  "Doctor",
+  "Teacher",
+  "Lawyer",
+  "Financial Analyst",
+  "Chef",
+  "Fitness Coach",
+  "Architect",
+  "Entrepreneur",
+  "Sales Manager",
+  "UX Researcher",
+  "Project Manager",
+  "HR Specialist",
+  "Civil Engineer",
+] as const;
+
+const PROFILE_GENERATION_JOB_RETENTION_DAYS = 5;
+
 export const listSystemProfilesInternal = internalQuery({
   args: {
     gender: v.union(v.literal("female"), v.literal("male")),
@@ -42,6 +67,9 @@ export const createProfileGenerationJobInternal = internalMutation({
   args: {
     source: v.union(v.literal("manual"), v.literal("cron")),
     triggeredByUserId: v.optional(v.string()),
+    preferredGender: v.optional(v.union(v.literal("female"), v.literal("male"))),
+    preferredOccupation: v.optional(v.string()),
+    preferredInterests: v.optional(v.array(v.string())),
   },
   returns: v.id("profileGenerationJobs"),
   handler: async (ctx, args) => {
@@ -50,6 +78,9 @@ export const createProfileGenerationJobInternal = internalMutation({
       source: args.source,
       status: "queued",
       triggeredByUserId: args.triggeredByUserId,
+      preferredGender: args.preferredGender,
+      preferredOccupation: args.preferredOccupation,
+      preferredInterests: args.preferredInterests,
       createdAt: now,
       updatedAt: now,
     });
@@ -66,6 +97,23 @@ export const updateProfileGenerationJobInternal = internalMutation({
     attempts: v.optional(v.number()),
     createdProfileId: v.optional(v.id("aiProfiles")),
     errorMessage: v.optional(v.string()),
+    progress: v.optional(
+      v.object({
+        currentStep: v.string(),
+        completedSteps: v.array(v.string()),
+        stepModels: v.optional(
+          v.array(
+            v.object({
+              step: v.string(),
+              model: v.string(),
+            }),
+          ),
+        ),
+        message: v.optional(v.string()),
+        totalSteps: v.number(),
+        completedStepCount: v.number(),
+      }),
+    ),
     retriedAt: v.optional(v.number()),
     startedAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),
@@ -147,9 +195,41 @@ export const enqueueCronProfileGeneration = internalMutation({
   },
 });
 
-export const adminGenerateSystemProfile = mutation({
+export const cleanupOldProfileGenerationJobsInternal = internalMutation({
   args: {},
+  returns: v.object({
+    deletedCount: v.number(),
+    cutoffTimestamp: v.number(),
+  }),
   handler: async (ctx) => {
+    const cutoffTimestamp =
+      Date.now() - PROFILE_GENERATION_JOB_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+
+    const oldJobs = await ctx.db
+      .query("profileGenerationJobs")
+      .withIndex("by_created_at", (q) => q.lt("createdAt", cutoffTimestamp))
+      .collect();
+
+    let deletedCount = 0;
+    for (const job of oldJobs) {
+      if (job.status === "queued" || job.status === "processing") {
+        continue;
+      }
+      await ctx.db.delete(job._id);
+      deletedCount += 1;
+    }
+
+    return { deletedCount, cutoffTimestamp };
+  },
+});
+
+export const adminGenerateSystemProfile = mutation({
+  args: {
+    preferredGender: v.optional(v.union(v.literal("female"), v.literal("male"))),
+    preferredOccupation: v.optional(v.string()),
+    preferredInterests: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new ConvexError("Not authenticated");
@@ -170,6 +250,9 @@ export const adminGenerateSystemProfile = mutation({
       {
         source: "manual",
         triggeredByUserId: user._id,
+        preferredGender: args.preferredGender,
+        preferredOccupation: args.preferredOccupation,
+        preferredInterests: args.preferredInterests,
       },
     );
 
@@ -215,7 +298,9 @@ export const adminRetryProfileGeneration = mutation({
       {
         source: "manual",
         triggeredByUserId: user._id,
-        preferredGender: job.selectedGender,
+        preferredGender: job.selectedGender ?? job.preferredGender,
+        preferredOccupation: job.preferredOccupation,
+        preferredInterests: job.preferredInterests,
       },
     );
 
@@ -252,5 +337,49 @@ export const getProfileGenerationJobs = query({
       .withIndex("by_created_at")
       .order("desc")
       .take(limit ?? 20);
+  },
+});
+
+export const getProfileGenerationOptions = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      return null;
+    }
+
+    const userProfile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
+      .unique();
+
+    if (!userProfile?.isAdmin) {
+      return null;
+    }
+
+    const interestOptions = await ctx.db
+      .query("filterOptions")
+      .withIndex("by_type_active", (q) =>
+        q.eq("type", "interest").eq("isActive", true),
+      )
+      .collect();
+
+    interestOptions.sort((a, b) => a.order - b.order);
+
+    return {
+      genders: [
+        { value: "female" as const, label: "Female" },
+        { value: "male" as const, label: "Male" },
+      ],
+      occupations: PROFILE_OCCUPATION_OPTIONS.map((occupation) => ({
+        value: occupation,
+        label: occupation,
+      })),
+      interests: interestOptions.map((option) => ({
+        value: option.value,
+        label: option.label,
+        emoji: option.emoji ?? "",
+      })),
+    };
   },
 });

@@ -11,9 +11,22 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Loader2, Plus, ListChecks } from "lucide-react";
+import { Loader2, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
+import { AddCharacterDialog } from "./add-character-dialog";
+
+type GenerateCharacterInput = {
+  preferredGender?: "female" | "male";
+  preferredOccupation?: string;
+  preferredInterests?: string[];
+};
+
+type InterestOption = {
+  value: string;
+  label: string;
+  emoji?: string;
+};
 
 type FailedJob = {
   _id: string;
@@ -23,8 +36,42 @@ type FailedJob = {
   createdAt?: number;
   completedAt?: number;
   selectedGender?: "female" | "male";
+  progress?: {
+    currentStep: string;
+    completedSteps: string[];
+    stepModels?: {
+      step: string;
+      model: string;
+    }[];
+    message?: string;
+    totalSteps: number;
+    completedStepCount: number;
+  };
   retriedAt?: number;
 };
+
+const JOB_PROGRESS_STEPS = [
+  { key: "candidate_generation", label: "Generate unique profile blueprint" },
+  { key: "avatar_generation", label: "Generate avatar image" },
+  { key: "showcase_generation", label: "Generate showcase images" },
+  { key: "profile_persist", label: "Save profile to database" },
+] as const;
+
+function getCurrentStepLabel(step: string | undefined): string {
+  if (!step) return "Unknown";
+  if (step === "failed") return "Failed";
+  if (step === "completed") return "Completed";
+  const matched = JOB_PROGRESS_STEPS.find((item) => item.key === step);
+  return matched?.label ?? step;
+}
+
+function getStepModel(
+  stepModels: { step: string; model: string }[] | undefined,
+  step: string,
+): string | null {
+  if (!stepModels) return null;
+  return stepModels.find((entry) => entry.step === step)?.model ?? null;
+}
 
 interface CharacterGenerationPanelProps {
   totalCharacters: number;
@@ -34,7 +81,9 @@ interface CharacterGenerationPanelProps {
   failedCount: number;
   jobs: FailedJob[];
   onRetryFailed: (jobId: string) => Promise<void>;
-  onGenerate: () => Promise<void>;
+  onGenerate: (input?: GenerateCharacterInput) => Promise<void>;
+  occupationOptions: InterestOption[];
+  interestOptions: InterestOption[];
 }
 
 export function CharacterGenerationPanel({
@@ -46,10 +95,15 @@ export function CharacterGenerationPanel({
   jobs,
   onRetryFailed,
   onGenerate,
+  occupationOptions,
+  interestOptions,
 }: CharacterGenerationPanelProps) {
   const hasRunningJobs = runningCount > 0;
   const [isJobsOpen, setIsJobsOpen] = useState(false);
   const [retryingJobId, setRetryingJobId] = useState<string | null>(null);
+  const [expandedJobIds, setExpandedJobIds] = useState<Record<string, boolean>>(
+    {},
+  );
   const [jobFilter, setJobFilter] = useState<"all" | "failed" | "running">(
     "all",
   );
@@ -80,6 +134,10 @@ export function CharacterGenerationPanel({
     } finally {
       setRetryingJobId(null);
     }
+  };
+
+  const toggleExpanded = (jobId: string) => {
+    setExpandedJobIds((prev) => ({ ...prev, [jobId]: !prev[jobId] }));
   };
 
   return (
@@ -164,6 +222,15 @@ export function CharacterGenerationPanel({
                       const isRunning =
                         job.status === "queued" || job.status === "processing";
                       const statusLabel = job.status ?? "unknown";
+                      const isExpanded = expandedJobIds[job._id] === true;
+                      const hasProgress = Boolean(job.progress);
+                      const completedStepCount =
+                        job.progress?.completedStepCount ?? 0;
+                      const totalSteps = job.progress?.totalSteps ?? 0;
+                      const progressSummary =
+                        hasProgress && totalSteps > 0
+                          ? `${completedStepCount}/${totalSteps} steps completed`
+                          : null;
 
                       return (
                         <div
@@ -195,9 +262,88 @@ export function CharacterGenerationPanel({
                                 : job.errorMessage ||
                                   "No error reason provided."
                               : isRunning
-                                ? "Generation in progress..."
+                                ? job.progress?.message || "Generation in progress..."
                                 : "Completed"}
                           </p>
+                          {hasProgress && (
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-xs text-muted-foreground">
+                                {progressSummary || "Progress details available"}
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => toggleExpanded(job._id)}
+                              >
+                                {isExpanded ? "Hide details" : "View details"}
+                              </Button>
+                            </div>
+                          )}
+                          {hasProgress && isExpanded && (
+                            <div className="rounded-md border border-border/50 p-3 space-y-2">
+                              <p className="text-xs text-muted-foreground">
+                                Current step:{" "}
+                                {getCurrentStepLabel(job.progress?.currentStep)}
+                              </p>
+                              {job.progress?.currentStep && (
+                                <p className="text-xs text-muted-foreground">
+                                  Model:{" "}
+                                  {getStepModel(
+                                    job.progress?.stepModels,
+                                    job.progress.currentStep,
+                                  ) ?? "n/a"}
+                                </p>
+                              )}
+                              <div className="space-y-1.5">
+                                {JOB_PROGRESS_STEPS.map((step) => {
+                                  const isDone = Boolean(
+                                    job.progress?.completedSteps.includes(step.key),
+                                  );
+                                  const isCurrent =
+                                    job.progress?.currentStep === step.key;
+                                  const model = getStepModel(
+                                    job.progress?.stepModels,
+                                    step.key,
+                                  );
+                                  return (
+                                    <div
+                                      key={step.key}
+                                      className="flex items-center justify-between gap-2 rounded-sm border border-border/30 px-2 py-1.5"
+                                    >
+                                      <div className="min-w-0">
+                                        <p className="text-xs">{step.label}</p>
+                                        <p className="text-[10px] text-muted-foreground break-words">
+                                          {model ? `Model: ${model}` : "Model: n/a"}
+                                        </p>
+                                      </div>
+                                      <Badge
+                                        variant={
+                                          isDone
+                                            ? "secondary"
+                                            : isCurrent
+                                              ? "default"
+                                              : "outline"
+                                        }
+                                        className="text-[10px]"
+                                      >
+                                        {isDone
+                                          ? "done"
+                                          : isCurrent
+                                            ? "running"
+                                            : "pending"}
+                                      </Badge>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              {job.progress?.message && (
+                                <p className="text-xs text-muted-foreground break-words">
+                                  {job.progress.message}
+                                </p>
+                              )}
+                            </div>
+                          )}
                           {isFailed && !isRetried && (
                             <div className="flex items-center gap-2">
                               <Button
@@ -227,18 +373,12 @@ export function CharacterGenerationPanel({
               </div>
             </SheetContent>
           </Sheet>
-          <Button
-            onClick={onGenerate}
-            disabled={isGenerating}
-            className="w-full sm:w-auto"
-          >
-            {isGenerating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="mr-2 h-4 w-4" />
-            )}
-            Add Character
-          </Button>
+          <AddCharacterDialog
+            onGenerate={onGenerate}
+            isGenerating={isGenerating}
+            occupationOptions={occupationOptions}
+            interestOptions={interestOptions}
+          />
         </div>
       </div>
     </div>

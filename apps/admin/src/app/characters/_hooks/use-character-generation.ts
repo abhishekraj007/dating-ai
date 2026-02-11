@@ -6,6 +6,23 @@ import { api } from "@dating-ai/backend/convex/_generated/api";
 import { toast } from "sonner";
 
 type GenerationJobStatus = "queued" | "processing" | "completed" | "failed";
+type GenerationInput = {
+  preferredGender?: "female" | "male";
+  preferredOccupation?: string;
+  preferredInterests?: string[];
+};
+
+type ProfileGenerationOption = {
+  value: string;
+  label: string;
+  emoji?: string;
+};
+
+type ProfileGenerationOptions = {
+  genders: ProfileGenerationOption[];
+  occupations: ProfileGenerationOption[];
+  interests: ProfileGenerationOption[];
+};
 
 type GenerationJob = {
   _id: string;
@@ -15,6 +32,17 @@ type GenerationJob = {
   createdAt?: number;
   completedAt?: number;
   selectedGender?: "female" | "male";
+  progress?: {
+    currentStep: string;
+    completedSteps: string[];
+    stepModels?: {
+      step: string;
+      model: string;
+    }[];
+    message?: string;
+    totalSteps: number;
+    completedStepCount: number;
+  };
   retriedAt?: number;
 };
 
@@ -32,6 +60,10 @@ export function useCharacterGeneration() {
     (api as any).features.ai.profileGeneration.getProfileGenerationJobs,
     isAuthenticated && isAdmin ? { limit: 20 } : "skip",
   ) as GenerationJob[] | null | undefined;
+  const generationOptions = useQuery(
+    (api as any).features.ai.profileGeneration.getProfileGenerationOptions,
+    isAuthenticated && isAdmin ? {} : "skip",
+  ) as ProfileGenerationOptions | null | undefined;
 
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -45,7 +77,7 @@ export function useCharacterGeneration() {
     jobs?.filter((job) => job.status === "failed" && !job.retriedAt) ?? [];
   const failedCount = failedJobs.length;
 
-  const triggerGeneration = async () => {
+  const triggerGeneration = async (input?: GenerationInput) => {
     if (!isAuthenticated || !isAdmin) {
       toast.error("Admin access required");
       return;
@@ -53,11 +85,19 @@ export function useCharacterGeneration() {
 
     setIsGenerating(true);
     try {
-      await generateProfile({});
+      await generateProfile({
+        preferredGender: input?.preferredGender,
+        preferredOccupation: input?.preferredOccupation?.trim() || undefined,
+        preferredInterests:
+          input?.preferredInterests && input.preferredInterests.length > 0
+            ? input.preferredInterests
+            : undefined,
+      });
       toast.success("Character generation queued");
     } catch (error) {
       toast.error("Failed to queue character generation");
       console.error(error);
+      throw error;
     } finally {
       setIsGenerating(false);
     }
@@ -87,6 +127,7 @@ export function useCharacterGeneration() {
     failedCount,
     failedJobs,
     jobs: jobs ?? [],
+    generationOptions: generationOptions ?? null,
     hasJobData: jobs !== undefined,
   };
 }

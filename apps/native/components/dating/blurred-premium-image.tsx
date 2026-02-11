@@ -10,6 +10,8 @@ import { useEffect, useRef, useState } from "react";
 import { Button, Avatar, useThemeColor, Dialog } from "heroui-native";
 import { X, Lock } from "lucide-react-native";
 import { usePurchases } from "@/contexts/purchases-context";
+import { useConvexAuth } from "convex/react";
+import { useRouter } from "expo-router";
 
 interface BlurredPremiumImageProps {
   imageUrl: string;
@@ -31,16 +33,29 @@ export function BlurredPremiumImage({
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const { presentPaywall } = usePurchases();
   const { width: screenWidth } = useWindowDimensions();
+  const { isAuthenticated } = useConvexAuth();
+  const router = useRouter();
 
   const handleUnlock = () => {
     setShowUnlockModal(false);
     presentPaywall();
   };
 
+  const onPressOverlay = () => {
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+      router.back();
+      router.push("/(root)/(auth)");
+      return;
+    }
+
+    setShowUnlockModal(true);
+  };
+
   return (
     <>
       <Pressable
-        onPress={() => setShowUnlockModal(true)}
+        onPress={onPressOverlay}
         style={[styles.container, { width, height, borderRadius }]}
       >
         <Image

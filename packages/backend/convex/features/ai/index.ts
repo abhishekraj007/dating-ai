@@ -44,6 +44,8 @@ export {
   adminGenerateSystemProfile,
   adminRetryProfileGeneration,
   enqueueCronProfileGeneration,
+  cleanupOldProfileGenerationJobsInternal,
   getProfileGenerationJobs,
+  getProfileGenerationOptions,
 } from "./profileGeneration";
 export { runSystemProfileGeneration } from "./profileGenerationActions";

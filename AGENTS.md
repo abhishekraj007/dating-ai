@@ -25,6 +25,7 @@
 - never create markdown (`.md`) files after you're done unless it's a big feature and planning is required. NEVER!
 - never user emojis in your replies.
 - check convex rules and docs if you're working on convex based projects and not sure about something. For complex convex bugs/implementation, use convex MCP or exa search tool to access latest docs.
+- **ALWAYS verify the latest official docs/changelogs before implementing or refactoring library/SDK usage (especially AI SDK, Convex, Next.js, Expo, and React), and prefer current APIs over deprecated ones.**
 - Always make sure code you write is secure and not hackable
 - **ALWAYS Only make changes that are directly requested. Keep solutions simple and focused.**
 - **ALWAYS read and understand relevant files before proposing edits. Do not speculate about code you have not inspected.**

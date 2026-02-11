@@ -5,7 +5,7 @@ import { internalAction } from "../../_generated/server";
 import Replicate from "replicate";
 import { r2 } from "../../uploads";
 import { z } from "zod";
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import { createGateway } from "@ai-sdk/gateway";
 
 type Gender = "female" | "male";
@@ -33,6 +33,13 @@ const AI_GATEWAY_BASE_URL =
   process.env.AI_GATEWAY_BASE_URL ?? "https://ai-gateway.vercel.sh/v1/ai";
 const PROFILE_GENERATION_MODEL =
   process.env.PROFILE_GENERATION_MODEL ?? "google/gemini-3-flash";
+const PROFILE_GENERATION_FALLBACK_MODELS = (
+  process.env.PROFILE_GENERATION_FALLBACK_MODELS ??
+  "google/gemini-2.5-flash,openai/gpt-4.1-mini,anthropic/claude-3-5-haiku-latest"
+)
+  .split(",")
+  .map((model) => model.trim())
+  .filter(Boolean);
 
 const FIRST_NAMES: Record<Gender, string[]> = {
   female: [
@@ -199,6 +206,36 @@ type ProfileCandidate = {
   };
 };
 
+type GenerationPreferences = {
+  preferredOccupation?: string;
+  preferredInterests?: string[];
+};
+
+type StepModelEntry = {
+  step: JobProgressStep;
+  model: string;
+};
+
+type CandidateBuildResult = {
+  candidate: ProfileCandidate;
+  model: string;
+};
+
+type JobProgressStep =
+  | "candidate_generation"
+  | "avatar_generation"
+  | "showcase_generation"
+  | "profile_persist";
+
+const JOB_PROGRESS_STEPS: JobProgressStep[] = [
+  "candidate_generation",
+  "avatar_generation",
+  "showcase_generation",
+  "profile_persist",
+];
+const FALLBACK_TEMPLATE_MODEL = "fallback/static-template";
+const PROFILE_PERSIST_MODEL = "convex-db";
+
 const profileBlueprintSchema = z.object({
   name: z.string().min(3).max(64),
   username: z.string().min(3).max(40).optional(),
@@ -308,10 +345,42 @@ function uniqueList(values: string[], limit: number): string[] {
   return out;
 }
 
+function uniqueModelList(models: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const model of models) {
+    const normalized = model.trim();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    out.push(normalized);
+  }
+  return out;
+}
+
+function normalizePreferenceText(
+  value: string | undefined,
+): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function normalizeInterestPreferences(
+  interests: string[] | undefined,
+): string[] | undefined {
+  if (!interests || interests.length === 0) return undefined;
+  const normalized = uniqueList(
+    interests.map((interest) => interest.trim()),
+    5,
+  );
+  return normalized.length > 0 ? normalized : undefined;
+}
+
 function toCandidateFromBlueprint(
   blueprint: z.infer<typeof profileBlueprintSchema>,
   gender: Gender,
   existingUsernames: Set<string>,
+  preferences?: GenerationPreferences,
 ): ProfileCandidate {
   const sanitizedProvidedUsername = blueprint.username
     ? sanitizeUsername(blueprint.username)
@@ -332,15 +401,22 @@ function toCandidateFromBlueprint(
   const tone = blueprint.communicationStyle?.tone;
   const responseLength = blueprint.communicationStyle?.responseLength;
 
+  const generatedInterests = uniqueList(blueprint.interests, 5);
+  const preferredInterests = preferences?.preferredInterests ?? [];
+  const mergedInterests = uniqueList(
+    [...preferredInterests, ...generatedInterests],
+    5,
+  );
+
   return {
     name: blueprint.name.trim(),
     username,
     gender,
     age: blueprint.age,
     zodiacSign: zodiac,
-    occupation: blueprint.occupation.trim(),
+    occupation: preferences?.preferredOccupation ?? blueprint.occupation.trim(),
     bio: blueprint.bio.trim(),
-    interests: uniqueList(blueprint.interests, 5),
+    interests: mergedInterests,
     personalityTraits: uniqueList(blueprint.personalityTraits, 4),
     relationshipGoal: blueprint.relationshipGoal.trim(),
     mbtiType: /^[EI][NS][FT][JP]$/i.test(normalizedMbti)
@@ -382,7 +458,8 @@ async function generateCandidateWithLLM(
     gender: Gender;
   }>,
   existingUsernames: Set<string>,
-): Promise<ProfileCandidate> {
+  preferences?: GenerationPreferences,
+): Promise<CandidateBuildResult> {
   if (!aiGatewayApiKey || !aiGatewayProvider) {
     throw new GenerationFailureError(
       "profile_model_generation_failed",
@@ -403,15 +480,17 @@ async function generateCandidateWithLLM(
       : attempt <= 8
         ? "Increase novelty strongly: different occupation, interests and personality wording."
         : "Maximize uniqueness aggressively while still realistic and natural.";
-
-  try {
-    const result = await generateObject({
-      model: aiGatewayProvider(PROFILE_GENERATION_MODEL),
-      schema: profileBlueprintSchema,
-      temperature: 1.05,
-      system:
-        "You generate highly unique dating profile blueprints for a dating app. Return valid structured output only.",
-      prompt: `Generate one unique ${gender} dating profile.
+  const preferenceHints = [
+    preferences?.preferredOccupation
+      ? `- occupation must be exactly: ${preferences.preferredOccupation}`
+      : null,
+    preferences?.preferredInterests && preferences.preferredInterests.length > 0
+      ? `- include these interests exactly (at least first 2): ${preferences.preferredInterests.join(", ")}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const prompt = `Generate one unique ${gender} dating profile.
 Constraints:
 - age 21-29
 - occupation
@@ -421,6 +500,7 @@ Constraints:
 - relationshipGoal short natural phrase
 - optional username and communicationStyle
 - avoid copying names or style from existing list
+${preferenceHints ? `\nUser-selected constraints:\n${preferenceHints}` : ""}
 
 Existing names to avoid: ${recentSameGenderNames.join(", ") || "none"}
 Existing usernames to avoid: ${recentUsernames.join(", ") || "none"}
@@ -446,17 +526,47 @@ Required JSON shape:
     "usesSlang": boolean,
     "flirtLevel": 3
   }
-}`,
-    });
-    return toCandidateFromBlueprint(result.object, gender, existingUsernames);
-  } catch (error) {
-    throw new GenerationFailureError(
-      "profile_model_generation_failed",
-      error instanceof Error
-        ? `Model generation failed: ${error.message}`
-        : "Model generation failed",
-    );
+}`;
+  const modelsToTry = uniqueModelList([
+    PROFILE_GENERATION_MODEL,
+    ...PROFILE_GENERATION_FALLBACK_MODELS,
+  ]);
+  const modelErrors: string[] = [];
+
+  for (const modelName of modelsToTry) {
+    console.log("Trying model:", modelName);
+    try {
+      const result = await generateText({
+        model: aiGatewayProvider(modelName),
+        experimental_output: Output.object({
+          schema: profileBlueprintSchema,
+        }),
+        temperature: 1.05,
+        system:
+          "You generate highly unique dating profile blueprints for a dating app. Return valid structured output only.",
+        prompt,
+      });
+      return {
+        candidate: toCandidateFromBlueprint(
+          result.experimental_output,
+          gender,
+          existingUsernames,
+          preferences,
+        ),
+        model: modelName,
+      };
+    } catch (error) {
+      console.error("Model generation failed:", modelName, error);
+      const message =
+        error instanceof Error ? error.message : "Unknown model error";
+      modelErrors.push(`${modelName}: ${message}`);
+    }
   }
+
+  throw new GenerationFailureError(
+    "profile_model_generation_failed",
+    `Model generation failed for all candidates. ${modelErrors.join(" | ")}`,
+  );
 }
 
 async function buildCandidateDynamic(
@@ -468,13 +578,15 @@ async function buildCandidateDynamic(
     gender: Gender;
   }>,
   existingUsernames: Set<string>,
-): Promise<ProfileCandidate> {
+  preferences?: GenerationPreferences,
+): Promise<CandidateBuildResult> {
   try {
     return await generateCandidateWithLLM(
       gender,
       attempt,
       existingProfiles,
       existingUsernames,
+      preferences,
     );
   } catch (error) {
     // Fallback preserves availability if model/API is unavailable.
@@ -482,21 +594,30 @@ async function buildCandidateDynamic(
       "[profileGeneration] LLM candidate generation failed:",
       error,
     );
-    return buildCandidate(gender, existingUsernames);
+    return {
+      candidate: buildCandidate(gender, existingUsernames, preferences),
+      model: FALLBACK_TEMPLATE_MODEL,
+    };
   }
 }
 
 function buildCandidate(
   gender: Gender,
   existingUsernames: Set<string>,
+  preferences?: GenerationPreferences,
 ): ProfileCandidate {
   const firstName = randomItem(FIRST_NAMES[gender]);
   const lastName = randomItem(LAST_NAMES);
   const name = `${firstName} ${lastName}`;
   const username = buildUsername(name, existingUsernames);
-  const interests = shuffle(INTERESTS).slice(0, 5);
+  const interestPool = shuffle(INTERESTS);
+  const interests = uniqueList(
+    [...(preferences?.preferredInterests ?? []), ...interestPool],
+    5,
+  );
   const personalityTraits = shuffle(PERSONALITY_TRAITS).slice(0, 4);
-  const occupation = randomItem(OCCUPATIONS[gender]);
+  const occupation =
+    preferences?.preferredOccupation ?? randomItem(OCCUPATIONS[gender]);
   const age = 21 + Math.floor(Math.random() * 8);
   const zodiacSign = randomItem(ZODIAC_SIGNS);
   const [interestA = "coffee", interestB = "travel", interestC = "music"] =
@@ -820,6 +941,44 @@ async function createAndStoreGeneratedImage(
   );
 }
 
+async function updateJobProgress(
+  ctx: any,
+  jobId: string,
+  currentStep: JobProgressStep | "failed" | "completed",
+  completedSteps: JobProgressStep[],
+  stepModels: StepModelEntry[],
+  message?: string,
+) {
+  await ctx.runMutation(
+    "features/ai/profileGeneration:updateProfileGenerationJobInternal" as any,
+    {
+      jobId,
+      progress: {
+        currentStep,
+        completedSteps,
+        stepModels,
+        message,
+        totalSteps: JOB_PROGRESS_STEPS.length,
+        completedStepCount: completedSteps.length,
+      },
+    },
+  );
+}
+
+function upsertStepModel(
+  stepModels: StepModelEntry[],
+  step: JobProgressStep,
+  model: string,
+): StepModelEntry[] {
+  const next = stepModels.filter((entry) => entry.step !== step);
+  next.push({ step, model });
+  return next;
+}
+
+function imageGenerationModelName(): string {
+  return isDev ? "picsum.photos (dev)" : "black-forest-labs/flux-dev";
+}
+
 export const runSystemProfileGeneration = internalAction({
   args: {
     source: v.union(v.literal("manual"), v.literal("cron")),
@@ -827,15 +986,27 @@ export const runSystemProfileGeneration = internalAction({
     preferredGender: v.optional(
       v.union(v.literal("female"), v.literal("male")),
     ),
+    preferredOccupation: v.optional(v.string()),
+    preferredInterests: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
+    const normalizedPreferences: GenerationPreferences = {
+      preferredOccupation: normalizePreferenceText(args.preferredOccupation),
+      preferredInterests: normalizeInterestPreferences(args.preferredInterests),
+    };
+
     const jobId = (await ctx.runMutation(
       "features/ai/profileGeneration:createProfileGenerationJobInternal" as any,
       {
         source: args.source,
         triggeredByUserId: args.triggeredByUserId,
+        preferredGender: args.preferredGender,
+        preferredOccupation: normalizedPreferences.preferredOccupation,
+        preferredInterests: normalizedPreferences.preferredInterests,
       },
     )) as string;
+    let completedSteps: JobProgressStep[] = [];
+    let stepModels: StepModelEntry[] = [];
 
     try {
       await ctx.runMutation(
@@ -845,6 +1016,14 @@ export const runSystemProfileGeneration = internalAction({
           status: "processing",
           startedAt: Date.now(),
         },
+      );
+      await updateJobProgress(
+        ctx,
+        jobId,
+        "candidate_generation",
+        completedSteps,
+        stepModels,
+        "Generating a unique profile blueprint...",
       );
 
       const selectedGender = args.preferredGender ?? weightedGender();
@@ -879,6 +1058,7 @@ export const runSystemProfileGeneration = internalAction({
           .map((username) => normalize(username)),
       );
       let candidate: ProfileCandidate | null = null;
+      let candidateModel = FALLBACK_TEMPLATE_MODEL;
       let attempts = 0;
       const seenCandidateFingerprints = new Set<string>();
 
@@ -889,8 +1069,9 @@ export const runSystemProfileGeneration = internalAction({
           attempts,
           existingProfiles,
           existingUsernames,
+          normalizedPreferences,
         );
-        const fingerprint = candidateFingerprint(generated);
+        const fingerprint = candidateFingerprint(generated.candidate);
         if (seenCandidateFingerprints.has(fingerprint)) {
           continue;
         }
@@ -899,15 +1080,20 @@ export const runSystemProfileGeneration = internalAction({
         const semanticThreshold = thresholdForAttempt(attempts);
         const usernameAlreadyExists = (await ctx.runQuery(
           "features/ai/profileGeneration:usernameExistsInternal" as any,
-          { username: generated.username },
+          { username: generated.candidate.username },
         )) as boolean;
         if (usernameAlreadyExists) {
           continue;
         }
         if (
-          !isDuplicateCandidate(generated, existingProfiles, semanticThreshold)
+          !isDuplicateCandidate(
+            generated.candidate,
+            existingProfiles,
+            semanticThreshold,
+          )
         ) {
-          candidate = generated;
+          candidate = generated.candidate;
+          candidateModel = generated.model;
         }
       }
 
@@ -917,6 +1103,25 @@ export const runSystemProfileGeneration = internalAction({
           `Failed to generate a unique profile candidate after ${MAX_GENERATION_ATTEMPTS} attempts`,
         );
       }
+      stepModels = upsertStepModel(
+        stepModels,
+        "candidate_generation",
+        candidateModel,
+      );
+      completedSteps = [...completedSteps, "candidate_generation"];
+      stepModels = upsertStepModel(
+        stepModels,
+        "avatar_generation",
+        imageGenerationModelName(),
+      );
+      await updateJobProgress(
+        ctx,
+        jobId,
+        "avatar_generation",
+        completedSteps,
+        stepModels,
+        `Profile blueprint generated in ${attempts} attempt${attempts > 1 ? "s" : ""}. Creating avatar...`,
+      );
 
       const avatarImageKey = await createAndStoreGeneratedImage(
         ctx,
@@ -924,13 +1129,27 @@ export const runSystemProfileGeneration = internalAction({
         null,
         `aiProfiles/generated/${jobId}/avatar`,
       );
+      completedSteps = [...completedSteps, "avatar_generation"];
 
       const avatarReferenceUrl = await r2.getUrl(avatarImageKey);
       const showcaseCount = Math.random() < 0.5 ? 1 : 2;
       const showcasePrompts = buildShowcasePrompts(candidate, showcaseCount);
       const profileImageKeys: string[] = [];
+      stepModels = upsertStepModel(
+        stepModels,
+        "showcase_generation",
+        imageGenerationModelName(),
+      );
+      await updateJobProgress(
+        ctx,
+        jobId,
+        "showcase_generation",
+        completedSteps,
+        stepModels,
+        `Generating showcase images (0/${showcaseCount})...`,
+      );
 
-      for (const prompt of showcasePrompts) {
+      for (const [index, prompt] of showcasePrompts.entries()) {
         const imageKey = await createAndStoreGeneratedImage(
           ctx,
           prompt,
@@ -938,7 +1157,29 @@ export const runSystemProfileGeneration = internalAction({
           `aiProfiles/generated/${jobId}/showcase`,
         );
         profileImageKeys.push(imageKey);
+        await updateJobProgress(
+          ctx,
+          jobId,
+          "showcase_generation",
+          completedSteps,
+          stepModels,
+          `Generating showcase images (${index + 1}/${showcaseCount})...`,
+        );
       }
+      completedSteps = [...completedSteps, "showcase_generation"];
+      stepModels = upsertStepModel(
+        stepModels,
+        "profile_persist",
+        PROFILE_PERSIST_MODEL,
+      );
+      await updateJobProgress(
+        ctx,
+        jobId,
+        "profile_persist",
+        completedSteps,
+        stepModels,
+        "Saving generated profile...",
+      );
 
       const createdProfileId = (await ctx.runMutation(
         "features/ai/profileGeneration:createSystemProfileInternal" as any,
@@ -948,6 +1189,7 @@ export const runSystemProfileGeneration = internalAction({
           profileImageKeys,
         },
       )) as string;
+      completedSteps = [...completedSteps, "profile_persist"];
 
       await ctx.runMutation(
         "features/ai/profileGeneration:updateProfileGenerationJobInternal" as any,
@@ -957,6 +1199,14 @@ export const runSystemProfileGeneration = internalAction({
           selectedGender,
           attempts,
           createdProfileId,
+          progress: {
+            currentStep: "completed",
+            completedSteps,
+            stepModels,
+            message: "Profile generation completed successfully.",
+            totalSteps: JOB_PROGRESS_STEPS.length,
+            completedStepCount: completedSteps.length,
+          },
           completedAt: Date.now(),
         },
       );
@@ -976,6 +1226,14 @@ export const runSystemProfileGeneration = internalAction({
           jobId,
           status: "failed",
           errorMessage,
+          progress: {
+            currentStep: "failed",
+            completedSteps,
+            stepModels,
+            message: errorMessage,
+            totalSteps: JOB_PROGRESS_STEPS.length,
+            completedStepCount: completedSteps.length,
+          },
           completedAt: Date.now(),
         },
       );

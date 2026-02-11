@@ -6,6 +6,7 @@ import {
   ScrollView,
   Text,
 } from "react-native";
+import { useRef } from "react";
 // import { Text } from "@/components/ui/text";
 import { Chip } from "heroui-native";
 import { Image } from "expo-image";
@@ -60,6 +61,8 @@ export function ProfileSwipeCard({
   const translateY = useSharedValue(0);
   const rotation = useSharedValue(0);
   const scale = useSharedValue(1);
+  const didPan = useSharedValue(false);
+  const blockCardPressUntilRef = useRef(0);
 
   const handleAuthRequired = () => {
     if (onAuthRequired) {
@@ -67,8 +70,28 @@ export function ProfileSwipeCard({
     }
   };
 
+  const markPanInteraction = () => {
+    blockCardPressUntilRef.current = Date.now() + 500;
+  };
+
+  const handleCardPress = () => {
+    if (Date.now() < blockCardPressUntilRef.current) {
+      return;
+    }
+    onPress();
+  };
+
   const panGesture = Gesture.Pan()
+    .onBegin(() => {
+      didPan.value = false;
+    })
     .onUpdate((event) => {
+      const hasMeaningfulPan =
+        Math.abs(event.translationX) > 8 || Math.abs(event.translationY) > 8;
+      if (hasMeaningfulPan && !didPan.value) {
+        didPan.value = true;
+        runOnJS(markPanInteraction)();
+      }
       translateX.value = event.translationX;
       translateY.value = event.translationY;
       rotation.value = (event.translationX / width) * 15;
@@ -93,6 +116,7 @@ export function ProfileSwipeCard({
 
       // If not authenticated and user swiped, snap back and prompt login
       if (!isAuthenticated && (swipedRight || swipedLeft)) {
+        runOnJS(markPanInteraction)();
         translateX.value = withSpring(0);
         translateY.value = withSpring(0);
         rotation.value = withSpring(0);
@@ -126,6 +150,7 @@ export function ProfileSwipeCard({
         scale.value = withSpring(1);
         if (dragX) dragX.value = withSpring(0);
       }
+      didPan.value = false;
     });
 
   // Only use pan gesture - taps are handled by Pressable on the image area
@@ -204,7 +229,7 @@ export function ProfileSwipeCard({
         {/* Tap overlay for profile navigation - covers upper portion only */}
         <Pressable
           style={[styles.tapOverlay, { bottom: reservedBottomUi + 60 }]}
-          onPress={onPress}
+          onPress={handleCardPress}
         />
 
         {/* Like Indicator */}

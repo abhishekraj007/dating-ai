@@ -228,10 +228,30 @@ export default defineSchema({
       v.literal("failed")
     ),
     triggeredByUserId: v.optional(v.string()),
+    preferredGender: v.optional(v.union(v.literal("female"), v.literal("male"))),
+    preferredOccupation: v.optional(v.string()),
+    preferredInterests: v.optional(v.array(v.string())),
     selectedGender: v.optional(v.union(v.literal("female"), v.literal("male"))),
     attempts: v.optional(v.number()),
     createdProfileId: v.optional(v.id("aiProfiles")),
     errorMessage: v.optional(v.string()),
+    progress: v.optional(
+      v.object({
+        currentStep: v.string(),
+        completedSteps: v.array(v.string()),
+        stepModels: v.optional(
+          v.array(
+            v.object({
+              step: v.string(),
+              model: v.string(),
+            })
+          )
+        ),
+        message: v.optional(v.string()),
+        totalSteps: v.number(),
+        completedStepCount: v.number(),
+      })
+    ),
     retriedAt: v.optional(v.number()),
     startedAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),

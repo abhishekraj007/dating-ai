@@ -7,7 +7,10 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { ZoomableImage } from "@/components/zoomable-image";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Chip, Skeleton, useThemeColor } from "heroui-native";
 import { X, Share2, MoreVertical } from "lucide-react-native";
