@@ -204,6 +204,7 @@ export const createAIProfile = mutation({
       gender: args.gender,
       avatarImageKey: args.avatarImageKey,
       isUserCreated: true,
+      visibleOn: ["web", "ios", "android"],
       status: "active",
       age: args.age,
       zodiacSign: args.zodiacSign,
@@ -322,6 +323,9 @@ export const adminUpdateProfile = mutation({
     voiceId: v.optional(v.string()),
     status: v.optional(
       v.union(v.literal("active"), v.literal("pending"), v.literal("archived")),
+    ),
+    visibleOn: v.optional(
+      v.array(v.union(v.literal("web"), v.literal("ios"), v.literal("android"))),
     ),
     communicationStyle: v.optional(
       v.object({

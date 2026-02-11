@@ -163,6 +163,7 @@ export const createSystemProfileInternal = internalMutation({
       gender: args.gender,
       avatarImageKey: args.avatarImageKey,
       isUserCreated: false,
+      visibleOn: ["web", "ios", "android"],
       status: "active",
       age: args.age,
       zodiacSign: args.zodiacSign,

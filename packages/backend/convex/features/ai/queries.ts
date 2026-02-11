@@ -16,8 +16,14 @@ export const getProfiles = query({
     gender: v.optional(v.union(v.literal("female"), v.literal("male"))),
     limit: v.optional(v.number()),
     excludeExistingConversations: v.optional(v.boolean()),
+    platform: v.optional(
+      v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
+    ),
   },
-  handler: async (ctx, { gender, limit, excludeExistingConversations }) => {
+  handler: async (
+    ctx,
+    { gender, limit, excludeExistingConversations, platform },
+  ) => {
     let profilesQuery = ctx.db
       .query("aiProfiles")
       .withIndex("by_status_and_gender", (q) => {
@@ -27,7 +33,7 @@ export const getProfiles = query({
         return q.eq("status", "active");
       });
 
-    let profiles = await profilesQuery.take(limit ?? 50);
+    let profiles = await profilesQuery.order("desc").take(limit ?? 50);
 
     // Optionally filter out profiles the user already has conversations with
     if (excludeExistingConversations) {
@@ -50,12 +56,20 @@ export const getProfiles = query({
       }
     }
 
+    const visibleProfiles = profiles.filter((profile) => {
+      if (!platform) return true;
+      // Backward compatibility: if unset, assume visible everywhere.
+      if (!profile.visibleOn || profile.visibleOn.length === 0) return true;
+      return profile.visibleOn.includes(platform);
+    });
+
     // Generate signed URLs for avatars
     return Promise.all(
-      profiles.map(async (profile) => {
-        const avatarUrl = profile.avatarImageKey
-          ? await r2.getUrl(profile.avatarImageKey)
-          : null;
+      visibleProfiles.map(async (profile) => {
+        const avatarUrl =
+          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
+            ? await r2.getUrl(profile.avatarImageKey)
+            : null;
         return {
           ...profile,
           avatarUrl,
@@ -79,9 +93,10 @@ export const getProfile = query({
     }
 
     // Get signed URLs for all images
-    const avatarUrl = profile.avatarImageKey
-      ? await r2.getUrl(profile.avatarImageKey)
-      : null;
+    const avatarUrl =
+      profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
+        ? await r2.getUrl(profile.avatarImageKey)
+        : null;
 
     const profileImageUrls = profile.profileImageKeys
       ? await Promise.all(profile.profileImageKeys.map((key) => r2.getUrl(key)))
@@ -124,9 +139,10 @@ export const getUserCreatedProfiles = query({
     // Generate signed URLs
     return Promise.all(
       profiles.map(async (profile) => {
-        const avatarUrl = profile.avatarImageKey
-          ? await r2.getUrl(profile.avatarImageKey)
-          : null;
+        const avatarUrl =
+          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
+            ? await r2.getUrl(profile.avatarImageKey)
+            : null;
         return {
           ...profile,
           avatarUrl,
@@ -159,9 +175,10 @@ export const getUserConversations = query({
         const profile = await ctx.db.get(conv.aiProfileId);
         if (!profile) return null;
 
-        const avatarUrl = profile.avatarImageKey
-          ? await r2.getUrl(profile.avatarImageKey)
-          : null;
+        const avatarUrl =
+          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
+            ? await r2.getUrl(profile.avatarImageKey)
+            : null;
 
         // Get last message from agent thread
         const messagesResult = await ctx.runQuery(
@@ -218,9 +235,10 @@ export const getConversation = query({
       return null;
     }
 
-    const avatarUrl = profile.avatarImageKey
-      ? await r2.getUrl(profile.avatarImageKey)
-      : null;
+    const avatarUrl =
+      profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
+        ? await r2.getUrl(profile.avatarImageKey)
+        : null;
 
     return {
       ...conversation,
@@ -419,9 +437,10 @@ export const getSystemProfiles = query({
     // Generate signed URLs for avatars and gallery images
     return Promise.all(
       systemProfiles.map(async (profile) => {
-        const avatarUrl = profile.avatarImageKey
-          ? await r2.getUrl(profile.avatarImageKey)
-          : null;
+        const avatarUrl =
+          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
+            ? await r2.getUrl(profile.avatarImageKey)
+            : null;
 
         const profileImageUrls = profile.profileImageKeys
           ? await Promise.all(

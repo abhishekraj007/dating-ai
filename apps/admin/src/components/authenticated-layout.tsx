@@ -37,6 +37,8 @@ export function AuthenticatedLayout({
         ? "Characters"
         : pathname === "/uploads"
           ? "Uploads"
+          : pathname === "/app-config"
+            ? "App Config"
           : "Admin";
 
   // Show loading skeleton while checking auth - keeps layout stable

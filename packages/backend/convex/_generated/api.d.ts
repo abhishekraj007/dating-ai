@@ -22,6 +22,11 @@ import type * as features_ai_profileGenerationActions from "../features/ai/profi
 import type * as features_ai_queries from "../features/ai/queries.js";
 import type * as features_ai_seed from "../features/ai/seed.js";
 import type * as features_ai_seed_genz from "../features/ai/seed_genz.js";
+import type * as features_appConfig_guards from "../features/appConfig/guards.js";
+import type * as features_appConfig_index from "../features/appConfig/index.js";
+import type * as features_appConfig_mutations from "../features/appConfig/mutations.js";
+import type * as features_appConfig_queries from "../features/appConfig/queries.js";
+import type * as features_appConfig_shared from "../features/appConfig/shared.js";
 import type * as features_credits_index from "../features/credits/index.js";
 import type * as features_credits_mutations from "../features/credits/mutations.js";
 import type * as features_credits_queries from "../features/credits/queries.js";
@@ -73,6 +78,11 @@ declare const fullApi: ApiFromModules<{
   "features/ai/queries": typeof features_ai_queries;
   "features/ai/seed": typeof features_ai_seed;
   "features/ai/seed_genz": typeof features_ai_seed_genz;
+  "features/appConfig/guards": typeof features_appConfig_guards;
+  "features/appConfig/index": typeof features_appConfig_index;
+  "features/appConfig/mutations": typeof features_appConfig_mutations;
+  "features/appConfig/queries": typeof features_appConfig_queries;
+  "features/appConfig/shared": typeof features_appConfig_shared;
   "features/credits/index": typeof features_credits_index;
   "features/credits/mutations": typeof features_credits_mutations;
   "features/credits/queries": typeof features_credits_queries;

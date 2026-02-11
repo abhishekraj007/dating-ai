@@ -23,6 +23,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import type { ForYouProfile } from "@/hooks/dating/useForYou";
+import { getChipTone } from "@/utils";
 
 const SWIPE_THRESHOLD = 120;
 
@@ -283,11 +284,21 @@ export function ProfileSwipeCard({
               }}
             >
               {profile.interests.slice(0, 5).map((interest, index) => {
-                const colors = ["accent", "success", "warning"] as const;
-                const color = colors[index % colors.length];
+                const tone = getChipTone(`${profile._id}-${interest}-${index}`);
                 return (
-                  <Chip key={index} size="md" variant={"primary"} color={color}>
-                    <Chip.Label>{interest}</Chip.Label>
+                  <Chip
+                    key={index}
+                    size="md"
+                    variant="secondary"
+                    style={{
+                      backgroundColor: tone.backgroundColor,
+                      borderColor: tone.borderColor,
+                      borderWidth: 0.5,
+                    }}
+                  >
+                    <Chip.Label style={{ color: tone.textColor }}>
+                      {interest}
+                    </Chip.Label>
                   </Chip>
                 );
               })}

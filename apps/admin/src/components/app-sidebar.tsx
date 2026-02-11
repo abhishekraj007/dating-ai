@@ -9,6 +9,7 @@ import {
   ChevronUp,
   Upload,
   Users,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
@@ -52,6 +53,11 @@ const menuItems = [
     title: "Uploads",
     url: "/uploads",
     icon: Upload,
+  },
+  {
+    title: "App Config",
+    url: "/app-config",
+    icon: SlidersHorizontal,
   },
 ];
 

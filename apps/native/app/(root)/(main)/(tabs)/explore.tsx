@@ -18,7 +18,9 @@ export default function ExploreScreen() {
   const handleFilterPress = () => {
     router.push("/filter");
   };
-  const { profiles, isLoading } = useExploreProfiles(50);
+  const { profiles, isLoading } = useExploreProfiles(20);
+
+  console.log(profiles);
 
   const handleProfilePress = (profileId: string) => {
     router.push(`/(root)/(main)/profile/${profileId}`);

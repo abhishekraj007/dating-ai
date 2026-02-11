@@ -347,7 +347,7 @@ async function getProfileAvatarUrl(
   },
   avatarImageKey: string | undefined,
 ): Promise<string | null> {
-  if (!avatarImageKey) {
+  if (!avatarImageKey || avatarImageKey === "default-avatar") {
     return null;
   }
 

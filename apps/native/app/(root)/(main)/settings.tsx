@@ -298,7 +298,7 @@ export default function SettingsRoute() {
             </Text>
 
             <Button
-              variant="destructive"
+              variant="danger"
               size="md"
               isDisabled={isDeletingUser}
               onPress={() => {

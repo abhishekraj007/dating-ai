@@ -10,6 +10,16 @@ interface UseAIProfilesOptions {
   excludeExistingConversations?: boolean;
 }
 
+type AppPlatform = "web" | "ios" | "android";
+
+function getCurrentPlatform(): AppPlatform {
+  const platform = process.env.EXPO_OS;
+  if (platform === "ios" || platform === "android" || platform === "web") {
+    return platform;
+  }
+  return "web";
+}
+
 export function useAIProfiles(
   genderOrOptions?: Gender | UseAIProfilesOptions,
   limit?: number,
@@ -20,10 +30,12 @@ export function useAIProfiles(
       ? genderOrOptions
       : { gender: genderOrOptions, limit };
 
+  const platform = getCurrentPlatform();
   const profiles = useQuery(api.features.ai.queries.getProfiles, {
     gender: options.gender,
     limit: options.limit,
     excludeExistingConversations: options.excludeExistingConversations,
+    platform,
   });
 
   return {
@@ -37,6 +49,7 @@ export function useAIProfiles(
  */
 export function useExploreProfiles(limit?: number) {
   const { preferences } = useUserPreferences();
+  const platform = getCurrentPlatform();
 
   // Extract only the allowed args to avoid sending system fields like _id, _creationTime
   const filterArgs = preferences
@@ -53,6 +66,7 @@ export function useExploreProfiles(limit?: number) {
     api.features.preferences.queries.getExploreProfiles,
     {
       limit,
+      platform,
       ...filterArgs,
     },
   );

@@ -29,6 +29,7 @@ export type AIProfile = {
   language?: string;
   voiceId?: string;
   status: "active" | "pending" | "archived";
+  visibleOn?: Array<"web" | "ios" | "android">;
   avatarImageKey?: string;
   profileImageKeys?: string[];
   communicationStyle?: CommunicationStyle;
@@ -46,6 +47,7 @@ export type CharacterFormData = {
   language: string;
   voiceId: string;
   status: "active" | "pending" | "archived";
+  visibleOn: Array<"web" | "ios" | "android">;
   communicationStyle: {
     tone: string;
     responseLength: string;
@@ -67,6 +69,7 @@ const initialFormData: CharacterFormData = {
   language: "en",
   voiceId: "",
   status: "active",
+  visibleOn: ["web", "ios", "android"],
   communicationStyle: {
     tone: "",
     responseLength: "medium",
@@ -118,6 +121,10 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
       language: profile.language ?? "en",
       voiceId: profile.voiceId ?? "",
       status: profile.status,
+      visibleOn:
+        profile.visibleOn && profile.visibleOn.length > 0
+          ? profile.visibleOn
+          : ["web", "ios", "android"],
       communicationStyle: {
         tone: profile.communicationStyle?.tone ?? "",
         responseLength: profile.communicationStyle?.responseLength ?? "medium",
@@ -269,6 +276,7 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
         language: formData.language || undefined,
         voiceId: formData.voiceId || undefined,
         status: formData.status,
+        visibleOn: formData.visibleOn,
         communicationStyle: formData.communicationStyle.tone
           ? {
               tone: formData.communicationStyle.tone,

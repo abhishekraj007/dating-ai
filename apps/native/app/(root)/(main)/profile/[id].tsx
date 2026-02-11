@@ -25,7 +25,7 @@ import { useState, useCallback } from "react";
 import { Text } from "@/components";
 import { LinearGradient } from "expo-linear-gradient";
 import { useConvexAuth } from "convex/react";
-import { isAndroid } from "@/utils";
+import { getChipTone, isAndroid } from "@/utils";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const photoWidth = (screenWidth - 48) / 2;
@@ -45,8 +45,16 @@ export default function ProfileDetailScreen() {
   const { isPremium } = useCredits();
   const [isStartingChat, setIsStartingChat] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [hasImageError, setHasImageError] = useState(false);
+
+  console.log(profile);
 
   const handleImageLoad = useCallback(() => {
+    setIsImageLoaded(true);
+  }, []);
+
+  const handleImageError = useCallback(() => {
+    setHasImageError(true);
     setIsImageLoaded(true);
   }, []);
 
@@ -152,7 +160,7 @@ export default function ProfileDetailScreen() {
       <View
         style={{
           position: "absolute",
-          top: isAndroid ? insets.top + 16 : 16,
+          top: insets.top + 16,
           paddingHorizontal: 16,
           left: 0,
           right: 0,
@@ -214,7 +222,7 @@ export default function ProfileDetailScreen() {
           )}
           <ZoomableImage
             source={
-              profile.avatarUrl
+              profile.avatarUrl && !hasImageError
                 ? { uri: profile.avatarUrl }
                 : require("@/assets/images/login-bg.jpeg")
             }
@@ -228,42 +236,58 @@ export default function ProfileDetailScreen() {
             cachePolicy="memory-disk"
             transition={300}
             onLoad={handleImageLoad}
+            onError={handleImageError}
           />
-        </View>
 
-        {/* Name and badges */}
-        <View className="px-4 mt-4">
-          <Text className="text-foreground text-2xl font-bold">
-            {profile.name}
-          </Text>
-          {profile.username && (
-            <Text variant="muted" className="text-sm mt-1">
-              @{profile.username}
-            </Text>
-          )}
+          <LinearGradient
+            pointerEvents="none"
+            colors={["transparent", "rgba(0,0,0,0.3)", "rgba(0,0,0,1)"]}
+            locations={[0.4, 0.6, 1]}
+            // locations={[0, 0.72, 1]}
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: "50%",
+            }}
+          />
 
-          <View className="flex-row flex-wrap gap-2 mt-3">
-            {profile.age && (
-              <Chip variant="secondary" size="sm">
-                <Chip.Label>
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              paddingHorizontal: 16,
+              paddingBottom: 16,
+              gap: 6,
+            }}
+          >
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+            >
+              <Text
+                size="lg"
+                weight="bold"
+                // className="text-white text-3xl font-bold"
+              >
+                {profile.name}
+              </Text>
+              {profile.age ? (
+                <Text className="text-white/90 text-xl font-semibold">
                   {genderSymbol} {profile.age}
-                </Chip.Label>
-              </Chip>
-            )}
-            {profile.zodiacSign && (
-              <Chip variant="secondary" size="sm">
-                <Chip.Label>{profile.zodiacSign}</Chip.Label>
-              </Chip>
-            )}
-            {profile.occupation && (
-              <Chip variant="secondary" size="sm">
-                <Chip.Label>{profile.occupation}</Chip.Label>
-              </Chip>
-            )}
-            {profile.mbtiType && (
-              <Chip variant="secondary" size="sm">
-                <Chip.Label>{profile.mbtiType}</Chip.Label>
-              </Chip>
+                </Text>
+              ) : null}
+            </View>
+
+            {(profile.zodiacSign || profile.occupation) && (
+              <Text className="text-white/90 text-base">
+                {profile.zodiacSign ?? ""}
+                {profile.zodiacSign && profile.occupation ? " • " : ""}
+                {profile.occupation ?? ""}
+              </Text>
             )}
           </View>
         </View>
@@ -271,7 +295,9 @@ export default function ProfileDetailScreen() {
         {/* About me */}
         {profile.bio && (
           <View className="px-4 mt-6">
-            <Text className="text-foreground font-semibold mb-2">About me</Text>
+            <Text variant="semi-muted" className="font-semibold mb-2">
+              About me
+            </Text>
             <Text variant="muted" className="leading-6">
               {profile.bio}
             </Text>
@@ -281,7 +307,7 @@ export default function ProfileDetailScreen() {
         {/* Relationship Goal */}
         {profile.relationshipGoal && (
           <View className="px-4 mt-6">
-            <Text className="text-foreground font-semibold mb-2">
+            <Text variant="semi-muted" className="font-semibold mb-2">
               Looking for
             </Text>
             <Text variant="muted" className="leading-6">
@@ -293,15 +319,31 @@ export default function ProfileDetailScreen() {
         {/* Personality Traits */}
         {profile.personalityTraits && profile.personalityTraits.length > 0 && (
           <View className="px-4 mt-6">
-            <Text className="text-foreground font-semibold mb-2">
+            <Text variant="semi-muted" className="font-semibold mb-2">
               Personality
             </Text>
             <View className="flex-row flex-wrap gap-2">
-              {profile.personalityTraits.map((trait, index) => (
-                <Chip key={index} variant="secondary" size="sm">
-                  <Chip.Label>{trait}</Chip.Label>
-                </Chip>
-              ))}
+              {profile.personalityTraits.map((trait, index) => {
+                const tone = getChipTone(
+                  `${profile._id}-trait-${trait}-${index}`,
+                );
+                return (
+                  <Chip
+                    key={index}
+                    variant="secondary"
+                    size="sm"
+                    style={{
+                      backgroundColor: tone.backgroundColor,
+                      borderColor: tone.borderColor,
+                      borderWidth: 0.5,
+                    }}
+                  >
+                    <Chip.Label style={{ color: tone.textColor }}>
+                      {trait}
+                    </Chip.Label>
+                  </Chip>
+                );
+              })}
             </View>
           </View>
         )}
@@ -309,12 +351,16 @@ export default function ProfileDetailScreen() {
         {/* Interests */}
         {profile.interests && profile.interests.length > 0 && (
           <View className="px-4 mt-6">
-            <Text className="text-foreground font-semibold mb-2">
+            <Text variant="semi-muted" className="font-semibold mb-2">
               Interests
             </Text>
             <View className="flex-row flex-wrap gap-2">
               {profile.interests.map((interest, index) => (
-                <InterestChip key={index} interest={interest} />
+                <InterestChip
+                  key={index}
+                  interest={interest}
+                  colorSeed={`${profile._id}-interest-${interest}-${index}`}
+                />
               ))}
             </View>
           </View>
@@ -323,7 +369,9 @@ export default function ProfileDetailScreen() {
         {/* Photos grid */}
         {profile.profileImageUrls && profile.profileImageUrls.length > 0 && (
           <View className="px-4 mt-6">
-            <Text className="text-foreground font-semibold mb-2">Photos</Text>
+            <Text variant="semi-muted" className="font-semibold mb-2">
+              Photos
+            </Text>
             <View className="flex-row flex-wrap gap-2">
               {profile.profileImageUrls.map((url, index) =>
                 isPremium ? (

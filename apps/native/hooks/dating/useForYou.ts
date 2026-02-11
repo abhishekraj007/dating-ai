@@ -28,14 +28,26 @@ export interface ForYouProfile {
   avatarUrl: string | null;
 }
 
+type AppPlatform = "web" | "ios" | "android";
+
+function getCurrentPlatform(): AppPlatform {
+  const platform = process.env.EXPO_OS;
+  if (platform === "ios" || platform === "android" || platform === "web") {
+    return platform;
+  }
+  return "web";
+}
+
 /**
  * Hook to get profiles for the For You feed.
  */
 export function useForYouProfiles(limit?: number) {
+  const platform = getCurrentPlatform();
   const profiles = useQuery(
     api.features.preferences.queries.getForYouProfiles,
     {
       limit,
+      platform,
     },
   );
 

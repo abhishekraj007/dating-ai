@@ -22,7 +22,7 @@ export default function MainLayout() {
         options={{
           ...standard,
           title: "Profile",
-          presentation: "modal",
+          // presentation: "modal",
           headerShown: false,
         }}
       />

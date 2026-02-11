@@ -1,0 +1,78 @@
+import { Avatar, Button, Chip, Separator, Surface, useThemeColor } from "heroui-native";
+import { Crown, Coins } from "lucide-react-native";
+import { Text, View } from "react-native";
+
+type AccountProfileSummaryProps = {
+  name: string;
+  email: string;
+  credits: number;
+  isPremium: boolean;
+  onBuyCredits: () => void;
+  onShowSubscription: () => void;
+  avatarUrl?: string;
+};
+
+export const AccountProfileSummary = ({
+  name,
+  email,
+  credits,
+  isPremium,
+  onBuyCredits,
+  onShowSubscription,
+  avatarUrl,
+}: AccountProfileSummaryProps) => {
+  const accent = useThemeColor("accent");
+  const success = useThemeColor("success");
+
+  return (
+    <Surface className="p-4 gap-4">
+      <View className="flex-row items-center gap-3">
+        <Avatar alt={name} size="md">
+          {avatarUrl ? <Avatar.Image source={{ uri: avatarUrl }} /> : null}
+          <Avatar.Fallback>{name[0] ?? "U"}</Avatar.Fallback>
+        </Avatar>
+
+        <View className="flex-1">
+          <Text className="text-lg font-semibold text-foreground">{name}</Text>
+          <Text className="text-sm text-muted">{email}</Text>
+        </View>
+      </View>
+
+      <Separator />
+
+      <View className="gap-3">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-2">
+            <Coins size={16} color={accent} />
+            <Text className="text-sm text-muted">Current credits</Text>
+          </View>
+          <Text className="text-base font-semibold text-foreground">
+            {credits}
+          </Text>
+        </View>
+
+        <View className="flex-row gap-2">
+          <Button variant="secondary" className="flex-1" onPress={onBuyCredits}>
+            Buy Credits
+          </Button>
+
+          {isPremium ? (
+            <Chip variant="soft" color="success" className="px-3">
+              <Crown size={14} color={success} />
+              <Chip.Label>Premium</Chip.Label>
+            </Chip>
+          ) : (
+            <Button
+              variant="primary"
+              className="flex-1"
+              onPress={onShowSubscription}
+            >
+              <Crown size={14} color="white" />
+              <Text className="text-white font-medium">Get Premium</Text>
+            </Button>
+          )}
+        </View>
+      </View>
+    </Surface>
+  );
+};

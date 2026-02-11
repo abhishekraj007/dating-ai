@@ -129,8 +129,11 @@ export const recordProfileInteraction = mutation({
 export const getForYouProfiles = query({
   args: {
     limit: v.optional(v.number()),
+    platform: v.optional(
+      v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
+    ),
   },
-  handler: async (ctx, { limit = 20 }) => {
+  handler: async (ctx, { limit = 20, platform }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
 
     // Default preferences
@@ -182,6 +185,7 @@ export const getForYouProfiles = query({
     }
 
     // Query profiles based on gender preference
+    const scanLimit = Math.max(limit * 6, 120);
     const allProfiles =
       genderPreference !== "both"
         ? await ctx.db
@@ -189,11 +193,13 @@ export const getForYouProfiles = query({
             .withIndex("by_status_and_gender", (q) =>
               q.eq("status", "active").eq("gender", genderPreference),
             )
-            .collect()
+            .order("desc")
+            .take(scanLimit)
         : await ctx.db
             .query("aiProfiles")
             .withIndex("by_status_and_gender", (q) => q.eq("status", "active"))
-            .collect();
+            .order("desc")
+            .take(scanLimit);
 
     // Filter profiles
     const filteredProfiles = allProfiles.filter((profile) => {
@@ -222,6 +228,17 @@ export const getForYouProfiles = query({
         }
       }
 
+      // Platform visibility filter.
+      // Backward compatibility: missing visibleOn means visible on all platforms.
+      if (
+        platform &&
+        profile.visibleOn &&
+        profile.visibleOn.length > 0 &&
+        !profile.visibleOn.includes(platform)
+      ) {
+        return false;
+      }
+
       // Zodiac filter (if preferences set)
       if (zodiacPreferences.length > 0 && profile.zodiacSign) {
         if (!zodiacPreferences.includes(profile.zodiacSign)) {
@@ -247,9 +264,10 @@ export const getForYouProfiles = query({
 
     return Promise.all(
       limitedProfiles.map(async (profile) => {
-        const avatarUrl = profile.avatarImageKey
-          ? await r2.getUrl(profile.avatarImageKey)
-          : null;
+        const avatarUrl =
+          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
+            ? await r2.getUrl(profile.avatarImageKey)
+            : null;
 
         return {
           ...profile,
@@ -283,9 +301,10 @@ export const getLikedProfiles = query({
         const profile = await ctx.db.get(like.aiProfileId);
         if (!profile) return null;
 
-        const avatarUrl = profile.avatarImageKey
-          ? await r2.getUrl(profile.avatarImageKey)
-          : null;
+        const avatarUrl =
+          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
+            ? await r2.getUrl(profile.avatarImageKey)
+            : null;
 
         return {
           ...profile,
@@ -307,6 +326,9 @@ export const getLikedProfiles = query({
 export const getExploreProfiles = query({
   args: {
     limit: v.optional(v.number()),
+    platform: v.optional(
+      v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
+    ),
     genderPreference: v.optional(
       v.union(v.literal("female"), v.literal("male"), v.literal("both")),
     ),
@@ -319,6 +341,7 @@ export const getExploreProfiles = query({
     ctx,
     {
       limit = 50,
+      platform,
       genderPreference: overrideGender,
       ageMin: overrideAgeMin,
       ageMax: overrideAgeMax,
@@ -369,6 +392,7 @@ export const getExploreProfiles = query({
     if (overrideInterests) interestPreferences = overrideInterests;
 
     // Query profiles based on gender preference
+    const scanLimit = Math.max(limit * 5, 150);
     const allProfiles =
       genderPreference !== "both"
         ? await ctx.db
@@ -376,11 +400,13 @@ export const getExploreProfiles = query({
             .withIndex("by_status_and_gender", (q) =>
               q.eq("status", "active").eq("gender", genderPreference),
             )
-            .collect()
+            .order("desc")
+            .take(scanLimit)
         : await ctx.db
             .query("aiProfiles")
             .withIndex("by_status_and_gender", (q) => q.eq("status", "active"))
-            .collect();
+            .order("desc")
+            .take(scanLimit);
 
     // Filter profiles
     const filteredProfiles = allProfiles.filter((profile) => {
@@ -394,6 +420,17 @@ export const getExploreProfiles = query({
         if (profile.age < ageMin || profile.age > ageMax) {
           return false;
         }
+      }
+
+      // Platform visibility filter.
+      // Backward compatibility: missing visibleOn means visible on all platforms.
+      if (
+        platform &&
+        profile.visibleOn &&
+        profile.visibleOn.length > 0 &&
+        !profile.visibleOn.includes(platform)
+      ) {
+        return false;
       }
 
       // Zodiac filter (if preferences set)
@@ -421,9 +458,10 @@ export const getExploreProfiles = query({
 
     return Promise.all(
       limitedProfiles.map(async (profile) => {
-        const avatarUrl = profile.avatarImageKey
-          ? await r2.getUrl(profile.avatarImageKey)
-          : null;
+        const avatarUrl =
+          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
+            ? await r2.getUrl(profile.avatarImageKey)
+            : null;
 
         return {
           ...profile,

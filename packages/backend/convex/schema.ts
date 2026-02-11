@@ -139,6 +139,9 @@ export default defineSchema({
     gender: v.union(v.literal("female"), v.literal("male")),
     avatarImageKey: v.optional(v.string()), // R2 key for main avatar (optional for seed data)
     isUserCreated: v.boolean(),
+    visibleOn: v.optional(
+      v.array(v.union(v.literal("web"), v.literal("ios"), v.literal("android")))
+    ),
     status: v.union(
       v.literal("active"),
       v.literal("pending"),
@@ -316,4 +319,20 @@ export default defineSchema({
     .index("by_type", ["type"])
     .index("by_type_active", ["type", "isActive"])
     .index("by_type_order", ["type", "order"]),
+
+  // App configuration managed from admin panel
+  // Enables changing URLs and identifiers without shipping app updates
+  appConfig: defineTable({
+    key: v.string(), // singleton key, currently "global"
+    baseWebUrl: v.optional(v.string()),
+    termsUrl: v.optional(v.string()),
+    privacyUrl: v.optional(v.string()),
+    helpCenterUrl: v.optional(v.string()),
+    supportUrl: v.optional(v.string()),
+    shareUrl: v.optional(v.string()),
+    iosAppStoreId: v.optional(v.string()),
+    androidAppId: v.optional(v.string()),
+    updatedAt: v.number(),
+    updatedBy: v.string(),
+  }).index("by_key", ["key"]),
 });
