@@ -284,7 +284,10 @@ export function ProfileSwipeCard({
               }}
             >
               {profile.interests.slice(0, 5).map((interest, index) => {
-                const tone = getChipTone(`${profile._id}-${interest}-${index}`);
+                const tone = getChipTone(
+                  `${profile._id}-${interest}-${index}`,
+                  "transparent",
+                );
                 return (
                   <Chip
                     key={index}

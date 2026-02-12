@@ -1,4 +1,4 @@
-import { View, Dimensions } from "react-native";
+import { View, Dimensions, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button, Skeleton, useThemeColor, ScrollShadow } from "heroui-native";
@@ -9,6 +9,7 @@ import { useExploreProfiles } from "@/hooks/dating";
 import { Text } from "@/components/ui/text";
 import { Header } from "@/components";
 import { FlashList } from "@shopify/flash-list";
+import { useCallback, useEffect } from "react";
 
 export default function ExploreScreen() {
   const router = useRouter();
@@ -18,9 +19,19 @@ export default function ExploreScreen() {
   const handleFilterPress = () => {
     router.push("/filter");
   };
-  const { profiles, isLoading } = useExploreProfiles(20);
+  const { profiles, isLoading, status, loadMore } = useExploreProfiles(20);
 
-  console.log(profiles);
+  const handleLoadMore = useCallback(() => {
+    if (status === "CanLoadMore") {
+      loadMore(20);
+    }
+  }, [status, loadMore]);
+
+  useEffect(() => {
+    if (!isLoading && profiles.length === 0 && status === "CanLoadMore") {
+      loadMore(20);
+    }
+  }, [isLoading, profiles.length, status, loadMore]);
 
   const handleProfilePress = (profileId: string) => {
     router.push(`/(root)/(main)/profile/${profileId}`);
@@ -82,7 +93,7 @@ export default function ExploreScreen() {
   );
 
   const renderEmpty = () => {
-    if (isLoading) {
+    if (isLoading || status === "LoadingMore" || status === "CanLoadMore") {
       return renderSkeleton();
     }
 
@@ -144,6 +155,15 @@ export default function ExploreScreen() {
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={renderEmpty}
             ItemSeparatorComponent={() => <View className="h-4" />}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              status === "LoadingMore" ? (
+                <View className="py-6 items-center">
+                  <ActivityIndicator size="small" color={foregroundColor} />
+                </View>
+              ) : null
+            }
           />
         </ScrollShadow>
       </SafeAreaView>

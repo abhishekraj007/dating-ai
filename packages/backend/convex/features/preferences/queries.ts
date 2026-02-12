@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 import { query, mutation } from "../../_generated/server";
 import { authComponent } from "../../lib/betterAuth";
 import { r2 } from "../../uploads";
@@ -469,6 +470,244 @@ export const getExploreProfiles = query({
         };
       }),
     );
+  },
+});
+
+/**
+ * Paginated version of getExploreProfiles for infinite scroll.
+ * Uses Convex cursor-based pagination with post-fetch filtering.
+ */
+export const getExploreProfilesPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    platform: v.optional(
+      v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
+    ),
+    genderPreference: v.optional(
+      v.union(v.literal("female"), v.literal("male"), v.literal("both")),
+    ),
+    ageMin: v.optional(v.number()),
+    ageMax: v.optional(v.number()),
+    zodiacPreferences: v.optional(v.array(v.string())),
+    interestPreferences: v.optional(v.array(v.string())),
+  },
+  handler: async (
+    ctx,
+    {
+      paginationOpts,
+      platform,
+      genderPreference: overrideGender,
+      ageMin: overrideAgeMin,
+      ageMax: overrideAgeMax,
+      zodiacPreferences: overrideZodiac,
+      interestPreferences: overrideInterests,
+    },
+  ) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+
+    let genderPreference: "female" | "male" | "both" = "female";
+    let ageMin = 18;
+    let ageMax = 99;
+    let zodiacPreferences: string[] = [];
+    let interestPreferences: string[] = [];
+    let userId: string | null = null;
+
+    if (user) {
+      userId = user._id;
+      const preferences = await ctx.db
+        .query("userPreferences")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .unique();
+
+      if (preferences) {
+        genderPreference = preferences.genderPreference;
+        ageMin = preferences.ageMin;
+        ageMax = preferences.ageMax;
+        zodiacPreferences = preferences.zodiacPreferences;
+        interestPreferences = preferences.interestPreferences;
+      }
+    }
+
+    if (overrideGender) genderPreference = overrideGender;
+    if (overrideAgeMin !== undefined) ageMin = overrideAgeMin;
+    if (overrideAgeMax !== undefined) ageMax = overrideAgeMax;
+    if (overrideZodiac) zodiacPreferences = overrideZodiac;
+    if (overrideInterests) interestPreferences = overrideInterests;
+
+    const dbQuery =
+      genderPreference !== "both"
+        ? ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_and_gender", (q) =>
+              q.eq("status", "active").eq("gender", genderPreference),
+            )
+            .order("desc")
+        : ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_and_gender", (q) => q.eq("status", "active"))
+            .order("desc");
+
+    const result = await dbQuery.paginate(paginationOpts);
+
+    const filteredPage = result.page.filter((profile) => {
+      if (user && profile.createdByUserId === userId) return false;
+      if (profile.age && (profile.age < ageMin || profile.age > ageMax))
+        return false;
+      if (
+        platform &&
+        profile.visibleOn &&
+        profile.visibleOn.length > 0 &&
+        !profile.visibleOn.includes(platform)
+      )
+        return false;
+      if (zodiacPreferences.length > 0 && profile.zodiacSign) {
+        if (!zodiacPreferences.includes(profile.zodiacSign)) return false;
+      }
+      if (interestPreferences.length > 0 && profile.interests) {
+        if (
+          !profile.interests.some((interest) =>
+            interestPreferences.includes(interest),
+          )
+        )
+          return false;
+      }
+      return true;
+    });
+
+    const pageWithUrls = await Promise.all(
+      filteredPage.map(async (profile) => {
+        const avatarUrl =
+          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
+            ? await r2.getUrl(profile.avatarImageKey)
+            : null;
+        return { ...profile, avatarUrl };
+      }),
+    );
+
+    return {
+      ...result,
+      page: pageWithUrls,
+    };
+  },
+});
+
+/**
+ * Paginated version of getForYouProfiles for infinite scroll.
+ * Uses Convex cursor-based pagination with post-fetch filtering.
+ * Excludes profiles the user has already interacted with.
+ */
+export const getForYouProfilesPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    platform: v.optional(
+      v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
+    ),
+  },
+  handler: async (ctx, { paginationOpts, platform }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+
+    let genderPreference: "female" | "male" | "both" = "female";
+    let ageMin = 18;
+    let ageMax = 99;
+    let zodiacPreferences: string[] = [];
+    let interestPreferences: string[] = [];
+    let userId: string | null = null;
+
+    if (user) {
+      userId = user._id;
+
+      const preferences = await ctx.db
+        .query("userPreferences")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .unique();
+
+      genderPreference = preferences?.genderPreference ?? "female";
+      ageMin = preferences?.ageMin ?? 18;
+      ageMax = preferences?.ageMax ?? 99;
+      zodiacPreferences = preferences?.zodiacPreferences ?? [];
+      interestPreferences = preferences?.interestPreferences ?? [];
+
+    }
+
+    const dbQuery =
+      genderPreference !== "both"
+        ? ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_and_gender", (q) =>
+              q.eq("status", "active").eq("gender", genderPreference),
+            )
+            .order("desc")
+        : ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_and_gender", (q) => q.eq("status", "active"))
+            .order("desc");
+
+    const result = await dbQuery.paginate(paginationOpts);
+
+    const includeMask = await Promise.all(
+      result.page.map(async (profile) => {
+        if (user) {
+          if (profile.createdByUserId === userId) return false;
+
+          const [interaction, conversation] = await Promise.all([
+            ctx.db
+              .query("profileInteractions")
+              .withIndex("by_user_and_profile", (q) =>
+                q.eq("userId", user._id).eq("aiProfileId", profile._id),
+              )
+              .unique(),
+            ctx.db
+              .query("aiConversations")
+              .withIndex("by_user_and_profile", (q) =>
+                q.eq("userId", user._id).eq("aiProfileId", profile._id),
+              )
+              .unique(),
+          ]);
+
+          if (interaction || conversation) return false;
+        }
+
+        if (profile.age && (profile.age < ageMin || profile.age > ageMax))
+          return false;
+        if (
+          platform &&
+          profile.visibleOn &&
+          profile.visibleOn.length > 0 &&
+          !profile.visibleOn.includes(platform)
+        )
+          return false;
+        if (zodiacPreferences.length > 0 && profile.zodiacSign) {
+          if (!zodiacPreferences.includes(profile.zodiacSign)) return false;
+        }
+        if (interestPreferences.length > 0 && profile.interests) {
+          if (
+            !profile.interests.some((interest) =>
+              interestPreferences.includes(interest),
+            )
+          )
+            return false;
+        }
+
+        return true;
+      }),
+    );
+
+    const filteredPage = result.page.filter((_, index) => includeMask[index]);
+
+    const pageWithUrls = await Promise.all(
+      filteredPage.map(async (profile) => {
+        const avatarUrl =
+          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
+            ? await r2.getUrl(profile.avatarImageKey)
+            : null;
+        return { ...profile, avatarUrl };
+      }),
+    );
+
+    return {
+      ...result,
+      page: pageWithUrls,
+    };
   },
 });
 

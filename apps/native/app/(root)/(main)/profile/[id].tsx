@@ -47,8 +47,6 @@ export default function ProfileDetailScreen() {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [hasImageError, setHasImageError] = useState(false);
 
-  console.log(profile);
-
   const handleImageLoad = useCallback(() => {
     setIsImageLoaded(true);
   }, []);
@@ -90,38 +88,103 @@ export default function ProfileDetailScreen() {
     return (
       <View style={{ flex: 1 }} className="bg-background">
         <StatusBar barStyle="light-content" />
-        {/* Header buttons - absolute positioned */}
+
+        {/* Back button */}
         <View
           style={{
             position: "absolute",
-            top: 16,
-            left: 0,
-            right: 0,
+            top: insets.top + 16,
+            left: 16,
             zIndex: 10,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            paddingHorizontal: 16,
           }}
         >
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
             isIconOnly
-            className="rounded-full"
-            style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
             onPress={() => router.back()}
+            className="rounded-full"
           >
-            <X color="#fff" />
+            <X size={20} color="#fff" />
           </Button>
         </View>
-        <View className="px-4" style={{ paddingTop: insets.top }}>
-          <Skeleton
-            style={{ width: "100%", height: heroImageHeight }}
-            className="rounded-none mb-4"
-          />
-          <Skeleton className="h-8 w-32 rounded-lg mb-2" />
-          <Skeleton className="h-4 w-full rounded-lg mb-4" />
-          <Skeleton className="h-20 w-full rounded-lg" />
+
+        <ScrollView
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1 }}
+        >
+          {/* Hero image skeleton */}
+          <View style={{ width: screenWidth, height: heroImageHeight }}>
+            <Skeleton
+              style={{ width: "100%", height: "100%" }}
+              className="rounded-none"
+            />
+            {/* Name & age overlay */}
+            <View
+              style={{
+                position: "absolute",
+                left: 16,
+                bottom: 16,
+                gap: 6,
+              }}
+            >
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+              >
+                <Skeleton className="h-7 w-32 rounded-lg" />
+                <Skeleton className="h-6 w-14 rounded-lg" />
+              </View>
+              <Skeleton className="h-4 w-44 rounded-lg" />
+            </View>
+          </View>
+
+          {/* About me */}
+          <View className="px-4 mt-6">
+            <Skeleton className="h-4 w-24 rounded-lg mb-2" />
+            <Skeleton className="h-4 w-full rounded-lg mb-1.5" />
+            <Skeleton className="h-4 w-full rounded-lg mb-1.5" />
+            <Skeleton className="h-4 w-3/4 rounded-lg" />
+          </View>
+
+          {/* Looking for */}
+          <View className="px-4 mt-6">
+            <Skeleton className="h-4 w-28 rounded-lg mb-2" />
+            <Skeleton className="h-4 w-full rounded-lg mb-1.5" />
+            <Skeleton className="h-4 w-2/3 rounded-lg" />
+          </View>
+
+          {/* Personality chips */}
+          <View className="px-4 mt-6">
+            <Skeleton className="h-4 w-28 rounded-lg mb-2" />
+            <View className="flex-row flex-wrap gap-2">
+              <Skeleton className="h-7 w-20 rounded-full" />
+              <Skeleton className="h-7 w-24 rounded-full" />
+              <Skeleton className="h-7 w-16 rounded-full" />
+              <Skeleton className="h-7 w-28 rounded-full" />
+            </View>
+          </View>
+
+          {/* Interest chips */}
+          <View className="px-4 mt-6">
+            <Skeleton className="h-4 w-24 rounded-lg mb-2" />
+            <View className="flex-row flex-wrap gap-2">
+              <Skeleton className="h-7 w-36 rounded-full" />
+              <Skeleton className="h-7 w-40 rounded-full" />
+              <Skeleton className="h-7 w-20 rounded-full" />
+            </View>
+          </View>
+
+          <View className="h-24" />
+        </ScrollView>
+
+        {/* Chat button skeleton */}
+        <View
+          className="absolute left-0 right-0 px-4 pb-4 pt-2"
+          style={{ bottom: insets.bottom }}
+        >
+          <Skeleton className="h-12 w-full rounded-xl" />
         </View>
       </View>
     );

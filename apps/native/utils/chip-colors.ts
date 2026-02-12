@@ -4,6 +4,8 @@ export interface ChipTone {
   textColor: string;
 }
 
+export type ChipToneVariant = "solid" | "transparent";
+
 interface ChipToneBase {
   backgroundColor: string;
   borderBaseColor: string;
@@ -55,14 +57,26 @@ function withAlpha(hex: string, opacity: number): string {
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
 }
 
-export function getChipTone(seed: string | number): ChipTone {
+export function getChipTone(
+  seed: string | number,
+  toneVariant: ChipToneVariant = "solid",
+): ChipTone {
   const normalizedSeed =
     typeof seed === "number" ? seed.toString() : seed.trim().toLowerCase();
   const paletteIndex = hashSeed(normalizedSeed) % CHIP_TONES.length;
   const tone = CHIP_TONES[paletteIndex];
+  const backgroundColor =
+    toneVariant === "transparent"
+      ? withAlpha(tone.backgroundColor, 0.55)
+      : tone.backgroundColor;
+  const borderColor =
+    toneVariant === "transparent"
+      ? withAlpha(tone.borderBaseColor, 0.2)
+      : withAlpha(tone.borderBaseColor, 0.35);
+
   return {
-    backgroundColor: tone.backgroundColor,
-    borderColor: withAlpha(tone.borderBaseColor, 0.35),
+    backgroundColor,
+    borderColor,
     textColor: tone.textColor,
   };
 }

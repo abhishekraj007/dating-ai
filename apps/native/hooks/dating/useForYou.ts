@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useConvexAuth } from "convex/react";
+import { usePaginatedQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend";
 import type { Id } from "@dating-ai/backend";
 
@@ -40,20 +41,23 @@ function getCurrentPlatform(): AppPlatform {
 
 /**
  * Hook to get profiles for the For You feed.
+ * Uses paginated query for infinite loading.
  */
-export function useForYouProfiles(limit?: number) {
+export function useForYouProfiles(initialNumItems: number = 20) {
   const platform = getCurrentPlatform();
-  const profiles = useQuery(
-    api.features.preferences.queries.getForYouProfiles,
+  const { results, status, loadMore, isLoading } = usePaginatedQuery(
+    api.features.preferences.queries.getForYouProfilesPaginated,
     {
-      limit,
       platform,
     },
+    { initialNumItems },
   );
 
   return {
-    profiles: profiles ?? [],
-    isLoading: profiles === undefined,
+    profiles: results ?? [],
+    isLoading,
+    status,
+    loadMore,
   };
 }
 

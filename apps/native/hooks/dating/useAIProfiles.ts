@@ -1,4 +1,4 @@
-import { useQuery } from "convex-helpers/react/cache";
+import { useQuery, usePaginatedQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend";
 import { useUserPreferences } from "./useForYou";
 
@@ -46,8 +46,9 @@ export function useAIProfiles(
 
 /**
  * Hook to get profiles for the Explore screen with user preference filtering.
+ * Uses paginated query for infinite scroll.
  */
-export function useExploreProfiles(limit?: number) {
+export function useExploreProfiles(initialNumItems: number = 20) {
   const { preferences } = useUserPreferences();
   const platform = getCurrentPlatform();
 
@@ -62,18 +63,20 @@ export function useExploreProfiles(limit?: number) {
       }
     : {};
 
-  const profiles = useQuery(
-    api.features.preferences.queries.getExploreProfiles,
+  const { results, status, loadMore, isLoading } = usePaginatedQuery(
+    api.features.preferences.queries.getExploreProfilesPaginated,
     {
-      limit,
       platform,
       ...filterArgs,
     },
+    { initialNumItems },
   );
 
   return {
-    profiles: profiles ?? [],
-    isLoading: profiles === undefined,
+    profiles: results ?? [],
+    isLoading,
+    status,
+    loadMore,
   };
 }
 

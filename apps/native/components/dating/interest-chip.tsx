@@ -1,5 +1,5 @@
 import { Chip } from "heroui-native";
-import { getChipTone } from "@/utils";
+import { getChipTone, type ChipToneVariant } from "@/utils";
 
 // Map interest names to emojis (fallback)
 const interestEmojis: Record<string, string> = {
@@ -20,16 +20,18 @@ interface InterestChipProps {
   showIcon?: boolean;
   onRemove?: () => void;
   colorSeed?: string | number;
+  toneVariant?: ChipToneVariant;
 }
 
 export const InterestChip = ({
   interest,
   showIcon = true,
   colorSeed,
+  toneVariant = "solid",
 }: InterestChipProps) => {
   const normalizedInterest = interest.toLowerCase();
   const emoji = interestEmojis[normalizedInterest] || "";
-  const tone = getChipTone(colorSeed ?? normalizedInterest);
+  const tone = getChipTone(colorSeed ?? normalizedInterest, toneVariant);
 
   return (
     <Chip

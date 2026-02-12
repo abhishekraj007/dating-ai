@@ -9,7 +9,7 @@ import { Text } from "@/components/ui/text";
 import { useRouter } from "expo-router";
 import { Skeleton } from "heroui-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { X, Heart } from "lucide-react-native";
 import Animated, {
   useSharedValue,
@@ -33,14 +33,29 @@ export default function ForYouScreen() {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
 
-  const { profiles, isLoading } = useForYouProfiles(20);
+  const { profiles, isLoading, status, loadMore } = useForYouProfiles(20);
   const { likeProfile, skipProfile, isAuthenticated } = useProfileInteraction();
   const [loadingChatting, setLoadingChatting] = useState(false);
   const { startConversation } = useStartConversation();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const lastPrefetchAtMs = useRef(0);
 
   const currentProfile = profiles[currentIndex];
   const nextProfile = profiles[currentIndex + 1];
+
+  // Prefetch more profiles when nearing the end of loaded batch
+  useEffect(() => {
+    const remaining = profiles.length - currentIndex;
+    const now = Date.now();
+    if (
+      remaining <= 5 &&
+      status === "CanLoadMore" &&
+      now - lastPrefetchAtMs.current > 600
+    ) {
+      lastPrefetchAtMs.current = now;
+      loadMore(20);
+    }
+  }, [currentIndex, profiles.length, status, loadMore]);
 
   // Track drag position for button animations
   const dragX = useSharedValue(0);
@@ -186,10 +201,32 @@ export default function ForYouScreen() {
           </View>
         ) : currentIndex >= profiles.length ? (
           <View className="flex-1 items-center justify-center px-6">
-            <Text className="text-xl font-semibold mb-2">No more profiles</Text>
-            <Text className="text-center text-muted">
-              You've seen all available profiles. Check back later for more!
-            </Text>
+            {status === "CanLoadMore" || status === "LoadingMore" ? (
+              <View className="flex-1 items-center justify-center w-full">
+                <View
+                  className="w-full relative bg-background overflow-hidden"
+                  style={{ height: cardHeight }}
+                >
+                  <Skeleton className="w-full h-full" />
+                  <View className="absolute bottom-28 left-0 right-0 p-6 z-10">
+                    <Skeleton className="h-8 w-3/4 rounded-lg mb-3" />
+                    <View className="flex-row gap-2">
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </View>
+                  </View>
+                </View>
+              </View>
+            ) : (
+              <>
+                <Text className="text-xl font-semibold mb-2">
+                  No more profiles
+                </Text>
+                <Text className="text-center text-muted">
+                  You've seen all available profiles. Check back later for more!
+                </Text>
+              </>
+            )}
           </View>
         ) : (
           <>
