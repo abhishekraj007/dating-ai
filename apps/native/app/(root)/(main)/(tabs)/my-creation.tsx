@@ -7,12 +7,14 @@ import { Plus } from "lucide-react-native";
 import { Header } from "@/components";
 import { ProfileCard, GenderTabs } from "@/components/dating";
 import { useUserCreatedProfiles, useStartConversation } from "@/hooks/dating";
+import { useTranslation } from "@/hooks/use-translation";
 
 const { width: screenWidth } = Dimensions.get("window");
 const cardWidth = (screenWidth - 48) / 2;
 
 export default function MyCreationScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [gender, setGender] = useState<"female" | "male">("female");
   const { profiles, isLoading } = useUserCreatedProfiles(gender);
   const { startConversation } = useStartConversation();
@@ -71,7 +73,7 @@ export default function MyCreationScreen() {
   return (
     <View className="flex-1 bg-background">
       <SafeAreaView className="flex-1" edges={["top"]}>
-        <Header title="My Creation" showSearch />
+        <Header title={t("tabs.myCreation")} showSearch />
 
         {/* Gender tabs with counts */}
         <View className="px-4 py-3">
@@ -90,14 +92,14 @@ export default function MyCreationScreen() {
         ) : profiles.length === 0 ? (
           <View className="flex-1 items-center justify-center px-6">
             <Text className="text-foreground text-xl font-semibold mb-2">
-              No Characters Yet
+              {t("myCreation.emptyTitle")}
             </Text>
             <Text className="text-muted text-center mb-4">
-              Create your first {gender} AI character and start chatting!
+              {t("myCreation.emptyDescription", { gender })}
             </Text>
             <Button onPress={handleCreatePress}>
               <Plus size={20} color="white" />
-              <Button.Label>Create Character</Button.Label>
+              <Button.Label>{t("myCreation.createCharacter")}</Button.Label>
             </Button>
           </View>
         ) : (

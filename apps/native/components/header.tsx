@@ -7,6 +7,7 @@ import { useQuery } from "convex-helpers/react/cache";
 import { usePurchases } from "@/contexts/purchases-context";
 import { api } from "@dating-ai/backend";
 import { AppLogo } from "./app-logo";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface HeaderProps {
   title?: string;
@@ -27,6 +28,7 @@ export const Header = ({
   hideCredits = false,
   hidePaywall = false,
 }: HeaderProps) => {
+  const { t } = useTranslation();
   const foregroundColor = useThemeColor("foreground");
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
@@ -109,7 +111,9 @@ export const Header = ({
               router.push("/(root)/(auth)");
             }}
           >
-            <Text className="text-foreground font-medium">Sign In</Text>
+            <Text className="text-foreground font-medium">
+              {t("common.signIn")}
+            </Text>
           </Button>
         )}
       </View>

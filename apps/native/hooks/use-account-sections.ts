@@ -222,15 +222,14 @@ export const useAccountSections = ({
           onPress: () =>
             openExternal(
               helpCenterUrl,
-              "Help Center URL is not configured yet.",
+              t("account.helpCenterMissing"),
             ),
         },
         {
           id: "contact-support",
           title: t("account.item.contactSupport"),
           icon: LifeBuoy,
-          onPress: () =>
-            openExternal(supportUrl, "Support URL is not configured yet."),
+          onPress: () => openExternal(supportUrl, t("account.supportMissing")),
         },
         // {
         //   id: "report-bug",
@@ -252,15 +251,14 @@ export const useAccountSections = ({
           id: "terms",
           title: t("account.item.terms"),
           icon: FileText,
-          onPress: () =>
-            openExternal(termsUrl, "Terms URL is not configured yet."),
+          onPress: () => openExternal(termsUrl, t("account.termsMissing")),
         },
         {
           id: "privacy",
           title: t("account.item.privacy"),
           icon: FileCheck,
           onPress: () =>
-            openExternal(privacyUrl, "Privacy URL is not configured yet."),
+            openExternal(privacyUrl, t("account.privacyMissing")),
         },
       ],
     },

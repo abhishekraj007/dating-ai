@@ -13,51 +13,13 @@ import { formatDistanceToNow } from "date-fns";
 import { useThemeColor } from "heroui-native";
 import type { Id } from "@dating-ai/backend";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "@/hooks/use-translation";
 
 type TabValue = "chats" | "calls";
 
-/**
- * Format the last message content for display in the chat list.
- * Handles special message types like image_response, quiz, etc.
- */
-function formatLastMessage(content: string | null | undefined): {
-  text: string;
-  isImage: boolean;
-} {
-  if (!content) {
-    return { text: "Start a conversation", isImage: false };
-  }
-
-  // Try to parse as JSON to detect special message types
-  try {
-    const parsed = JSON.parse(content);
-
-    if (parsed.type === "image_response") {
-      return { text: "Sent a photo", isImage: true };
-    }
-    if (parsed.type === "image_request") {
-      return { text: "Requested a photo", isImage: true };
-    }
-    if (parsed.type === "quiz_question" || parsed.type === "quiz_start") {
-      return { text: "Started a quiz", isImage: false };
-    }
-    if (parsed.type === "quiz_end") {
-      return { text: "Quiz completed", isImage: false };
-    }
-    if (parsed.type === "quiz_answer_result") {
-      return { text: "Quiz answer", isImage: false };
-    }
-
-    // Unknown structured type, show generic message
-    return { text: content, isImage: false };
-  } catch {
-    // Not JSON, return as plain text
-    return { text: content, isImage: false };
-  }
-}
-
 export default function ChatsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabValue>("chats");
   const { conversations, isLoading } = useConversations();
   const { profiles: likedProfiles, isLoading: isLoadingLikes } =
@@ -88,13 +50,43 @@ export default function ChatsScreen() {
     }
   };
 
+  const formatLastMessage = (content: string | null | undefined) => {
+    if (!content) {
+      return { text: t("chats.startConversation"), isImage: false };
+    }
+
+    try {
+      const parsed = JSON.parse(content);
+
+      if (parsed.type === "image_response") {
+        return { text: t("chats.sentPhoto"), isImage: true };
+      }
+      if (parsed.type === "image_request") {
+        return { text: t("chats.requestedPhoto"), isImage: true };
+      }
+      if (parsed.type === "quiz_question" || parsed.type === "quiz_start") {
+        return { text: t("chats.startedQuiz"), isImage: false };
+      }
+      if (parsed.type === "quiz_end") {
+        return { text: t("chats.quizCompleted"), isImage: false };
+      }
+      if (parsed.type === "quiz_answer_result") {
+        return { text: t("chats.quizAnswer"), isImage: false };
+      }
+
+      return { text: content, isImage: false };
+    } catch {
+      return { text: content, isImage: false };
+    }
+  };
+
   const renderNewMatches = () => {
     if (newMatches.length === 0) return null;
 
     return (
       <View className="mb-4">
         <Text className="text-foreground text-lg font-bold px-4 mb-3">
-          New Matches
+          {t("chats.newMatches")}
         </Text>
         <ScrollView
           horizontal
@@ -189,7 +181,7 @@ export default function ChatsScreen() {
         minute: "2-digit",
       });
     } else if (diffDays === 1) {
-      return "Yesterday";
+      return t("common.yesterday");
     } else if (diffDays < 7) {
       return formatDistanceToNow(date, { addSuffix: false });
     } else {
@@ -220,7 +212,7 @@ export default function ChatsScreen() {
         <View className="flex-1 ml-3">
           <View className="flex-row items-center gap-2">
             <Text className="text-foreground font-semibold">
-              {item.profile?.name ?? "AI Profile"}
+              {item.profile?.name ?? t("chats.aiProfile")}
             </Text>
             {/* Hide level badge */}
             {/* <LevelBadge level={item.relationshipLevel} size="sm" /> */}
@@ -266,7 +258,7 @@ export default function ChatsScreen() {
         }}
         edges={["top"]}
       >
-        <Header title="Chats" showSettings={false} />
+        <Header title={t("tabs.chats")} showSettings={false} />
         <ScrollShadow
           size={20}
           LinearGradientComponent={LinearGradient}
@@ -277,10 +269,10 @@ export default function ChatsScreen() {
           ) : conversations.length === 0 && newMatches.length === 0 ? (
             <View className="flex-1 items-center justify-center px-6">
               <Text className="text-foreground text-xl font-semibold mb-2">
-                No Conversations Yet
+                {t("chats.emptyTitle")}
               </Text>
               <Text className="text-muted text-center">
-                Start chatting with AI profiles from the Explore tab!
+                {t("chats.emptyDescription")}
               </Text>
             </View>
           ) : (

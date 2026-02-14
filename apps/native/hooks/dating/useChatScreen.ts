@@ -13,8 +13,10 @@ import { useRequestChatImage } from "./useImageRequest";
 import type { ImageRequestOptions } from "./useImageRequest";
 import { useChatScroll } from "./useChatScroll";
 import { useCredits, CREDIT_COSTS } from "./useCredits";
+import { useTranslation } from "@/hooks/use-translation";
 
 export function useChatScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [message, setMessage] = useState("");
@@ -349,12 +351,12 @@ export function useChatScreen() {
   const handleClearChat = useCallback(() => {
     popoverRef.current?.close();
     Alert.alert(
-      "Clear Chat",
-      `Are you sure you want to delete all messages and images with ${profile?.name ?? "this AI"}? This action cannot be undone.`,
+      t("chat.clearTitle"),
+      t("chat.clearBody", { name: profile?.name ?? t("chat.thisAi") }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("alerts.cancel"), style: "cancel" },
         {
-          text: "Clear",
+          text: t("chat.clear"),
           style: "destructive",
           onPress: async () => {
             if (!id) return;
@@ -363,7 +365,7 @@ export function useChatScreen() {
               await clearChat(id, threadId);
             } catch (error) {
               console.error("Failed to clear chat:", error);
-              Alert.alert("Error", "Failed to clear chat. Please try again.");
+              Alert.alert(t("alerts.error"), t("chat.clearFailed"));
             } finally {
               setIsClearing(false);
             }
@@ -371,7 +373,7 @@ export function useChatScreen() {
         },
       ],
     );
-  }, [id, threadId, profile?.name, clearChat]);
+  }, [id, threadId, profile?.name, clearChat, t]);
 
   // Determine which quiz question should be interactive
   const interactiveQuizQuestionId = useMemo(() => {

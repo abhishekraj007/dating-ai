@@ -2,6 +2,7 @@ import { useAppTheme } from "@/contexts/app-theme-context";
 import { BottomSheet, Button, Separator, useThemeColor } from "heroui-native";
 import { Moon, Sun } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
+import { useTranslation } from "@/hooks/use-translation";
 
 type ThemeOption = {
   id: string;
@@ -67,6 +68,7 @@ export const AccountAppearanceSheet = ({
   isOpen,
   onOpenChange,
 }: AccountAppearanceSheetProps) => {
+  const { t } = useTranslation();
   const { currentTheme, toggleTheme, isLight, setTheme } = useAppTheme();
 
   const getCurrentThemeId = () => {
@@ -89,7 +91,9 @@ export const AccountAppearanceSheet = ({
         <BottomSheet.Content snapPoints={["72%"]}>
           <View className="gap-4 py-4">
             <View className="gap-2">
-              <Text className="text-sm font-medium text-muted">Theme</Text>
+              <Text className="text-sm font-medium text-muted">
+                {t("appearance.theme")}
+              </Text>
               <Button
                 variant="primary"
                 onPress={() => {
@@ -102,13 +106,15 @@ export const AccountAppearanceSheet = ({
                   <Moon size={18} color="white" />
                 )}
                 <Text className="text-white font-medium">
-                  {isLight ? "Light" : "Dark"}
+                  {isLight ? t("appearance.light") : t("appearance.dark")}
                 </Text>
               </Button>
             </View>
 
             <View className="gap-2">
-              <Text className="text-sm font-medium text-muted">Color</Text>
+              <Text className="text-sm font-medium text-muted">
+                {t("appearance.color")}
+              </Text>
               <View className="px-12 py-4 bg-overlay flex-row justify-between gap-3">
                 {availableThemes.map((theme) => (
                   <ThemeOptionButton

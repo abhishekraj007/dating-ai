@@ -1,5 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { api, useConvexAuth, useMutation, useQuery } from "@dating-ai/backend";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   DEFAULT_LANGUAGE,
   SUPPORTED_LANGUAGES,
@@ -36,23 +44,41 @@ const interpolate = (template: string, values?: TranslationValues) => {
 };
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated } = useConvexAuth();
   const [language, setLanguageState] = useState<AppLanguage>(DEFAULT_LANGUAGE);
   const [isLanguageLoaded, setIsLanguageLoaded] = useState(false);
+  const hasSyncedSessionRef = useRef(false);
+  const remoteLanguage = useQuery(
+    (api as any).features.preferences.queries.getUserAppLanguage,
+    isAuthenticated ? {} : "skip",
+  ) as AppLanguage | null | undefined;
+  const setRemoteLanguage = useMutation(
+    (api as any).features.preferences.queries.setUserAppLanguage,
+  );
+
+  const isSupportedLanguage = (candidate: string | null): candidate is AppLanguage =>
+    !!candidate && SUPPORTED_LANGUAGES.some((item) => item.code === candidate);
 
   useEffect(() => {
     const loadLanguage = async () => {
       try {
         const savedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
-        const isSupported = SUPPORTED_LANGUAGES.some(
-          (item) => item.code === savedLanguage,
-        );
-
-        if (savedLanguage && isSupported) {
-          setLanguageState(savedLanguage as AppLanguage);
-        } else {
-          await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, DEFAULT_LANGUAGE);
-          setLanguageState(DEFAULT_LANGUAGE);
+        if (isSupportedLanguage(savedLanguage)) {
+          setLanguageState(savedLanguage);
+          return;
         }
+
+        // Locale fallback for first run (before any manual selection)
+        const detected = Intl.DateTimeFormat()
+          .resolvedOptions()
+          .locale.split("-")[0]
+          .toLowerCase();
+        const localeLanguage = isSupportedLanguage(detected)
+          ? detected
+          : DEFAULT_LANGUAGE;
+
+        await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, localeLanguage);
+        setLanguageState(localeLanguage);
       } catch (error) {
         console.log("Error loading language preference:", error);
         setLanguageState(DEFAULT_LANGUAGE);
@@ -64,10 +90,43 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     void loadLanguage();
   }, []);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      hasSyncedSessionRef.current = false;
+      return;
+    }
+
+    if (!isLanguageLoaded || remoteLanguage === undefined || hasSyncedSessionRef.current) {
+      return;
+    }
+
+    const syncLanguage = async () => {
+      // If user has a saved language in DB, that takes priority
+      if (remoteLanguage && remoteLanguage !== language) {
+        setLanguageState(remoteLanguage);
+        await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, remoteLanguage);
+        hasSyncedSessionRef.current = true;
+        return;
+      }
+
+      // If DB does not have language yet, persist current app language
+      if (!remoteLanguage) {
+        await setRemoteLanguage({ appLanguage: language });
+      }
+
+      hasSyncedSessionRef.current = true;
+    };
+
+    void syncLanguage();
+  }, [isAuthenticated, isLanguageLoaded, language, remoteLanguage, setRemoteLanguage]);
+
   const setLanguage = async (nextLanguage: AppLanguage) => {
     setLanguageState(nextLanguage);
     try {
       await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
+      if (isAuthenticated) {
+        await setRemoteLanguage({ appLanguage: nextLanguage });
+      }
     } catch (error) {
       console.log("Error saving language preference:", error);
     }
@@ -76,8 +135,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   const value = useMemo(() => {
     const t = (key: string, values?: TranslationValues) => {
       const selectedLanguageMap = TRANSLATIONS[language] ?? {};
-      const englishMap = TRANSLATIONS[DEFAULT_LANGUAGE];
-      const template = selectedLanguageMap[key] ?? englishMap[key] ?? key;
+      const template = selectedLanguageMap[key] ?? key;
       return interpolate(template, values);
     };
 

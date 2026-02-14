@@ -3,6 +3,7 @@ import { Avatar, useThemeColor } from "heroui-native";
 import Markdown from "react-native-markdown-display";
 import { useMarkdownStyles } from "./useMarkdownStyles";
 import type { AIBubbleProps } from "./message-types";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface Props extends AIBubbleProps {
   message?: string;
@@ -17,6 +18,7 @@ export function QuizStartBubble({
   profileName,
   time,
 }: Props) {
+  const { t } = useTranslation();
   const markdownStyles = useMarkdownStyles();
   const borderColor = useThemeColor("muted");
 
@@ -28,7 +30,7 @@ export function QuizStartBubble({
           className="flex-1 h-px"
           style={{ backgroundColor: borderColor, opacity: 0.3 }}
         />
-        <Text className="text-muted text-sm">Quiz started</Text>
+        <Text className="text-muted text-sm">{t("quiz.started")}</Text>
         <View
           className="flex-1 h-px"
           style={{ backgroundColor: borderColor, opacity: 0.3 }}
@@ -47,7 +49,7 @@ export function QuizStartBubble({
         <View className="max-w-[75%]">
           <View className="bg-surface rounded-2xl rounded-tl-sm px-4 py-3">
             <Markdown style={markdownStyles}>
-              {message || "Let's play a quiz!"}
+              {message || t("quiz.letsPlay")}
             </Markdown>
           </View>
           <Text className="text-muted text-xs mt-1">{time}</Text>

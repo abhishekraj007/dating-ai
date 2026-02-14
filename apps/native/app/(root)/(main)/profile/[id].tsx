@@ -26,12 +26,14 @@ import { Text } from "@/components";
 import { LinearGradient } from "expo-linear-gradient";
 import { useConvexAuth } from "convex/react";
 import { getChipTone, isAndroid } from "@/utils";
+import { useTranslation } from "@/hooks/use-translation";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const photoWidth = (screenWidth - 48) / 2;
 const heroImageHeight = screenHeight * 0.45;
 
 export default function ProfileDetailScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -203,10 +205,10 @@ export default function ProfileDetailScreen() {
           }}
         >
           <Text className="text-foreground text-xl font-semibold">
-            Profile not found
+            {t("profile.notFound")}
           </Text>
           <Button className="mt-4" onPress={() => router.back()}>
-            <Button.Label>Go Back</Button.Label>
+            <Button.Label>{t("common.goBack")}</Button.Label>
           </Button>
         </View>
       </View>
@@ -359,7 +361,7 @@ export default function ProfileDetailScreen() {
         {profile.bio && (
           <View className="px-4 mt-6">
             <Text variant="semi-muted" className="font-semibold mb-2">
-              About me
+              {t("profile.aboutMe")}
             </Text>
             <Text variant="muted" className="leading-6">
               {profile.bio}
@@ -371,7 +373,7 @@ export default function ProfileDetailScreen() {
         {profile.relationshipGoal && (
           <View className="px-4 mt-6">
             <Text variant="semi-muted" className="font-semibold mb-2">
-              Looking for
+              {t("profile.lookingFor")}
             </Text>
             <Text variant="muted" className="leading-6">
               {profile.relationshipGoal}
@@ -383,7 +385,7 @@ export default function ProfileDetailScreen() {
         {profile.personalityTraits && profile.personalityTraits.length > 0 && (
           <View className="px-4 mt-6">
             <Text variant="semi-muted" className="font-semibold mb-2">
-              Personality
+              {t("profile.personality")}
             </Text>
             <View className="flex-row flex-wrap gap-2">
               {profile.personalityTraits.map((trait, index) => {
@@ -415,7 +417,7 @@ export default function ProfileDetailScreen() {
         {profile.interests && profile.interests.length > 0 && (
           <View className="px-4 mt-6">
             <Text variant="semi-muted" className="font-semibold mb-2">
-              Interests
+              {t("profile.interests")}
             </Text>
             <View className="flex-row flex-wrap gap-2">
               {profile.interests.map((interest, index) => (
@@ -433,7 +435,7 @@ export default function ProfileDetailScreen() {
         {profile.profileImageUrls && profile.profileImageUrls.length > 0 && (
           <View className="px-4 mt-6">
             <Text variant="semi-muted" className="font-semibold mb-2">
-              Photos
+              {t("profile.photos")}
             </Text>
             <View className="flex-row flex-wrap gap-2">
               {profile.profileImageUrls.map((url, index) =>
@@ -470,7 +472,7 @@ export default function ProfileDetailScreen() {
         {conversation && (
           <View className="px-4 mt-6 items-center">
             <Text className="text-foreground font-semibold mb-2">
-              Compatibility
+              {t("profile.compatibility")}
             </Text>
             <CompatibilityIndicator
               score={conversation.compatibilityScore}
@@ -488,7 +490,9 @@ export default function ProfileDetailScreen() {
         style={{ bottom: insets.bottom }}
       >
         <Button onPress={handleChat} isDisabled={isStartingChat}>
-          <Button.Label>{isStartingChat ? "Starting..." : "Chat"}</Button.Label>
+          <Button.Label>
+            {isStartingChat ? t("common.starting") : t("common.chat")}
+          </Button.Label>
         </Button>
       </View>
     </View>

@@ -47,10 +47,12 @@ import {
 } from "@/components/dating";
 import { useChatScreen } from "@/hooks/dating";
 import { useThemeColor } from "heroui-native";
+import { useTranslation } from "@/hooks/use-translation";
 
 const BOTTOM_SHADOW_SIZE = 240;
 
 export default function ChatScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const foregroundColor = useThemeColor("foreground");
   const mutedColor = useThemeColor("muted");
@@ -330,10 +332,10 @@ export default function ChatScreen() {
                   }}
                 >
                   <Text className="text-foreground text-lg font-semibold mb-2">
-                    Conversation not found
+                    {t("chat.conversationNotFound")}
                   </Text>
                   <Button className="mt-4" onPress={() => router.back()}>
-                    <Button.Label>Go Back</Button.Label>
+                    <Button.Label>{t("common.goBack")}</Button.Label>
                   </Button>
                 </View>
               ) : (
@@ -344,10 +346,12 @@ export default function ChatScreen() {
                   }}
                 >
                   <Text className="text-foreground text-lg font-semibold mb-2">
-                    Start a conversation
+                    {t("chat.startConversation")}
                   </Text>
                   <Text className="text-muted text-center">
-                    Say hello to {profile?.name ?? "your AI companion"}!
+                    {t("chat.sayHello", {
+                      name: profile?.name ?? t("chat.aiCompanion"),
+                    })}
                   </Text>
                 </View>
               )
@@ -385,7 +389,7 @@ export default function ChatScreen() {
               ) : (
                 <Camera size={16} color={foregroundColor} />
               )}
-              <Button.Label>Selfie</Button.Label>
+              <Button.Label>{t("chat.selfie")}</Button.Label>
             </Button>
             <Button
               variant="secondary"
@@ -394,7 +398,7 @@ export default function ChatScreen() {
               isDisabled={isSending}
             >
               <HelpCircle size={16} color={foregroundColor} />
-              <Button.Label>Quiz</Button.Label>
+              <Button.Label>{t("chat.quiz")}</Button.Label>
             </Button>
             <Button
               variant="secondary"
@@ -403,7 +407,7 @@ export default function ChatScreen() {
               isDisabled={isSending}
             >
               <MessageSquare size={16} color={foregroundColor} />
-              <Button.Label>Topic</Button.Label>
+              <Button.Label>{t("chat.topic")}</Button.Label>
             </Button>
             <Button
               variant="secondary"
@@ -412,7 +416,7 @@ export default function ChatScreen() {
               isDisabled={isSending}
             >
               <Lightbulb size={16} color={foregroundColor} />
-              <Button.Label>Suggestion</Button.Label>
+              <Button.Label>{t("chat.suggestion")}</Button.Label>
             </Button>
           </ScrollView>
           <View style={styles.composerRow}>
@@ -430,7 +434,7 @@ export default function ChatScreen() {
               ]}
             >
               <KeyboardComposer
-                placeholder="Type a message..."
+                placeholder={t("chat.typeMessage")}
                 onSend={handleSend}
                 onChangeText={setMessage}
                 onHeightChange={setComposerHeight}

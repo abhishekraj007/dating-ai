@@ -6,6 +6,7 @@ import { CustomBottomSheet } from "@/components/bottom-sheet";
 import { Camera, Sparkles } from "lucide-react-native";
 import type BottomSheet from "@gorhom/bottom-sheet";
 import { forwardRef } from "react";
+import { useTranslation } from "@/hooks/use-translation";
 
 // Style options matching the backend
 const HAIRSTYLE_OPTIONS = [
@@ -65,6 +66,7 @@ interface ImageRequestSheetProps {
 
 export const ImageRequestSheet = forwardRef<BottomSheet, ImageRequestSheetProps>(
   ({ isOpen, onClose, onSubmit, isLoading = false, credits = 0 }, ref) => {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState("hairstyle");
     const [selectedHairstyle, setSelectedHairstyle] = useState<string | null>(null);
     const [selectedClothing, setSelectedClothing] = useState<string | null>(null);
@@ -120,18 +122,20 @@ export const ImageRequestSheet = forwardRef<BottomSheet, ImageRequestSheetProps>
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-row items-center gap-2">
               <Camera size={24} color={accentColor} />
-              <Text size="xl" weight="semibold">Request Photo</Text>
+              <Text size="xl" weight="semibold">
+                {t("imageRequest.title")}
+              </Text>
             </View>
             <View className="flex-row items-center gap-1 bg-surface-secondary px-3 py-1.5 rounded-full">
               <Sparkles size={14} color={accentColor} />
               <Text size="sm" variant="accent">
-                5 credits
+                {t("imageRequest.credits", { count: 5 })}
               </Text>
             </View>
           </View>
 
           <Text size="sm" variant="muted" className="mb-4">
-            Customize the photo you want to receive. Each selection is optional.
+            {t("imageRequest.subtitle")}
           </Text>
 
           {/* Tabs */}
@@ -140,19 +144,19 @@ export const ImageRequestSheet = forwardRef<BottomSheet, ImageRequestSheetProps>
               <Tabs.ScrollView contentContainerClassName="gap-2">
                 <Tabs.Indicator />
                 <Tabs.Trigger value="hairstyle">
-                  <Tabs.Label>Hairstyle</Tabs.Label>
+                  <Tabs.Label>{t("imageRequest.hairstyle")}</Tabs.Label>
                   {selectedHairstyle && (
                     <View className="w-2 h-2 rounded-full bg-accent ml-1" />
                   )}
                 </Tabs.Trigger>
                 <Tabs.Trigger value="clothing">
-                  <Tabs.Label>Clothing</Tabs.Label>
+                  <Tabs.Label>{t("imageRequest.clothing")}</Tabs.Label>
                   {selectedClothing && (
                     <View className="w-2 h-2 rounded-full bg-accent ml-1" />
                   )}
                 </Tabs.Trigger>
                 <Tabs.Trigger value="scene">
-                  <Tabs.Label>Scene</Tabs.Label>
+                  <Tabs.Label>{t("imageRequest.scene")}</Tabs.Label>
                   {selectedScene && (
                     <View className="w-2 h-2 rounded-full bg-accent ml-1" />
                   )}
@@ -214,7 +218,7 @@ export const ImageRequestSheet = forwardRef<BottomSheet, ImageRequestSheetProps>
                   onPress={handleReset}
                   isDisabled={isLoading}
                 >
-                  <Button.Label>Reset</Button.Label>
+                  <Button.Label>{t("common.reset")}</Button.Label>
                 </Button>
               )}
               <Button
@@ -227,7 +231,7 @@ export const ImageRequestSheet = forwardRef<BottomSheet, ImageRequestSheetProps>
                 ) : (
                   <>
                     <Camera size={18} color={accentForegroundColor} />
-                    <Button.Label>Generate Photo</Button.Label>
+                    <Button.Label>{t("imageRequest.generatePhoto")}</Button.Label>
                   </>
                 )}
               </Button>
@@ -235,7 +239,7 @@ export const ImageRequestSheet = forwardRef<BottomSheet, ImageRequestSheetProps>
 
             {credits < 5 && (
               <Text size="xs" variant="danger" className="text-center mt-2">
-                Insufficient credits. You need at least 5 credits.
+                {t("imageRequest.insufficientCredits")}
               </Text>
             )}
           </View>

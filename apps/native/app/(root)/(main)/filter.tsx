@@ -19,9 +19,11 @@ import {
   useFilterOptions,
   type GenderPreference,
 } from "@/hooks/dating";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function FilterScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const accentColor = useThemeColor("accent");
   const foregroundColor = useThemeColor("foreground");
@@ -104,7 +106,9 @@ export default function FilterScreen() {
           >
             <X size={24} color={foregroundColor} />
           </Button>
-          <Text className="text-foreground text-lg font-semibold">Filter</Text>
+          <Text className="text-foreground text-lg font-semibold">
+            {t("filter.title")}
+          </Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -120,7 +124,7 @@ export default function FilterScreen() {
             {/* Gender Preference */}
             <View className="px-4 mb-6">
               <Text className="text-foreground font-semibold mb-2">
-                Interested In
+                {t("filter.interestedIn")}
               </Text>
               <View className="flex-row gap-2 flex-wrap">
                 {isLoadingOptions ? (
@@ -155,7 +159,9 @@ export default function FilterScreen() {
             {/* Age Range */}
             <View className="px-4 mb-6">
               <View className="flex-row justify-between mb-2">
-                <Text className="text-foreground font-semibold">Age</Text>
+                <Text className="text-foreground font-semibold">
+                  {t("filter.age")}
+                </Text>
               </View>
               <View className="flex-row gap-2 flex-wrap">
                 {isLoadingOptions ? (
@@ -190,7 +196,9 @@ export default function FilterScreen() {
 
             {/* Zodiac Signs */}
             <View className="px-4 mb-6">
-              <Text className="text-foreground font-semibold mb-3">Zodiac</Text>
+              <Text className="text-foreground font-semibold mb-3">
+                {t("filter.zodiac")}
+              </Text>
               <View className="flex-row flex-wrap gap-2">
                 {isLoadingOptions ? (
                   <>
@@ -225,7 +233,7 @@ export default function FilterScreen() {
             {/* Interests */}
             <View className="px-4 mb-6">
               <Text className="text-foreground font-semibold mb-3">
-                Interests
+                {t("filter.interests")}
               </Text>
               <View className="flex-row flex-wrap gap-2">
                 {isLoadingOptions ? (
@@ -273,14 +281,16 @@ export default function FilterScreen() {
             onPress={handleReset}
             isDisabled={isSaving}
           >
-            <Button.Label>Reset</Button.Label>
+            <Button.Label>{t("common.reset")}</Button.Label>
           </Button>
           <Button
             style={{ flex: 1 }}
             onPress={handleApply}
             isDisabled={isSaving}
           >
-            <Button.Label>{isSaving ? "Saving..." : "Apply"}</Button.Label>
+            <Button.Label>
+              {isSaving ? t("common.saving") : t("common.apply")}
+            </Button.Label>
           </Button>
         </View>
       </SafeAreaView>

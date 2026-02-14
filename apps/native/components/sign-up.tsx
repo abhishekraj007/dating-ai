@@ -1,5 +1,6 @@
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
+import { useTranslation } from "@/hooks/use-translation";
 import {
 	ActivityIndicator,
 	Text,
@@ -9,6 +10,7 @@ import {
 } from "react-native";
 
 export function SignUp() {
+	const { t } = useTranslation();
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -27,7 +29,7 @@ export function SignUp() {
 			},
 			{
 				onError: (error) => {
-					setError(error.error?.message || "Failed to sign up");
+					setError(error.error?.message || t("signUp.failed"));
 					setIsLoading(false);
 				},
 				onSuccess: () => {
@@ -45,7 +47,7 @@ export function SignUp() {
 	return (
 		<View className="mt-6 p-4 bg-card rounded-lg border border-border">
 			<Text className="text-lg font-semibold text-foreground mb-4">
-				Create Account
+				{t("signUp.createAccount")}
 			</Text>
 
 			{error && (
@@ -56,7 +58,7 @@ export function SignUp() {
 
 			<TextInput
 				className="mb-3 p-4 rounded-md bg-input text-foreground border border-input"
-				placeholder="Name"
+				placeholder={t("common.name")}
 				value={name}
 				onChangeText={setName}
 				placeholderTextColor="#9CA3AF"
@@ -64,7 +66,7 @@ export function SignUp() {
 
 			<TextInput
 				className="mb-3 p-4 rounded-md bg-input text-foreground border border-input"
-				placeholder="Email"
+				placeholder={t("common.email")}
 				value={email}
 				onChangeText={setEmail}
 				placeholderTextColor="#9CA3AF"
@@ -74,7 +76,7 @@ export function SignUp() {
 
 			<TextInput
 				className="mb-4 p-4 rounded-md bg-input text-foreground border border-input"
-				placeholder="Password"
+				placeholder={t("common.password")}
 				value={password}
 				onChangeText={setPassword}
 				placeholderTextColor="#9CA3AF"
@@ -89,7 +91,9 @@ export function SignUp() {
 				{isLoading ? (
 					<ActivityIndicator size="small" color="#fff" />
 				) : (
-					<Text className="text-primary-foreground font-medium">Sign Up</Text>
+					<Text className="text-primary-foreground font-medium">
+						{t("common.signUp")}
+					</Text>
 				)}
 			</TouchableOpacity>
 		</View>

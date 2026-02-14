@@ -17,6 +17,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import type { ForYouProfile } from "@/hooks/dating/useForYou";
+import { useTranslation } from "@/hooks/use-translation";
 
 const { width, height } = Dimensions.get("window");
 
@@ -107,6 +108,7 @@ export function MatchModal({
   onStartChatting,
   isLoading,
 }: MatchModalProps) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const isOpen = visible && !!profile;
 
@@ -189,10 +191,9 @@ export function MatchModal({
             </View>
 
             <Animated.View entering={FadeIn.delay(220).duration(350)}>
-              <Text style={styles.matchTitle}>It's a Match!</Text>
+              <Text style={styles.matchTitle}>{t("match.title")}</Text>
               <Text style={styles.matchSubtitle}>
-                You and {profile.name} like each other{"\n"}
-                What's your next move?
+                {t("match.subtitle", { name: profile.name })}
               </Text>
             </Animated.View>
           </View>
@@ -209,7 +210,7 @@ export function MatchModal({
               onPress={onSkipForNow}
             >
               <Button.Label style={styles.skipButtonText}>
-                Keep Swiping
+                {t("match.keepSwiping")}
               </Button.Label>
             </Button>
 
@@ -224,7 +225,7 @@ export function MatchModal({
               {isLoading && <Spinner size="sm" />}
               {!isLoading && (
                 <Button.Label style={styles.chatButtonText}>
-                  Start Chatting
+                  {t("match.startChatting")}
                 </Button.Label>
               )}
             </Button>

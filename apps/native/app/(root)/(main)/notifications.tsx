@@ -7,11 +7,13 @@ import { Button, Card, Spinner, TextField } from "heroui-native";
 import { useState, useEffect } from "react";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function NotificationsScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const [title, setTitle] = useState("Test Notification");
-  const [body, setBody] = useState("This is a test notification");
+  const [title, setTitle] = useState(t("notifications.defaultTitle"));
+  const [body, setBody] = useState(t("notifications.defaultBody"));
   const [sending, setSending] = useState(false);
   const [requesting, setRequesting] = useState(false);
   const [permissionRefresh, setPermissionRefresh] = useState(0);
@@ -55,9 +57,9 @@ export default function NotificationsScreen() {
 
       if (isExpoGo && Platform.OS === "ios") {
         Alert.alert(
-          "Build Required",
-          "Push notifications are not supported in Expo Go on iOS. Please create a development build using 'npx expo run:ios' or EAS Build to test push notifications.",
-          [{ text: "OK" }]
+          t("notifications.buildRequired"),
+          t("notifications.buildRequiredDescription"),
+          [{ text: t("common.ok") }],
         );
         setRequesting(false);
         return;
@@ -67,8 +69,8 @@ export default function NotificationsScreen() {
         await Notifications.requestPermissionsAsync();
       if (permStatus !== "granted") {
         Alert.alert(
-          "Permission Denied",
-          "Please enable notifications in your device settings to receive push notifications."
+          t("notifications.permissionDenied"),
+          t("notifications.permissionDeniedDescription"),
         );
       } else {
         // Get and register the token
@@ -81,8 +83,8 @@ export default function NotificationsScreen() {
           });
           await recordToken({ token: tokenData.data });
           Alert.alert(
-            "Success",
-            "Notification permissions granted and device registered!"
+            t("alerts.success"),
+            t("notifications.permissionsGranted"),
           );
           setPermissionRefresh((prev) => prev + 1); // Trigger status refetch
         } catch (error) {
@@ -94,16 +96,16 @@ export default function NotificationsScreen() {
             error.message.includes("aps-environment")
           ) {
             Alert.alert(
-              "Development Build Required",
-              "Push notifications require a development build. Run 'npx expo run:ios' or 'npx expo run:android' to create a proper build with push notification support."
+              t("notifications.buildRequired"),
+              t("notifications.devBuildRequiredDescription"),
             );
           } else {
-            Alert.alert("Error", "Failed to register device for notifications");
+            Alert.alert(t("alerts.error"), t("notifications.registerFailed"));
           }
         }
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to request permissions");
+      Alert.alert(t("alerts.error"), t("notifications.requestFailed"));
     } finally {
       setRequesting(false);
     }
@@ -111,12 +113,12 @@ export default function NotificationsScreen() {
 
   const handleSendNotification = async () => {
     if (!title || !body) {
-      Alert.alert("Error", "Please enter both title and body");
+      Alert.alert(t("alerts.error"), t("notifications.enterTitleBody"));
       return;
     }
 
     if (!userData?.userMetadata._id) {
-      Alert.alert("Error", "User not found");
+      Alert.alert(t("alerts.error"), t("notifications.userNotFound"));
       return;
     }
 
@@ -128,11 +130,11 @@ export default function NotificationsScreen() {
         body,
         data: { timestamp: Date.now() },
       });
-      Alert.alert("Success", "Notification sent successfully!");
+      Alert.alert(t("alerts.success"), t("notifications.sentSuccess"));
     } catch (error) {
       Alert.alert(
-        "Error",
-        error instanceof Error ? error.message : "Failed to send notification"
+        t("alerts.error"),
+        error instanceof Error ? error.message : t("notifications.sendFailed"),
       );
     } finally {
       setSending(false);
@@ -159,14 +161,14 @@ export default function NotificationsScreen() {
       {/* Status Card */}
       <Card>
         <Card.Header>
-          <Card.Title>Push Notification Status</Card.Title>
+          <Card.Title>{t("notifications.statusTitle")}</Card.Title>
         </Card.Header>
         <Card.Body className="gap-2">
           <View>
             <Card.Description>
               {status.hasToken
-                ? "Notifications enabled. Device registered."
-                : "Notifications not enabled. Please allow notification permissions."}
+                ? t("notifications.enabledRegistered")
+                : t("notifications.disabledPrompt")}
             </Card.Description>
           </View>
           {!status.hasToken && (
@@ -176,7 +178,9 @@ export default function NotificationsScreen() {
               isDisabled={requesting}
               className="mt-2"
             >
-              {requesting ? "Requesting..." : "Enable Notifications"}
+              {requesting
+                ? t("notifications.requesting")
+                : t("notifications.enable")}
             </Button>
           )}
         </Card.Body>
@@ -186,24 +190,24 @@ export default function NotificationsScreen() {
       {status.hasToken && (
         <Card>
           <Card.Header>
-            <Card.Title>Send Test Notification</Card.Title>
-            <Card.Description>Send a notification to yourself</Card.Description>
+            <Card.Title>{t("notifications.sendTestTitle")}</Card.Title>
+            <Card.Description>{t("notifications.sendToSelf")}</Card.Description>
           </Card.Header>
           <Card.Body className="gap-4">
             <TextField>
-              <TextField.Label>Title</TextField.Label>
+              <TextField.Label>{t("notifications.titleLabel")}</TextField.Label>
               <TextField.Input
                 value={title}
                 onChangeText={setTitle}
-                placeholder="Notification title"
+                placeholder={t("notifications.titlePlaceholder")}
               />
             </TextField>
             <TextField>
-              <TextField.Label>Body</TextField.Label>
+              <TextField.Label>{t("notifications.bodyLabel")}</TextField.Label>
               <TextField.Input
                 value={body}
                 onChangeText={setBody}
-                placeholder="Notification body"
+                placeholder={t("notifications.bodyPlaceholder")}
                 numberOfLines={3}
                 multiline
               />
@@ -213,7 +217,7 @@ export default function NotificationsScreen() {
               onPress={handleSendNotification}
               isDisabled={sending}
             >
-              {sending ? "Sending..." : "Send Notification"}
+              {sending ? t("notifications.sending") : t("notifications.send")}
             </Button>
           </Card.Body>
         </Card>
@@ -223,9 +227,9 @@ export default function NotificationsScreen() {
       {notifications && notifications.length > 0 && (
         <Card>
           <Card.Header>
-            <Card.Title>Recent Notifications</Card.Title>
+            <Card.Title>{t("notifications.recentTitle")}</Card.Title>
             <Card.Description>
-              {notifications.length} notification(s)
+              {t("notifications.count", { count: notifications.length })}
             </Card.Description>
           </Card.Header>
           <Card.Body className="gap-3">

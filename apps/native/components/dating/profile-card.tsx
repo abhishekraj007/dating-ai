@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { PressableFeedback, Chip, Button } from "heroui-native";
 import { MoreVertical } from "lucide-react-native";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface ProfileCardProps {
   name: string;
@@ -27,6 +28,7 @@ export const ProfileCard = ({
   showChatButton = false,
   onChatPress,
 }: ProfileCardProps) => {
+  const { t } = useTranslation();
   const genderSymbol = gender === "female" ? "\u2640" : "\u2642";
 
   return (
@@ -92,7 +94,7 @@ export const ProfileCard = ({
               className="mt-3"
               onPress={onChatPress}
             >
-              <Button.Label>Chat</Button.Label>
+              <Button.Label>{t("common.chat")}</Button.Label>
             </Button>
           )}
         </View>
@@ -100,4 +102,3 @@ export const ProfileCard = ({
     </PressableFeedback>
   );
 };
-

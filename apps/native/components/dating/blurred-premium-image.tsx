@@ -12,6 +12,7 @@ import { X, Lock } from "lucide-react-native";
 import { usePurchases } from "@/contexts/purchases-context";
 import { useConvexAuth } from "convex/react";
 import { useRouter } from "expo-router";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface BlurredPremiumImageProps {
   imageUrl: string;
@@ -30,6 +31,7 @@ export function BlurredPremiumImage({
   profileAvatar,
   borderRadius = 16,
 }: BlurredPremiumImageProps) {
+  const { t } = useTranslation();
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const { presentPaywall } = usePurchases();
   const { width: screenWidth } = useWindowDimensions();
@@ -70,7 +72,7 @@ export function BlurredPremiumImage({
             <Lock size={16} color="#fff" />
           </View>
           <View style={styles.tapLabel}>
-            <Text style={styles.tapText}>Tap to See Photo</Text>
+            <Text style={styles.tapText}>{t("premium.tapToSeePhoto")}</Text>
           </View>
         </View>
       </Pressable>
@@ -101,11 +103,10 @@ export function BlurredPremiumImage({
               </Avatar>
 
               <Dialog.Title className="text-[22px] font-bold text-white mt-4 text-center">
-                Get closer to {profileName}
+                {t("premium.getCloser", { name: profileName })}
               </Dialog.Title>
               <Dialog.Description className="text-[15px] text-[#999] text-center mt-2 leading-[22px]">
-                {profileName} has sent you a photo. Get Premium and find out
-                what hides beneath the blur.
+                {t("premium.unlockDescription", { name: profileName })}
               </Dialog.Description>
 
               <Button
@@ -114,7 +115,7 @@ export function BlurredPremiumImage({
                 onPress={handleUnlock}
                 className="w-full mt-4"
               >
-                <Button.Label>Unlock Unlimited Access</Button.Label>
+                <Button.Label>{t("premium.unlockUnlimited")}</Button.Label>
               </Button>
             </View>
           </Dialog.Content>

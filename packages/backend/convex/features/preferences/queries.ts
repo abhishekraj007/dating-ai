@@ -4,6 +4,19 @@ import { query, mutation } from "../../_generated/server";
 import { authComponent } from "../../lib/betterAuth";
 import { r2 } from "../../uploads";
 
+const appLanguageValidator = v.union(
+  v.literal("en"),
+  v.literal("es"),
+  v.literal("fr"),
+  v.literal("de"),
+  v.literal("pt"),
+  v.literal("hi"),
+  v.literal("ja"),
+  v.literal("ko"),
+  v.literal("zh"),
+  v.literal("ar"),
+);
+
 /**
  * Get user preferences for AI profile matching.
  */
@@ -32,6 +45,65 @@ export const getUserPreferences = query({
     }
 
     return preferences;
+  },
+});
+
+/**
+ * Get selected app language for the authenticated user.
+ */
+export const getUserAppLanguage = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      return null;
+    }
+
+    const preferences = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .unique();
+
+    return preferences?.appLanguage ?? null;
+  },
+});
+
+/**
+ * Save selected app language for the authenticated user.
+ */
+export const setUserAppLanguage = mutation({
+  args: {
+    appLanguage: appLanguageValidator,
+  },
+  handler: async (ctx, { appLanguage }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    const existingPreferences = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .unique();
+
+    if (existingPreferences) {
+      await ctx.db.patch(existingPreferences._id, {
+        appLanguage,
+        updatedAt: Date.now(),
+      });
+      return existingPreferences._id;
+    }
+
+    return await ctx.db.insert("userPreferences", {
+      userId: user._id,
+      appLanguage,
+      genderPreference: "female",
+      ageMin: 18,
+      ageMax: 35,
+      zodiacPreferences: [],
+      interestPreferences: [],
+      updatedAt: Date.now(),
+    });
   },
 });
 
