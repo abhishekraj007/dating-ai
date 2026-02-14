@@ -99,29 +99,76 @@ export default function ChatsScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+          contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
         >
           {newMatches.map((profile: any) => (
             <Pressable
               key={profile._id}
               onPress={() => handleMatchPress(profile._id)}
-              className="items-center"
+              style={{ width: 100 }}
             >
-              <View className="w-24 h-32 rounded-xl overflow-hidden mb-2">
-                <ExpoImage
-                  source={{ uri: profile.avatarUrl }}
-                  style={{ width: "100%", height: "100%" }}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  transition={200}
-                />
-              </View>
-              <Text
-                className="text-foreground text-sm font-medium"
-                numberOfLines={1}
+              <View
+                style={{
+                  width: 100,
+                  height: 140,
+                  borderRadius: 16,
+                  overflow: "hidden",
+                }}
               >
-                {profile.name}
-              </Text>
+                {profile.avatarUrl ? (
+                  <ExpoImage
+                    source={{ uri: profile.avatarUrl }}
+                    style={{ width: "100%", height: "100%" }}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    transition={200}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: "rgba(128,128,128,0.2)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 28,
+                        fontWeight: "700",
+                        color: "rgba(255,255,255,0.6)",
+                      }}
+                    >
+                      {profile.name?.[0] ?? "?"}
+                    </Text>
+                  </View>
+                )}
+                <LinearGradient
+                  colors={["transparent", "rgba(0,0,0,0.7)"]}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: 56,
+                    justifyContent: "flex-end",
+                    paddingHorizontal: 8,
+                    paddingBottom: 8,
+                  }}
+                >
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      color: "#fff",
+                      fontSize: 13,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {profile.name?.split(" ")[0]}
+                  </Text>
+                </LinearGradient>
+              </View>
             </Pressable>
           ))}
         </ScrollView>

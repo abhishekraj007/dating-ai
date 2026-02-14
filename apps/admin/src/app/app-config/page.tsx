@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
 type ConfigForm = {
@@ -29,6 +30,7 @@ type ConfigForm = {
   shareUrl: string;
   iosAppStoreId: string;
   androidAppId: string;
+  showMyCreationTab: boolean;
 };
 
 const emptyForm: ConfigForm = {
@@ -40,12 +42,19 @@ const emptyForm: ConfigForm = {
   shareUrl: "",
   iosAppStoreId: "",
   androidAppId: "",
+  showMyCreationTab: false,
 };
 
 export default function AppConfigPage() {
-  const adminConfig = useQuery((api as any).features.appConfig.queries.getAdminAppConfig);
-  const publicConfig = useQuery((api as any).features.appConfig.queries.getPublicAppConfig);
-  const upsertConfig = useMutation((api as any).features.appConfig.mutations.upsertAppConfig);
+  const adminConfig = useQuery(
+    (api as any).features.appConfig.queries.getAdminAppConfig,
+  );
+  const publicConfig = useQuery(
+    (api as any).features.appConfig.queries.getPublicAppConfig,
+  );
+  const upsertConfig = useMutation(
+    (api as any).features.appConfig.mutations.upsertAppConfig,
+  );
 
   const [form, setForm] = useState<ConfigForm>(emptyForm);
   const [isSaving, setIsSaving] = useState(false);
@@ -65,6 +74,7 @@ export default function AppConfigPage() {
       shareUrl: adminConfig.shareUrl ?? "",
       iosAppStoreId: adminConfig.iosAppStoreId ?? "",
       androidAppId: adminConfig.androidAppId ?? "",
+      showMyCreationTab: adminConfig.showMyCreationTab ?? false,
     });
     setHasLoadedInitial(true);
   }, [adminConfig, hasLoadedInitial]);
@@ -96,11 +106,14 @@ export default function AppConfigPage() {
         shareUrl: form.shareUrl || undefined,
         iosAppStoreId: form.iosAppStoreId || undefined,
         androidAppId: form.androidAppId || undefined,
+        showMyCreationTab: form.showMyCreationTab,
       });
 
       toast.success("App configuration updated");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update config");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update config",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -136,7 +149,8 @@ export default function AppConfigPage() {
               <CardHeader>
                 <CardTitle>Managed Values</CardTitle>
                 <CardDescription>
-                  Leave a field empty to use sensible defaults derived from base web URL.
+                  Leave a field empty to use sensible defaults derived from base
+                  web URL.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -210,25 +224,63 @@ export default function AppConfigPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Resolved Runtime Links</CardTitle>
-                <CardDescription>
-                  These computed values are consumed by mobile account screens.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <ResolvedRow label="Terms" value={resolved.termsUrl} />
-                <ResolvedRow label="Privacy" value={resolved.privacyUrl} />
-                <ResolvedRow label="Help Center" value={resolved.helpCenterUrl} />
-                <ResolvedRow label="Support" value={resolved.supportUrl} />
-                <ResolvedRow label="Share" value={resolved.shareUrl} />
-                <Separator className="my-3" />
-                <p className="text-xs text-muted-foreground">
-                  Last updated: {adminConfig?.updatedAt ? new Date(adminConfig.updatedAt).toLocaleString() : "Not set"}
-                </p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Feature Flags</CardTitle>
+                  <CardDescription>
+                    Toggle features on or off for all app users.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="showMyCreationTab">My Creation Tab</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Show the "My Creation" tab in the bottom navigation bar.
+                      </p>
+                    </div>
+                    <Switch
+                      id="showMyCreationTab"
+                      checked={form.showMyCreationTab}
+                      onCheckedChange={(checked) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          showMyCreationTab: checked,
+                        }))
+                      }
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Resolved Runtime Links</CardTitle>
+                  <CardDescription>
+                    These computed values are consumed by mobile account
+                    screens.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <ResolvedRow label="Terms" value={resolved.termsUrl} />
+                  <ResolvedRow label="Privacy" value={resolved.privacyUrl} />
+                  <ResolvedRow
+                    label="Help Center"
+                    value={resolved.helpCenterUrl}
+                  />
+                  <ResolvedRow label="Support" value={resolved.supportUrl} />
+                  <ResolvedRow label="Share" value={resolved.shareUrl} />
+                  <Separator className="my-3" />
+                  <p className="text-xs text-muted-foreground">
+                    Last updated:{" "}
+                    {adminConfig?.updatedAt
+                      ? new Date(adminConfig.updatedAt).toLocaleString()
+                      : "Not set"}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
       </PageShell>

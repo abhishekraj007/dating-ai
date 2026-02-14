@@ -18,6 +18,7 @@ export const upsertAppConfig = mutation({
     shareUrl: v.optional(v.string()),
     iosAppStoreId: v.optional(v.string()),
     androidAppId: v.optional(v.string()),
+    showMyCreationTab: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const userData = await requireAdmin(ctx);
@@ -32,6 +33,7 @@ export const upsertAppConfig = mutation({
       shareUrl: normalizeUrl(args.shareUrl),
       iosAppStoreId: normalizeAppStoreId(args.iosAppStoreId),
       androidAppId: normalizeAndroidAppId(args.androidAppId),
+      showMyCreationTab: args.showMyCreationTab,
       updatedAt: Date.now(),
       updatedBy: userData.userMetadata._id,
     };

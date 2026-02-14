@@ -2,7 +2,8 @@ import { query } from "../../_generated/server";
 import { APP_CONFIG_KEY, buildUrlFromBase } from "./shared";
 import { requireAdmin } from "./guards";
 
-const fallbackBaseWebUrl = process.env.SITE_URL ?? process.env.EXPO_PUBLIC_CONVEX_SITE_URL;
+const fallbackBaseWebUrl =
+  process.env.SITE_URL ?? process.env.EXPO_PUBLIC_CONVEX_SITE_URL;
 const fallbackAndroidAppId = "com.noosperai.quotes";
 
 export const getPublicAppConfig = query({
@@ -32,6 +33,7 @@ export const getPublicAppConfig = query({
       shareUrl,
       iosAppStoreId: config?.iosAppStoreId,
       androidAppId: config?.androidAppId ?? fallbackAndroidAppId,
+      showMyCreationTab: config?.showMyCreationTab ?? false,
       updatedAt: config?.updatedAt,
     };
   },
@@ -56,6 +58,7 @@ export const getAdminAppConfig = query({
       shareUrl: config?.shareUrl,
       iosAppStoreId: config?.iosAppStoreId,
       androidAppId: config?.androidAppId ?? fallbackAndroidAppId,
+      showMyCreationTab: config?.showMyCreationTab ?? false,
       updatedAt: config?.updatedAt,
       updatedBy: config?.updatedBy,
     };

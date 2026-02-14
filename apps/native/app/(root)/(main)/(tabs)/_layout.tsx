@@ -4,6 +4,8 @@ import { TabBarIcon } from "@/components/tabbar-icon";
 import { useThemeColor } from "heroui-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Platform } from "react-native";
+import { useQuery } from "convex/react";
+import { api } from "@dating-ai/backend";
 
 export default function TabsLayout() {
   const { isDark } = useAppTheme();
@@ -12,6 +14,10 @@ export default function TabsLayout() {
   const mutedColor = useThemeColor("muted");
   const backgroundColor = useThemeColor("background");
   const borderColor = useThemeColor("border");
+  const appConfig = useQuery(
+    (api as any).features.appConfig.queries.getPublicAppConfig,
+  ) as { showMyCreationTab?: boolean } | undefined;
+  const showMyCreationTab = appConfig?.showMyCreationTab ?? false;
 
   // Calculate proper bottom padding for Android navigation bar
   const bottomPadding =
@@ -72,6 +78,7 @@ export default function TabsLayout() {
         name="my-creation"
         options={{
           title: "My Creation",
+          href: showMyCreationTab ? undefined : null,
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name="my-creation" color={color} focused={focused} />
           ),

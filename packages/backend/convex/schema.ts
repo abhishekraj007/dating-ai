@@ -15,8 +15,8 @@ export default defineSchema({
       v.union(
         v.literal("manual"), // Admin granted
         v.literal("subscription"), // From active subscription
-        v.literal("lifetime") // Lifetime access
-      )
+        v.literal("lifetime"), // Lifetime access
+      ),
     ),
     premiumGrantedAt: v.optional(v.number()),
     premiumExpiresAt: v.optional(v.number()), // null = lifetime/subscription-based
@@ -31,7 +31,7 @@ export default defineSchema({
     genderPreference: v.union(
       v.literal("female"),
       v.literal("male"),
-      v.literal("both")
+      v.literal("both"),
     ),
     // Age range preference
     ageMin: v.number(), // Default: 18
@@ -51,7 +51,7 @@ export default defineSchema({
     action: v.union(
       v.literal("like"), // Swiped right
       v.literal("skip"), // Swiped left
-      v.literal("superlike") // Future: super like feature
+      v.literal("superlike"), // Future: super like feature
     ),
     createdAt: v.number(),
   })
@@ -76,7 +76,7 @@ export default defineSchema({
       v.literal("canceled"),
       v.literal("expired"),
       v.literal("past_due"),
-      v.literal("trialing")
+      v.literal("trialing"),
     ),
     productType: v.optional(v.string()), // e.g., "monthly", "yearly" - derived from webhook
 
@@ -112,7 +112,7 @@ export default defineSchema({
       v.literal("paid"),
       v.literal("pending"),
       v.literal("failed"),
-      v.literal("refunded")
+      v.literal("refunded"),
     ),
     createdAt: v.number(),
   })
@@ -140,12 +140,14 @@ export default defineSchema({
     avatarImageKey: v.optional(v.string()), // R2 key for main avatar (optional for seed data)
     isUserCreated: v.boolean(),
     visibleOn: v.optional(
-      v.array(v.union(v.literal("web"), v.literal("ios"), v.literal("android")))
+      v.array(
+        v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
+      ),
     ),
     status: v.union(
       v.literal("active"),
       v.literal("pending"),
-      v.literal("archived")
+      v.literal("archived"),
     ),
     // Optional profile fields - AI adapts if missing
     age: v.optional(v.number()),
@@ -170,7 +172,7 @@ export default defineSchema({
         usesEmojis: v.optional(v.boolean()), // Whether to use emojis frequently
         usesSlang: v.optional(v.boolean()), // Gen-Z slang, abbreviations
         flirtLevel: v.optional(v.number()), // 1-5, how flirty the responses are
-      })
+      }),
     ),
   })
     .index("by_gender", ["gender"])
@@ -178,7 +180,11 @@ export default defineSchema({
     .index("by_status_and_gender", ["status", "gender"])
     .index("by_username", ["username"])
     .index("by_system_created_at", ["isUserCreated", "createdAt"])
-    .index("by_system_status_created_at", ["isUserCreated", "status", "createdAt"]),
+    .index("by_system_status_created_at", [
+      "isUserCreated",
+      "status",
+      "createdAt",
+    ]),
 
   // Conversation metadata - links Agent threads to AI profiles
   aiConversations: defineTable({
@@ -206,14 +212,14 @@ export default defineSchema({
         hairstyle: v.optional(v.string()),
         clothing: v.optional(v.string()),
         scene: v.optional(v.string()),
-      })
+      }),
     ),
     imageKey: v.optional(v.string()), // R2 key when complete
     status: v.union(
       v.literal("pending"),
       v.literal("processing"),
       v.literal("completed"),
-      v.literal("failed")
+      v.literal("failed"),
     ),
     replicateJobId: v.optional(v.string()),
     errorMessage: v.optional(v.string()),
@@ -230,10 +236,12 @@ export default defineSchema({
       v.literal("queued"),
       v.literal("processing"),
       v.literal("completed"),
-      v.literal("failed")
+      v.literal("failed"),
     ),
     triggeredByUserId: v.optional(v.string()),
-    preferredGender: v.optional(v.union(v.literal("female"), v.literal("male"))),
+    preferredGender: v.optional(
+      v.union(v.literal("female"), v.literal("male")),
+    ),
     preferredOccupation: v.optional(v.string()),
     preferredInterests: v.optional(v.array(v.string())),
     selectedGender: v.optional(v.union(v.literal("female"), v.literal("male"))),
@@ -249,13 +257,13 @@ export default defineSchema({
             v.object({
               step: v.string(),
               model: v.string(),
-            })
-          )
+            }),
+          ),
         ),
         message: v.optional(v.string()),
         totalSteps: v.number(),
         completedStepCount: v.number(),
-      })
+      }),
     ),
     retriedAt: v.optional(v.number()),
     startedAt: v.optional(v.number()),
@@ -275,7 +283,7 @@ export default defineSchema({
     status: v.union(
       v.literal("active"),
       v.literal("completed"),
-      v.literal("cancelled")
+      v.literal("cancelled"),
     ),
     // Quiz questions and answers
     questions: v.array(
@@ -286,7 +294,7 @@ export default defineSchema({
         correctIndex: v.number(), // 0-3
         userAnswer: v.optional(v.number()), // User's selected index
         isCorrect: v.optional(v.boolean()),
-      })
+      }),
     ),
     currentQuestionIndex: v.number(),
     score: v.number(), // Correct answers count
@@ -332,6 +340,7 @@ export default defineSchema({
     shareUrl: v.optional(v.string()),
     iosAppStoreId: v.optional(v.string()),
     androidAppId: v.optional(v.string()),
+    showMyCreationTab: v.optional(v.boolean()),
     updatedAt: v.number(),
     updatedBy: v.string(),
   }).index("by_key", ["key"]),
