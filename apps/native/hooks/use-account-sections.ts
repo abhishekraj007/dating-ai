@@ -5,7 +5,6 @@ import * as WebBrowser from "expo-web-browser";
 import type { LucideIcon } from "lucide-react-native";
 import {
   Bell,
-  Bug,
   FileCheck,
   FileText,
   LifeBuoy,
@@ -14,8 +13,10 @@ import {
   Settings,
   Share2,
   Star,
+  UserRound,
 } from "lucide-react-native";
 import { Alert, Platform, Share } from "react-native";
+import { useTranslation } from "@/hooks/use-translation";
 
 const FALLBACK_ANDROID_APP_ID = "com.noosperai.quotes";
 
@@ -48,16 +49,6 @@ const buildFallbackUrl = (path: string) => {
   return `${baseUrl}${path}`;
 };
 
-const appendBugTopic = (supportUrl: string) => {
-  try {
-    const parsed = new URL(supportUrl);
-    parsed.searchParams.set("topic", "bug");
-    return parsed.toString();
-  } catch {
-    return supportUrl;
-  }
-};
-
 type AccountActionItem = {
   id: string;
   title: string;
@@ -75,19 +66,26 @@ export type AccountSection = {
 
 type UseAccountSectionsOptions = {
   onOpenAppearance: () => void;
+  onOpenLanguage: () => void;
+  onOpenAccountActions: () => void;
+  isAuthenticated: boolean;
 };
 
 export const useAccountSections = ({
   onOpenAppearance,
+  onOpenLanguage,
+  onOpenAccountActions,
+  isAuthenticated,
 }: UseAccountSectionsOptions) => {
   const router = useRouter();
+  const { t } = useTranslation();
   const runtimeConfig = useQuery(
     (api as any).features.appConfig.queries.getPublicAppConfig,
   ) as RuntimeAppConfig | undefined;
 
   const openExternal = async (url: string, fallbackMessage: string) => {
     if (!url) {
-      Alert.alert("Link unavailable", fallbackMessage);
+      Alert.alert(t("alerts.linkUnavailable"), fallbackMessage);
       return;
     }
 
@@ -99,7 +97,7 @@ export const useAccountSections = ({
 
       await Linking.openURL(url);
     } catch {
-      Alert.alert("Unable to open link", "Please try again in a moment.");
+      Alert.alert(t("alerts.unableOpenLink"), t("alerts.tryAgainMoment"));
     }
   };
 
@@ -112,8 +110,8 @@ export const useAccountSections = ({
 
         if (!iosAppStoreId) {
           Alert.alert(
-            "Rating unavailable",
-            "iOS App Store ID is not configured yet.",
+            t("alerts.ratingUnavailable"),
+            t("alerts.iosStoreMissing"),
           );
           return;
         }
@@ -136,7 +134,7 @@ export const useAccountSections = ({
       }
     } catch (error) {
       console.log(error);
-      Alert.alert("Unable to open rating", "Please try again in a moment.");
+      Alert.alert(t("alerts.unableOpenRating"), t("alerts.tryAgainMoment"));
     }
   };
 
@@ -148,7 +146,7 @@ export const useAccountSections = ({
       "";
 
     if (!shareUrl) {
-      Alert.alert("Share unavailable", "App share URL is not configured yet.");
+      Alert.alert(t("alerts.shareUnavailable"), t("alerts.shareUrlMissing"));
       return;
     }
 
@@ -159,7 +157,7 @@ export const useAccountSections = ({
         title: "Dating AI",
       });
     } catch {
-      Alert.alert("Unable to share", "Please try again in a moment.");
+      Alert.alert(t("alerts.unableShare"), t("alerts.tryAgainMoment"));
     }
   };
 
@@ -172,37 +170,54 @@ export const useAccountSections = ({
   const sections: AccountSection[] = [
     {
       id: "quick-actions",
-      title: "Quick Actions",
+      title: t("account.section.quickActions"),
       items: [
         {
           id: "appearance",
-          title: "Appearance",
+          title: t("account.item.appearance"),
           icon: Palette,
           onPress: onOpenAppearance,
         },
         {
           id: "settings",
-          title: "Settings",
+          title: t("account.item.settings"),
           icon: Settings,
           onPress: () => router.push("/(root)/(main)/settings"),
         },
         {
           id: "notifications",
-          title: "Notifications",
+          title: t("account.item.notifications"),
           icon: Bell,
           onPress: () => router.push("/(root)/(main)/notifications"),
         },
+        {
+          id: "language",
+          title: t("account.item.language"),
+          icon: Settings,
+          onPress: onOpenLanguage,
+        },
+        ...(isAuthenticated
+          ? [
+              {
+                id: "account-actions",
+                title: t("account.item.account"),
+                description: t("account.item.accountDescription"),
+                icon: UserRound,
+                onPress: onOpenAccountActions,
+              },
+            ]
+          : []),
       ],
     },
     {
       id: "support",
-      title: "Support",
-      description: "Help, troubleshooting, and contact options.",
+      title: t("account.section.support"),
+      description: t("account.section.supportDescription"),
       items: [
         {
           id: "help-center",
-          title: "Help Center",
-          description: "Read FAQs and product guidance.",
+          title: t("account.item.helpCenter"),
+          description: t("account.item.helpCenterDescription"),
           icon: MessageCircleQuestion,
           onPress: () =>
             openExternal(
@@ -212,37 +227,37 @@ export const useAccountSections = ({
         },
         {
           id: "contact-support",
-          title: "Contact Support",
+          title: t("account.item.contactSupport"),
           icon: LifeBuoy,
           onPress: () =>
             openExternal(supportUrl, "Support URL is not configured yet."),
         },
-        {
-          id: "report-bug",
-          title: "Report a Bug",
-          icon: Bug,
-          onPress: () =>
-            openExternal(
-              appendBugTopic(supportUrl),
-              "Bug report URL is not configured yet.",
-            ),
-        },
+        // {
+        //   id: "report-bug",
+        //   title: "Report a Bug",
+        //   icon: Bug,
+        //   onPress: () =>
+        //     openExternal(
+        //       appendBugTopic(supportUrl),
+        //       "Bug report URL is not configured yet.",
+        //     ),
+        // },
       ],
     },
     {
       id: "legal",
-      title: "Legal",
+      title: t("account.section.legal"),
       items: [
         {
           id: "terms",
-          title: "Terms of Service",
+          title: t("account.item.terms"),
           icon: FileText,
           onPress: () =>
             openExternal(termsUrl, "Terms URL is not configured yet."),
         },
         {
           id: "privacy",
-          title: "Privacy Policy",
+          title: t("account.item.privacy"),
           icon: FileCheck,
           onPress: () =>
             openExternal(privacyUrl, "Privacy URL is not configured yet."),
@@ -251,18 +266,18 @@ export const useAccountSections = ({
     },
     {
       id: "feedback",
-      title: "Feedback",
-      description: "Share your feedback and help us improve.",
+      title: t("account.section.feedback"),
+      description: t("account.section.feedbackDescription"),
       items: [
         {
           id: "rate-us",
-          title: "Rate Us",
+          title: t("account.item.rateUs"),
           icon: Star,
           onPress: openRateUs,
         },
         {
           id: "share-app",
-          title: "Share App",
+          title: t("account.item.shareApp"),
           icon: Share2,
           onPress: shareApp,
         },

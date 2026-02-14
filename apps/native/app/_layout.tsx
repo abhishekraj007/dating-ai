@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
 import { HeroUINativeProvider } from "heroui-native";
 import { AppThemeProvider, useAppTheme } from "@/contexts/app-theme-context";
+import { LanguageProvider, useLanguage } from "@/contexts/language-context";
 import { PurchasesProvider } from "@/contexts/purchases-context";
 import ConvexProvider from "@/providers/ConvexProvider";
 import SplashScreenProvider from "@/providers/SplashScreenProvider";
@@ -28,8 +29,9 @@ const heroUIConfig = {
 /* ------------------------------ themed route ------------------------------ */
 function ThemedLayout() {
   const { isThemeLoaded } = useAppTheme();
+  const { isLanguageLoaded } = useLanguage();
 
-  if (!isThemeLoaded) {
+  if (!isThemeLoaded || !isLanguageLoaded) {
     return null; // Let SplashScreenProvider handle the splash screen
   }
 
@@ -46,11 +48,13 @@ export default function Layout() {
       {/* <KeyboardProvider> */}
       <ConvexProvider>
         <SplashScreenProvider>
-          <AppThemeProvider>
-            <PurchasesProvider>
-              <ThemedLayout />
-            </PurchasesProvider>
-          </AppThemeProvider>
+          <LanguageProvider>
+            <AppThemeProvider>
+              <PurchasesProvider>
+                <ThemedLayout />
+              </PurchasesProvider>
+            </AppThemeProvider>
+          </LanguageProvider>
         </SplashScreenProvider>
       </ConvexProvider>
       {/* </KeyboardProvider> */}

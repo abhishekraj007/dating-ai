@@ -6,6 +6,9 @@ import { useRouter } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
+import { useState } from "react";
+import { useTranslation } from "@/hooks/use-translation";
+import { LanguageSheet } from "@/components/language/language-sheet";
 
 const { width, height } = Dimensions.get("window");
 
@@ -15,6 +18,8 @@ const WELCOME_VIDEO_URL =
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { t, language, supportedLanguages } = useTranslation();
+  const [isLanguageSheetOpen, setIsLanguageSheetOpen] = useState(false);
 
   // Create video player with loop and autoplay
   //   const player = useVideoPlayer(WELCOME_VIDEO_URL, (player) => {
@@ -50,23 +55,39 @@ export default function WelcomeScreen() {
       />
 
       {/* Content */}
+      <View style={styles.languageButtonWrapper}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="bg-black/45 rounded-full"
+          onPress={() => setIsLanguageSheetOpen(true)}
+        >
+          {supportedLanguages.find((item) => item.code === language)?.label ??
+            "English"}
+        </Button>
+      </View>
+
       <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
         <View style={styles.content}>
           {/* Title */}
-          <Text style={styles.title}>Find your new AI bestfriend & more!</Text>
+          <Text style={styles.title}>{t("welcome.title")}</Text>
 
           {/* Subtitle */}
-          <Text style={styles.subtitle}>
-            Feeling alone? You’re not the only one. Come meet characters who
-            actually listen and understand you.
-          </Text>
+          <Text style={styles.subtitle}>{t("welcome.subtitle")}</Text>
 
           {/* Button */}
           <Button size="lg" onPress={handleGetStarted} className="w-full">
-            <Button.Label className="font-semibold">Get Started</Button.Label>
+            <Button.Label className="font-semibold">
+              {t("welcome.cta")}
+            </Button.Label>
           </Button>
         </View>
       </SafeAreaView>
+
+      <LanguageSheet
+        isOpen={isLanguageSheetOpen}
+        onOpenChange={setIsLanguageSheetOpen}
+      />
     </View>
   );
 }
@@ -93,6 +114,12 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     justifyContent: "flex-end",
+  },
+  languageButtonWrapper: {
+    position: "absolute",
+    top: 50,
+    right: 16,
+    zIndex: 10,
   },
   content: {
     paddingHorizontal: 24,

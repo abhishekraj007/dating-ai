@@ -17,14 +17,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { X } from "lucide-react-native";
 import { isAndroid } from "@/utils";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "@/hooks/use-translation";
+import { LanguageSheet } from "@/components/language/language-sheet";
 
 const { width, height } = Dimensions.get("window");
 
 export default function Landing() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t, language, supportedLanguages } = useTranslation();
   const { isAuthenticated } = useConvexAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isLanguageSheetOpen, setIsLanguageSheetOpen] = useState(false);
   const { signIn: signInWithGoogle, isLoading: isGoogleLoading } =
     useGoogleAuth();
   const { signIn: signInWithApple, isLoading: isAppleLoading } = useAppleAuth();
@@ -100,6 +104,25 @@ export default function Landing() {
         <Button
           variant="tertiary"
           size="sm"
+          onPress={() => setIsLanguageSheetOpen(true)}
+          style={{
+            position: "absolute",
+            top: insets.top,
+            left: 16,
+            zIndex: 10,
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            borderRadius: 20,
+          }}
+        >
+          <Text className="text-white text-xs">
+            {supportedLanguages.find((item) => item.code === language)?.label ??
+              "English"}
+          </Text>
+        </Button>
+
+        <Button
+          variant="tertiary"
+          size="sm"
           isIconOnly
           onPress={handleClose}
           style={{
@@ -125,8 +148,7 @@ export default function Landing() {
               ChatAI
             </Text>
             <Text className="text-white/80">
-              Lonely moments happen. Find company that never sleeps, talk with
-              your AI friends anytime.
+              {t("auth.tagline")}
             </Text>
           </View>
           <View className="w-full gap-4">
@@ -139,7 +161,7 @@ export default function Landing() {
               isDisabled={isLoading}
             >
               <Ionicons name="logo-google" size={20} color="white" />
-              <Text className="text-white">Continue with Google</Text>
+              <Text className="text-white">{t("auth.continueGoogle")}</Text>
             </Button>
             {/* apple */}
             <Button
@@ -150,19 +172,24 @@ export default function Landing() {
               isDisabled={isLoading}
             >
               <Ionicons name="logo-apple" size={20} color={"white"} />
-              <Text className="text-white">Continue with Apple</Text>
+              <Text className="text-white">{t("auth.continueApple")}</Text>
             </Button>
           </View>
           <View className="justify-center gap-1 flex-row flex-wrap items-center ">
             <Text className="text-white/50 text-sm">
-              By continuing, you agree to our
+              {t("auth.agreePrefix")}
             </Text>
-            <Text className="text-white/80 text-xs">terms of service</Text>
-            <Text className="text-muted text-sm">and</Text>
-            <Text className="text-white/80 text-xs">privacy policy</Text>
+            <Text className="text-white/80 text-xs">{t("auth.terms")}</Text>
+            <Text className="text-muted text-sm">{t("auth.and")}</Text>
+            <Text className="text-white/80 text-xs">{t("auth.privacy")}</Text>
           </View>
         </View>
       </View>
+
+      <LanguageSheet
+        isOpen={isLanguageSheetOpen}
+        onOpenChange={setIsLanguageSheetOpen}
+      />
 
       {/* Loading overlay */}
       {isLoading && (

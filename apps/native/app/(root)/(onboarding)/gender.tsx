@@ -14,6 +14,7 @@ import {
   GENDER_OPTIONS,
   type GenderPreference,
 } from "@/stores/onboarding-store";
+import { useTranslation } from "@/hooks/use-translation";
 
 const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = width - 48;
@@ -21,6 +22,7 @@ const CARD_HEIGHT = height / 6;
 
 export default function GenderScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { isAuthenticated } = useConvexAuth();
   const { genderPreference, setGenderPreference, reset } = useOnboardingStore();
   const { savePreferences } = useSavePreferences();
@@ -66,7 +68,7 @@ export default function GenderScreen() {
         <View className="flex-1 px-6 pt-8">
           {/* Title */}
           <Text size="2xl" className="text-center my-8">
-            Who are you interested in?
+            {t("onboarding.gender.title")}
           </Text>
 
           {/* Vertical list of cards */}
@@ -94,7 +96,9 @@ export default function GenderScreen() {
                   style={styles.gradient}
                 />
                 {/* Label */}
-                <Text style={styles.label}>{option.label}</Text>
+                <Text style={styles.label}>
+                  {t(`onboarding.gender.${option.value}`)}
+                </Text>
               </Pressable>
             ))}
           </View>
@@ -109,7 +113,7 @@ export default function GenderScreen() {
             className="w-full"
           >
             <Button.Label>
-              {isSaving ? "Setting up..." : "Continue"}
+              {isSaving ? t("onboarding.settingUp") : t("onboarding.continue")}
             </Button.Label>
           </Button>
         </View>

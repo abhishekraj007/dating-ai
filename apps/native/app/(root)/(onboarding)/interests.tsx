@@ -13,9 +13,11 @@ import {
   useOnboardingStore,
   INTEREST_OPTIONS,
 } from "@/stores/onboarding-store";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function InterestsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { isAuthenticated } = useConvexAuth();
 
   const { genderPreference, interests, toggleInterest, reset } =
@@ -66,7 +68,7 @@ export default function InterestsScreen() {
         <View className="flex-1 px-6 pt-12">
           {/* Title */}
           <Text size="2xl" className="text-center my-8">
-            What are your interests?
+            {t("onboarding.interests.title")}
           </Text>
 
           {/* Interests Grid */}
@@ -97,7 +99,8 @@ export default function InterestsScreen() {
                     onPress={() => toggleInterest(interest.value)}
                   >
                     <Chip.Label>
-                      {interest.emoji} {interest.label}
+                      {interest.emoji}{" "}
+                      {t(`onboarding.interest.${interest.value}`)}
                     </Chip.Label>
                   </Chip>
                 ))}
@@ -110,7 +113,7 @@ export default function InterestsScreen() {
         <View className="px-6 pb-4">
           {interests.length > 0 && (
             <Text className="text-center text-muted text-sm mb-3">
-              {interests.length} selected
+              {t("onboarding.interests.selected", { count: interests.length })}
             </Text>
           )}
           <Button
@@ -121,10 +124,10 @@ export default function InterestsScreen() {
           >
             <Button.Label>
               {isSaving
-                ? "Setting up..."
+                ? t("onboarding.settingUp")
                 : interests.length > 0
-                  ? "Continue"
-                  : "Skip"}
+                  ? t("onboarding.continue")
+                  : t("onboarding.skip")}
             </Button.Label>
           </Button>
         </View>

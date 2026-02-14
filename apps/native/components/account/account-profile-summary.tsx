@@ -1,6 +1,7 @@
 import { Avatar, Button, Chip, Separator, Surface, useThemeColor } from "heroui-native";
 import { Crown, Coins } from "lucide-react-native";
 import { Text, View } from "react-native";
+import { useTranslation } from "@/hooks/use-translation";
 
 type AccountProfileSummaryProps = {
   name: string;
@@ -23,6 +24,7 @@ export const AccountProfileSummary = ({
 }: AccountProfileSummaryProps) => {
   const accent = useThemeColor("accent");
   const success = useThemeColor("success");
+  const { t } = useTranslation();
 
   return (
     <Surface className="p-4 gap-4">
@@ -44,7 +46,9 @@ export const AccountProfileSummary = ({
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-2">
             <Coins size={16} color={accent} />
-            <Text className="text-sm text-muted">Current credits</Text>
+            <Text className="text-sm text-muted">
+              {t("account.profile.currentCredits")}
+            </Text>
           </View>
           <Text className="text-base font-semibold text-foreground">
             {credits}
@@ -53,13 +57,13 @@ export const AccountProfileSummary = ({
 
         <View className="flex-row gap-2">
           <Button variant="secondary" className="flex-1" onPress={onBuyCredits}>
-            Buy Credits
+            {t("account.profile.buyCredits")}
           </Button>
 
           {isPremium ? (
             <Chip variant="soft" color="success" className="px-3">
               <Crown size={14} color={success} />
-              <Chip.Label>Premium</Chip.Label>
+              <Chip.Label>{t("account.profile.premium")}</Chip.Label>
             </Chip>
           ) : (
             <Button
@@ -68,7 +72,9 @@ export const AccountProfileSummary = ({
               onPress={onShowSubscription}
             >
               <Crown size={14} color="white" />
-              <Text className="text-white font-medium">Get Premium</Text>
+              <Text className="text-white font-medium">
+                {t("account.profile.getPremium")}
+              </Text>
             </Button>
           )}
         </View>

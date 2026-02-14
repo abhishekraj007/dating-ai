@@ -1,32 +1,45 @@
 import { Fragment } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Separator, Spinner } from "heroui-native";
+import { Spinner } from "heroui-native";
 import { api, useQuery } from "@dating-ai/backend";
 import { useRouter } from "expo-router";
-import { Trash2 } from "lucide-react-native";
-import { Header } from "@/components";
+import { useConvexAuth } from "convex/react";
 import {
+  AccountActionsSheet,
   AccountAppearanceSheet,
+  AccountGuestSummary,
   AccountLinkItem,
   AccountProfileSummary,
   AccountSectionCard,
 } from "@/components/account";
+import { LanguageSheet } from "@/components/language/language-sheet";
 import { authClient } from "@/lib/betterAuth/client";
 import { usePurchases } from "@/contexts/purchases-context";
 import { useAccountSections } from "@/hooks/use-account-sections";
 import { useState } from "react";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function AccountScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
   const { presentPaywall } = usePurchases();
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+  const [isAccountActionsOpen, setIsAccountActionsOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const { sections } = useAccountSections({
     onOpenAppearance: () => setIsAppearanceOpen(true),
+    onOpenLanguage: () => setIsLanguageOpen(true),
+    onOpenAccountActions: () => setIsAccountActionsOpen(true),
+    isAuthenticated,
   });
-  const userData = useQuery(api.user.fetchUserAndProfile);
+  const userData = useQuery(
+    api.user.fetchUserAndProfile,
+    isAuthenticated ? {} : "skip",
+  );
 
   const handleSignOut = async () => {
     await authClient.signOut(
@@ -40,7 +53,7 @@ export default function AccountScreen() {
         },
         onError: (ctx) => {
           setIsSigningOut(false);
-          Alert.alert("Error", ctx.error.message || "Failed to sign out");
+          Alert.alert(t("alerts.error"), ctx.error.message || "Failed to sign out");
         },
       },
     );
@@ -58,13 +71,16 @@ export default function AccountScreen() {
         },
         onError: (ctx) => {
           setIsDeletingUser(false);
-          Alert.alert("Error", ctx.error.message || "Failed to delete user");
+          Alert.alert(
+            t("alerts.error"),
+            ctx.error.message || "Failed to delete user",
+          );
         },
       },
     );
   };
 
-  if (!userData?.userMetadata) {
+  if (isAuthLoading || (isAuthenticated && userData === undefined)) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
         <Spinner />
@@ -87,16 +103,22 @@ export default function AccountScreen() {
           contentContainerClassName="px-4 py-4 gap-4"
           showsVerticalScrollIndicator={false}
         >
-          <AccountProfileSummary
-            name={userData.profile?.name || "No name set"}
-            email={userData.userMetadata.email}
-            credits={userData.profile?.credits ?? 0}
-            isPremium={Boolean(userData.profile?.isPremium)}
-            onBuyCredits={() => router.push("/(root)/(main)/buy-credits")}
-            onShowSubscription={() => {
-              void presentPaywall();
-            }}
-          />
+          {isAuthenticated && userData?.userMetadata ? (
+            <AccountProfileSummary
+              name={userData.profile?.name || t("account.profile.noName")}
+              email={userData.userMetadata.email}
+              credits={userData.profile?.credits ?? 0}
+              isPremium={Boolean(userData.profile?.isPremium)}
+              onBuyCredits={() => router.push("/(root)/(main)/buy-credits")}
+              onShowSubscription={() => {
+                void presentPaywall();
+              }}
+            />
+          ) : (
+            <AccountGuestSummary
+              onLogin={() => router.push("/(root)/(auth)")}
+            />
+          )}
 
           {sections.map((section) => (
             <AccountSectionCard
@@ -104,7 +126,7 @@ export default function AccountScreen() {
               title={section.title}
               description={section.description || ""}
             >
-              {section.items.map((item, index) => (
+              {section.items.map((item) => (
                 <Fragment key={item.id}>
                   <AccountLinkItem
                     title={item.title}
@@ -117,73 +139,57 @@ export default function AccountScreen() {
               ))}
             </AccountSectionCard>
           ))}
-
-          <AccountSectionCard title="Account">
-            <Button
-              variant="tertiary"
-              isDisabled={isSigningOut}
-              onPress={() => {
-                Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-                  {
-                    text: "Cancel",
-                    style: "cancel",
-                  },
-                  {
-                    text: "Sign Out",
-                    onPress: () => {
-                      void handleSignOut();
-                    },
-                  },
-                ]);
-              }}
-            >
-              Sign Out
-            </Button>
-
-            <View className="mt-2">
-              <Text className="text-base font-semibold text-danger">
-                Danger Zone
-              </Text>
-              <Text className="text-xs text-muted">
-                Once you delete your account, there is no going back.
-              </Text>
-              <Button
-                className="mt-2"
-                variant="danger"
-                isDisabled={isDeletingUser}
-                onPress={() => {
-                  Alert.alert(
-                    "Delete Account",
-                    "Are you sure you want to permanently delete your account? This action cannot be undone.",
-                    [
-                      {
-                        text: "Cancel",
-                        style: "cancel",
-                      },
-                      {
-                        text: "Delete",
-                        style: "destructive",
-                        onPress: () => {
-                          void handleDeleteUser();
-                        },
-                      },
-                    ],
-                  );
-                }}
-              >
-                <Trash2 size={16} color="white" />
-                <Text className="text-white font-medium">
-                  {isDeletingUser ? "Deleting..." : "Delete Account"}
-                </Text>
-              </Button>
-            </View>
-          </AccountSectionCard>
         </ScrollView>
 
         <AccountAppearanceSheet
           isOpen={isAppearanceOpen}
           onOpenChange={setIsAppearanceOpen}
         />
+        <LanguageSheet
+          isOpen={isLanguageOpen}
+          onOpenChange={setIsLanguageOpen}
+        />
+        {isAuthenticated ? (
+          <AccountActionsSheet
+            isOpen={isAccountActionsOpen}
+            onOpenChange={setIsAccountActionsOpen}
+            isSigningOut={isSigningOut}
+            isDeletingUser={isDeletingUser}
+            onSignOut={() => {
+              Alert.alert(t("alerts.signOutTitle"), t("alerts.signOutBody"), [
+                {
+                  text: t("alerts.cancel"),
+                  style: "cancel",
+                },
+                {
+                  text: t("account.actions.signOut"),
+                  onPress: () => {
+                    void handleSignOut();
+                  },
+                },
+              ]);
+            }}
+            onDeleteAccount={() => {
+              Alert.alert(
+                t("alerts.deleteTitle"),
+                t("alerts.deleteBody"),
+                [
+                  {
+                    text: t("alerts.cancel"),
+                    style: "cancel",
+                  },
+                  {
+                    text: t("alerts.delete"),
+                    style: "destructive",
+                    onPress: () => {
+                      void handleDeleteUser();
+                    },
+                  },
+                ],
+              );
+            }}
+          />
+        ) : null}
       </SafeAreaView>
     </View>
   );
