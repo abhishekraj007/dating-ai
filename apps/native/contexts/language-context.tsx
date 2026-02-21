@@ -11,9 +11,9 @@ import {
 import {
   DEFAULT_LANGUAGE,
   SUPPORTED_LANGUAGES,
-  TRANSLATIONS,
   type AppLanguage,
-} from "@/lib/i18n/translations";
+} from "@/lib/i18n/types";
+import { TRANSLATIONS } from "@/lib/i18n/translations";
 
 const LANGUAGE_STORAGE_KEY = "@app_language";
 
@@ -43,7 +43,11 @@ const interpolate = (template: string, values?: TranslationValues) => {
   });
 };
 
-export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
+export const LanguageProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const { isAuthenticated } = useConvexAuth();
   const [language, setLanguageState] = useState<AppLanguage>(DEFAULT_LANGUAGE);
   const [isLanguageLoaded, setIsLanguageLoaded] = useState(false);
@@ -56,7 +60,9 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     (api as any).features.preferences.queries.setUserAppLanguage,
   );
 
-  const isSupportedLanguage = (candidate: string | null): candidate is AppLanguage =>
+  const isSupportedLanguage = (
+    candidate: string | null,
+  ): candidate is AppLanguage =>
     !!candidate && SUPPORTED_LANGUAGES.some((item) => item.code === candidate);
 
   useEffect(() => {
@@ -96,7 +102,11 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
       return;
     }
 
-    if (!isLanguageLoaded || remoteLanguage === undefined || hasSyncedSessionRef.current) {
+    if (
+      !isLanguageLoaded ||
+      remoteLanguage === undefined ||
+      hasSyncedSessionRef.current
+    ) {
       return;
     }
 
@@ -118,7 +128,13 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     void syncLanguage();
-  }, [isAuthenticated, isLanguageLoaded, language, remoteLanguage, setRemoteLanguage]);
+  }, [
+    isAuthenticated,
+    isLanguageLoaded,
+    language,
+    remoteLanguage,
+    setRemoteLanguage,
+  ]);
 
   const setLanguage = async (nextLanguage: AppLanguage) => {
     setLanguageState(nextLanguage);
@@ -149,7 +165,9 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   }, [isLanguageLoaded, language]);
 
   return (
-    <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
+    <LanguageContext.Provider value={value}>
+      {children}
+    </LanguageContext.Provider>
   );
 };
 
