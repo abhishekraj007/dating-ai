@@ -85,12 +85,40 @@ function extractToolOutputs(msg: any): string[] {
   return outputs;
 }
 
+function extractMessageText(msg: any): string {
+  if (msg.parts && Array.isArray(msg.parts)) {
+    const textFromParts = msg.parts
+      .filter(
+        (part: any) =>
+          part.type === "text" &&
+          typeof part.text === "string" &&
+          part.text.trim() !== "",
+      )
+      .map((part: any) => part.text)
+      .join(" ")
+      .trim();
+
+    if (textFromParts) {
+      return textFromParts;
+    }
+  }
+
+  return typeof msg.text === "string" ? msg.text : "";
+}
+
+function hasVisibleAssistantContent(msg: any): boolean {
+  return (
+    extractToolOutputs(msg).length > 0 || extractMessageText(msg).trim() !== ""
+  );
+}
+
 /**
  * Process a raw message into one or more processed messages.
  * A single agent message with multiple tool calls becomes multiple UI messages.
  */
 function processMessage(msg: any, index: number): ProcessedMessage[] {
   const baseId = msg._id || msg.id || msg.key || `msg-${index}`;
+  const messageText = extractMessageText(msg);
 
   // For user messages, just use text
   if (msg.role === "user") {
@@ -99,7 +127,7 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
         _id: baseId,
         _creationTime: msg._creationTime,
         role: msg.role,
-        content: msg.text || "",
+        content: messageText,
         order: msg.order,
         isStreaming: false,
       },
@@ -127,7 +155,7 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
       _id: baseId,
       _creationTime: msg._creationTime,
       role: msg.role,
-      content: msg.text || "",
+      content: messageText,
       order: msg.order,
       isStreaming: msg.status === "streaming",
     },
@@ -202,15 +230,20 @@ export function useMessages(threadId: string | undefined) {
     let streaming = false;
 
     results.forEach((msg: any, index: number) => {
-      // Track streaming status
-      if (msg.status === "streaming" || msg.status === "pending") {
+      const hasVisibleContent =
+        msg.role !== "assistant" || hasVisibleAssistantContent(msg);
+
+      // Show typing only while the assistant has not produced visible content yet.
+      if (
+        msg.role === "assistant" &&
+        (msg.status === "streaming" || msg.status === "pending") &&
+        !hasVisibleContent
+      ) {
         streaming = true;
       }
 
-      // Skip ALL assistant messages with empty content (prevents empty bubbles)
-      // These appear briefly before content arrives via streaming
-      if (msg.role === "assistant" && (!msg.text || msg.text.trim() === "")) {
-        return; // Skip - typing indicator will show instead
+      if (msg.role === "assistant" && !hasVisibleContent) {
+        return;
       }
 
       const processed = processMessage(msg, index);

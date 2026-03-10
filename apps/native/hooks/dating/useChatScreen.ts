@@ -91,27 +91,26 @@ export function useChatScreen() {
   const [isSending, setIsSending] = useState(false);
   const pendingResponseRef = useRef<number | null>(null);
 
-  // Compute if we should show typing indicator
-  const isWaitingForAI = useMemo(() => {
+  const hasAIResponseAfterSend = useMemo(() => {
     if (pendingResponseRef.current === null) return false;
-    const aiMessagesAfterSend = messages.filter(
+
+    return messages.some(
       (m) => m.role !== "user" && m.order > pendingResponseRef.current!,
     );
-    if (aiMessagesAfterSend.length > 0) {
-      pendingResponseRef.current = null;
-      return false;
-    }
-    return true;
   }, [messages]);
+
+  const isWaitingForAI =
+    pendingResponseRef.current !== null && !hasAIResponseAfterSend;
 
   const showTypingIndicator = isSending || isAITyping || isWaitingForAI;
 
-  // Reset isSending when AI starts responding
+  // Reset transient send state as soon as the assistant response becomes visible.
   useEffect(() => {
-    if (isAITyping) {
+    if (hasAIResponseAfterSend) {
+      pendingResponseRef.current = null;
       setIsSending(false);
     }
-  }, [isAITyping]);
+  }, [hasAIResponseAfterSend]);
 
   const handleSend = useCallback(
     (text: string) => {

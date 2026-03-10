@@ -37,29 +37,32 @@ export default function RootLayout() {
   // Sync onboarding preferences after login (if any stored)
   // useSyncOnboardingPreferences();
 
-  // Check if user needs onboarding
-  const hasCompletedOnboarding =
-    userData?.profile?.hasCompletedOnboarding ?? false;
+  const hasResolvedAuthenticatedUser = Boolean(userData?.userMetadata);
+  const hasCompletedOnboarding = Boolean(
+    userData?.profile?.hasCompletedOnboarding,
+  );
+  const isUserStatePending = isAuthenticated && userData == null;
   const needsOnboarding =
-    isAuthenticated && !hasCompletedOnboarding && userData !== undefined;
+    hasResolvedAuthenticatedUser && !hasCompletedOnboarding;
 
   console.log("userData", userData);
   console.log("isAuthenticated", isAuthenticated);
+  console.log("hasResolvedAuthenticatedUser", hasResolvedAuthenticatedUser);
   console.log("needsOnboarding", needsOnboarding);
   console.log("hasCompletedOnboarding", hasCompletedOnboarding);
 
-  if (isLoading) {
-    return <SplashScreen />;
-  }
-
-  // Show splash while checking onboarding status
-  if (isAuthenticated && userData === undefined) {
+  if (isLoading || isUserStatePending) {
     return <SplashScreen />;
   }
 
   // Redirect to onboarding if needed (but not if already there)
   if (needsOnboarding && !isOnOnboarding) {
     return <Redirect href="/(root)/(onboarding)/welcome" />;
+  }
+
+  // Redirect away from onboarding after completion
+  if (!needsOnboarding && isOnOnboarding) {
+    return <Redirect href="/(root)/(main)" />;
   }
 
   return (

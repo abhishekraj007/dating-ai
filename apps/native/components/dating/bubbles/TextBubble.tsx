@@ -5,6 +5,12 @@ import { AIBubbleWrapper } from "./AIBubbleWrapper";
 import { useMarkdownStyles } from "./useMarkdownStyles";
 import type { AIBubbleProps, ImageRequestData } from "./message-types";
 
+function shouldRenderAsMarkdown(content: string) {
+  return /(^|\n)(#{1,6}\s|[-*+]\s|\d+\.\s|>|```)|`[^`]+`|\*\*[^*]+\*\*|__[^_]+__|\[[^\]]+\]\([^\)]+\)/m.test(
+    content,
+  );
+}
+
 interface AITextProps extends AIBubbleProps {
   content: string;
 }
@@ -19,6 +25,7 @@ export function AITextBubble({
   time,
 }: AITextProps) {
   const markdownStyles = useMarkdownStyles();
+  const renderMarkdown = shouldRenderAsMarkdown(content);
 
   return (
     <AIBubbleWrapper
@@ -27,7 +34,13 @@ export function AITextBubble({
       time={time}
     >
       <View className="bg-surface rounded-2xl rounded-tl-sm px-4 py-3">
-        <Markdown style={markdownStyles}>{content}</Markdown>
+        {renderMarkdown ? (
+          <Markdown style={markdownStyles}>{content}</Markdown>
+        ) : (
+          <Text className="text-foreground text-[15px] leading-[22px]">
+            {content}
+          </Text>
+        )}
       </View>
     </AIBubbleWrapper>
   );

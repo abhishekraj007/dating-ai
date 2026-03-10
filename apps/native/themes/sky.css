@@ -8,6 +8,10 @@
       /* Surface: Used for non-overlay components (cards, accordions, disclosure groups) */
       --surface: hsl(210 30% 96%);
       --surface-foreground: hsl(210 35% 18%);
+      --surface-secondary: hsl(210 26% 94%);
+      --surface-secondary-foreground: hsl(210 32% 20%);
+      --surface-tertiary: hsl(210 22% 92%);
+      --surface-tertiary-foreground: hsl(210 30% 22%);
 
       /* Overlay: Used for floating/overlay components (dialogs, popovers, modals, menus) */
       --overlay: hsl(210 30% 96%);
@@ -44,11 +48,16 @@
       /* Misc Colors */
       --border: hsl(200 22% 88%);
       --divider: hsl(200 18% 82%);
+      --separator: var(--divider);
+      --focus: hsl(200 55% 58%);
       --link: hsl(200 50% 62%);
 
       /* Shadow Variables */
-      --surface-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06), 0 0 1px 0 rgba(0, 0, 0, 0.06);
-      --overlay-shadow: 0 4px 16px 0 rgba(24, 24, 27, 0.08), 0 8px 24px 0 rgba(24, 24, 27, 0.09);
+      --surface-shadow:
+        0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),
+        0 0 1px 0 rgba(0, 0, 0, 0.06);
+      --overlay-shadow:
+        0 4px 16px 0 rgba(24, 24, 27, 0.08), 0 8px 24px 0 rgba(24, 24, 27, 0.09);
       --field-shadow: none;
     }
 
@@ -60,6 +69,10 @@
       /* Surface: Used for non-overlay components (cards, accordions, disclosure groups) */
       --surface: hsl(210 22% 13%);
       --surface-foreground: hsl(210 10% 85%);
+      --surface-secondary: hsl(210 20% 16%);
+      --surface-secondary-foreground: hsl(210 10% 86%);
+      --surface-tertiary: hsl(210 18% 19%);
+      --surface-tertiary-foreground: hsl(210 10% 88%);
 
       /* Overlay: Used for floating/overlay components (dialogs, popovers, modals, menus) */
       --overlay: hsl(210 20% 16%);
@@ -96,6 +109,8 @@
       /* Misc Colors */
       --border: hsl(200 16% 22%);
       --divider: hsl(200 14% 28%);
+      --separator: var(--divider);
+      --focus: hsl(200 46% 64%);
       --link: hsl(200 42% 65%);
 
       /* Shadow Variables */

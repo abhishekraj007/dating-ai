@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { useConvexAuth } from "convex/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAppleAuth, useGoogleAuth } from "@/lib/betterAuth/oauth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { X } from "lucide-react-native";
@@ -43,20 +43,21 @@ export default function Landing() {
 
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true);
-    await signInWithGoogle();
+    try {
+      await signInWithGoogle();
+    } catch {
+      setIsSigningIn(false);
+    }
   };
 
   const handleAppleSignIn = async () => {
     setIsSigningIn(true);
-    await signInWithApple();
-  };
-
-  useEffect(() => {
-    // Redirect to main after successful authentication
-    if (isAuthenticated && isSigningIn) {
-      router.replace("/(root)/(main)");
+    try {
+      await signInWithApple();
+    } catch {
+      setIsSigningIn(false);
     }
-  }, [isAuthenticated, isSigningIn]);
+  };
 
   const isLoading = isGoogleLoading || isAppleLoading || isSigningIn;
 
