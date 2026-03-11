@@ -2,10 +2,11 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { useConvexAuth } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
-import { Stack, Redirect, useSegments } from "expo-router";
+import { Stack, Redirect, useSegments, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { Platform } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { useEffect, useRef } from "react";
 import { SplashScreen } from "@/components/splash-screen";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 // import { useSyncOnboardingPreferences } from "@/hooks/useSyncOnboardingPreferences";
@@ -21,6 +22,8 @@ export default function RootLayout() {
   const themeColorForeground = useThemeColor("foreground");
   const themeColorBackground = useThemeColor("background");
   const segments = useSegments();
+  const router = useRouter();
+  const didRedirectFromOnboarding = useRef(false);
 
   // Check if we're already on onboarding screens
   const isOnOnboarding = (segments as string[]).includes("(onboarding)");
@@ -45,11 +48,21 @@ export default function RootLayout() {
   const needsOnboarding =
     hasResolvedAuthenticatedUser && !hasCompletedOnboarding;
 
-  console.log("userData", userData);
-  console.log("isAuthenticated", isAuthenticated);
-  console.log("hasResolvedAuthenticatedUser", hasResolvedAuthenticatedUser);
-  console.log("needsOnboarding", needsOnboarding);
-  console.log("hasCompletedOnboarding", hasCompletedOnboarding);
+  // Navigate away from onboarding when it's no longer needed.
+  // Uses useEffect + router.replace instead of <Redirect> to avoid an infinite
+  // re-render loop: useSegments() returns the old segments until navigation
+  // completes, so a synchronous <Redirect> keeps re-firing.
+  useEffect(() => {
+    if (isLoading || isUserStatePending) return;
+    if (!needsOnboarding && isOnOnboarding) {
+      if (!didRedirectFromOnboarding.current) {
+        didRedirectFromOnboarding.current = true;
+        router.replace("/(root)/(main)");
+      }
+    } else {
+      didRedirectFromOnboarding.current = false;
+    }
+  }, [isLoading, isUserStatePending, needsOnboarding, isOnOnboarding, router]);
 
   if (isLoading || isUserStatePending) {
     return <SplashScreen />;
@@ -58,11 +71,6 @@ export default function RootLayout() {
   // Redirect to onboarding if needed (but not if already there)
   if (needsOnboarding && !isOnOnboarding) {
     return <Redirect href="/(root)/(onboarding)/welcome" />;
-  }
-
-  // Redirect away from onboarding after completion
-  if (!needsOnboarding && isOnOnboarding) {
-    return <Redirect href="/(root)/(main)" />;
   }
 
   return (

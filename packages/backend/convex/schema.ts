@@ -209,6 +209,10 @@ export default defineSchema({
     compatibilityScore: v.number(), // 0-100, default 60
     messageCount: v.number(), // default 0
     lastMessageAt: v.number(),
+    lastMessagePreview: v.optional(v.string()),
+    lastMessageRole: v.optional(v.string()),
+    profileAvatarImageKey: v.optional(v.string()), // Denormalized for convenience
+    profileName: v.optional(v.string()), // Denormalized for convenience
   })
     .index("by_user", ["userId"])
     .index("by_user_and_profile", ["userId", "aiProfileId"])
