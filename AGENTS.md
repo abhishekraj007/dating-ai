@@ -4,6 +4,8 @@
 - Keep files and component maintable and shorts, devide into multiple if required.
 - Always seperate UI and logics into components and hooks.
 - Do not use useCallback unless necessary.
+- Do not use useMemo unless necessary.
+- Prefer plain render-time derivation by default. With modern React/React Native and React Compiler, do not add `useMemo` or `useCallback` unless there is a measured performance issue, a correctness requirement, or a library/API that truly needs stable identity.
 - Write layout and components that should work in both light and dark mode.
 - Layout and components should be mobile first and responsive.
 - Do not write documentation .md file untill neccessary and it's a big feature.
