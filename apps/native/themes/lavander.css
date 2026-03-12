@@ -8,6 +8,10 @@
       /* Surface: Used for non-overlay components (cards, accordions, disclosure groups) */
       --surface: hsl(280 20% 96%);
       --surface-foreground: hsl(280 30% 20%);
+      --surface-secondary: hsl(280 18% 94%);
+      --surface-secondary-foreground: hsl(280 30% 20%);
+      --surface-tertiary: hsl(280 16% 91%);
+      --surface-tertiary-foreground: hsl(280 30% 20%);
 
       /* Overlay: Used for floating/overlay components (dialogs, popovers, modals, menus) */
       --overlay: hsl(280 20% 96%);
@@ -65,6 +69,10 @@
       /* Surface: Used for non-overlay components (cards, accordions, disclosure groups) */
       --surface: hsl(280 18% 15%);
       --surface-foreground: hsl(280 10% 85%);
+      --surface-secondary: hsl(280 16% 18%);
+      --surface-secondary-foreground: hsl(280 10% 85%);
+      --surface-tertiary: hsl(280 14% 21%);
+      --surface-tertiary-foreground: hsl(280 10% 85%);
 
       /* Overlay: Used for floating/overlay components (dialogs, popovers, modals, menus) */
       --overlay: hsl(280 16% 18%);
