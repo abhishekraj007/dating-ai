@@ -3,8 +3,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 // import { KeyboardProvider } from "react-native-keyboard-controller";
 import "../global.css";
 import { HeroUINativeProvider } from "heroui-native";
-import { AppThemeProvider, useAppTheme } from "@/contexts/app-theme-context";
-import { LanguageProvider, useLanguage } from "@/contexts/language-context";
+import { AppThemeProvider } from "@/contexts/app-theme-context";
+import { LanguageProvider } from "@/contexts/language-context";
 import { PurchasesProvider } from "@/contexts/purchases-context";
 import ConvexProvider from "@/providers/ConvexProvider";
 import SplashScreenProvider from "@/providers/SplashScreenProvider";
@@ -25,37 +25,23 @@ const heroUIConfig = {
     allowFontScaling: false,
   },
 };
-
-/* ------------------------------ themed route ------------------------------ */
-function ThemedLayout() {
-  const { isThemeLoaded } = useAppTheme();
-  const { isLanguageLoaded } = useLanguage();
-
-  if (!isThemeLoaded || !isLanguageLoaded) {
-    return null; // Let SplashScreenProvider handle the splash screen
-  }
-
-  return (
-    <HeroUINativeProvider config={heroUIConfig}>
-      <Slot />
-    </HeroUINativeProvider>
-  );
-}
 /* ------------------------------- root layout ------------------------------ */
 export default function Layout() {
   return (
     <GestureHandlerRootView className="flex-1">
       {/* <KeyboardProvider> */}
       <ConvexProvider>
-        <SplashScreenProvider>
-          <LanguageProvider>
-            <AppThemeProvider>
+        <LanguageProvider>
+          <AppThemeProvider>
+            <SplashScreenProvider>
               <PurchasesProvider>
-                <ThemedLayout />
+                <HeroUINativeProvider config={heroUIConfig}>
+                  <Slot />
+                </HeroUINativeProvider>
               </PurchasesProvider>
-            </AppThemeProvider>
-          </LanguageProvider>
-        </SplashScreenProvider>
+            </SplashScreenProvider>
+          </AppThemeProvider>
+        </LanguageProvider>
       </ConvexProvider>
       {/* </KeyboardProvider> */}
     </GestureHandlerRootView>

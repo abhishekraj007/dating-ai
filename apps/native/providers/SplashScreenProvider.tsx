@@ -10,6 +10,8 @@ import { useConvexAuth } from "convex/react";
 import * as SplashScreen from "expo-splash-screen";
 import type React from "react";
 import { useEffect } from "react";
+import { useAppTheme } from "@/contexts/app-theme-context";
+import { useLanguage } from "@/contexts/language-context";
 import { delay } from "@/utils/delay";
 
 /**
@@ -40,6 +42,8 @@ export default function SplashScreenProvider({
   children: React.ReactNode;
 }) {
   const { isLoading: isAuthLoading } = useConvexAuth();
+  const { isThemeLoaded } = useAppTheme();
+  const { isLanguageLoaded } = useLanguage();
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -52,7 +56,7 @@ export default function SplashScreenProvider({
   }
 
   useEffect(() => {
-    if (isAuthLoading || !fontsLoaded) {
+    if (isAuthLoading || !fontsLoaded || !isThemeLoaded || !isLanguageLoaded) {
       return;
     }
     /**
@@ -61,7 +65,7 @@ export default function SplashScreenProvider({
     delay(350).then(() => {
       SplashScreen.hideAsync();
     });
-  }, [isAuthLoading, fontsLoaded]);
+  }, [isAuthLoading, fontsLoaded, isThemeLoaded, isLanguageLoaded]);
 
   return <>{children}</>;
 }

@@ -2,7 +2,7 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { useConvexAuth } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
-import { Stack, Redirect, useSegments, useRouter } from "expo-router";
+import { type Href, Stack, useSegments, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { Platform, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
@@ -23,7 +23,7 @@ export default function RootLayout() {
   const themeColorBackground = useThemeColor("background");
   const segments = useSegments();
   const router = useRouter();
-  const didRedirectFromOnboarding = useRef(false);
+  const lastNavigationTarget = useRef<string | null>(null);
   const [hasFinishedInitialBootstrap, setHasFinishedInitialBootstrap] =
     useState(false);
 
@@ -47,7 +47,8 @@ export default function RootLayout() {
     userData?.profile?.hasCompletedOnboarding,
   );
   const isUserStatePending = isAuthenticated && userData == null;
-  const needsOnboarding = hasResolvedAuthenticatedUser && !hasCompletedOnboarding;
+  const needsOnboarding =
+    hasResolvedAuthenticatedUser && !hasCompletedOnboarding;
   const isUserBootstrapPending = isAuthenticated && userData === undefined;
 
   useEffect(() => {
@@ -63,29 +64,36 @@ export default function RootLayout() {
   // Only block the UI during the initial app bootstrap.
   // Re-showing this overlay during OAuth handoffs causes visible flicker.
   const showSplash = !hasFinishedInitialBootstrap;
+  let nextRoute: Href | null = null;
 
-  // Navigate away from onboarding when it's no longer needed.
-  // Uses useEffect + router.replace instead of <Redirect> to avoid an infinite
-  // re-render loop: useSegments() returns the old segments until navigation
-  // completes, so a synchronous <Redirect> keeps re-firing.
-  useEffect(() => {
-    if (showSplash || isUserStatePending) return;
-    if (!needsOnboarding && isOnOnboarding) {
-      if (!didRedirectFromOnboarding.current) {
-        didRedirectFromOnboarding.current = true;
-        router.replace("/(root)/(main)");
-      }
-    } else {
-      didRedirectFromOnboarding.current = false;
+  if (!showSplash && !isUserStatePending) {
+    if (needsOnboarding && !isOnOnboarding) {
+      nextRoute = "/(root)/(onboarding)/welcome";
+    } else if (!needsOnboarding && isOnOnboarding) {
+      nextRoute = "/(root)/(main)";
     }
-  }, [showSplash, isUserStatePending, needsOnboarding, isOnOnboarding, router]);
+  }
+
+  // Keep onboarding routing imperative in one place.
+  // Expo Router can report stale segments for a render after replace(), so we
+  // guard against re-firing the same navigation target until the route updates.
+  useEffect(() => {
+    if (!nextRoute) {
+      lastNavigationTarget.current = null;
+      return;
+    }
+
+    if (lastNavigationTarget.current === nextRoute) {
+      return;
+    }
+
+    lastNavigationTarget.current = nextRoute;
+    router.replace(nextRoute);
+  }, [nextRoute, router]);
 
   return (
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
-      {needsOnboarding && !isOnOnboarding && !showSplash && (
-        <Redirect href="/(root)/(onboarding)/welcome" />
-      )}
       <Stack
         screenOptions={{
           headerTitleAlign: "center",

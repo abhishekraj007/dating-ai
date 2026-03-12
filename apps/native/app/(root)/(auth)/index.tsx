@@ -45,7 +45,6 @@ export default function Landing() {
   };
 
   const isLoading = isGoogleLoading || isAppleLoading;
-  const isLoading = isGoogleLoading || isAppleLoading;
 
   return (
     <>
