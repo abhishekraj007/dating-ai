@@ -4,9 +4,9 @@ import { useConvexAuth } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
 import { Stack, Redirect, useSegments, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
-import { Platform } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SplashScreen } from "@/components/splash-screen";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 // import { useSyncOnboardingPreferences } from "@/hooks/useSyncOnboardingPreferences";
@@ -24,6 +24,8 @@ export default function RootLayout() {
   const segments = useSegments();
   const router = useRouter();
   const didRedirectFromOnboarding = useRef(false);
+  const [hasFinishedInitialBootstrap, setHasFinishedInitialBootstrap] =
+    useState(false);
 
   // Check if we're already on onboarding screens
   const isOnOnboarding = (segments as string[]).includes("(onboarding)");
@@ -45,15 +47,29 @@ export default function RootLayout() {
     userData?.profile?.hasCompletedOnboarding,
   );
   const isUserStatePending = isAuthenticated && userData == null;
-  const needsOnboarding =
-    hasResolvedAuthenticatedUser && !hasCompletedOnboarding;
+  const needsOnboarding = hasResolvedAuthenticatedUser && !hasCompletedOnboarding;
+  const isUserBootstrapPending = isAuthenticated && userData === undefined;
+
+  useEffect(() => {
+    if (hasFinishedInitialBootstrap) {
+      return;
+    }
+
+    if (!isLoading && !isUserBootstrapPending) {
+      setHasFinishedInitialBootstrap(true);
+    }
+  }, [hasFinishedInitialBootstrap, isLoading, isUserBootstrapPending]);
+
+  // Only block the UI during the initial app bootstrap.
+  // Re-showing this overlay during OAuth handoffs causes visible flicker.
+  const showSplash = !hasFinishedInitialBootstrap;
 
   // Navigate away from onboarding when it's no longer needed.
   // Uses useEffect + router.replace instead of <Redirect> to avoid an infinite
   // re-render loop: useSegments() returns the old segments until navigation
   // completes, so a synchronous <Redirect> keeps re-firing.
   useEffect(() => {
-    if (isLoading || isUserStatePending) return;
+    if (showSplash || isUserStatePending) return;
     if (!needsOnboarding && isOnOnboarding) {
       if (!didRedirectFromOnboarding.current) {
         didRedirectFromOnboarding.current = true;
@@ -62,20 +78,14 @@ export default function RootLayout() {
     } else {
       didRedirectFromOnboarding.current = false;
     }
-  }, [isLoading, isUserStatePending, needsOnboarding, isOnOnboarding, router]);
-
-  if (isLoading || isUserStatePending) {
-    return <SplashScreen />;
-  }
-
-  // Redirect to onboarding if needed (but not if already there)
-  if (needsOnboarding && !isOnOnboarding) {
-    return <Redirect href="/(root)/(onboarding)/welcome" />;
-  }
+  }, [showSplash, isUserStatePending, needsOnboarding, isOnOnboarding, router]);
 
   return (
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
+      {needsOnboarding && !isOnOnboarding && !showSplash && (
+        <Redirect href="/(root)/(onboarding)/welcome" />
+      )}
       <Stack
         screenOptions={{
           headerTitleAlign: "center",
@@ -120,7 +130,7 @@ export default function RootLayout() {
           }}
         />
 
-        {/* Main app - shown when authenticated and onboarded */}
+        {/* Main app - accessible to all users */}
         <Stack.Screen
           name="(main)"
           options={{
@@ -128,6 +138,16 @@ export default function RootLayout() {
           }}
         />
       </Stack>
+      {showSplash && (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { zIndex: 9999, backgroundColor: themeColorBackground },
+          ]}
+        >
+          <SplashScreen />
+        </View>
+      )}
     </>
   );
 }

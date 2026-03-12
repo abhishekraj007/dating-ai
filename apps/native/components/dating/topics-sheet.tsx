@@ -18,8 +18,6 @@ import {
   Dumbbell,
   type LucideIcon,
 } from "lucide-react-native";
-import type BottomSheet from "@gorhom/bottom-sheet";
-import { forwardRef } from "react";
 
 // Conversation topic categories
 export const CONVERSATION_TOPICS = [
@@ -129,47 +127,42 @@ interface TopicsSheetProps {
   onSelectTopic: (topic: (typeof CONVERSATION_TOPICS)[number]) => void;
 }
 
-export const TopicsSheet = forwardRef<BottomSheet, TopicsSheetProps>(
-  ({ isOpen, onClose, onSelectTopic }, ref) => {
-    const insets = useSafeAreaInsets();
+export function TopicsSheet({
+  isOpen,
+  onClose,
+  onSelectTopic,
+}: TopicsSheetProps) {
+  const insets = useSafeAreaInsets();
 
-    const handleSelectTopic = (topic: (typeof CONVERSATION_TOPICS)[number]) => {
-      onSelectTopic(topic);
-      onClose();
-    };
+  const handleSelectTopic = (topic: (typeof CONVERSATION_TOPICS)[number]) => {
+    onSelectTopic(topic);
+    onClose();
+  };
 
-    return (
-      <CustomBottomSheet
-        ref={ref}
-        isOpen={isOpen}
-        onClose={onClose}
-        snapPoints={["70%"]}
-      >
-        <View className="flex-1 px-4">
-          <Text className="text-lg font-semibold text-foreground text-center mb-4">
-            Topic
-          </Text>
+  return (
+    <CustomBottomSheet isOpen={isOpen} onClose={onClose} snapPoints={["70%"]}>
+      <View className="flex-1 px-4">
+        <Text className="text-lg font-semibold text-foreground text-center mb-4">
+          Topic
+        </Text>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingBottom: Math.max(insets.bottom, 32) + 100,
-              flex: 1,
-            }}
-          >
-            {CONVERSATION_TOPICS.map((topic) => (
-              <TopicItem
-                key={topic.id}
-                icon={topic.icon}
-                label={topic.label}
-                onPress={() => handleSelectTopic(topic)}
-              />
-            ))}
-          </ScrollView>
-        </View>
-      </CustomBottomSheet>
-    );
-  }
-);
-
-TopicsSheet.displayName = "TopicsSheet";
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: Math.max(insets.bottom, 32) + 100,
+            flex: 1,
+          }}
+        >
+          {CONVERSATION_TOPICS.map((topic) => (
+            <TopicItem
+              key={topic.id}
+              icon={topic.icon}
+              label={topic.label}
+              onPress={() => handleSelectTopic(topic)}
+            />
+          ))}
+        </ScrollView>
+      </View>
+    </CustomBottomSheet>
+  );
+}

@@ -6,28 +6,23 @@ import {
   View,
   ActivityIndicator,
   StyleSheet,
-  Platform,
   Dimensions,
 } from "react-native";
 import { Image } from "expo-image";
-import { useConvexAuth } from "convex/react";
 import { useState } from "react";
 import { useAppleAuth, useGoogleAuth } from "@/lib/betterAuth/oauth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { X } from "lucide-react-native";
-import { isAndroid } from "@/utils";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "@/hooks/use-translation";
 import { LanguageSheet } from "@/components/language/language-sheet";
 
-const { width, height } = Dimensions.get("window");
+const { height } = Dimensions.get("window");
 
 export default function Landing() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t, language, supportedLanguages } = useTranslation();
-  const { isAuthenticated } = useConvexAuth();
-  const [isSigningIn, setIsSigningIn] = useState(false);
   const [isLanguageSheetOpen, setIsLanguageSheetOpen] = useState(false);
   const { signIn: signInWithGoogle, isLoading: isGoogleLoading } =
     useGoogleAuth();
@@ -42,24 +37,15 @@ export default function Landing() {
   };
 
   const handleGoogleSignIn = async () => {
-    setIsSigningIn(true);
-    try {
-      await signInWithGoogle();
-    } catch {
-      setIsSigningIn(false);
-    }
+    await signInWithGoogle();
   };
 
   const handleAppleSignIn = async () => {
-    setIsSigningIn(true);
-    try {
-      await signInWithApple();
-    } catch {
-      setIsSigningIn(false);
-    }
+    await signInWithApple();
   };
 
-  const isLoading = isGoogleLoading || isAppleLoading || isSigningIn;
+  const isLoading = isGoogleLoading || isAppleLoading;
+  const isLoading = isGoogleLoading || isAppleLoading;
 
   return (
     <>
@@ -148,9 +134,7 @@ export default function Landing() {
             <Text className="font-extrabold text-6xl text-white/90">
               ChatAI
             </Text>
-            <Text className="text-white/80">
-              {t("auth.tagline")}
-            </Text>
+            <Text className="text-white/80">{t("auth.tagline")}</Text>
           </View>
           <View className="w-full gap-4">
             {/* google */}
