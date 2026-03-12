@@ -9,7 +9,7 @@ import { Text } from "@/components/ui/text";
 import { useRouter } from "expo-router";
 import { Skeleton } from "heroui-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useState, useCallback, useEffect, useRef } from "react";
+import { Suspense, useState, useCallback, useEffect, useRef } from "react";
 import { X, Heart } from "lucide-react-native";
 import Animated, {
   useSharedValue,
@@ -28,7 +28,46 @@ import {
 import { useStartConversation } from "@/hooks/dating";
 import type { Id } from "@dating-ai/backend";
 
+function ForYouSkeleton() {
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  const bottomPadding =
+    Platform.OS === "android" ? Math.max(insets.bottom, 8) : 24;
+  const cardHeight = height - insets.bottom - 40;
+
+  return (
+    <View className="flex-1 bg-background">
+      <GestureHandlerRootView style={styles.cardContainer}>
+        <View className="flex-1 items-center justify-center w-full">
+          <View
+            className="w-full relative bg-background overflow-hidden"
+            style={{ height: cardHeight }}
+          >
+            <Skeleton className="w-full h-full" />
+            <View className="absolute bottom-28 left-0 right-0 p-6 z-10">
+              <Skeleton className="h-8 w-3/4 rounded-lg mb-3" />
+              <View className="flex-row gap-2">
+                <Skeleton className="h-6 w-16 rounded-full" />
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-6 w-14 rounded-full" />
+              </View>
+            </View>
+          </View>
+        </View>
+      </GestureHandlerRootView>
+    </View>
+  );
+}
+
 export default function ForYouScreen() {
+  return (
+    <Suspense fallback={<ForYouSkeleton />}>
+      <ForYouContent />
+    </Suspense>
+  );
+}
+
+function ForYouContent() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();

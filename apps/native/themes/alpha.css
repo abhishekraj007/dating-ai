@@ -44,6 +44,8 @@
       /* Misc Colors */
       --border: var(--color-neutral-200);
       --divider: var(--color-neutral-400);
+      --separator: var(--color-neutral-300);
+      --focus: var(--accent);
       --link: var(--foreground);
     }
 
@@ -91,6 +93,8 @@
       /* Misc Colors */
       --border: var(--color-neutral-800);
       --divider: var(--color-neutral-600);
+      --separator: var(--color-neutral-700);
+      --focus: var(--accent);
       --link: var(--foreground);
     }
   }
