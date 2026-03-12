@@ -72,19 +72,19 @@ function ForYouContent() {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
 
-  const { profiles, isLoading, status, loadMore } = useForYouProfiles(20);
+  const { profiles, isLoading, status, loadMore, removeProfile, restoreProfile } =
+    useForYouProfiles(20);
   const { likeProfile, skipProfile, isAuthenticated } = useProfileInteraction();
   const [loadingChatting, setLoadingChatting] = useState(false);
   const { startConversation } = useStartConversation();
-  const [currentIndex, setCurrentIndex] = useState(0);
   const lastPrefetchAtMs = useRef(0);
 
-  const currentProfile = profiles[currentIndex];
-  const nextProfile = profiles[currentIndex + 1];
+  const currentProfile = profiles[0];
+  const nextProfile = profiles[1];
 
   // Prefetch more profiles when nearing the end of loaded batch
   useEffect(() => {
-    const remaining = profiles.length - currentIndex;
+    const remaining = profiles.length;
     const now = Date.now();
     if (
       remaining <= 5 &&
@@ -94,7 +94,7 @@ function ForYouContent() {
       lastPrefetchAtMs.current = now;
       loadMore(20);
     }
-  }, [currentIndex, profiles.length, status, loadMore]);
+  }, [profiles.length, status, loadMore]);
 
   // Track drag position for button animations
   const dragX = useSharedValue(0);
@@ -138,20 +138,29 @@ function ForYouContent() {
 
   const handleSwipeLeft = useCallback(async () => {
     if (!currentProfile) return;
-    // Auth check is done in the card component - this only gets called if authenticated
-    await skipProfile(currentProfile._id as Id<"aiProfiles">);
-    setCurrentIndex((prev) => prev + 1);
-  }, [currentProfile, skipProfile]);
+    removeProfile(currentProfile._id as Id<"aiProfiles">);
+
+    try {
+      await skipProfile(currentProfile._id as Id<"aiProfiles">);
+    } catch (error) {
+      restoreProfile(currentProfile);
+      console.error("Failed to skip profile:", error);
+    }
+  }, [currentProfile, removeProfile, restoreProfile, skipProfile]);
 
   const handleSwipeRight = useCallback(async () => {
     if (!currentProfile) return;
-    // Auth check is done in the card component - this only gets called if authenticated
-    await likeProfile(currentProfile._id as Id<"aiProfiles">);
-    // Show match modal instead of navigating
-    setMatchedProfile(currentProfile);
-    setShowMatchModal(true);
-    setCurrentIndex((prev) => prev + 1);
-  }, [currentProfile, likeProfile]);
+    removeProfile(currentProfile._id as Id<"aiProfiles">);
+
+    try {
+      await likeProfile(currentProfile._id as Id<"aiProfiles">);
+      setMatchedProfile(currentProfile);
+      setShowMatchModal(true);
+    } catch (error) {
+      restoreProfile(currentProfile);
+      console.error("Failed to like profile:", error);
+    }
+  }, [currentProfile, likeProfile, removeProfile, restoreProfile]);
 
   const handleSkipPress = useCallback(async () => {
     if (!currentProfile) return;
@@ -160,9 +169,22 @@ function ForYouContent() {
       navigateToLogin();
       return;
     }
-    await skipProfile(currentProfile._id as Id<"aiProfiles">);
-    setCurrentIndex((prev) => prev + 1);
-  }, [currentProfile, skipProfile, isAuthenticated, navigateToLogin]);
+    removeProfile(currentProfile._id as Id<"aiProfiles">);
+
+    try {
+      await skipProfile(currentProfile._id as Id<"aiProfiles">);
+    } catch (error) {
+      restoreProfile(currentProfile);
+      console.error("Failed to skip profile:", error);
+    }
+  }, [
+    currentProfile,
+    skipProfile,
+    isAuthenticated,
+    navigateToLogin,
+    removeProfile,
+    restoreProfile,
+  ]);
 
   const handleLikePress = useCallback(async () => {
     if (!currentProfile) return;
@@ -171,12 +193,24 @@ function ForYouContent() {
       navigateToLogin();
       return;
     }
-    await likeProfile(currentProfile._id as Id<"aiProfiles">);
-    // Show match modal
-    setMatchedProfile(currentProfile);
-    setShowMatchModal(true);
-    setCurrentIndex((prev) => prev + 1);
-  }, [currentProfile, likeProfile, isAuthenticated, navigateToLogin]);
+    removeProfile(currentProfile._id as Id<"aiProfiles">);
+
+    try {
+      await likeProfile(currentProfile._id as Id<"aiProfiles">);
+      setMatchedProfile(currentProfile);
+      setShowMatchModal(true);
+    } catch (error) {
+      restoreProfile(currentProfile);
+      console.error("Failed to like profile:", error);
+    }
+  }, [
+    currentProfile,
+    likeProfile,
+    isAuthenticated,
+    navigateToLogin,
+    removeProfile,
+    restoreProfile,
+  ]);
 
   const handleMatchClose = useCallback(() => {
     setShowMatchModal(false);
@@ -238,7 +272,7 @@ function ForYouContent() {
               </View>
             </View>
           </View>
-        ) : currentIndex >= profiles.length ? (
+        ) : profiles.length === 0 ? (
           <View className="flex-1 items-center justify-center px-6">
             {status === "CanLoadMore" || status === "LoadingMore" ? (
               <View className="flex-1 items-center justify-center w-full">
@@ -304,7 +338,7 @@ function ForYouContent() {
       </GestureHandlerRootView>
 
       {/* Fixed Action Buttons */}
-      {currentProfile && !isLoading && currentIndex < profiles.length && (
+      {currentProfile && !isLoading && (
         <View
           style={[
             styles.actionButtonsContainer,

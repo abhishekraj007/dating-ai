@@ -213,11 +213,17 @@ export function ProfileSwipeCard({
       >
         {/* Profile Image */}
         <Image
-          source={{ uri: profile.avatarUrl ?? undefined }}
+          source={
+            profile.avatarUrl
+              ? {
+                  uri: profile.avatarUrl,
+                  cacheKey: profile.avatarImageKey ?? String(profile._id),
+                }
+              : undefined
+          }
           style={styles.image}
           contentFit="cover"
-          cachePolicy="disk"
-          transition={200}
+          cachePolicy="memory-disk"
         />
 
         {/* Gradient Overlay */}

@@ -4,7 +4,7 @@ import { api } from "@dating-ai/backend";
 import type { Id } from "@dating-ai/backend";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useFocusEffect } from "expo-router";
 
 export type GenderPreference = "female" | "male" | "both";
@@ -26,6 +26,7 @@ export interface ForYouProfile {
   zodiacSign?: string;
   bio?: string;
   interests?: string[];
+  avatarImageKey?: string;
   avatarUrl: string | null;
 }
 
@@ -52,12 +53,69 @@ export function useForYouProfiles(initialNumItems: number = 20) {
     },
     { initialNumItems },
   );
+  const seenProfileIdsRef = useRef(new Set<string>());
+  const removedProfileIdsRef = useRef(new Set<string>());
+  const [profiles, setProfiles] = useState<ForYouProfile[]>([]);
+
+  useEffect(() => {
+    if (!results || results.length === 0) {
+      return;
+    }
+
+    setProfiles((currentProfiles) => {
+      let hasChanges = false;
+      const nextProfiles = [...currentProfiles];
+
+      for (const profile of results as ForYouProfile[]) {
+        const profileId = String(profile._id);
+
+        if (
+          seenProfileIdsRef.current.has(profileId) ||
+          removedProfileIdsRef.current.has(profileId)
+        ) {
+          continue;
+        }
+
+        seenProfileIdsRef.current.add(profileId);
+        nextProfiles.push(profile);
+        hasChanges = true;
+      }
+
+      return hasChanges ? nextProfiles : currentProfiles;
+    });
+  }, [results]);
+
+  const removeProfile = useCallback((profileId: Id<"aiProfiles">) => {
+    const normalizedProfileId = String(profileId);
+    removedProfileIdsRef.current.add(normalizedProfileId);
+    seenProfileIdsRef.current.add(normalizedProfileId);
+
+    setProfiles((currentProfiles) =>
+      currentProfiles.filter((profile) => profile._id !== profileId),
+    );
+  }, []);
+
+  const restoreProfile = useCallback((profile: ForYouProfile) => {
+    const profileId = String(profile._id);
+    removedProfileIdsRef.current.delete(profileId);
+    seenProfileIdsRef.current.add(profileId);
+
+    setProfiles((currentProfiles) => {
+      if (currentProfiles.some((current) => current._id === profile._id)) {
+        return currentProfiles;
+      }
+
+      return [profile, ...currentProfiles];
+    });
+  }, []);
 
   return {
-    profiles: results ?? [],
-    isLoading,
+    profiles,
+    isLoading: profiles.length === 0 && isLoading,
     status,
     loadMore,
+    removeProfile,
+    restoreProfile,
   };
 }
 
