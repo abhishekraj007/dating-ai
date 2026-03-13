@@ -674,8 +674,26 @@ export const getForYouProfilesPaginated = query({
     platform: v.optional(
       v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
     ),
+    genderPreference: v.optional(
+      v.union(v.literal("female"), v.literal("male"), v.literal("both")),
+    ),
+    ageMin: v.optional(v.number()),
+    ageMax: v.optional(v.number()),
+    zodiacPreferences: v.optional(v.array(v.string())),
+    interestPreferences: v.optional(v.array(v.string())),
   },
-  handler: async (ctx, { paginationOpts, platform }) => {
+  handler: async (
+    ctx,
+    {
+      paginationOpts,
+      platform,
+      genderPreference: requestedGenderPreference,
+      ageMin: requestedAgeMin,
+      ageMax: requestedAgeMax,
+      zodiacPreferences: requestedZodiacPreferences,
+      interestPreferences: requestedInterestPreferences,
+    },
+  ) => {
     const user = await authComponent.safeGetAuthUser(ctx);
 
     let genderPreference: "female" | "male" | "both" = "female";
@@ -700,6 +718,12 @@ export const getForYouProfilesPaginated = query({
       interestPreferences = preferences?.interestPreferences ?? [];
 
     }
+
+    genderPreference = requestedGenderPreference ?? genderPreference;
+    ageMin = requestedAgeMin ?? ageMin;
+    ageMax = requestedAgeMax ?? ageMax;
+    zodiacPreferences = requestedZodiacPreferences ?? zodiacPreferences;
+    interestPreferences = requestedInterestPreferences ?? interestPreferences;
 
     const dbQuery =
       genderPreference !== "both"

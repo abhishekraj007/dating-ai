@@ -8,7 +8,6 @@ import {
 import { Text } from "@/components/ui/text";
 import { useRouter } from "expo-router";
 import { Skeleton } from "heroui-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Suspense, useState, useCallback, useEffect, useRef } from "react";
 import { X, Heart } from "lucide-react-native";
 import Animated, {
@@ -37,7 +36,7 @@ function ForYouSkeleton() {
 
   return (
     <View className="flex-1 bg-background">
-      <GestureHandlerRootView style={styles.cardContainer}>
+      <View style={styles.cardContainer}>
         <View className="flex-1 items-center justify-center w-full">
           <View
             className="w-full relative bg-background overflow-hidden"
@@ -54,7 +53,7 @@ function ForYouSkeleton() {
             </View>
           </View>
         </View>
-      </GestureHandlerRootView>
+      </View>
     </View>
   );
 }
@@ -72,8 +71,14 @@ function ForYouContent() {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
 
-  const { profiles, isLoading, status, loadMore, removeProfile, restoreProfile } =
-    useForYouProfiles(20);
+  const {
+    profiles,
+    isLoading,
+    status,
+    loadMore,
+    removeProfile,
+    restoreProfile,
+  } = useForYouProfiles(20);
   const { likeProfile, skipProfile, isAuthenticated } = useProfileInteraction();
   const [loadingChatting, setLoadingChatting] = useState(false);
   const { startConversation } = useStartConversation();
@@ -251,7 +256,7 @@ function ForYouContent() {
   return (
     <View className="flex-1 bg-background">
       {/* Card Stack - Full Screen */}
-      <GestureHandlerRootView style={styles.cardContainer}>
+      <View style={styles.cardContainer}>
         {isLoading ? (
           <View className="flex-1 items-center justify-center  w-full">
             {/* Card Skeleton */}
@@ -335,7 +340,7 @@ function ForYouContent() {
             )}
           </>
         )}
-      </GestureHandlerRootView>
+      </View>
 
       {/* Fixed Action Buttons */}
       {currentProfile && !isLoading && (

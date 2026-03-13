@@ -46,16 +46,42 @@ function getCurrentPlatform(): AppPlatform {
  */
 export function useForYouProfiles(initialNumItems: number = 20) {
   const platform = getCurrentPlatform();
+  const { preferences } = useUserPreferences();
+  const genderPreference = preferences?.genderPreference ?? "female";
+  const ageMin = preferences?.ageMin ?? 18;
+  const ageMax = preferences?.ageMax ?? 99;
+  const zodiacPreferences = [...(preferences?.zodiacPreferences ?? [])].sort();
+  const interestPreferences = [
+    ...(preferences?.interestPreferences ?? []),
+  ].sort();
+  const filterSignature = JSON.stringify({
+    genderPreference,
+    ageMin,
+    ageMax,
+    zodiacPreferences,
+    interestPreferences,
+  });
   const { results, status, loadMore, isLoading } = usePaginatedQuery(
     api.features.preferences.queries.getForYouProfilesPaginated,
     {
       platform,
+      genderPreference,
+      ageMin,
+      ageMax,
+      zodiacPreferences,
+      interestPreferences,
     },
     { initialNumItems },
   );
   const seenProfileIdsRef = useRef(new Set<string>());
   const removedProfileIdsRef = useRef(new Set<string>());
   const [profiles, setProfiles] = useState<ForYouProfile[]>([]);
+
+  useEffect(() => {
+    seenProfileIdsRef.current = new Set();
+    removedProfileIdsRef.current = new Set();
+    setProfiles([]);
+  }, [filterSignature]);
 
   useEffect(() => {
     if (!results || results.length === 0) {
