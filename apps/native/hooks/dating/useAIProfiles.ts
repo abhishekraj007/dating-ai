@@ -1,6 +1,7 @@
 import { useQuery, usePaginatedQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend";
-import { useUserPreferences } from "./useForYou";
+import { useConvexAuth } from "convex/react";
+import { DEFAULT_USER_PREFERENCES, useUserPreferences } from "./useForYou";
 
 type Gender = "female" | "male";
 
@@ -49,25 +50,30 @@ export function useAIProfiles(
  * Uses paginated query for infinite scroll.
  */
 export function useExploreProfiles(initialNumItems: number = 20) {
+  const { isAuthenticated } = useConvexAuth();
   const { preferences } = useUserPreferences();
   const platform = getCurrentPlatform();
+  const genderPreference =
+    preferences?.genderPreference ?? DEFAULT_USER_PREFERENCES.genderPreference;
+  const ageMin = preferences?.ageMin ?? DEFAULT_USER_PREFERENCES.ageMin;
+  const ageMax = preferences?.ageMax ?? DEFAULT_USER_PREFERENCES.ageMax;
+  const zodiacPreferences = [...(preferences?.zodiacPreferences ?? [])].sort();
+  const interestPreferences = [
+    ...(preferences?.interestPreferences ?? []),
+  ].sort();
 
-  // Extract only the allowed args to avoid sending system fields like _id, _creationTime
-  const filterArgs = preferences
-    ? {
-        genderPreference: preferences.genderPreference,
-        ageMin: preferences.ageMin,
-        ageMax: preferences.ageMax,
-        zodiacPreferences: preferences.zodiacPreferences,
-        interestPreferences: preferences.interestPreferences,
-      }
-    : {};
+  const viewerKind = isAuthenticated ? "authenticated" : "anonymous";
 
   const { results, status, loadMore, isLoading } = usePaginatedQuery(
     api.features.preferences.queries.getExploreProfilesPaginated,
     {
       platform,
-      ...filterArgs,
+      viewerKind,
+      genderPreference,
+      ageMin,
+      ageMax,
+      zodiacPreferences,
+      interestPreferences,
     },
     { initialNumItems },
   );

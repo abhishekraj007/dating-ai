@@ -62,7 +62,7 @@ export default function MainLayout() {
       />
 
       {/* Legacy/utility screens */}
-      <Stack.Screen
+      {/* <Stack.Screen
         name="index"
         options={{
           ...standard,
@@ -70,7 +70,7 @@ export default function MainLayout() {
           headerTitle: "",
           headerShown: false,
         }}
-      />
+      /> */}
       <Stack.Screen
         name="buy-credits"
         options={{

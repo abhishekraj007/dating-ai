@@ -10,6 +10,14 @@ import { useFocusEffect } from "expo-router";
 export type GenderPreference = "female" | "male" | "both";
 export type InteractionAction = "like" | "skip" | "superlike";
 
+export const DEFAULT_USER_PREFERENCES: UserPreferences = {
+  genderPreference: "female",
+  ageMin: 18,
+  ageMax: 99,
+  zodiacPreferences: [],
+  interestPreferences: [],
+};
+
 export interface UserPreferences {
   genderPreference: GenderPreference;
   ageMin: number;
@@ -47,9 +55,10 @@ function getCurrentPlatform(): AppPlatform {
 export function useForYouProfiles(initialNumItems: number = 20) {
   const platform = getCurrentPlatform();
   const { preferences } = useUserPreferences();
-  const genderPreference = preferences?.genderPreference ?? "female";
-  const ageMin = preferences?.ageMin ?? 18;
-  const ageMax = preferences?.ageMax ?? 99;
+  const genderPreference =
+    preferences?.genderPreference ?? DEFAULT_USER_PREFERENCES.genderPreference;
+  const ageMin = preferences?.ageMin ?? DEFAULT_USER_PREFERENCES.ageMin;
+  const ageMax = preferences?.ageMax ?? DEFAULT_USER_PREFERENCES.ageMax;
   const zodiacPreferences = [...(preferences?.zodiacPreferences ?? [])].sort();
   const interestPreferences = [
     ...(preferences?.interestPreferences ?? []),
@@ -160,6 +169,8 @@ export function useUserPreferences() {
       const json = await AsyncStorage.getItem("user_preferences");
       if (json) {
         setLocalPreferences(JSON.parse(json));
+      } else {
+        setLocalPreferences(null);
       }
     } catch (e) {
       console.error("Failed to load local preferences", e);
@@ -167,6 +178,16 @@ export function useUserPreferences() {
       setIsLoadingLocal(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setIsLoadingLocal(false);
+      return;
+    }
+
+    setIsLoadingLocal(true);
+    void loadLocalPreferences();
+  }, [isAuthenticated, loadLocalPreferences]);
 
   // Reload local preferences when screen focuses (to catch updates from Filter screen)
   useFocusEffect(

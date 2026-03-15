@@ -552,6 +552,9 @@ export const getExploreProfiles = query({
 export const getExploreProfilesPaginated = query({
   args: {
     paginationOpts: paginationOptsValidator,
+    viewerKind: v.optional(
+      v.union(v.literal("authenticated"), v.literal("anonymous")),
+    ),
     platform: v.optional(
       v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
     ),
@@ -567,6 +570,7 @@ export const getExploreProfilesPaginated = query({
     ctx,
     {
       paginationOpts,
+      viewerKind: _viewerKind,
       platform,
       genderPreference: overrideGender,
       ageMin: overrideAgeMin,
@@ -716,7 +720,6 @@ export const getForYouProfilesPaginated = query({
       ageMax = preferences?.ageMax ?? 99;
       zodiacPreferences = preferences?.zodiacPreferences ?? [];
       interestPreferences = preferences?.interestPreferences ?? [];
-
     }
 
     genderPreference = requestedGenderPreference ?? genderPreference;
