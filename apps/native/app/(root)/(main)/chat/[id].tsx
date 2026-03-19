@@ -90,7 +90,6 @@ export default function ChatScreen() {
     viewabilityConfig,
     onViewableItemsChanged,
     initialScrollIndex,
-    initialScrollIndexParams,
 
     // Keyboard state
     composerHeight,
@@ -220,6 +219,7 @@ export default function ChatScreen() {
             <Popover.Portal>
               <Popover.Overlay />
               <Popover.Content
+                presentation="popover"
                 placement="bottom"
                 align="end"
                 className="rounded-xl p-2"
@@ -260,11 +260,6 @@ export default function ChatScreen() {
             initialScrollIndex={
               typeof initialScrollIndex === "number" && messages.length > 0
                 ? initialScrollIndex
-                : undefined
-            }
-            initialScrollIndexParams={
-              typeof initialScrollIndex === "number" && messages.length > 0
-                ? initialScrollIndexParams
                 : undefined
             }
             contentContainerStyle={{

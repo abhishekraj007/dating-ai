@@ -7,9 +7,9 @@ import {
 } from "react-native";
 import { Text } from "@/components/ui/text";
 import { useRouter } from "expo-router";
-import { Skeleton } from "heroui-native";
-import { Suspense, useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { X, Heart } from "lucide-react-native";
+import { Skeleton } from "heroui-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -26,44 +26,10 @@ import {
 } from "@/hooks/dating/useForYou";
 import { useStartConversation } from "@/hooks/dating";
 import type { Id } from "@dating-ai/backend";
-
-function ForYouSkeleton() {
-  const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
-  const bottomPadding =
-    Platform.OS === "android" ? Math.max(insets.bottom, 8) : 24;
-  const cardHeight = height - insets.bottom - 40;
-
-  return (
-    <View className="flex-1 bg-background">
-      <View style={styles.cardContainer}>
-        <View className="flex-1 items-center justify-center w-full">
-          <View
-            className="w-full relative bg-background overflow-hidden"
-            style={{ height: cardHeight }}
-          >
-            <Skeleton className="w-full h-full" />
-            <View className="absolute bottom-28 left-0 right-0 p-6 z-10">
-              <Skeleton className="h-8 w-3/4 rounded-lg mb-3" />
-              <View className="flex-row gap-2">
-                <Skeleton className="h-6 w-16 rounded-full" />
-                <Skeleton className="h-6 w-20 rounded-full" />
-                <Skeleton className="h-6 w-14 rounded-full" />
-              </View>
-            </View>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-}
+import { ForYouHeroUISkeleton } from "@/components/dating/for-you-skeleton";
 
 export default function ForYouScreen() {
-  return (
-    <Suspense fallback={<ForYouSkeleton />}>
-      <ForYouContent />
-    </Suspense>
-  );
+  return <ForYouContent />;
 }
 
 function ForYouContent() {
@@ -258,43 +224,11 @@ function ForYouContent() {
       {/* Card Stack - Full Screen */}
       <View style={styles.cardContainer}>
         {isLoading ? (
-          <View className="flex-1 items-center justify-center  w-full">
-            {/* Card Skeleton */}
-            <View
-              className="w-full relative bg-background overflow-hidden"
-              style={{ height: cardHeight }}
-            >
-              <Skeleton className="w-full h-full" />
-
-              {/* Content Overlay Skeleton */}
-              <View className="absolute bottom-28 left-0 right-0 p-6 z-10">
-                <Skeleton className="h-8 w-3/4 rounded-lg mb-3" />
-                <View className="flex-row gap-2">
-                  <Skeleton className="h-6 w-16 rounded-full" />
-                  <Skeleton className="h-6 w-20 rounded-full" />
-                  <Skeleton className="h-6 w-14 rounded-full" />
-                </View>
-              </View>
-            </View>
-          </View>
+          <ForYouHeroUISkeleton cardHeight={cardHeight} />
         ) : profiles.length === 0 ? (
           <View className="flex-1 items-center justify-center px-6">
             {status === "CanLoadMore" || status === "LoadingMore" ? (
-              <View className="flex-1 items-center justify-center w-full">
-                <View
-                  className="w-full relative bg-background overflow-hidden"
-                  style={{ height: cardHeight }}
-                >
-                  <Skeleton className="w-full h-full" />
-                  <View className="absolute bottom-28 left-0 right-0 p-6 z-10">
-                    <Skeleton className="h-8 w-3/4 rounded-lg mb-3" />
-                    <View className="flex-row gap-2">
-                      <Skeleton className="h-6 w-16 rounded-full" />
-                      <Skeleton className="h-6 w-20 rounded-full" />
-                    </View>
-                  </View>
-                </View>
-              </View>
+              <ForYouHeroUISkeleton cardHeight={cardHeight} />
             ) : (
               <>
                 <Text className="text-xl font-semibold mb-2">
@@ -306,7 +240,7 @@ function ForYouContent() {
               </>
             )}
           </View>
-        ) : (
+        ) : currentProfile ? (
           <>
             {/* Next card (behind) - slightly smaller and offset */}
             {nextProfile && (
@@ -339,6 +273,8 @@ function ForYouContent() {
               />
             )}
           </>
+        ) : (
+          <ForYouHeroUISkeleton cardHeight={cardHeight} />
         )}
       </View>
 
@@ -390,6 +326,33 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "flex-start",
+  },
+  heroSkeletonStatusPillWrap: {
+    position: "absolute",
+    top: 20,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 1,
+  },
+  heroSkeletonContentWrap: {
+    position: "absolute",
+    left: 24,
+    right: 24,
+    bottom: 160,
+  },
+  heroSkeletonChipRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 10,
+  },
+  heroSkeletonButtonsRow: {
+    position: "absolute",
+    left: 24,
+    right: 24,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   actionButtonsContainer: {
     position: "absolute",

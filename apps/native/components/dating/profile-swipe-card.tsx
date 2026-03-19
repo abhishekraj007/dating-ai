@@ -6,7 +6,7 @@ import {
   ScrollView,
   Text,
 } from "react-native";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 // import { Text } from "@/components/ui/text";
 import { Chip } from "heroui-native";
 import { Image } from "expo-image";
@@ -33,6 +33,7 @@ interface ProfileSwipeCardProps {
   onSwipeRight: () => void;
   onPress: () => void;
   onAuthRequired?: () => void;
+  onImageReady?: () => void;
   dragX?: SharedValue<number>;
   bottomUiHeight?: number;
   isFirst?: boolean;
@@ -46,6 +47,7 @@ export function ProfileSwipeCard({
   onSwipeRight,
   onPress,
   onAuthRequired,
+  onImageReady,
   dragX,
   bottomUiHeight,
   isFirst = false,
@@ -64,6 +66,7 @@ export function ProfileSwipeCard({
   const scale = useSharedValue(1);
   const didPan = useSharedValue(false);
   const blockCardPressUntilRef = useRef(0);
+  const hasReportedImageReadyRef = useRef(false);
 
   const handleAuthRequired = () => {
     if (onAuthRequired) {
@@ -81,6 +84,20 @@ export function ProfileSwipeCard({
     }
     onPress();
   };
+
+  const reportImageReady = () => {
+    if (!isFirst || !onImageReady || hasReportedImageReadyRef.current) {
+      return;
+    }
+    hasReportedImageReadyRef.current = true;
+    onImageReady();
+  };
+
+  useEffect(() => {
+    if (!profile.avatarUrl) {
+      reportImageReady();
+    }
+  }, [profile.avatarUrl]);
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {
@@ -224,6 +241,8 @@ export function ProfileSwipeCard({
           style={styles.image}
           contentFit="cover"
           cachePolicy="memory-disk"
+          onLoad={reportImageReady}
+          onError={reportImageReady}
         />
 
         {/* Gradient Overlay */}

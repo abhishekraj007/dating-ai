@@ -5,7 +5,7 @@ const crons = cronJobs();
 // Auto-generate one new system profile every 6 hours.
 crons.interval(
   "auto generate ai profile",
-  { hours: 12 },
+  { hours: 72 },
   "features/ai/profileGeneration:enqueueCronProfileGeneration" as any,
   {},
 );

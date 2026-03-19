@@ -227,20 +227,10 @@ export function useMessages(threadId: string | undefined) {
     }
 
     const allMessages: ProcessedMessage[] = [];
-    let streaming = false;
 
     results.forEach((msg: any, index: number) => {
       const hasVisibleContent =
         msg.role !== "assistant" || hasVisibleAssistantContent(msg);
-
-      // Show typing only while the assistant has not produced visible content yet.
-      if (
-        msg.role === "assistant" &&
-        (msg.status === "streaming" || msg.status === "pending") &&
-        !hasVisibleContent
-      ) {
-        streaming = true;
-      }
 
       if (msg.role === "assistant" && !hasVisibleContent) {
         return;
@@ -253,7 +243,17 @@ export function useMessages(threadId: string | undefined) {
     // Sort by order to ensure correct sequence
     allMessages.sort((a, b) => a.order - b.order);
 
-    return { processedMessages: allMessages, hasStreamingMessage: streaming };
+    const lastRawMessage = results[results.length - 1];
+    const hasStreamingTail =
+      lastRawMessage?.role === "assistant" &&
+      (lastRawMessage.status === "streaming" ||
+        lastRawMessage.status === "pending") &&
+      !hasVisibleAssistantContent(lastRawMessage);
+
+    return {
+      processedMessages: allMessages,
+      hasStreamingMessage: hasStreamingTail,
+    };
   }, [results]);
 
   // Get optimistic messages for this thread

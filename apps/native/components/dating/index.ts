@@ -17,6 +17,7 @@ export { TopicsSheet, CONVERSATION_TOPICS } from "./topics-sheet";
 export type { TopicId } from "./topics-sheet";
 export { SuggestionsSheet, DEFAULT_SUGGESTIONS } from "./suggestions-sheet";
 export { ProfileSwipeCard } from "./profile-swipe-card";
+export { ForYouSkeleton } from "./for-you-skeleton";
 export { MatchModal } from "./match-modal";
 export { ChatInputBox } from "./chat-input-box";
 export { TypingIndicator } from "./bubbles";
