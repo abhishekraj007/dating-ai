@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach to Hermes App (8082)",
+      "cwd": "${workspaceFolder}/apps/native",
+      "type": "reactnativedirect",
+      "request": "attach",
+      "address": "localhost"
+    },
+    {
+      "name": "Expo Go (Local)",
+      "cwd": "${workspaceFolder}/apps/native",
+      "type": "reactnative",
+      "request": "launch",
+      "platform": "exponent",
+      "expoHostType": "local"
+    },
+    {
+      "name": "Expo Go (LAN)",
+      "cwd": "${workspaceFolder}/apps/native",
+      "type": "reactnative",
+      "request": "launch",
+      "platform": "exponent",
+      "expoHostType": "lan"
+    }
+  ]
+}
