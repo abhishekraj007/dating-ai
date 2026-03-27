@@ -211,7 +211,7 @@ export function useMessages(threadId: string | undefined) {
   const { results, status, loadMore } = useUIMessages(
     api.features.ai.queries.listThreadMessages,
     threadId ? { threadId } : "skip",
-    { initialNumItems: PAGE_SIZE },
+    { initialNumItems: PAGE_SIZE, stream: true },
   );
 
   // Get cached messages for this thread (computed once per threadId change)
@@ -305,8 +305,16 @@ export function useMessages(threadId: string | undefined) {
       baseMessages = [...olderFromCache, ...processedMessages];
     }
 
-    // Add optimistic messages (they have higher order numbers)
-    const allMessages = [...baseMessages, ...optimisticMessages];
+    // Filter out optimistic messages whose content already exists in real messages
+    // This prevents a transient double-count (real + optimistic) that causes scroll jitter
+    const realUserContents = new Set(
+      baseMessages.filter((m) => m.role === "user").map((m) => m.content),
+    );
+    const activeOptimistic = optimisticMessages.filter(
+      (o) => !realUserContents.has(o.content),
+    );
+
+    const allMessages = [...baseMessages, ...activeOptimistic];
 
     // Sort by order
     allMessages.sort((a, b) => a.order - b.order);

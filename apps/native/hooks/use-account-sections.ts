@@ -161,11 +161,14 @@ export const useAccountSections = ({
     }
   };
 
-  const termsUrl = runtimeConfig?.termsUrl ?? buildFallbackUrl("/terms");
-  const privacyUrl = runtimeConfig?.privacyUrl ?? buildFallbackUrl("/privacy");
+  const termsUrl =
+    runtimeConfig?.termsUrl ?? buildFallbackUrl("/dating-ai/terms");
+  const privacyUrl =
+    runtimeConfig?.privacyUrl ?? buildFallbackUrl("/dating-ai/privacy");
   const helpCenterUrl =
-    runtimeConfig?.helpCenterUrl ?? buildFallbackUrl("/help");
-  const supportUrl = runtimeConfig?.supportUrl ?? buildFallbackUrl("/support");
+    runtimeConfig?.helpCenterUrl ?? buildFallbackUrl("/dating-ai/help");
+  const supportUrl =
+    runtimeConfig?.supportUrl ?? buildFallbackUrl("/dating-ai/support");
 
   const sections: AccountSection[] = [
     {
@@ -177,12 +180,6 @@ export const useAccountSections = ({
           title: t("account.item.appearance"),
           icon: Palette,
           onPress: onOpenAppearance,
-        },
-        {
-          id: "settings",
-          title: t("account.item.settings"),
-          icon: Settings,
-          onPress: () => router.push("/(root)/(main)/settings"),
         },
         {
           id: "notifications",
@@ -201,7 +198,6 @@ export const useAccountSections = ({
               {
                 id: "account-actions",
                 title: t("account.item.account"),
-                description: t("account.item.accountDescription"),
                 icon: UserRound,
                 onPress: onOpenAccountActions,
               },
@@ -217,13 +213,9 @@ export const useAccountSections = ({
         {
           id: "help-center",
           title: t("account.item.helpCenter"),
-          description: t("account.item.helpCenterDescription"),
           icon: MessageCircleQuestion,
           onPress: () =>
-            openExternal(
-              helpCenterUrl,
-              t("account.helpCenterMissing"),
-            ),
+            openExternal(helpCenterUrl, t("account.helpCenterMissing")),
         },
         {
           id: "contact-support",
@@ -257,8 +249,7 @@ export const useAccountSections = ({
           id: "privacy",
           title: t("account.item.privacy"),
           icon: FileCheck,
-          onPress: () =>
-            openExternal(privacyUrl, t("account.privacyMissing")),
+          onPress: () => openExternal(privacyUrl, t("account.privacyMissing")),
         },
       ],
     },

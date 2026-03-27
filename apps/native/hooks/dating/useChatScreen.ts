@@ -15,6 +15,8 @@ import { useChatScroll } from "./useChatScroll";
 import { useCredits, CREDIT_COSTS } from "./useCredits";
 import { useTranslation } from "@/hooks/use-translation";
 
+const AI_RESPONSE_WAIT_TIMEOUT_MS = 15000;
+
 export function useChatScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -49,22 +51,6 @@ export function useChatScreen() {
   // Credits for client-side checking
   const { credits, hasEnoughCredits } = useCredits();
 
-  // Chat scroll behavior
-  const {
-    shouldLoadMore,
-    handleScroll,
-    scrollToBottom,
-    viewabilityConfig,
-    onViewableItemsChanged,
-    initialScrollIndex,
-    initialScrollIndexParams,
-  } = useChatScroll({
-    listRef,
-    messages,
-    conversationId: id,
-    isLoading: isLoadingMessages,
-  });
-
   // Derive profile
   const profile = conversation?.profile;
 
@@ -89,79 +75,179 @@ export function useChatScreen() {
   const [isActionsSheetOpen, setIsActionsSheetOpen] = useState(false);
 
   const [isSending, setIsSending] = useState(false);
-  const pendingResponseRef = useRef<number | null>(null);
+  const [pendingAssistantState, setPendingAssistantState] = useState<{
+    conversationKey: string;
+    baselineOrder: number;
+  } | null>(null);
+  const pendingAssistantTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
+  const conversationKey = threadId ?? id ?? null;
+
+  const clearPendingAssistantState = useCallback(() => {
+    if (pendingAssistantTimeoutRef.current) {
+      clearTimeout(pendingAssistantTimeoutRef.current);
+      pendingAssistantTimeoutRef.current = null;
+    }
+    setPendingAssistantState(null);
+  }, []);
+
+  const startPendingAssistantState = useCallback(() => {
+    if (!conversationKey) {
+      return;
+    }
+
+    const baselineOrder =
+      messages.length > 0
+        ? Math.max(...messages.map((entry) => entry.order))
+        : -1;
+
+    clearPendingAssistantState();
+    setPendingAssistantState({ conversationKey, baselineOrder });
+    pendingAssistantTimeoutRef.current = setTimeout(() => {
+      setPendingAssistantState((current) =>
+        current?.conversationKey === conversationKey ? null : current,
+      );
+      pendingAssistantTimeoutRef.current = null;
+    }, AI_RESPONSE_WAIT_TIMEOUT_MS);
+  }, [clearPendingAssistantState, conversationKey, messages]);
 
   const hasAIResponseAfterSend = useMemo(() => {
-    if (pendingResponseRef.current === null) return false;
+    if (
+      !pendingAssistantState ||
+      pendingAssistantState.conversationKey !== conversationKey
+    ) {
+      return false;
+    }
 
     return messages.some(
-      (m) => m.role !== "user" && m.order > pendingResponseRef.current!,
+      (entry) =>
+        entry.role !== "user" &&
+        entry.order > pendingAssistantState.baselineOrder,
     );
-  }, [messages]);
+  }, [conversationKey, messages, pendingAssistantState]);
 
   const isWaitingForAI =
-    pendingResponseRef.current !== null && !hasAIResponseAfterSend;
+    pendingAssistantState !== null &&
+    pendingAssistantState.conversationKey === conversationKey &&
+    !isAITyping &&
+    !hasAIResponseAfterSend;
 
-  const showTypingIndicator = isSending || isAITyping || isWaitingForAI;
+  const showTypingIndicator = isAITyping || isWaitingForAI;
 
-  // Reset transient send state as soon as the assistant response becomes visible.
+  // Chat scroll behavior
+  const {
+    shouldLoadMore,
+    handleScroll,
+    scrollToBottom,
+    viewabilityConfig,
+    onViewableItemsChanged,
+    initialScrollIndex,
+  } = useChatScroll({
+    listRef,
+    messages,
+    conversationId: id,
+    isLoading: isLoadingMessages,
+  });
+
   useEffect(() => {
-    if (hasAIResponseAfterSend) {
-      pendingResponseRef.current = null;
-      setIsSending(false);
+    if (!pendingAssistantState) {
+      return;
     }
-  }, [hasAIResponseAfterSend]);
+
+    if (
+      pendingAssistantState.conversationKey !== conversationKey ||
+      isAITyping ||
+      hasAIResponseAfterSend
+    ) {
+      clearPendingAssistantState();
+    }
+  }, [
+    clearPendingAssistantState,
+    conversationKey,
+    hasAIResponseAfterSend,
+    isAITyping,
+    pendingAssistantState,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      if (pendingAssistantTimeoutRef.current) {
+        clearTimeout(pendingAssistantTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const sendConversationMessage = useCallback(
+    async (content: string, options?: { optimistic?: boolean }) => {
+      if (!id || isSending) {
+        return false;
+      }
+
+      if (!hasEnoughCredits("TEXT_MESSAGE")) {
+        router.push("/buy-credits");
+        return false;
+      }
+
+      setIsSending(true);
+      startPendingAssistantState();
+
+      try {
+        if (options?.optimistic) {
+          await sendMessageWithOptimistic(
+            { conversationId: id as Id<"aiConversations">, content },
+            threadId,
+          );
+        } else {
+          await sendMessage({
+            conversationId: id as Id<"aiConversations">,
+            content,
+          });
+        }
+
+        return true;
+      } catch (error: any) {
+        clearPendingAssistantState();
+
+        if (error.message?.includes("Insufficient credits")) {
+          router.push("/buy-credits");
+        } else {
+          console.error("Failed to send message:", error);
+        }
+
+        return false;
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [
+      clearPendingAssistantState,
+      hasEnoughCredits,
+      id,
+      isSending,
+      router,
+      sendMessage,
+      sendMessageWithOptimistic,
+      startPendingAssistantState,
+      threadId,
+    ],
+  );
 
   const handleSend = useCallback(
     (text: string) => {
       if (!text.trim() || !id || isSending) return;
 
-      // Client-side credit check for text messages (1 credit)
-      if (!hasEnoughCredits("TEXT_MESSAGE")) {
-        router.push("/buy-credits");
-        return;
-      }
-
       const content = text.trim();
 
       setBlurTrigger(Date.now());
       setMessage("");
-      setIsSending(true);
-
-      const currentMaxOrder =
-        messages.length > 0 ? Math.max(...messages.map((m) => m.order)) : 0;
-      pendingResponseRef.current = currentMaxOrder;
-
-      sendMessageWithOptimistic(
-        { conversationId: id as Id<"aiConversations">, content },
-        threadId,
-      ).catch((error) => {
-        if (error.message && error.message.includes("Insufficient credits")) {
-          // Reset sending state and redirect to buy credits
-          setIsSending(false);
-          router.push("/buy-credits");
-        } else {
-          console.error("Failed to send message:", error);
-        }
-      });
+      void sendConversationMessage(content, { optimistic: true });
 
       // Scroll to bottom when user sends message
       scrollToBottom(true);
-
-      setTimeout(() => {
-        setIsSending(false);
-      }, 10000); // Timeout to reset sending state if no response
     },
-    [
-      id,
-      isSending,
-      messages,
-      sendMessageWithOptimistic,
-      threadId,
-      scrollToBottom,
-      router,
-      hasEnoughCredits,
-    ],
+    [id, isSending, sendConversationMessage, scrollToBottom],
   );
 
   const handleImageRequest = useCallback(
@@ -193,29 +279,8 @@ export function useChatScreen() {
 
   const handleStartQuiz = useCallback(async () => {
     if (!id || isSending) return;
-
-    // Client-side credit check for text messages (1 credit)
-    if (!hasEnoughCredits("TEXT_MESSAGE")) {
-      router.push("/buy-credits");
-      return;
-    }
-
-    setIsSending(true);
-    try {
-      await sendMessage({
-        conversationId: id as any,
-        content: "Let's play quiz!",
-      });
-    } catch (error: any) {
-      if (error.message?.includes("Insufficient credits")) {
-        router.push("/buy-credits");
-      } else {
-        console.error("Failed to start quiz:", error);
-      }
-    } finally {
-      setIsSending(false);
-    }
-  }, [id, isSending, sendMessage, hasEnoughCredits, router]);
+    await sendConversationMessage("Let's play quiz!");
+  }, [id, isSending, sendConversationMessage]);
 
   const handleOpenMessageActions = useCallback((messageOrder: number) => {
     setSelectedMessageOrder(messageOrder);
@@ -236,115 +301,36 @@ export function useChatScreen() {
     async (answer: string) => {
       if (!id || isSending) return;
 
-      // Client-side credit check for text messages (1 credit)
-      if (!hasEnoughCredits("TEXT_MESSAGE")) {
-        router.push("/buy-credits");
-        return;
-      }
-
-      setIsSending(true);
-      try {
-        await sendMessage({
-          conversationId: id as any,
-          content: answer,
-        });
-      } catch (error: any) {
-        if (error.message?.includes("Insufficient credits")) {
-          router.push("/buy-credits");
-        } else {
-          console.error("Failed to send quiz answer:", error);
-        }
-      } finally {
-        setIsSending(false);
-      }
+      await sendConversationMessage(answer);
     },
-    [id, isSending, sendMessage, hasEnoughCredits, router],
+    [id, isSending, sendConversationMessage],
   );
 
   const handleEndQuiz = useCallback(async () => {
     if (!id || isSending) return;
-
-    // Client-side credit check for text messages (1 credit)
-    if (!hasEnoughCredits("TEXT_MESSAGE")) {
-      router.push("/buy-credits");
-      return;
-    }
-
-    setIsSending(true);
-    try {
-      await sendMessage({
-        conversationId: id as any,
-        content: "End the quiz",
-      });
-    } catch (error: any) {
-      if (error.message?.includes("Insufficient credits")) {
-        router.push("/buy-credits");
-      } else {
-        console.error("Failed to end quiz:", error);
-      }
-    } finally {
-      setIsSending(false);
-    }
-  }, [id, isSending, sendMessage, hasEnoughCredits, router]);
+    await sendConversationMessage("End the quiz");
+  }, [id, isSending, sendConversationMessage]);
 
   const handleTopicSelect = useCallback(
     async (topic: { id: string; label: string; prompt: string }) => {
       if (!id || isSending) return;
 
-      // Client-side credit check for text messages (1 credit)
-      if (!hasEnoughCredits("TEXT_MESSAGE")) {
-        router.push("/buy-credits");
-        return;
-      }
-
       setIsTopicsSheetOpen(false);
-      setIsSending(true);
-      try {
-        await sendMessage({
-          conversationId: id as any,
-          content: topic.prompt,
-        });
-      } catch (error: any) {
-        if (error.message?.includes("Insufficient credits")) {
-          router.push("/buy-credits");
-        } else {
-          console.error("Failed to send topic message:", error);
-        }
-      } finally {
-        setIsSending(false);
-      }
+
+      await sendConversationMessage(topic.prompt);
     },
-    [id, isSending, sendMessage, hasEnoughCredits, router],
+    [id, isSending, sendConversationMessage],
   );
 
   const handleSuggestionSelect = useCallback(
     async (suggestion: string) => {
       if (!id || isSending) return;
 
-      // Client-side credit check for text messages (1 credit)
-      if (!hasEnoughCredits("TEXT_MESSAGE")) {
-        router.push("/buy-credits");
-        return;
-      }
-
       setIsSuggestionsSheetOpen(false);
-      setIsSending(true);
-      try {
-        await sendMessage({
-          conversationId: id as any,
-          content: suggestion,
-        });
-      } catch (error: any) {
-        if (error.message?.includes("Insufficient credits")) {
-          router.push("/buy-credits");
-        } else {
-          console.error("Failed to send suggestion message:", error);
-        }
-      } finally {
-        setIsSending(false);
-      }
+
+      await sendConversationMessage(suggestion);
     },
-    [id, isSending, sendMessage, hasEnoughCredits, router],
+    [id, isSending, sendConversationMessage],
   );
 
   const handleClearChat = useCallback(() => {
@@ -360,6 +346,7 @@ export function useChatScreen() {
           onPress: async () => {
             if (!id) return;
             setIsClearing(true);
+            clearPendingAssistantState();
             try {
               await clearChat(id, threadId);
             } catch (error) {
@@ -372,7 +359,7 @@ export function useChatScreen() {
         },
       ],
     );
-  }, [id, threadId, profile?.name, clearChat, t]);
+  }, [clearChat, clearPendingAssistantState, id, profile?.name, t, threadId]);
 
   // Determine which quiz question should be interactive
   const interactiveQuizQuestionId = useMemo(() => {
@@ -454,7 +441,6 @@ export function useChatScreen() {
     viewabilityConfig,
     onViewableItemsChanged,
     initialScrollIndex,
-    initialScrollIndexParams,
 
     // Keyboard state
     composerHeight,
@@ -472,7 +458,6 @@ export function useChatScreen() {
     // Typing indicator
     showTypingIndicator,
     isAITyping,
-
     // Sheet states
     isImageSheetOpen,
     setIsImageSheetOpen,
