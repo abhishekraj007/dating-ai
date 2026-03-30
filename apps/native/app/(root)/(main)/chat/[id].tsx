@@ -3,6 +3,7 @@ import {
   Text,
   ScrollView,
   Pressable,
+  TouchableWithoutFeedback,
   StyleSheet,
   useWindowDimensions,
 } from "react-native";
@@ -44,12 +45,14 @@ import { useChatScreen } from "@/hooks/dating";
 import { useThemeColor } from "heroui-native";
 import { useTranslation } from "@/hooks/use-translation";
 
-const BOTTOM_SHADOW_SIZE = 240;
+const BOTTOM_SHADOW_SIZE = 20;
 
 export default function ChatScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const foregroundColor = useThemeColor("foreground");
+  const backgroundColor = useThemeColor("background");
+  console.log(backgroundColor);
   const mutedColor = useThemeColor("muted");
   const { height } = useWindowDimensions();
   const emptyHeight = height - 350;
@@ -91,6 +94,8 @@ export default function ChatScreen() {
     setComposerHeight,
     setKeyboardHeight,
     blurTrigger,
+    isKeyboardOpen,
+    dismissKeyboard,
 
     // Message input
     setMessage,
@@ -234,121 +239,139 @@ export default function ChatScreen() {
 
         <View style={{ flex: 1 }}>
           {/* Messages with bottom scroll shadow */}
-          <ScrollShadow
-            size={BOTTOM_SHADOW_SIZE}
-            visibility="bottom"
-            LinearGradientComponent={LinearGradient}
-            style={{ flex: 1 }}
+          <TouchableWithoutFeedback
+            accessible={false}
+            onPress={dismissKeyboard}
           >
-            <FlashList
-              ref={listRef}
-              data={messages}
-              renderItem={renderMessage}
-              keyExtractor={(item) => item._id}
-              initialScrollIndex={
-                typeof initialScrollIndex === "number" && messages.length > 0
-                  ? initialScrollIndex
-                  : undefined
-              }
-              contentContainerStyle={{
-                paddingTop: 16,
-                paddingBottom: 16,
-              }}
-              showsVerticalScrollIndicator={false}
-              keyboardDismissMode="interactive"
-              keyboardShouldPersistTaps="handled"
-              onScroll={handleScroll}
-              scrollEventThrottle={16}
-              viewabilityConfig={viewabilityConfig}
-              onViewableItemsChanged={onViewableItemsChanged}
-              onStartReached={() => {
-                if (!shouldLoadMore() || !hasMore || isLoadingMore) {
-                  return;
-                }
-                loadMore();
-              }}
-              onStartReachedThreshold={0.3}
-              ListHeaderComponent={
-                isLoadingMore ? (
-                  <View className="py-4 items-center">
-                    <Spinner size="sm" />
-                  </View>
-                ) : null
-              }
-              ListFooterComponent={
-                showTypingIndicator ? (
-                  <View className="pt-2">
-                    <TypingIndicator
-                      avatarUrl={profile?.avatarUrl}
-                      profileName={profile?.name}
-                    />
-                  </View>
-                ) : null
-              }
-              ListEmptyComponent={
-                isLoadingConversation || isLoadingMessages ? (
-                  <View className="p-4 gap-4">
-                    <View className="flex-row gap-2">
-                      <Skeleton className="w-8 h-8 rounded-full" />
-                      <View className="gap-2">
-                        <Skeleton className="h-16 w-52 rounded-2xl rounded-tl-sm" />
-                        <Skeleton className="h-3 w-12" />
+            <View style={{ flex: 1 }}>
+              <ScrollShadow
+                size={BOTTOM_SHADOW_SIZE}
+                visibility="bottom"
+                LinearGradientComponent={LinearGradient}
+                style={{ flex: 1 }}
+              >
+                <FlashList
+                  ref={listRef}
+                  data={messages}
+                  renderItem={renderMessage}
+                  keyExtractor={(item) => item._id}
+                  initialScrollIndex={
+                    typeof initialScrollIndex === "number" &&
+                    messages.length > 0
+                      ? initialScrollIndex
+                      : undefined
+                  }
+                  contentContainerStyle={{
+                    paddingTop: 16,
+                    paddingBottom: 16,
+                  }}
+                  showsVerticalScrollIndicator={false}
+                  keyboardDismissMode="interactive"
+                  keyboardShouldPersistTaps="handled"
+                  onScroll={handleScroll}
+                  onScrollBeginDrag={dismissKeyboard}
+                  scrollEventThrottle={16}
+                  viewabilityConfig={viewabilityConfig}
+                  onViewableItemsChanged={onViewableItemsChanged}
+                  onStartReached={() => {
+                    if (!shouldLoadMore() || !hasMore || isLoadingMore) {
+                      return;
+                    }
+                    loadMore();
+                  }}
+                  onStartReachedThreshold={0.3}
+                  ListHeaderComponent={
+                    isLoadingMore ? (
+                      <View className="py-4 items-center">
+                        <Spinner size="sm" />
                       </View>
-                    </View>
-                    <View className="flex-row justify-end">
-                      <View className="gap-2 items-end">
-                        <Skeleton className="h-10 w-40 rounded-2xl rounded-br-sm" />
-                        <Skeleton className="h-3 w-10" />
+                    ) : null
+                  }
+                  ListFooterComponent={
+                    showTypingIndicator ? (
+                      <View className="pt-2">
+                        <TypingIndicator
+                          avatarUrl={profile?.avatarUrl}
+                          profileName={profile?.name}
+                        />
                       </View>
-                    </View>
-                    <View className="flex-row gap-2">
-                      <Skeleton className="w-8 h-8 rounded-full" />
-                      <View className="gap-2">
-                        <Skeleton className="h-24 w-64 rounded-2xl rounded-tl-sm" />
-                        <Skeleton className="h-3 w-12" />
+                    ) : null
+                  }
+                  ListEmptyComponent={
+                    isLoadingConversation || isLoadingMessages ? (
+                      <View className="p-4 gap-4">
+                        <View className="flex-row gap-2">
+                          <Skeleton className="w-8 h-8 rounded-full" />
+                          <View className="gap-2">
+                            <Skeleton className="h-16 w-52 rounded-2xl rounded-tl-sm" />
+                            <Skeleton className="h-3 w-12" />
+                          </View>
+                        </View>
+                        <View className="flex-row justify-end">
+                          <View className="gap-2 items-end">
+                            <Skeleton className="h-10 w-40 rounded-2xl rounded-br-sm" />
+                            <Skeleton className="h-3 w-10" />
+                          </View>
+                        </View>
+                        <View className="flex-row gap-2">
+                          <Skeleton className="w-8 h-8 rounded-full" />
+                          <View className="gap-2">
+                            <Skeleton className="h-24 w-64 rounded-2xl rounded-tl-sm" />
+                            <Skeleton className="h-3 w-12" />
+                          </View>
+                        </View>
                       </View>
-                    </View>
-                  </View>
-                ) : !conversation ? (
-                  <View
-                    className="flex-1 items-center justify-center px-6 pt-20"
-                    style={{
-                      height: emptyHeight,
-                    }}
-                  >
-                    <Text className="text-foreground text-lg font-semibold mb-2">
-                      {t("chat.conversationNotFound")}
-                    </Text>
-                    <Button className="mt-4" onPress={() => router.back()}>
-                      <Button.Label>{t("common.goBack")}</Button.Label>
-                    </Button>
-                  </View>
-                ) : (
-                  <View
-                    className="flex-1 items-center justify-center px-6 pt-20"
-                    style={{
-                      height: emptyHeight,
-                    }}
-                  >
-                    <Text className="text-foreground text-lg font-semibold mb-2">
-                      {t("chat.startConversation")}
-                    </Text>
-                    <Text className="text-muted text-center">
-                      {t("chat.sayHello", {
-                        name: profile?.name ?? t("chat.aiCompanion"),
-                      })}
-                    </Text>
-                  </View>
-                )
-              }
-            />
-          </ScrollShadow>
+                    ) : !conversation ? (
+                      <View
+                        className="flex-1 items-center justify-center px-6 pt-20"
+                        style={{
+                          height: emptyHeight,
+                        }}
+                      >
+                        <Text className="text-foreground text-lg font-semibold mb-2">
+                          {t("chat.conversationNotFound")}
+                        </Text>
+                        <Button className="mt-4" onPress={() => router.back()}>
+                          <Button.Label>{t("common.goBack")}</Button.Label>
+                        </Button>
+                      </View>
+                    ) : (
+                      <View
+                        className="flex-1 items-center justify-center px-6 pt-20"
+                        style={{
+                          height: emptyHeight,
+                        }}
+                      >
+                        <Text className="text-foreground text-lg font-semibold mb-2">
+                          {t("chat.startConversation")}
+                        </Text>
+                        <Text className="text-muted text-center">
+                          {t("chat.sayHello", {
+                            name: profile?.name ?? t("chat.aiCompanion"),
+                          })}
+                        </Text>
+                      </View>
+                    )
+                  }
+                />
+              </ScrollShadow>
+            </View>
+          </TouchableWithoutFeedback>
 
-          <KeyboardStickyView>
+          <KeyboardStickyView
+          // offset={{
+          //   opened: 200,
+          // }}
+          >
             <View
               style={[
                 styles.composerContainer,
-                { paddingBottom: Math.max(insets.bottom, 8) },
+                {
+                  backgroundColor: "red",
+                  paddingBottom: isKeyboardOpen
+                    ? 8
+                    : Math.max(insets.bottom, 8),
+                },
               ]}
             >
               <ScrollView
@@ -357,10 +380,10 @@ export default function ChatScreen() {
                 nestedScrollEnabled
                 contentContainerStyle={{
                   paddingHorizontal: 16,
-                  paddingVertical: 10,
+                  paddingBottom: 10,
                   gap: 8,
-                  height: 56,
                   alignItems: "center",
+                  backgroundColor: "pink",
                 }}
               >
                 <Button
@@ -404,7 +427,7 @@ export default function ChatScreen() {
                   <Button.Label>{t("chat.suggestion")}</Button.Label>
                 </Button>
               </ScrollView>
-              <View style={styles.composerRow}>
+              <View style={[styles.composerRow]}>
                 <Button
                   variant="secondary"
                   isDisabled={isSending}
@@ -472,14 +495,12 @@ export default function ChatScreen() {
 
 const styles = StyleSheet.create({
   composerContainer: {
-    backgroundColor: "transparent",
     paddingTop: 8,
   },
   composerRow: {
     flexDirection: "row",
     alignItems: "flex-end",
     paddingHorizontal: 8,
-    paddingBottom: 8,
   },
   composerWrapper: {
     borderRadius: 24,
