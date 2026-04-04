@@ -43,6 +43,7 @@ import type * as features_subscriptions_mutations from "../features/subscription
 import type * as features_subscriptions_queries from "../features/subscriptions/queries.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
+import type * as lib_aiProfileAvatar from "../lib/aiProfileAvatar.js";
 import type * as lib_betterAuth_component from "../lib/betterAuth/component.js";
 import type * as lib_betterAuth_createAuth from "../lib/betterAuth/createAuth.js";
 import type * as lib_betterAuth_index from "../lib/betterAuth/index.js";
@@ -99,6 +100,7 @@ declare const fullApi: ApiFromModules<{
   "features/subscriptions/queries": typeof features_subscriptions_queries;
   healthCheck: typeof healthCheck;
   http: typeof http;
+  "lib/aiProfileAvatar": typeof lib_aiProfileAvatar;
   "lib/betterAuth/component": typeof lib_betterAuth_component;
   "lib/betterAuth/createAuth": typeof lib_betterAuth_createAuth;
   "lib/betterAuth/index": typeof lib_betterAuth_index;

@@ -5,6 +5,7 @@ import { paginationOptsValidator } from "convex/server";
 import { listUIMessages, syncStreams, vStreamArgs } from "@convex-dev/agent";
 import { r2 } from "../../uploads";
 import { authComponent } from "../../lib/betterAuth";
+import { buildAiProfileAvatarUrl } from "../../lib/aiProfileAvatar";
 
 /**
  * Get all active AI profiles with optional gender filter.
@@ -66,10 +67,10 @@ export const getProfiles = query({
     // Generate signed URLs for avatars
     return Promise.all(
       visibleProfiles.map(async (profile) => {
-        const avatarUrl =
-          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
-            ? await r2.getUrl(profile.avatarImageKey)
-            : null;
+        const avatarUrl = buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        );
         return {
           ...profile,
           avatarUrl,
@@ -93,10 +94,10 @@ export const getProfile = query({
     }
 
     // Get signed URLs for all images
-    const avatarUrl =
-      profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
-        ? await r2.getUrl(profile.avatarImageKey)
-        : null;
+    const avatarUrl = buildAiProfileAvatarUrl(
+      profile._id,
+      profile.avatarImageKey,
+    );
 
     const profileImageUrls = profile.profileImageKeys
       ? await Promise.all(profile.profileImageKeys.map((key) => r2.getUrl(key)))
@@ -139,10 +140,10 @@ export const getUserCreatedProfiles = query({
     // Generate signed URLs
     return Promise.all(
       profiles.map(async (profile) => {
-        const avatarUrl =
-          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
-            ? await r2.getUrl(profile.avatarImageKey)
-            : null;
+        const avatarUrl = buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        );
         return {
           ...profile,
           avatarUrl,
@@ -175,10 +176,10 @@ export const getUserConversations = query({
         const profile = await ctx.db.get(conv.aiProfileId);
         if (!profile) return null;
 
-        const avatarUrl =
-          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
-            ? await r2.getUrl(profile.avatarImageKey)
-            : null;
+        const avatarUrl = buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        );
 
         // Get last message from agent thread
         const messagesResult = await ctx.runQuery(
@@ -235,10 +236,10 @@ export const getConversation = query({
       return null;
     }
 
-    const avatarUrl =
-      profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
-        ? await r2.getUrl(profile.avatarImageKey)
-        : null;
+    const avatarUrl = buildAiProfileAvatarUrl(
+      profile._id,
+      profile.avatarImageKey,
+    );
 
     return {
       ...conversation,
@@ -437,10 +438,10 @@ export const getSystemProfiles = query({
     // Generate signed URLs for avatars and gallery images
     return Promise.all(
       systemProfiles.map(async (profile) => {
-        const avatarUrl =
-          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
-            ? await r2.getUrl(profile.avatarImageKey)
-            : null;
+        const avatarUrl = buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        );
 
         const profileImageUrls = profile.profileImageKeys
           ? await Promise.all(

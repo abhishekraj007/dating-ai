@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import type { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import {
   useConversationByProfile,
   useStartConversation,
@@ -10,9 +11,26 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 
+type ProfileDetails = {
+  _id: string;
+  name: string;
+  age?: number | null;
+  username?: string | null;
+  bio?: string | null;
+  zodiacSign?: string | null;
+  occupation?: string | null;
+  mbtiType?: string | null;
+  relationshipGoal?: string | null;
+  personalityTraits?: string[] | null;
+  interests?: string[] | null;
+  profileImageUrls?: string[] | null;
+  avatarImageKey?: string | null;
+  avatarUrl?: string | null;
+};
+
 interface ProfileClientProps {
   profileId: string;
-  initialProfile: any;
+  initialProfile: ProfileDetails;
 }
 
 export function ProfileClient({
@@ -35,7 +53,7 @@ export function ProfileClient({
         router.push(`/chat/${conversation._id}`);
       } else {
         const conversationId = await startConversation({
-          aiProfileId: profileId as any,
+          aiProfileId: profileId as Id<"aiProfiles">,
         });
         router.push(`/chat/${conversationId}`);
       }

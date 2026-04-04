@@ -367,7 +367,7 @@ export default function ChatScreen() {
               style={[
                 styles.composerContainer,
                 {
-                  backgroundColor: "red",
+                  backgroundColor,
                   paddingBottom: isKeyboardOpen
                     ? 8
                     : Math.max(insets.bottom, 8),
@@ -383,7 +383,6 @@ export default function ChatScreen() {
                   paddingBottom: 10,
                   gap: 8,
                   alignItems: "center",
-                  backgroundColor: "pink",
                 }}
               >
                 <Button

@@ -57,7 +57,7 @@
     "expo-system-ui": "~55.0.9",
     "expo-video": "~55.0.10",
     "expo-web-browser": "~55.0.9",
-    "heroui-native": "1.0.0-rc.4",
+    "heroui-native": "1.0.0",
     "lucide-react-native": "^0.548.0",
     "nativewind": "^4.2.1",
     "react": "19.2.0",

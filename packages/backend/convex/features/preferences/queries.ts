@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { query, mutation } from "../../_generated/server";
 import { authComponent } from "../../lib/betterAuth";
-import { r2 } from "../../uploads";
+import { buildAiProfileAvatarUrl } from "../../lib/aiProfileAvatar";
 
 const appLanguageValidator = v.union(
   v.literal("en"),
@@ -337,10 +337,10 @@ export const getForYouProfiles = query({
 
     return Promise.all(
       limitedProfiles.map(async (profile) => {
-        const avatarUrl =
-          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
-            ? await r2.getUrl(profile.avatarImageKey)
-            : null;
+        const avatarUrl = buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        );
 
         return {
           ...profile,
@@ -374,10 +374,10 @@ export const getLikedProfiles = query({
         const profile = await ctx.db.get(like.aiProfileId);
         if (!profile) return null;
 
-        const avatarUrl =
-          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
-            ? await r2.getUrl(profile.avatarImageKey)
-            : null;
+        const avatarUrl = buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        );
 
         return {
           ...profile,
@@ -531,10 +531,10 @@ export const getExploreProfiles = query({
 
     return Promise.all(
       limitedProfiles.map(async (profile) => {
-        const avatarUrl =
-          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
-            ? await r2.getUrl(profile.avatarImageKey)
-            : null;
+        const avatarUrl = buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        );
 
         return {
           ...profile,
@@ -652,10 +652,10 @@ export const getExploreProfilesPaginated = query({
 
     const pageWithUrls = await Promise.all(
       filteredPage.map(async (profile) => {
-        const avatarUrl =
-          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
-            ? await r2.getUrl(profile.avatarImageKey)
-            : null;
+        const avatarUrl = buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        );
         return { ...profile, avatarUrl };
       }),
     );
@@ -795,10 +795,10 @@ export const getForYouProfilesPaginated = query({
 
     const pageWithUrls = await Promise.all(
       filteredPage.map(async (profile) => {
-        const avatarUrl =
-          profile.avatarImageKey && profile.avatarImageKey !== "default-avatar"
-            ? await r2.getUrl(profile.avatarImageKey)
-            : null;
+        const avatarUrl = buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        );
         return { ...profile, avatarUrl };
       }),
     );

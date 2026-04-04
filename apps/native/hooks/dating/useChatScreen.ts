@@ -31,7 +31,9 @@ export function useChatScreen() {
   const isKeyboardOpen = keyboardHeight > 0;
 
   // Dismiss keyboard when tapping outside
-  const dismissKeyboard = useCallback(() => setBlurTrigger(Date.now()), []);
+  const dismissKeyboard = useCallback(() => {
+    setBlurTrigger((current) => current + 1);
+  }, []);
 
   // Conversation and messages
   const { conversation, isLoading: isLoadingConversation } =
@@ -240,14 +242,14 @@ export function useChatScreen() {
 
       const content = text.trim();
 
-      setBlurTrigger(Date.now());
+      dismissKeyboard();
       setMessage("");
       void sendConversationMessage(content, { optimistic: true });
 
       // Scroll to bottom when user sends message
       scrollToBottom(true);
     },
-    [id, isSending, sendConversationMessage, scrollToBottom],
+    [dismissKeyboard, id, isSending, sendConversationMessage, scrollToBottom],
   );
 
   const handleImageRequest = useCallback(
