@@ -90,6 +90,8 @@ export const en: TranslationMap = {
   "account.actions.subtitle": "Manage your session and account lifecycle.",
   "account.actions.signOut": "Sign Out",
   "account.actions.signingOut": "Signing Out...",
+  "account.actions.clearCache": "Clear Cache",
+  "account.actions.clearingCache": "Clearing Cache...",
   "account.actions.dangerTitle": "Danger Zone",
   "account.actions.dangerDescription":
     "Once you delete your account, there is no going back.",
@@ -113,6 +115,7 @@ export const en: TranslationMap = {
   "account.item.language": "Language",
   "account.item.account": "Account",
   "account.item.accountDescription": "Sign out and manage account deletion.",
+  "account.item.signOutDescription": "Sign out of this device.",
   "account.item.helpCenter": "FAQ & Help Center",
   "account.item.helpCenterDescription": "Read FAQs and product guidance.",
   "account.item.contactSupport": "Contact Support",
@@ -138,6 +141,11 @@ export const en: TranslationMap = {
   "alerts.unableShare": "Unable to share",
   "alerts.signOutTitle": "Sign Out",
   "alerts.signOutBody": "Are you sure you want to sign out?",
+  "alerts.clearCacheTitle": "Clear Cache",
+  "alerts.clearCacheBody":
+    "Clear downloaded images and temporary app data from this device?",
+  "alerts.clearCacheSuccess": "App cache cleared successfully.",
+  "alerts.clearCacheFailed": "Failed to clear app cache. Please try again.",
   "alerts.deleteTitle": "Delete Account",
   "alerts.deleteBody":
     "Are you sure you want to permanently delete your account? This action cannot be undone.",
@@ -287,6 +295,9 @@ export const en: TranslationMap = {
   "imageRequest.hairstyle": "Hairstyle",
   "imageRequest.clothing": "Clothing",
   "imageRequest.scene": "Scene",
+  "imageRequest.extraDetailsLabel": "Extra details",
+  "imageRequest.extraDetailsPlaceholder":
+    "Add anything else you want the AI to consider...",
   "imageRequest.generatePhoto": "Send a Photo",
   "imageRequest.insufficientCredits":
     "Insufficient credits. You need at least 5 credits.",

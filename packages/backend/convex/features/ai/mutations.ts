@@ -325,7 +325,9 @@ export const adminUpdateProfile = mutation({
       v.union(v.literal("active"), v.literal("pending"), v.literal("archived")),
     ),
     visibleOn: v.optional(
-      v.array(v.union(v.literal("web"), v.literal("ios"), v.literal("android"))),
+      v.array(
+        v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
+      ),
     ),
     communicationStyle: v.optional(
       v.object({
@@ -529,6 +531,7 @@ export const createChatImageRequestInternal = internalMutation({
             hairstyle: styleOptions.hairstyle,
             clothing: styleOptions.clothing,
             scene: styleOptions.scene,
+            description: styleOptions.description,
           }
         : undefined,
       status: "pending",
@@ -561,6 +564,7 @@ export const requestChatImage = mutation({
         hairstyle: v.optional(v.string()),
         clothing: v.optional(v.string()),
         scene: v.optional(v.string()),
+        description: v.optional(v.string()),
       }),
     ),
   },
@@ -619,8 +623,14 @@ export const requestChatImage = mutation({
             .filter(Boolean)
             .join(", ")
         : "";
+      const detailDescription = styleOptions?.description?.trim();
 
-      const userMessage = `Can you send me a selfie${styleDescription ? ` ${styleDescription}` : ""}?`;
+      const userMessage = [
+        `Can you send me a selfie${styleDescription ? ` ${styleDescription}` : ""}?`,
+        detailDescription ? `Extra details: ${detailDescription}` : null,
+      ]
+        .filter(Boolean)
+        .join(" ");
 
       // Save user message with prompt parameter (for user messages)
       await saveMessage(ctx, components.agent, {

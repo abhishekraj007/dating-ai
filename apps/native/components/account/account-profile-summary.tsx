@@ -1,4 +1,11 @@
-import { Avatar, Button, Chip, Separator, Surface, useThemeColor } from "heroui-native";
+import {
+  Avatar,
+  Button,
+  Chip,
+  Separator,
+  Surface,
+  useThemeColor,
+} from "heroui-native";
 import { Crown, Coins } from "lucide-react-native";
 import { Text, View } from "react-native";
 import { useTranslation } from "@/hooks/use-translation";
@@ -37,6 +44,12 @@ export const AccountProfileSummary = ({
         <View className="flex-1">
           <Text className="text-lg font-semibold text-foreground">{name}</Text>
           <Text className="text-sm text-muted">{email}</Text>
+          {isPremium && (
+            <Chip variant="soft" color="success" className="px-3 mt-1">
+              <Crown size={14} color={success} />
+              <Chip.Label>{t("account.profile.premium")}</Chip.Label>
+            </Chip>
+          )}
         </View>
       </View>
 
@@ -60,12 +73,7 @@ export const AccountProfileSummary = ({
             {t("account.profile.buyCredits")}
           </Button>
 
-          {isPremium ? (
-            <Chip variant="soft" color="success" className="px-3">
-              <Crown size={14} color={success} />
-              <Chip.Label>{t("account.profile.premium")}</Chip.Label>
-            </Chip>
-          ) : (
+          {!isPremium && (
             <Button
               variant="primary"
               className="flex-1"

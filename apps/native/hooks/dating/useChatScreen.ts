@@ -143,13 +143,10 @@ export function useChatScreen() {
     shouldLoadMore,
     handleScroll,
     scrollToBottom,
-    viewabilityConfig,
-    onViewableItemsChanged,
-    initialScrollIndex,
   } = useChatScroll({
     listRef,
     messages,
-    conversationId: id,
+    conversationId: threadId ?? id,
     isLoading: isLoadingMessages,
   });
 
@@ -457,9 +454,6 @@ export function useChatScreen() {
 
     // Scroll handlers
     handleScroll,
-    viewabilityConfig,
-    onViewableItemsChanged,
-    initialScrollIndex,
 
     // Keyboard state
     composerHeight,

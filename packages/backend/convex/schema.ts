@@ -230,6 +230,7 @@ export default defineSchema({
         hairstyle: v.optional(v.string()),
         clothing: v.optional(v.string()),
         scene: v.optional(v.string()),
+        description: v.optional(v.string()),
       }),
     ),
     imageKey: v.optional(v.string()), // R2 key when complete

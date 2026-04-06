@@ -172,6 +172,24 @@ export const useAccountSections = ({
 
   const sections: AccountSection[] = [
     {
+      id: "feedback",
+      title: t("account.section.feedback"),
+      items: [
+        {
+          id: "rate-us",
+          title: t("account.item.rateUs"),
+          icon: Star,
+          onPress: openRateUs,
+        },
+        {
+          id: "share-app",
+          title: t("account.item.shareApp"),
+          icon: Share2,
+          onPress: shareApp,
+        },
+      ],
+    },
+    {
       id: "quick-actions",
       title: t("account.section.quickActions"),
       items: [
@@ -223,16 +241,6 @@ export const useAccountSections = ({
           icon: LifeBuoy,
           onPress: () => openExternal(supportUrl, t("account.supportMissing")),
         },
-        // {
-        //   id: "report-bug",
-        //   title: "Report a Bug",
-        //   icon: Bug,
-        //   onPress: () =>
-        //     openExternal(
-        //       appendBugTopic(supportUrl),
-        //       "Bug report URL is not configured yet.",
-        //     ),
-        // },
       ],
     },
     {
@@ -250,25 +258,6 @@ export const useAccountSections = ({
           title: t("account.item.privacy"),
           icon: FileCheck,
           onPress: () => openExternal(privacyUrl, t("account.privacyMissing")),
-        },
-      ],
-    },
-    {
-      id: "feedback",
-      title: t("account.section.feedback"),
-      description: t("account.section.feedbackDescription"),
-      items: [
-        {
-          id: "rate-us",
-          title: t("account.item.rateUs"),
-          icon: Star,
-          onPress: openRateUs,
-        },
-        {
-          id: "share-app",
-          title: t("account.item.shareApp"),
-          icon: Share2,
-          onPress: shareApp,
         },
       ],
     },

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, ScrollView } from "react-native";
+import { View } from "react-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Text } from "@/components/ui/text";
 import {
@@ -7,6 +7,9 @@ import {
   Tabs,
   Chip,
   Spinner,
+  TextArea,
+  TextField,
+  Label,
   useThemeColor,
   BottomSheet,
 } from "heroui-native";
@@ -61,6 +64,7 @@ export interface ImageRequestOptions {
   hairstyle?: string;
   clothing?: string;
   scene?: string;
+  description?: string;
 }
 
 interface ImageRequestSheetProps {
@@ -85,14 +89,17 @@ export function ImageRequestSheet({
   );
   const [selectedClothing, setSelectedClothing] = useState<string | null>(null);
   const [selectedScene, setSelectedScene] = useState<string | null>(null);
+  const [extraDetails, setExtraDetails] = useState("");
   const accentColor = useThemeColor("accent");
   const accentForegroundColor = useThemeColor("accent-foreground");
+  const trimmedExtraDetails = extraDetails.trim();
 
   const handleSubmit = () => {
     onSubmit({
       hairstyle: selectedHairstyle ?? undefined,
       clothing: selectedClothing ?? undefined,
       scene: selectedScene ?? undefined,
+      description: trimmedExtraDetails || undefined,
     });
   };
 
@@ -100,10 +107,15 @@ export function ImageRequestSheet({
     setSelectedHairstyle(null);
     setSelectedClothing(null);
     setSelectedScene(null);
+    setExtraDetails("");
   };
 
-  const hasAnySelection =
-    selectedHairstyle || selectedClothing || selectedScene;
+  const hasAnySelection = Boolean(
+    selectedHairstyle ||
+    selectedClothing ||
+    selectedScene ||
+    trimmedExtraDetails,
+  );
 
   const renderChipList = (
     options: string[],
@@ -180,10 +192,12 @@ export function ImageRequestSheet({
             </Tabs.ScrollView>
           </Tabs.List>
 
-          <ScrollView
+          <BottomSheetScrollView
             className="flex-1"
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            contentContainerStyle={{ paddingBottom: 8 }}
           >
             <Tabs.Content value="hairstyle">
               {renderChipList(
@@ -202,27 +216,50 @@ export function ImageRequestSheet({
             <Tabs.Content value="scene">
               {renderChipList(SCENE_OPTIONS, selectedScene, setSelectedScene)}
             </Tabs.Content>
-          </ScrollView>
+
+            <View className="pt-2">
+              <TextField>
+                <Label>{t("imageRequest.extraDetailsLabel")}</Label>
+                <TextArea
+                  value={extraDetails}
+                  onChangeText={setExtraDetails}
+                  placeholder={t("imageRequest.extraDetailsPlaceholder")}
+                  numberOfLines={4}
+                  style={{ height: 104 }}
+                />
+              </TextField>
+            </View>
+          </BottomSheetScrollView>
         </Tabs>
 
         {/* Summary & Actions */}
         <View className="pt-4 border-t border-border mt-4">
           {hasAnySelection && (
-            <View className="flex-row flex-wrap gap-2 mb-4">
-              {selectedHairstyle && (
-                <Chip size="sm" variant="soft" color="accent">
-                  <Chip.Label>{selectedHairstyle}</Chip.Label>
-                </Chip>
-              )}
-              {selectedClothing && (
-                <Chip size="sm" variant="soft" color="accent">
-                  <Chip.Label>{selectedClothing}</Chip.Label>
-                </Chip>
-              )}
-              {selectedScene && (
-                <Chip size="sm" variant="soft" color="accent">
-                  <Chip.Label>{selectedScene}</Chip.Label>
-                </Chip>
+            <View className="mb-4 gap-3">
+              <View className="flex-row flex-wrap gap-2">
+                {selectedHairstyle && (
+                  <Chip size="sm" variant="soft" color="accent">
+                    <Chip.Label>{selectedHairstyle}</Chip.Label>
+                  </Chip>
+                )}
+                {selectedClothing && (
+                  <Chip size="sm" variant="soft" color="accent">
+                    <Chip.Label>{selectedClothing}</Chip.Label>
+                  </Chip>
+                )}
+                {selectedScene && (
+                  <Chip size="sm" variant="soft" color="accent">
+                    <Chip.Label>{selectedScene}</Chip.Label>
+                  </Chip>
+                )}
+              </View>
+              {trimmedExtraDetails && (
+                <View className="rounded-2xl bg-surface-secondary px-4 py-3">
+                  <Text size="xs" variant="muted" className="mb-1">
+                    {t("imageRequest.extraDetailsLabel")}
+                  </Text>
+                  <Text size="sm">{trimmedExtraDetails}</Text>
+                </View>
               )}
             </View>
           )}

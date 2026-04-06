@@ -1,10 +1,11 @@
 import { Fragment } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Spinner } from "heroui-native";
+import { Button, Spinner, Surface, useThemeColor } from "heroui-native";
 import { api, useQuery } from "@dating-ai/backend";
 import { useRouter } from "expo-router";
 import { useConvexAuth } from "convex/react";
+import { LogOut } from "lucide-react-native";
 import {
   AccountActionsSheet,
   AccountAppearanceSheet,
@@ -17,14 +18,17 @@ import { LanguageSheet } from "@/components/language/language-sheet";
 import { authClient } from "@/lib/betterAuth/client";
 import { usePurchases } from "@/contexts/purchases-context";
 import { useAccountSections } from "@/hooks/use-account-sections";
+import { useClearAppCache } from "@/hooks/use-clear-app-cache";
 import { useState } from "react";
 import { useTranslation } from "@/hooks/use-translation";
 
 export default function AccountScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const mutedColor = useThemeColor("muted");
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
   const { presentPaywall } = usePurchases();
+  const { clearAppCache, isClearingCache } = useClearAppCache();
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isAccountActionsOpen, setIsAccountActionsOpen] = useState(false);
@@ -53,10 +57,25 @@ export default function AccountScreen() {
         },
         onError: (ctx) => {
           setIsSigningOut(false);
-          Alert.alert(t("alerts.error"), ctx.error.message || "Failed to sign out");
+          Alert.alert(
+            t("alerts.error"),
+            ctx.error.message || "Failed to sign out",
+          );
         },
       },
     );
+  };
+
+  const handleClearCache = async () => {
+    setIsAccountActionsOpen(false);
+
+    try {
+      await clearAppCache();
+      Alert.alert(t("alerts.success"), t("alerts.clearCacheSuccess"));
+    } catch (error) {
+      console.error("Failed to clear app cache", error);
+      Alert.alert(t("alerts.error"), t("alerts.clearCacheFailed"));
+    }
   };
 
   const handleDeleteUser = async () => {
@@ -139,6 +158,42 @@ export default function AccountScreen() {
               ))}
             </AccountSectionCard>
           ))}
+
+          {isAuthenticated ? (
+            <Button
+              variant="tertiary"
+              isDisabled={isSigningOut}
+              onPress={() => {
+                Alert.alert(t("alerts.signOutTitle"), t("alerts.signOutBody"), [
+                  {
+                    text: t("alerts.cancel"),
+                    style: "cancel",
+                  },
+                  {
+                    text: t("account.actions.signOut"),
+                    onPress: () => {
+                      void handleSignOut();
+                    },
+                  },
+                ]);
+              }}
+            >
+              <View className="w-full flex-row items-center justify-center gap-3">
+                {isSigningOut ? (
+                  <Spinner size="sm" />
+                ) : (
+                  <LogOut size={18} color={mutedColor} />
+                )}
+                <View>
+                  <Text className="text-md font-medium text-foreground">
+                    {isSigningOut
+                      ? t("account.actions.signingOut")
+                      : t("account.actions.signOut")}
+                  </Text>
+                </View>
+              </View>
+            </Button>
+          ) : null}
         </ScrollView>
 
         <AccountAppearanceSheet
@@ -153,40 +208,40 @@ export default function AccountScreen() {
           <AccountActionsSheet
             isOpen={isAccountActionsOpen}
             onOpenChange={setIsAccountActionsOpen}
-            isSigningOut={isSigningOut}
+            isClearingCache={isClearingCache}
             isDeletingUser={isDeletingUser}
-            onSignOut={() => {
-              Alert.alert(t("alerts.signOutTitle"), t("alerts.signOutBody"), [
-                {
-                  text: t("alerts.cancel"),
-                  style: "cancel",
-                },
-                {
-                  text: t("account.actions.signOut"),
-                  onPress: () => {
-                    void handleSignOut();
-                  },
-                },
-              ]);
-            }}
-            onDeleteAccount={() => {
+            onClearCache={() => {
               Alert.alert(
-                t("alerts.deleteTitle"),
-                t("alerts.deleteBody"),
+                t("alerts.clearCacheTitle"),
+                t("alerts.clearCacheBody"),
                 [
                   {
                     text: t("alerts.cancel"),
                     style: "cancel",
                   },
                   {
-                    text: t("alerts.delete"),
-                    style: "destructive",
+                    text: t("chat.clear"),
                     onPress: () => {
-                      void handleDeleteUser();
+                      void handleClearCache();
                     },
                   },
                 ],
               );
+            }}
+            onDeleteAccount={() => {
+              Alert.alert(t("alerts.deleteTitle"), t("alerts.deleteBody"), [
+                {
+                  text: t("alerts.cancel"),
+                  style: "cancel",
+                },
+                {
+                  text: t("alerts.delete"),
+                  style: "destructive",
+                  onPress: () => {
+                    void handleDeleteUser();
+                  },
+                },
+              ]);
             }}
           />
         ) : null}

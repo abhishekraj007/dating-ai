@@ -155,7 +155,10 @@ export default function SettingsRoute() {
         onError: (ctx) => {
           setIsDeletingUser(false);
           console.error(ctx.error);
-          Alert.alert(t("alerts.error"), ctx.error.message || t("account.actions.delete"));
+          Alert.alert(
+            t("alerts.error"),
+            ctx.error.message || t("account.actions.delete"),
+          );
         },
       },
     );
@@ -313,21 +316,17 @@ export default function SettingsRoute() {
               size="md"
               isDisabled={isDeletingUser}
               onPress={() => {
-                Alert.alert(
-                  t("alerts.deleteTitle"),
-                  t("alerts.deleteBody"),
-                  [
-                    {
-                      text: t("alerts.cancel"),
-                      style: "cancel",
-                    },
-                    {
-                      text: t("alerts.delete"),
-                      style: "destructive",
-                      onPress: handleDeleteUser,
-                    },
-                  ],
-                );
+                Alert.alert(t("alerts.deleteTitle"), t("alerts.deleteBody"), [
+                  {
+                    text: t("alerts.cancel"),
+                    style: "cancel",
+                  },
+                  {
+                    text: t("alerts.delete"),
+                    style: "destructive",
+                    onPress: handleDeleteUser,
+                  },
+                ]);
               }}
             >
               <Trash size={18} color={textDanger} />
@@ -362,7 +361,10 @@ const SignOutButton = () => {
         },
         onError: (ctx) => {
           console.error(ctx.error);
-          Alert.alert(t("alerts.error"), ctx.error.message || t("signIn.failed"));
+          Alert.alert(
+            t("alerts.error"),
+            ctx.error.message || t("signIn.failed"),
+          );
           setIsSigningOut(false);
         },
       },

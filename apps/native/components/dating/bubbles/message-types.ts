@@ -35,6 +35,7 @@ export interface ImageRequestData {
     hairstyle?: string;
     clothing?: string;
     scene?: string;
+    description?: string;
   };
 }
 
@@ -66,7 +67,7 @@ export interface AIBubbleProps {
  * Returns null if not valid JSON or missing type field.
  */
 export function parseStructuredContent(
-  content: string
+  content: string,
 ): StructuredContent | null {
   try {
     const parsed = JSON.parse(content);

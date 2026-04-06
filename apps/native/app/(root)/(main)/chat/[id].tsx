@@ -82,9 +82,6 @@ export default function ChatScreen() {
 
     // Scroll handlers
     handleScroll,
-    viewabilityConfig,
-    onViewableItemsChanged,
-    initialScrollIndex,
 
     // Keyboard state
     composerHeight,
@@ -251,11 +248,6 @@ export default function ChatScreen() {
                 data={messages}
                 renderItem={renderMessage}
                 keyExtractor={(item) => item._id}
-                initialScrollIndex={
-                  typeof initialScrollIndex === "number" && messages.length > 0
-                    ? initialScrollIndex
-                    : undefined
-                }
                 contentContainerStyle={{
                   paddingTop: 16,
                   paddingBottom: 16,
@@ -266,8 +258,6 @@ export default function ChatScreen() {
                 onScroll={handleScroll}
                 onScrollBeginDrag={dismissKeyboard}
                 scrollEventThrottle={16}
-                viewabilityConfig={viewabilityConfig}
-                onViewableItemsChanged={onViewableItemsChanged}
                 onStartReached={() => {
                   if (!shouldLoadMore() || !hasMore || isLoadingMore) {
                     return;
