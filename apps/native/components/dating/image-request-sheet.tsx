@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { View, ScrollView } from "react-native";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Text } from "@/components/ui/text";
-import { Button, Tabs, Chip, Spinner, useThemeColor } from "heroui-native";
+import {
+  Button,
+  Tabs,
+  Chip,
+  Spinner,
+  useThemeColor,
+  BottomSheet,
+} from "heroui-native";
 import { CustomBottomSheet } from "@/components/bottom-sheet";
 import { Camera, Sparkles } from "lucide-react-native";
 
@@ -118,16 +126,13 @@ export function ImageRequestSheet({
   );
 
   return (
-    <CustomBottomSheet isOpen={isOpen} onClose={onClose} snapPoints={["70%"]}>
+    <CustomBottomSheet isOpen={isOpen} onClose={onClose}>
       <View className="flex-1">
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
-          <View className="flex-row items-center gap-2">
-            <Camera size={24} color={accentColor} />
-            <Text size="xl" weight="semibold">
-              {t("imageRequest.title")}
-            </Text>
-          </View>
+          <BottomSheet.Title className="text-center">
+            {t("imageRequest.title")}
+          </BottomSheet.Title>
           <View className="flex-row items-center gap-1 bg-surface-secondary px-3 py-1.5 rounded-full">
             <Sparkles size={14} color={accentColor} />
             <Text size="sm" variant="accent">
@@ -141,9 +146,18 @@ export function ImageRequestSheet({
         </Text>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} variant="pill">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          variant="secondary"
+          className="flex-1"
+        >
           <Tabs.List className="mb-2">
-            <Tabs.ScrollView contentContainerClassName="gap-2">
+            <Tabs.ScrollView
+              scrollAlign="center"
+              showsHorizontalScrollIndicator={false}
+              contentContainerClassName="flex-grow justify-center gap-2"
+            >
               <Tabs.Indicator />
               <Tabs.Trigger value="hairstyle">
                 <Tabs.Label>{t("imageRequest.hairstyle")}</Tabs.Label>
@@ -166,7 +180,11 @@ export function ImageRequestSheet({
             </Tabs.ScrollView>
           </Tabs.List>
 
-          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          <ScrollView
+            className="flex-1"
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
             <Tabs.Content value="hairstyle">
               {renderChipList(
                 HAIRSTYLE_OPTIONS,
@@ -212,8 +230,8 @@ export function ImageRequestSheet({
           <View className="flex-row gap-3">
             {hasAnySelection && (
               <Button
-                variant="secondary"
-                className="flex-1"
+                variant="outline"
+                // className="flex-1"
                 onPress={handleReset}
                 isDisabled={isLoading}
               >
@@ -226,7 +244,7 @@ export function ImageRequestSheet({
               isDisabled={isLoading || credits < 5}
             >
               {isLoading ? (
-                <Spinner size="sm" />
+                <Spinner color={accentForegroundColor} size="sm" />
               ) : (
                 <>
                   <Camera size={18} color={accentForegroundColor} />

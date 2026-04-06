@@ -1,9 +1,8 @@
-import { View, ScrollView, Pressable } from "react-native";
+import { View, Pressable, ScrollView } from "react-native";
 import { Text } from "@/components/ui/text";
-import { Spinner, useThemeColor } from "heroui-native";
+import { BottomSheet, Spinner, useThemeColor } from "heroui-native";
 import { CustomBottomSheet } from "@/components/bottom-sheet";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MessageSquare, RefreshCw } from "lucide-react-native";
+import { RefreshCw } from "lucide-react-native";
 
 // Default conversation suggestions when AI-generated ones aren't available
 export const DEFAULT_SUGGESTIONS = [
@@ -24,7 +23,6 @@ interface SuggestionItemProps {
 
 function SuggestionItem({ suggestion, onPress }: SuggestionItemProps) {
   const borderColor = useThemeColor("border");
-  const foregroundColor = useThemeColor("foreground");
 
   return (
     <Pressable
@@ -54,8 +52,6 @@ export function SuggestionsSheet({
   isLoading = false,
   onRefresh,
 }: SuggestionsSheetProps) {
-  const insets = useSafeAreaInsets();
-  const accentColor = useThemeColor("accent");
   const mutedColor = useThemeColor("muted");
 
   const handleSelectSuggestion = (suggestion: string) => {
@@ -64,13 +60,13 @@ export function SuggestionsSheet({
   };
 
   return (
-    <CustomBottomSheet isOpen={isOpen} onClose={onClose} snapPoints={["70%"]}>
+    <CustomBottomSheet isOpen={isOpen} onClose={onClose}>
       <View className="flex-1 px-4">
         <View className="flex-row items-center justify-between mb-4">
           <View className="w-10" />
-          <Text className="text-lg font-semibold text-foreground text-center">
+          <BottomSheet.Title className="text-center">
             Suggestion
-          </Text>
+          </BottomSheet.Title>
           {onRefresh ? (
             <Pressable
               onPress={onRefresh}
@@ -97,10 +93,12 @@ export function SuggestionsSheet({
           </View>
         ) : (
           <ScrollView
+            className="flex-1"
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingBottom: Math.max(insets.bottom, 32) + 16,
-            }}
+            keyboardShouldPersistTaps="handled"
+            // contentContainerStyle={{
+            //   paddingBottom: 16,
+            // }}
           >
             {suggestions.map((suggestion, index) => (
               <SuggestionItem

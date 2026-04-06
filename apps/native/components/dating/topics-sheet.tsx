@@ -1,8 +1,8 @@
-import { View, ScrollView, Pressable } from "react-native";
+import { View, Pressable, ScrollView } from "react-native";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Text } from "@/components/ui/text";
-import { useThemeColor } from "heroui-native";
+import { BottomSheet, useThemeColor } from "heroui-native";
 import { CustomBottomSheet } from "@/components/bottom-sheet";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Plane,
   Palette,
@@ -132,26 +132,19 @@ export function TopicsSheet({
   onClose,
   onSelectTopic,
 }: TopicsSheetProps) {
-  const insets = useSafeAreaInsets();
-
   const handleSelectTopic = (topic: (typeof CONVERSATION_TOPICS)[number]) => {
     onSelectTopic(topic);
     onClose();
   };
 
   return (
-    <CustomBottomSheet isOpen={isOpen} onClose={onClose} snapPoints={["70%"]}>
+    <CustomBottomSheet isOpen={isOpen} onClose={onClose}>
       <View className="flex-1 px-4">
-        <Text className="text-lg font-semibold text-foreground text-center mb-4">
-          Topic
-        </Text>
-
+        <BottomSheet.Title className="text-center">Topics</BottomSheet.Title>
         <ScrollView
+          className="flex-1"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingBottom: Math.max(insets.bottom, 32) + 100,
-            flex: 1,
-          }}
+          keyboardShouldPersistTaps="handled"
         >
           {CONVERSATION_TOPICS.map((topic) => (
             <TopicItem

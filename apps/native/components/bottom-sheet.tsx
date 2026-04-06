@@ -1,5 +1,4 @@
 import { BottomSheet } from "heroui-native";
-import { View } from "react-native";
 
 interface CustomBottomSheetProps {
   isOpen: boolean;
@@ -12,7 +11,7 @@ export function CustomBottomSheet({
   isOpen,
   onClose,
   children,
-  snapPoints = ["65%"],
+  snapPoints,
 }: CustomBottomSheetProps) {
   return (
     <BottomSheet
@@ -23,8 +22,14 @@ export function CustomBottomSheet({
     >
       <BottomSheet.Portal>
         <BottomSheet.Overlay />
-        <BottomSheet.Content snapPoints={snapPoints}>
-          <View className="flex-1 px-6 pb-6">{children}</View>
+        <BottomSheet.Content
+          keyboardBehavior="interactive"
+          keyboardBlurBehavior="restore"
+          android_keyboardInputMode="adjustResize"
+          enableBlurKeyboardOnGesture
+          {...(snapPoints ? { snapPoints } : {})}
+        >
+          {children}
         </BottomSheet.Content>
       </BottomSheet.Portal>
     </BottomSheet>

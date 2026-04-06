@@ -279,15 +279,32 @@ export function useChatScreen() {
     [id, requestImage, hasEnoughCredits, router],
   );
 
+  const handleOpenImageSheet = () => {
+    dismissKeyboard();
+    setIsImageSheetOpen(true);
+  };
+
   const handleStartQuiz = useCallback(async () => {
     if (!id || isSending) return;
+    dismissKeyboard();
     await sendConversationMessage("Let's play quiz!");
-  }, [id, isSending, sendConversationMessage]);
+  }, [dismissKeyboard, id, isSending, sendConversationMessage]);
+
+  const handleOpenTopicsSheet = () => {
+    dismissKeyboard();
+    setIsTopicsSheetOpen(true);
+  };
+
+  const handleOpenSuggestionsSheet = () => {
+    dismissKeyboard();
+    setIsSuggestionsSheetOpen(true);
+  };
 
   const handleOpenMessageActions = useCallback((messageOrder: number) => {
+    dismissKeyboard();
     setSelectedMessageOrder(messageOrder);
     setIsMessageActionsOpen(true);
-  }, []);
+  }, [dismissKeyboard]);
 
   const handleDeleteMessage = useCallback(async () => {
     if (selectedMessageOrder === null) return;
@@ -478,8 +495,11 @@ export function useChatScreen() {
 
     // Handlers
     handleSend,
+    handleOpenImageSheet,
     handleImageRequest,
     handleStartQuiz,
+    handleOpenTopicsSheet,
+    handleOpenSuggestionsSheet,
     handleOpenMessageActions,
     handleDeleteMessage,
     handleQuizAnswer,
