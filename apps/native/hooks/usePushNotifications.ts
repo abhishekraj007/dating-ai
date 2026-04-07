@@ -79,8 +79,18 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
   }
 
   try {
+    const projectId =
+      Constants.easConfig?.projectId ??
+      Constants.expoConfig?.extra?.eas?.projectId;
+
+    if (!projectId) {
+      throw new Error(
+        "Missing EAS project ID. Run EAS project init for this app and rebuild the native app.",
+      );
+    }
+
     const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId: Constants.expoConfig?.extra?.eas?.projectId,
+      projectId,
     });
     token = tokenData.data;
   } catch (e) {

@@ -7,6 +7,7 @@ import { Image } from "lucide-react-native";
 import { Image as ExpoImage } from "expo-image";
 import { Header } from "@/components";
 import { GenderTabs, LevelBadge } from "@/components/dating";
+import { parseStructuredContent } from "@/components/dating/bubbles/message-types";
 import { useConversations, useStartConversation } from "@/hooks/dating";
 import { useLikedProfiles } from "@/hooks/dating/useForYou";
 import { formatDistanceToNow } from "date-fns";
@@ -55,29 +56,35 @@ export default function ChatsScreen() {
       return { text: t("chats.startConversation"), isImage: false };
     }
 
-    try {
-      const parsed = JSON.parse(content);
+    const structuredContent = parseStructuredContent(content);
 
-      if (parsed.type === "image_response") {
+    if (structuredContent) {
+      if (structuredContent.type === "image_response") {
         return { text: t("chats.sentPhoto"), isImage: true };
       }
-      if (parsed.type === "image_request") {
+      if (structuredContent.type === "image_request") {
         return { text: t("chats.requestedPhoto"), isImage: true };
       }
-      if (parsed.type === "quiz_question" || parsed.type === "quiz_start") {
+      if (
+        structuredContent.type === "quiz_question" ||
+        structuredContent.type === "quiz_start"
+      ) {
         return { text: t("chats.startedQuiz"), isImage: false };
       }
-      if (parsed.type === "quiz_end") {
+      if (structuredContent.type === "quiz_end") {
         return { text: t("chats.quizCompleted"), isImage: false };
       }
-      if (parsed.type === "quiz_answer_result") {
+      if (structuredContent.type === "quiz_answer_result") {
         return { text: t("chats.quizAnswer"), isImage: false };
       }
+      if (structuredContent.type === "chat_error") {
+        return { text: t("chats.replyFailed"), isImage: false };
+      }
 
-      return { text: content, isImage: false };
-    } catch {
-      return { text: content, isImage: false };
+      return { text: t("chats.startConversation"), isImage: false };
     }
+
+    return { text: content, isImage: false };
   };
 
   const renderNewMatches = () => {

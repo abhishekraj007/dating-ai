@@ -122,6 +122,7 @@ export default function ChatScreen() {
     handleEndQuiz,
     handleTopicSelect,
     handleSuggestionSelect,
+    handleRetryFailedResponse,
     handleClearChat,
   } = useChatScreen();
 
@@ -139,6 +140,8 @@ export default function ChatScreen() {
         isQuizActive={isInteractiveQuizQuestion}
         onQuizAnswer={handleQuizAnswer}
         onEndQuiz={handleEndQuiz}
+        onRetryChatError={handleRetryFailedResponse}
+        isRetrying={isSending}
         onLongPress={
           isUser ? () => handleOpenMessageActions(item.order) : undefined
         }

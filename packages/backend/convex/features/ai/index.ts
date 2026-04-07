@@ -27,6 +27,7 @@ export {
 export {
   startConversation,
   sendMessage,
+  retryFailedResponse,
   deleteMessage,
   createAIProfile,
   updateAIProfile,

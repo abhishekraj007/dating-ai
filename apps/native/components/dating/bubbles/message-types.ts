@@ -46,6 +46,14 @@ export interface ImageResponseData {
   prompt?: string;
 }
 
+export interface ChatErrorData {
+  type: "chat_error";
+  code?: "rate_limited" | "generation_failed";
+  promptMessageId?: string;
+  retryable?: boolean;
+  message?: string;
+}
+
 export type StructuredContent =
   | QuizQuestionData
   | QuizAnswerResultData
@@ -53,6 +61,7 @@ export type StructuredContent =
   | QuizEndData
   | ImageRequestData
   | ImageResponseData
+  | ChatErrorData
   | { type: string; message?: string };
 
 // Shared props for AI bubble components

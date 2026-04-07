@@ -152,6 +152,68 @@ export const sendMessage = mutation({
   },
 });
 
+export const retryFailedResponse = mutation({
+  args: {
+    conversationId: v.id("aiConversations"),
+    promptMessageId: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { conversationId, promptMessageId }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    const conversation = await ctx.db.get(conversationId);
+    if (!conversation || conversation.userId !== user._id) {
+      throw new Error("Conversation not found");
+    }
+
+    const promptMessages = await ctx.runQuery(
+      components.agent.messages.getMessagesByIds,
+      { messageIds: [promptMessageId] },
+    );
+    const promptMessage = promptMessages[0];
+
+    if (
+      !promptMessage ||
+      promptMessage.threadId !== conversation.threadId ||
+      promptMessage.userId !== user._id ||
+      promptMessage.message?.role !== "user"
+    ) {
+      throw new Error("Message not found");
+    }
+
+    const pendingMessages = await ctx.runQuery(
+      components.agent.messages.listMessagesByThreadId,
+      {
+        threadId: conversation.threadId,
+        order: "desc",
+        statuses: ["pending"],
+        paginationOpts: { numItems: 10, cursor: null },
+      },
+    );
+
+    if (pendingMessages.page.length > 0) {
+      throw new Error("AI response already in progress");
+    }
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.features.ai.actions.generateResponse,
+      {
+        conversationId,
+        promptMessageId,
+        threadId: conversation.threadId,
+        userId: user._id,
+        aiProfileId: conversation.aiProfileId,
+      },
+    );
+
+    return null;
+  },
+});
+
 /**
  * Create a new AI profile (user-created character).
  */

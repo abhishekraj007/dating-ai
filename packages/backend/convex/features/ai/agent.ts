@@ -1,3 +1,5 @@
+import { createGateway } from "@ai-sdk/gateway";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { Agent, createTool } from "@convex-dev/agent";
 import { z } from "zod/v3";
 import { components } from "../../_generated/api";
@@ -8,6 +10,47 @@ export const DEFAULT_VOICES = {
   female: "EXAVITQu4vr4xnSDxMaL", // Sarah
   male: "pNInz6obpgDQGcFmaJgB", // Adam
 } as const;
+
+const AI_GATEWAY_BASE_URL =
+  process.env.AI_GATEWAY_BASE_URL ?? "https://ai-gateway.vercel.sh/v1/ai";
+const AI_AGENT_PROVIDER = process.env.AI_AGENT_PROVIDER ?? "gateway";
+const AI_AGENT_MODEL = process.env.AI_AGENT_MODEL ?? "google/gemini-3-flash";
+const AI_AGENT_EMBEDDING_MODEL =
+  process.env.AI_AGENT_EMBEDDING_MODEL ?? "openai/text-embedding-3-small";
+
+const gatewayProvider = createGateway({
+  apiKey: process.env.AI_GATEWAY_API_KEY,
+  baseURL: AI_GATEWAY_BASE_URL,
+});
+const openRouterProvider = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY,
+});
+
+function getAgentLanguageModel() {
+  if (AI_AGENT_PROVIDER === "gateway") {
+    return gatewayProvider(AI_AGENT_MODEL);
+  }
+
+  if (AI_AGENT_PROVIDER === "openrouter") {
+    return openRouterProvider.chat(AI_AGENT_MODEL);
+  }
+
+  console.log("AI_AGENT_PROVIDER", AI_AGENT_PROVIDER);
+
+  throw new Error(
+    `Unsupported AI_AGENT_PROVIDER "${AI_AGENT_PROVIDER}". Expected "gateway" or "openrouter".`,
+  );
+}
+
+function getAgentEmbeddingModel() {
+  const embeddingModelId = AI_AGENT_EMBEDDING_MODEL.trim();
+
+  if (!embeddingModelId || !process.env.AI_GATEWAY_API_KEY) {
+    return undefined;
+  }
+
+  return gatewayProvider.textEmbeddingModel(embeddingModelId);
+}
 
 /**
  * Build a personality-based system prompt from AI profile data.
@@ -358,10 +401,25 @@ Ask questions one at a time, wait for answers, give feedback, then continue.`,
  * Scales to 100K+ profiles since agents are created per-request, not stored.
  */
 export function createAIProfileAgent(profile: Doc<"aiProfiles">) {
+  const languageModel = getAgentLanguageModel();
+  console.log("Agene using language model:", languageModel);
+  const embeddingModel = getAgentEmbeddingModel();
+  const searchOptions = embeddingModel
+    ? {
+        limit: 5,
+        vectorSearch: true,
+        messageRange: { before: 2, after: 1 },
+      }
+    : {
+        limit: 5,
+        textSearch: true,
+        messageRange: { before: 2, after: 1 },
+      };
+
   return new Agent(components.agent, {
     name: profile.name,
-    languageModel: "google/gemini-3-flash",
-    textEmbeddingModel: "openai/text-embedding-3-small",
+    languageModel: getAgentLanguageModel(),
+    textEmbeddingModel: embeddingModel,
     instructions: buildPersonalityPrompt(profile),
     tools: {
       generateImage: generateImageTool,
@@ -370,11 +428,7 @@ export function createAIProfileAgent(profile: Doc<"aiProfiles">) {
     maxSteps: 5,
     contextOptions: {
       recentMessages: 20,
-      searchOptions: {
-        limit: 5,
-        vectorSearch: true,
-        messageRange: { before: 2, after: 1 },
-      },
+      searchOptions,
     },
   });
 }

@@ -31,13 +31,43 @@ function updateCache(threadId: string, messages: ProcessedMessage[]): void {
   messagesCache.set(threadId, messages);
 }
 
+function getStructuredMessagePayload(value: string): string | null {
+  try {
+    const parsed = JSON.parse(value);
+
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      typeof parsed.type !== "string"
+    ) {
+      return null;
+    }
+
+    if (
+      parsed.type === "quiz_question" ||
+      parsed.type === "quiz_start" ||
+      parsed.type === "quiz_end" ||
+      parsed.type === "quiz_answer_result" ||
+      parsed.type === "image_request" ||
+      parsed.type === "image_response" ||
+      parsed.type === "chat_error"
+    ) {
+      return JSON.stringify(parsed);
+    }
+  } catch {
+    // Not valid JSON, treat as plain text.
+  }
+
+  return null;
+}
+
 /**
  * Extract all structured tool outputs from message parts.
  * Returns an array since a single message can have multiple tool calls.
- * Also extracts structured content from text parts (like image_response).
+ * Also extracts structured content from text parts.
  */
 function extractToolOutputs(msg: any): string[] {
-  const outputs: string[] = [];
+  const outputs = new Set<string>();
 
   if (msg.parts && Array.isArray(msg.parts)) {
     for (const part of msg.parts) {
@@ -48,41 +78,26 @@ function extractToolOutputs(msg: any): string[] {
         part.state === "output-available"
       ) {
         try {
-          const parsed = JSON.parse(part.output);
-          // If it's a structured type we care about, add it
-          if (
-            parsed.type === "quiz_question" ||
-            parsed.type === "quiz_start" ||
-            parsed.type === "quiz_end" ||
-            parsed.type === "quiz_answer_result" ||
-            parsed.type === "image_request" ||
-            parsed.type === "image_response"
-          ) {
-            outputs.push(part.output);
+          const payload = getStructuredMessagePayload(part.output);
+          if (payload) {
+            outputs.add(payload);
           }
         } catch {
           // Not valid JSON, skip
         }
       }
 
-      // Also check text parts for structured content (like image_response)
-      // These are added as separate messages by the image generation action
+      // Also check text parts for structured content.
       if (part.type === "text" && part.text && part.state === "done") {
-        try {
-          const parsed = JSON.parse(part.text);
-          // Only extract image_response from text parts
-          // (other structured types come from tool outputs)
-          if (parsed.type === "image_response") {
-            outputs.push(part.text);
-          }
-        } catch {
-          // Not valid JSON, skip (most text parts are plain text)
+        const payload = getStructuredMessagePayload(part.text);
+        if (payload) {
+          outputs.add(payload);
         }
       }
     }
   }
 
-  return outputs;
+  return Array.from(outputs);
 }
 
 function extractMessageText(msg: any): string {
@@ -92,7 +107,8 @@ function extractMessageText(msg: any): string {
         (part: any) =>
           part.type === "text" &&
           typeof part.text === "string" &&
-          part.text.trim() !== "",
+          part.text.trim() !== "" &&
+          getStructuredMessagePayload(part.text) === null,
       )
       .map((part: any) => part.text)
       .join(" ")
@@ -175,6 +191,15 @@ function addOptimisticMessage(threadId: string, message: ProcessedMessage) {
 
 function clearOptimisticMessages(threadId: string) {
   optimisticMessagesMap.set(threadId, []);
+  optimisticListeners.get(threadId)?.forEach((cb) => cb());
+}
+
+function removeOptimisticMessage(threadId: string, messageId: string) {
+  const current = optimisticMessagesMap.get(threadId) ?? [];
+  optimisticMessagesMap.set(
+    threadId,
+    current.filter((message) => message._id !== messageId),
+  );
   optimisticListeners.get(threadId)?.forEach((cb) => cb());
 }
 
@@ -363,6 +388,9 @@ export function useMessages(threadId: string | undefined) {
 
 export function useSendMessage() {
   const sendMessage = useMutation(api.features.ai.mutations.sendMessage);
+  const retryFailedResponse = useMutation(
+    api.features.ai.mutations.retryFailedResponse,
+  );
 
   // Enhanced send with local optimistic update for instant feedback
   const sendMessageWithOptimistic = (
@@ -388,13 +416,24 @@ export function useSendMessage() {
 
       // Add to optimistic messages (triggers re-render via listener)
       addOptimisticMessage(threadId, optimisticMessage);
+
+      return sendMessage(args).catch((error) => {
+        removeOptimisticMessage(threadId, optimisticMessage._id);
+        throw error;
+      });
     }
 
-    // Fire mutation (don't await - let it run in background)
     return sendMessage(args);
   };
 
-  return { sendMessage, sendMessageWithOptimistic };
+  const retryMessage = (args: {
+    conversationId: Id<"aiConversations">;
+    promptMessageId: string;
+  }) => {
+    return retryFailedResponse(args);
+  };
+
+  return { sendMessage, sendMessageWithOptimistic, retryMessage };
 }
 
 export function useDeleteMessage() {

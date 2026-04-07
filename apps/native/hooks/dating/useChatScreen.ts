@@ -48,7 +48,8 @@ export function useChatScreen() {
     isAITyping,
   } = useMessages(threadId);
 
-  const { sendMessage, sendMessageWithOptimistic } = useSendMessage();
+  const { sendMessage, sendMessageWithOptimistic, retryMessage } =
+    useSendMessage();
 
   // Credits for client-side checking
   const { credits, hasEnoughCredits } = useCredits();
@@ -139,11 +140,7 @@ export function useChatScreen() {
   const showTypingIndicator = isAITyping || isWaitingForAI;
 
   // Chat scroll behavior
-  const {
-    shouldLoadMore,
-    handleScroll,
-    scrollToBottom,
-  } = useChatScroll({
+  const { shouldLoadMore, handleScroll, scrollToBottom } = useChatScroll({
     listRef,
     messages,
     conversationId: threadId ?? id,
@@ -213,6 +210,7 @@ export function useChatScreen() {
           router.push("/buy-credits");
         } else {
           console.error("Failed to send message:", error);
+          Alert.alert(t("alerts.error"), t("alerts.tryAgainMoment"));
         }
 
         return false;
@@ -226,6 +224,7 @@ export function useChatScreen() {
       id,
       isSending,
       router,
+      t,
       sendMessage,
       sendMessageWithOptimistic,
       startPendingAssistantState,
@@ -297,11 +296,14 @@ export function useChatScreen() {
     setIsSuggestionsSheetOpen(true);
   };
 
-  const handleOpenMessageActions = useCallback((messageOrder: number) => {
-    dismissKeyboard();
-    setSelectedMessageOrder(messageOrder);
-    setIsMessageActionsOpen(true);
-  }, [dismissKeyboard]);
+  const handleOpenMessageActions = useCallback(
+    (messageOrder: number) => {
+      dismissKeyboard();
+      setSelectedMessageOrder(messageOrder);
+      setIsMessageActionsOpen(true);
+    },
+    [dismissKeyboard],
+  );
 
   const handleDeleteMessage = useCallback(async () => {
     if (selectedMessageOrder === null) return;
@@ -347,6 +349,43 @@ export function useChatScreen() {
       await sendConversationMessage(suggestion);
     },
     [id, isSending, sendConversationMessage],
+  );
+
+  const handleRetryFailedResponse = useCallback(
+    async (promptMessageId: string) => {
+      if (!id || isSending) {
+        return;
+      }
+
+      dismissKeyboard();
+      setIsSending(true);
+      startPendingAssistantState();
+
+      try {
+        await retryMessage({
+          conversationId: id as Id<"aiConversations">,
+          promptMessageId,
+        });
+      } catch (error) {
+        clearPendingAssistantState();
+        console.error("Failed to retry response:", error);
+        Alert.alert(
+          t("alerts.error"),
+          error instanceof Error ? error.message : t("chat.retryFailed"),
+        );
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [
+      clearPendingAssistantState,
+      dismissKeyboard,
+      id,
+      isSending,
+      retryMessage,
+      startPendingAssistantState,
+      t,
+    ],
   );
 
   const handleClearChat = useCallback(() => {
@@ -500,6 +539,7 @@ export function useChatScreen() {
     handleEndQuiz,
     handleTopicSelect,
     handleSuggestionSelect,
+    handleRetryFailedResponse,
     handleClearChat,
   };
 }

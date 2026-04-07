@@ -6,6 +6,7 @@ import { internal, components } from "../../_generated/api";
 import { createAIProfileAgent } from "./agent";
 import { r2 } from "../../uploads";
 import Replicate from "replicate";
+import { saveMessage } from "@convex-dev/agent";
 
 // Initialize Replicate client
 const replicate = new Replicate({
@@ -28,6 +29,110 @@ type ImageGenerationResult =
       success: false;
       error: string;
     };
+
+type ChatErrorCode = "rate_limited" | "generation_failed";
+
+function getChatErrorDetails(error: unknown): {
+  code: ChatErrorCode;
+  errorMessage: string;
+} {
+  const typedError = error as {
+    message?: string;
+    lastError?: {
+      statusCode?: number;
+      responseBody?: string;
+      data?: {
+        error?: {
+          metadata?: {
+            raw?: string;
+          };
+        };
+      };
+    };
+  };
+
+  const rawDetails = [
+    typedError.lastError?.data?.error?.metadata?.raw,
+    typedError.lastError?.responseBody,
+    typedError.message,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join(" | ");
+
+  const code =
+    typedError.lastError?.statusCode === 429 ||
+    /rate.limit|temporarily rate-limited|retry shortly|statusCode\":429/i.test(
+      rawDetails,
+    )
+      ? "rate_limited"
+      : "generation_failed";
+
+  return {
+    code,
+    errorMessage:
+      rawDetails ||
+      (error instanceof Error ? error.message : "Unknown generation error"),
+  };
+}
+
+async function failPendingAssistantMessages(
+  ctx: {
+    runQuery: (...args: Array<any>) => Promise<any>;
+    runMutation: (...args: Array<any>) => Promise<any>;
+  },
+  threadId: string,
+  errorMessage: string,
+) {
+  const pendingMessages = await ctx.runQuery(
+    components.agent.messages.listMessagesByThreadId,
+    {
+      threadId,
+      order: "desc",
+      statuses: ["pending"],
+      paginationOpts: { numItems: 10, cursor: null },
+    },
+  );
+
+  await Promise.all(
+    pendingMessages.page.map((message: { _id: string }) =>
+      ctx.runMutation(components.agent.messages.updateMessage, {
+        messageId: message._id,
+        patch: {
+          status: "failed",
+          error: errorMessage,
+          finishReason: "error",
+        },
+      }),
+    ),
+  );
+}
+
+async function saveRetryableChatErrorMessage(
+  ctx: any,
+  args: {
+    threadId: string;
+    userId: string;
+    promptMessageId: string;
+    agentName: string;
+    code: ChatErrorCode;
+  },
+) {
+  await saveMessage(ctx, components.agent, {
+    threadId: args.threadId,
+    userId: args.userId,
+    promptMessageId: args.promptMessageId,
+    message: {
+      role: "assistant",
+      content: JSON.stringify({
+        type: "chat_error",
+        code: args.code,
+        promptMessageId: args.promptMessageId,
+        retryable: true,
+      }),
+    },
+    agentName: args.agentName,
+  });
+}
 
 /**
  * Generate image using placeholder service (for development).
@@ -155,6 +260,7 @@ export const generateResponse = internalAction({
     userId: v.optional(v.string()),
     aiProfileId: v.optional(v.id("aiProfiles")),
   },
+  returns: v.null(),
   handler: async (
     ctx,
     { conversationId, promptMessageId, threadId, userId, aiProfileId },
@@ -193,30 +299,39 @@ export const generateResponse = internalAction({
     // Create dynamic agent for this profile
     const agent = createAIProfileAgent(profile);
 
-    // Generate streaming response
-    const result = await agent.streamText(
-      ctx,
-      { threadId: convThreadId!, userId: convUserId! },
-      { promptMessageId },
-      { saveStreamDeltas: true },
-    );
+    let result;
 
-    // Wait for the stream to complete by awaiting the text
-    const fullText = await result.text;
-    console.log("Stream completed, response text length:", fullText.length);
+    try {
+      // Generate streaming response
+      result = await agent.streamText(
+        ctx,
+        { threadId: convThreadId!, userId: convUserId! },
+        { promptMessageId },
+        { saveStreamDeltas: true },
+      );
+    } catch (error) {
+      const { code, errorMessage } = getChatErrorDetails(error);
 
-    // Get the saved messages to check for tool calls
-    // When using saveStreamDeltas, tool calls are saved directly to the message in the database
-    const savedMessages = result.savedMessages;
-    console.log("Saved messages count:", savedMessages?.length ?? 0);
+      console.error("Failed to generate AI response:", error);
 
-    if (savedMessages && savedMessages.length > 0) {
-      // Log the saved messages structure
-      console.log("Saved messages:", JSON.stringify(savedMessages, null, 2));
+      await failPendingAssistantMessages(ctx, convThreadId!, errorMessage);
 
-      for (const msgId of savedMessages) {
-        console.log("Checking message ID:", msgId);
+      try {
+        await saveRetryableChatErrorMessage(ctx, {
+          threadId: convThreadId!,
+          userId: convUserId!,
+          promptMessageId,
+          agentName: profile.name,
+          code,
+        });
+      } catch (messageError) {
+        console.error(
+          "Failed to save retryable chat error message:",
+          messageError,
+        );
       }
+
+      return null;
     }
 
     // Alternative approach: Query the thread messages directly to find tool calls

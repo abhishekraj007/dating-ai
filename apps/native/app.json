@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "dating-ai",
-    "slug": "dating-ai",
+    "slug": "datingai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -62,8 +62,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "10557409-a012-4b82-ae6c-a8c0cf6e970b"
+        "projectId": "30076408-2843-4f4f-9288-b94bd6ff262e"
       }
-    }
+    },
+    "owner": "abhishekrajemail"
   }
 }

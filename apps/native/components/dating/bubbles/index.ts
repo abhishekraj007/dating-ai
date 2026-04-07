@@ -4,6 +4,7 @@ export { QuizQuestionBubble } from "./QuizQuestionBubble";
 export { QuizResultBubble } from "./QuizResultBubble";
 export { QuizStartBubble } from "./QuizStartBubble";
 export { ImageRequestBubble, ImageResponseBubble } from "./ImageBubble";
+export { ChatErrorBubble } from "./ChatErrorBubble";
 export {
   AITextBubble,
   UserTextBubble,
