@@ -11,6 +11,7 @@ import {
   AccountAppearanceSheet,
   AccountGuestSummary,
   AccountLinkItem,
+  AccountNotificationSheet,
   AccountProfileSummary,
   AccountSectionCard,
 } from "@/components/account";
@@ -30,12 +31,14 @@ export default function AccountScreen() {
   const { presentPaywall } = usePurchases();
   const { clearAppCache, isClearingCache } = useClearAppCache();
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
+  const [isNotificationSheetOpen, setIsNotificationSheetOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isAccountActionsOpen, setIsAccountActionsOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const { sections } = useAccountSections({
     onOpenAppearance: () => setIsAppearanceOpen(true),
+    onOpenNotifications: () => setIsNotificationSheetOpen(true),
     onOpenLanguage: () => setIsLanguageOpen(true),
     onOpenAccountActions: () => setIsAccountActionsOpen(true),
     isAuthenticated,
@@ -200,6 +203,12 @@ export default function AccountScreen() {
           isOpen={isAppearanceOpen}
           onOpenChange={setIsAppearanceOpen}
         />
+        {isAuthenticated ? (
+          <AccountNotificationSheet
+            isOpen={isNotificationSheetOpen}
+            onOpenChange={setIsNotificationSheetOpen}
+          />
+        ) : null}
         <LanguageSheet
           isOpen={isLanguageOpen}
           onOpenChange={setIsLanguageOpen}

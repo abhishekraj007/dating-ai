@@ -219,7 +219,7 @@ export default function AppConfigPage() {
                   label="Android App ID"
                   value={form.androidAppId}
                   onChange={(value) => onChange("androidAppId", value)}
-                  placeholder="com.noosperai.quotes"
+                  placeholder="com.noosperai.datingai"
                 />
               </CardContent>
             </Card>

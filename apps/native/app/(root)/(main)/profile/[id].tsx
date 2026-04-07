@@ -11,7 +11,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Chip, Skeleton, useThemeColor } from "heroui-native";
 import { X, Share2, MoreVertical } from "lucide-react-native";
 import { useAIProfile, useCredits } from "@/hooks/dating";
@@ -285,24 +285,26 @@ export default function ProfileDetailScreen() {
               }}
             />
           )}
-          <ZoomableImage
-            source={
-              profile.avatarUrl && !hasImageError
-                ? { uri: profile.avatarUrl }
-                : require("@/assets/images/login-bg.jpeg")
-            }
-            style={{
-              width: "100%",
-              height: "100%",
-              opacity: isImageLoaded ? 1 : 0,
-            }}
-            contentFit="cover"
-            contentPosition="top"
-            cachePolicy="memory-disk"
-            transition={300}
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-          />
+          <Link.AppleZoomTarget>
+            <ZoomableImage
+              source={
+                profile.avatarUrl && !hasImageError
+                  ? { uri: profile.avatarUrl }
+                  : require("@/assets/images/login-bg.jpeg")
+              }
+              style={{
+                width: "100%",
+                height: "100%",
+                opacity: isImageLoaded ? 1 : 0,
+              }}
+              contentFit="cover"
+              contentPosition="top"
+              cachePolicy="memory-disk"
+              transition={300}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
+          </Link.AppleZoomTarget>
 
           <LinearGradient
             pointerEvents="none"

@@ -246,6 +246,8 @@ export const de: TranslationMap = {
     "Benachrichtigungen aktiviert. Gerät registriert.",
   "notifications.disabledPrompt":
     "Benachrichtigungen nicht aktiviert. Bitte erlaube Benachrichtigungsberechtigungen.",
+  "notifications.disabledInApp":
+    "Benachrichtigungen sind für diese App auf diesem Gerät deaktiviert.",
   "notifications.requesting": "Anfrage...",
   "notifications.enable": "Benachrichtigungen aktivieren",
   "notifications.sendTestTitle": "Testbenachrichtigung senden",

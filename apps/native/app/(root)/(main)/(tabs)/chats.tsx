@@ -85,7 +85,7 @@ export default function ChatsScreen() {
 
     return (
       <View className="mb-4">
-        <Text className="text-foreground text-lg font-bold px-4 mb-3">
+        <Text className="text-foreground opacity-80 text-lg font-bold px-4 mb-3">
           {t("chats.newMatches")}
         </Text>
         <ScrollView

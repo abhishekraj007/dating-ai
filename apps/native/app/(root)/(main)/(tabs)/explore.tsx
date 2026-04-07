@@ -1,6 +1,6 @@
 import { View, Dimensions, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { Button, Skeleton, useThemeColor, ScrollShadow } from "heroui-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SlidersHorizontal } from "lucide-react-native";
@@ -33,10 +33,6 @@ export default function ExploreScreen() {
     }
   }, [isLoading, profiles.length, status, loadMore]);
 
-  const handleProfilePress = (profileId: string) => {
-    router.push(`/(root)/(main)/profile/${profileId}`);
-  };
-
   const renderProfile = ({ item, index }: { item: any; index: number }) => {
     // 2 columns
     const isLeft = index % 2 === 0;
@@ -49,14 +45,21 @@ export default function ExploreScreen() {
           paddingRight: isLeft ? GAP / 2 : 16,
         }}
       >
-        <ProfileCard
-          name={item.name}
-          age={item.age}
-          zodiacSign={item.zodiacSign}
-          avatarUrl={item.avatarUrl}
-          gender={item.gender}
-          onPress={() => handleProfilePress(item._id)}
-        />
+        <Link href={`/(root)/(main)/profile/${item._id}`} asChild>
+          <Link.Trigger>
+            <View>
+              <ProfileCard
+                name={item.name}
+                age={item.age}
+                zodiacSign={item.zodiacSign}
+                avatarUrl={item.avatarUrl}
+                gender={item.gender}
+                isPressable={false}
+                imageWrapper={(image) => <Link.AppleZoom>{image}</Link.AppleZoom>}
+              />
+            </View>
+          </Link.Trigger>
+        </Link>
       </View>
     );
   };

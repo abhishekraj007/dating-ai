@@ -239,6 +239,8 @@ export const hi: TranslationMap = {
   "notifications.enabledRegistered": "नोटिफिकेशन चालू हैं। डिवाइस रजिस्टर है।",
   "notifications.disabledPrompt":
     "नोटिफिकेशन सक्षम नहीं हैं। कृपया अनुमति दें।",
+  "notifications.disabledInApp":
+    "इस डिवाइस पर इस ऐप के लिए नोटिफिकेशन बंद हैं।",
   "notifications.requesting": "अनुरोध किया जा रहा है...",
   "notifications.enable": "नोटिफिकेशन सक्षम करें",
   "notifications.sendTestTitle": "टेस्ट नोटिफिकेशन भेजें",

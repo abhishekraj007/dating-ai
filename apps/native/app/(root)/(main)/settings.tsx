@@ -97,6 +97,7 @@ export default function SettingsRoute() {
     isEnabled: notificationsEnabled,
     isRequesting,
     enableNotifications,
+    disableNotifications,
   } = useNotificationSettings();
 
   const getCurrentThemeId = () => {
@@ -113,23 +114,20 @@ export default function SettingsRoute() {
   };
 
   const handleNotificationToggle = async (enabled: boolean) => {
-    if (enabled) {
-      try {
+    try {
+      if (enabled) {
         await enableNotifications();
         Alert.alert(t("alerts.success"), t("notifications.permissionsGranted"));
-      } catch (error) {
-        Alert.alert(
-          t("alerts.error"),
-          error instanceof Error
-            ? error.message
-            : t("notifications.requestFailed"),
-        );
+        return;
       }
-    } else {
+
+      await disableNotifications();
+    } catch (error) {
       Alert.alert(
-        t("settings.disableNotifications"),
-        t("settings.disableNotificationsDescription"),
-        [{ text: t("common.ok") }],
+        t("alerts.error"),
+        error instanceof Error
+          ? error.message
+          : t("notifications.requestFailed"),
       );
     }
   };

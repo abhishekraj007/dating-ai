@@ -251,6 +251,8 @@ export const fr: TranslationMap = {
     "Notifications activées. Appareil enregistré.",
   "notifications.disabledPrompt":
     "Notifications non activées. Veuillez autoriser les permissions de notification.",
+  "notifications.disabledInApp":
+    "Les notifications sont désactivées pour cette application sur cet appareil.",
   "notifications.requesting": "Demande en cours...",
   "notifications.enable": "Activer les notifications",
   "notifications.sendTestTitle": "Envoyer une notification test",

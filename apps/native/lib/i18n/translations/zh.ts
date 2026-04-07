@@ -226,6 +226,7 @@ export const zh: TranslationMap = {
   "notifications.statusTitle": "推送通知状态",
   "notifications.enabledRegistered": "通知已启用。设备已注册。",
   "notifications.disabledPrompt": "通知未启用。请允许通知权限。",
+  "notifications.disabledInApp": "此设备上此应用的通知已关闭。",
   "notifications.requesting": "请求中...",
   "notifications.enable": "启用通知",
   "notifications.sendTestTitle": "发送测试通知",

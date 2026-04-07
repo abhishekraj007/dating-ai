@@ -22,7 +22,9 @@ export default defineSchema({
     premiumExpiresAt: v.optional(v.number()), // null = lifetime/subscription-based
     // Onboarding status
     hasCompletedOnboarding: v.optional(v.boolean()),
-  }).index("by_auth_user_id", ["authUserId"]),
+  })
+    .index("by_auth_user_id", ["authUserId"])
+    .index("by_email", ["email"]),
 
   // User preferences for AI profile matching (from onboarding)
   userPreferences: defineTable({

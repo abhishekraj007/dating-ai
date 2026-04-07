@@ -256,6 +256,8 @@ export const en: TranslationMap = {
     "Notifications enabled. Device registered.",
   "notifications.disabledPrompt":
     "Notifications not enabled. Please allow notification permissions.",
+  "notifications.disabledInApp":
+    "Notifications are turned off for this app on this device.",
   "notifications.requesting": "Requesting...",
   "notifications.enable": "Enable Notifications",
   "notifications.sendTestTitle": "Send Test Notification",

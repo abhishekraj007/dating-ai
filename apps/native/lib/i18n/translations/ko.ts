@@ -236,6 +236,7 @@ export const ko: TranslationMap = {
     "알림이 활성화되었습니다. 기기가 등록되었습니다.",
   "notifications.disabledPrompt":
     "알림이 활성화되지 않았습니다. 알림 권한을 허용해 주세요.",
+  "notifications.disabledInApp": "이 기기에서 이 앱의 알림이 꺼져 있습니다.",
   "notifications.requesting": "요청 중...",
   "notifications.enable": "알림 활성화",
   "notifications.sendTestTitle": "테스트 알림 보내기",

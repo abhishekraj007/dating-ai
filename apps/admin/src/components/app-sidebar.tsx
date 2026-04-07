@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   BookOpen,
+  Bell,
   LayoutDashboard,
   Settings,
   LogOut,
@@ -58,6 +59,11 @@ const menuItems = [
     title: "App Config",
     url: "/app-config",
     icon: SlidersHorizontal,
+  },
+  {
+    title: "Notifications",
+    url: "/notifications",
+    icon: Bell,
   },
 ];
 

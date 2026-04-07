@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.noosperai.quotes"
+      "bundleIdentifier": "com.noosperai.datingai"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.noosperai.quotes"
+      "package": "com.noosperai.datingai"
     },
     "web": {
       "output": "static",

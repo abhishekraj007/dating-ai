@@ -4,7 +4,7 @@ import { requireAdmin } from "./guards";
 
 const fallbackBaseWebUrl =
   process.env.SITE_URL ?? process.env.EXPO_PUBLIC_CONVEX_SITE_URL;
-const fallbackAndroidAppId = "com.noosperai.quotes";
+const fallbackAndroidAppId = "com.noosperai.datingai";
 
 export const getPublicAppConfig = query({
   args: {},

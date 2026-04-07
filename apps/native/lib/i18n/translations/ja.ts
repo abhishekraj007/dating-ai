@@ -241,6 +241,8 @@ export const ja: TranslationMap = {
     "通知が有効です。デバイスが登録されています。",
   "notifications.disabledPrompt":
     "通知が有効になっていません。通知の権限を許可してください。",
+  "notifications.disabledInApp":
+    "このデバイスではこのアプリの通知がオフになっています。",
   "notifications.requesting": "リクエスト中...",
   "notifications.enable": "通知を有効にする",
   "notifications.sendTestTitle": "テスト通知を送信",

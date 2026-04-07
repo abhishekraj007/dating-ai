@@ -234,6 +234,8 @@ export const ar: TranslationMap = {
   "notifications.enabledRegistered": "الإشعارات مفعلة. الجهاز مسجل.",
   "notifications.disabledPrompt":
     "الإشعارات غير مفعلة. يرجى السماح بأذونات الإشعارات.",
+  "notifications.disabledInApp":
+    "تم إيقاف الإشعارات لهذا التطبيق على هذا الجهاز.",
   "notifications.requesting": "جارٍ الطلب...",
   "notifications.enable": "تفعيل الإشعارات",
   "notifications.sendTestTitle": "إرسال إشعار تجريبي",

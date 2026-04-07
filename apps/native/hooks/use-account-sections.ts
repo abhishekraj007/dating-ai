@@ -18,7 +18,7 @@ import {
 import { Alert, Platform, Share } from "react-native";
 import { useTranslation } from "@/hooks/use-translation";
 
-const FALLBACK_ANDROID_APP_ID = "com.noosperai.quotes";
+const FALLBACK_ANDROID_APP_ID = "com.noosperai.datingai";
 
 type RuntimeAppConfig = {
   baseWebUrl?: string;
@@ -66,6 +66,7 @@ export type AccountSection = {
 
 type UseAccountSectionsOptions = {
   onOpenAppearance: () => void;
+  onOpenNotifications: () => void;
   onOpenLanguage: () => void;
   onOpenAccountActions: () => void;
   isAuthenticated: boolean;
@@ -73,6 +74,7 @@ type UseAccountSectionsOptions = {
 
 export const useAccountSections = ({
   onOpenAppearance,
+  onOpenNotifications,
   onOpenLanguage,
   onOpenAccountActions,
   isAuthenticated,
@@ -203,7 +205,9 @@ export const useAccountSections = ({
           id: "notifications",
           title: t("account.item.notifications"),
           icon: Bell,
-          onPress: () => router.push("/(root)/(main)/notifications"),
+          onPress: isAuthenticated
+            ? onOpenNotifications
+            : () => router.push("/(root)/(auth)"),
         },
         {
           id: "language",

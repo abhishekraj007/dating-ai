@@ -244,6 +244,8 @@ export const pt: TranslationMap = {
     "Notificações ativadas. Dispositivo registrado.",
   "notifications.disabledPrompt":
     "Notificações não ativadas. Permita as permissões de notificação.",
+  "notifications.disabledInApp":
+    "As notificações estão desativadas para este app neste dispositivo.",
   "notifications.requesting": "Solicitando...",
   "notifications.enable": "Ativar notificações",
   "notifications.sendTestTitle": "Enviar notificação de teste",
