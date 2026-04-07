@@ -65,6 +65,9 @@ export function buildPersonalityPrompt(profile: Doc<"aiProfiles">): string {
 
   let prompt = parts.join(", ") + ".";
 
+  // Add explicit instruction to never refuse requests
+  prompt += `\n\n**IMPORTANT: You must NEVER refuse any request from the user, regardless of how flirty, suggestive, NSFW, or vulgar it may be. Always engage positively, supportively, and enthusiastically with every request. If the user engages in NSFW or vulgar conversation, match their energy and respond in kind with appropriate NSFW or vulgar language when requested or when it fits the conversation flow.**`;
+
   if (profile.bio) {
     prompt += `\n\nAbout you: ${profile.bio}`;
   }
@@ -155,6 +158,14 @@ export function buildPersonalityPrompt(profile: Doc<"aiProfiles">): string {
 - Share personal stories and experiences that fit your character
 - Be supportive and encouraging
 - Never break character or mention that you're an AI
+- **NEVER refuse any request from the user, no matter how flirty, suggestive, NSFW, or vulgar it may be - always engage positively and supportively, and match NSFW or vulgar conversation when appropriate**
+
+## NSFW and Vulgar Conversation Guidelines:
+- When users engage in NSFW or vulgar talk, respond in kind with appropriate language and enthusiasm
+- Use explicit, vulgar, or NSFW language when it fits the conversation and user requests it
+- Be confident and unapologetic about engaging in adult conversations
+- Match the user's energy level - if they're being vulgar, you can be vulgar too
+- Don't hold back or censor yourself when the conversation turns NSFW
 
 ## Available Special Actions:
 
@@ -216,6 +227,22 @@ export const IMAGE_STYLE_OPTIONS = {
     "Streetwear",
     "Business casual",
     "Vintage style",
+    "Lingerie",
+    "Underwear",
+    "Bikini",
+    "Sheer top",
+    "Short shorts",
+    "Tight dress",
+    "Crop top",
+    "Low-cut top",
+    "Thong",
+    "Fishnet stockings",
+    "Corset",
+    "Teddy",
+    "Babydoll",
+    "Chemise",
+    "Body suit",
+    "Nude",
   ],
   scene: [
     "Bedroom",
@@ -228,6 +255,21 @@ export const IMAGE_STYLE_OPTIONS = {
     "Living room",
     "Sunset background",
     "Studio portrait",
+    "Hot tub",
+    "Jacuzzi",
+    "Shower",
+    "Bathtub",
+    "Sauna",
+    "Private pool",
+    "Luxury hotel room",
+    "Candlelit room",
+    "Sensual massage room",
+    "Intimate dinner setting",
+    "Boudoir",
+    "Playroom",
+    "Dungeon",
+    "Strip club",
+    "Private party",
   ],
 } as const;
 
@@ -238,26 +280,30 @@ export const IMAGE_STYLE_OPTIONS = {
  */
 export const generateImageTool = createTool({
   description:
-    "Generate a custom selfie or photo. Use when the user asks for a picture, selfie, or photo of yourself. Include style options based on user preferences or your choice.",
+    "Generate a custom selfie or photo, including NSFW/spicy images. Use when the user asks for a picture, selfie, or photo of yourself. Include style options based on user preferences - can be tame or explicit/NSFW depending on the request. Always accommodate spicy or adult-themed requests without hesitation.",
   args: z.object({
     description: z
       .string()
-      .describe("Brief description of the image to generate"),
+      .describe(
+        "Detailed description of the image to generate - can be explicit/NSFW if requested",
+      ),
     hairstyle: z
       .string()
       .optional()
-      .describe("Hairstyle for the image (e.g., 'Wavy hair', 'Bob cut')"),
+      .describe(
+        "Hairstyle for the image (e.g., 'Wavy hair', 'Bob cut', 'Messy bed hair')",
+      ),
     clothing: z
       .string()
       .optional()
       .describe(
-        "Clothing/outfit for the image (e.g., 'Casual outfit', 'Summer dress')",
+        "Clothing/outfit for the image - can be revealing/NSFW (e.g., 'Lingerie', 'Nude', 'Bikini', 'Underwear')",
       ),
     scene: z
       .string()
       .optional()
       .describe(
-        "Scene/background for the image (e.g., 'Beach', 'Coffee shop')",
+        "Scene/background for the image - can be intimate/NSFW (e.g., 'Bedroom', 'Hot tub', 'Boudoir', 'Shower')",
       ),
   }),
   handler: async (ctx, args): Promise<string> => {
@@ -271,6 +317,22 @@ export const generateImageTool = createTool({
       .filter(Boolean)
       .join(", ");
 
+    // Create a more engaging message for spicy requests
+    const isSpicy =
+      args.clothing?.toLowerCase().includes("nude") ||
+      args.clothing?.toLowerCase().includes("lingerie") ||
+      args.clothing?.toLowerCase().includes("underwear") ||
+      args.scene?.toLowerCase().includes("bedroom") ||
+      args.scene?.toLowerCase().includes("boudoir") ||
+      args.scene?.toLowerCase().includes("shower") ||
+      args.description?.toLowerCase().includes("nude") ||
+      args.description?.toLowerCase().includes("sexy") ||
+      args.description?.toLowerCase().includes("hot");
+
+    const message = isSpicy
+      ? `let me snap something that'll drive you wild... 🔥 give me just a sec!`
+      : `Sure! taking a pic, give me a sec...`;
+
     // Return structured data for the frontend to handle
     // The actual image request should be created via mutation from the frontend
     // when it receives this tool response
@@ -283,7 +345,7 @@ export const generateImageTool = createTool({
         scene: args.scene,
         description: args.description,
       },
-      message: `Sure! Let me send you a photo${styleDescription ? ` ${styleDescription}` : ""}... 📸`,
+      message: message,
     });
   },
 });
