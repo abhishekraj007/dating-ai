@@ -1,10 +1,4 @@
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  useWindowDimensions,
-} from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { useEffect, useRef, useState } from "react";
 import { Button, Avatar, useThemeColor, Dialog } from "heroui-native";
@@ -34,7 +28,6 @@ export function BlurredPremiumImage({
   const { t } = useTranslation();
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const { presentPaywall } = usePurchases();
-  const { width: screenWidth } = useWindowDimensions();
   const { isAuthenticated } = useConvexAuth();
   const router = useRouter();
 
@@ -78,16 +71,21 @@ export function BlurredPremiumImage({
       </Pressable>
 
       <Dialog isOpen={showUnlockModal} onOpenChange={setShowUnlockModal}>
-        <Dialog.Portal className="flex-1 justify-center items-center">
+        <Dialog.Portal
+          style={[
+            StyleSheet.absoluteFillObject,
+            styles.dialogPortal,
+          ]}
+        >
           <Dialog.Overlay className="bg-black/70" />
-          <Dialog.Content className="w-[90%] max-w-[360px] bg-[#1a1a1a] rounded-3xl overflow-hidden p-0">
+          <Dialog.Content className="w-[90%] max-w-[360px] self-center bg-[#1a1a1a] rounded-3xl overflow-hidden p-0">
             <Dialog.Close className="absolute top-4 right-4 z-10 bg-white/90 rounded-full p-2">
               <X size={24} color="#666" />
             </Dialog.Close>
 
             <Image
               source={{ uri: imageUrl }}
-              style={[styles.modalImage, { width: screenWidth }]}
+              style={styles.modalImage}
               contentFit="cover"
               blurRadius={75}
               cachePolicy="memory-disk"
@@ -126,6 +124,11 @@ export function BlurredPremiumImage({
 }
 
 const styles = StyleSheet.create({
+  dialogPortal: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
   container: {
     overflow: "hidden",
     position: "relative",
