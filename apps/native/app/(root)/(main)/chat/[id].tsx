@@ -1,18 +1,11 @@
 import {
   View,
   Text,
-  ScrollView,
   Pressable,
-  StyleSheet,
   useWindowDimensions,
 } from "react-native";
-import { KeyboardComposer } from "@launchhq/react-native-keyboard-composer";
 import { FlashList } from "@shopify/flash-list";
-import { KeyboardStickyView } from "react-native-keyboard-controller";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Button,
   Avatar,
@@ -25,14 +18,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import {
   ChevronLeft,
   MoreVertical,
-  Camera,
-  HelpCircle,
-  MessageSquare,
-  Lightbulb,
   Trash2,
-  Plus,
 } from "lucide-react-native";
 import {
+  ChatForm,
   MessageBubble,
   ImageRequestSheet,
   MessageActionsSheet,
@@ -48,9 +37,7 @@ const BOTTOM_SHADOW_SIZE = 20;
 
 export default function ChatScreen() {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const foregroundColor = useThemeColor("foreground");
-  const mutedColor = useThemeColor("muted");
   const { height } = useWindowDimensions();
   const emptyHeight = height - 350;
 
@@ -347,109 +334,24 @@ export default function ChatScreen() {
             </ScrollShadow>
           </View>
 
-          <KeyboardStickyView>
-            <LinearGradient
-              colors={[
-                "rgba(0, 0, 0, 0)",
-                "rgba(0, 0, 0, 0.8)",
-                "rgba(0, 0, 0, 1)",
-              ]}
-              locations={[0, 0.45, 1]}
-              start={{ x: 0.5, y: 0 }}
-              end={{ x: 0.5, y: 1 }}
-              style={[
-                styles.composerContainer,
-                {
-                  paddingBottom: isKeyboardOpen
-                    ? 8
-                    : Math.max(insets.bottom, 8),
-                },
-              ]}
-            >
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                nestedScrollEnabled
-                contentContainerStyle={{
-                  paddingHorizontal: 16,
-                  paddingBottom: 10,
-                  gap: 8,
-                  alignItems: "center",
-                }}
-              >
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onPress={handleOpenImageSheet}
-                  isDisabled={isRequestingImage}
-                >
-                  {isRequestingImage ? (
-                    <Spinner size="sm" />
-                  ) : (
-                    <Camera size={16} color={foregroundColor} />
-                  )}
-                  <Button.Label>{t("chat.selfie")}</Button.Label>
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onPress={handleStartQuiz}
-                  isDisabled={isSending}
-                >
-                  <HelpCircle size={16} color={foregroundColor} />
-                  <Button.Label>{t("chat.quiz")}</Button.Label>
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onPress={handleOpenTopicsSheet}
-                  isDisabled={isSending}
-                >
-                  <MessageSquare size={16} color={foregroundColor} />
-                  <Button.Label>{t("chat.topic")}</Button.Label>
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onPress={handleOpenSuggestionsSheet}
-                  isDisabled={isSending}
-                >
-                  <Lightbulb size={16} color={foregroundColor} />
-                  <Button.Label>{t("chat.suggestion")}</Button.Label>
-                </Button>
-              </ScrollView>
-              <View style={[styles.composerRow]}>
-                {/* <Button
-                  variant="secondary"
-                  isDisabled={isSending}
-                  className="mr-2 p-2 rounded-full w-12 h-12"
-                >
-                  <Plus size={24} color={mutedColor} />
-                </Button> */}
-                <View
-                  style={[
-                    styles.composerWrapper,
-                    { height: composerHeight, flex: 1 },
-                  ]}
-                >
-                  <KeyboardComposer
-                    text={message}
-                    placeholder={t("chat.typeMessage")}
-                    onSend={handleSend}
-                    onStop={handleStopResponse}
-                    onChangeText={setMessage}
-                    onHeightChange={setComposerHeight}
-                    onKeyboardHeightChange={setKeyboardHeight}
-                    isStreaming={showTypingIndicator}
-                    blurTrigger={blurTrigger}
-                    editable={!isSending}
-                    minHeight={48}
-                    maxHeight={120}
-                  />
-                </View>
-              </View>
-            </LinearGradient>
-          </KeyboardStickyView>
+          <ChatForm
+            composerHeight={composerHeight}
+            onComposerHeightChange={setComposerHeight}
+            onKeyboardHeightChange={setKeyboardHeight}
+            blurTrigger={blurTrigger}
+            isKeyboardOpen={isKeyboardOpen}
+            message={message}
+            onChangeMessage={setMessage}
+            onSend={handleSend}
+            onStopResponse={handleStopResponse}
+            showTypingIndicator={showTypingIndicator}
+            isSending={isSending}
+            isRequestingImage={isRequestingImage}
+            onOpenImageSheet={handleOpenImageSheet}
+            onStartQuiz={handleStartQuiz}
+            onOpenTopicsSheet={handleOpenTopicsSheet}
+            onOpenSuggestionsSheet={handleOpenSuggestionsSheet}
+          />
         </View>
       </View>
 
@@ -485,19 +387,3 @@ export default function ChatScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  composerContainer: {
-    paddingTop: 8,
-  },
-  composerRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    paddingHorizontal: 8,
-  },
-  composerWrapper: {
-    borderRadius: 24,
-    overflow: "hidden",
-    backgroundColor: "transparent",
-  },
-});
