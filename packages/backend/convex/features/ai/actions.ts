@@ -75,6 +75,17 @@ function getChatErrorDetails(error: unknown): {
   };
 }
 
+function isPromptCancelled(
+  conversation: {
+    cancelledPromptMessageIds?: Array<string>;
+  } | null,
+  promptMessageId: string,
+) {
+  return (
+    conversation?.cancelledPromptMessageIds?.includes(promptMessageId) ?? false
+  );
+}
+
 async function failPendingAssistantMessages(
   ctx: {
     runQuery: (...args: Array<any>) => Promise<any>;
@@ -265,16 +276,31 @@ export const generateResponse = internalAction({
     ctx,
     { conversationId, promptMessageId, threadId, userId, aiProfileId },
   ) => {
+    const latestConversation = await ctx.runQuery(
+      internal.features.ai.internalQueries.getConversationInternal,
+      { conversationId },
+    );
+
+    if (!latestConversation) {
+      console.error("Conversation not found:", conversationId);
+      return null;
+    }
+
+    if (isPromptCancelled(latestConversation, promptMessageId)) {
+      await ctx.runMutation(
+        internal.features.ai.mutations.finalizePendingPromptState,
+        { conversationId, promptMessageId },
+      );
+      return null;
+    }
+
     // Use pre-fetched data if available, otherwise fetch (backwards compatibility)
     let convThreadId = threadId;
     let convUserId = userId;
     let profileId = aiProfileId;
 
     if (!convThreadId || !convUserId || !profileId) {
-      const conversation = await ctx.runQuery(
-        internal.features.ai.internalQueries.getConversationInternal,
-        { conversationId },
-      );
+      const conversation = latestConversation;
 
       if (!conversation) {
         console.error("Conversation not found:", conversationId);
@@ -310,6 +336,19 @@ export const generateResponse = internalAction({
         { saveStreamDeltas: true },
       );
     } catch (error) {
+      const currentConversation = await ctx.runQuery(
+        internal.features.ai.internalQueries.getConversationInternal,
+        { conversationId },
+      );
+
+      if (isPromptCancelled(currentConversation, promptMessageId)) {
+        await ctx.runMutation(
+          internal.features.ai.mutations.finalizePendingPromptState,
+          { conversationId, promptMessageId },
+        );
+        return null;
+      }
+
       const { code, errorMessage } = getChatErrorDetails(error);
 
       console.error("Failed to generate AI response:", error);
@@ -331,6 +370,24 @@ export const generateResponse = internalAction({
         );
       }
 
+      await ctx.runMutation(
+        internal.features.ai.mutations.finalizePendingPromptState,
+        { conversationId, promptMessageId },
+      );
+
+      return null;
+    }
+
+    const currentConversation = await ctx.runQuery(
+      internal.features.ai.internalQueries.getConversationInternal,
+      { conversationId },
+    );
+
+    if (isPromptCancelled(currentConversation, promptMessageId)) {
+      await ctx.runMutation(
+        internal.features.ai.mutations.finalizePendingPromptState,
+        { conversationId, promptMessageId },
+      );
       return null;
     }
 
@@ -359,15 +416,21 @@ export const generateResponse = internalAction({
       }
 
       // Check if this message has tool calls in its content
-      if (message.message?.content && Array.isArray(message.message.content)) {
-        for (const contentPart of message.message.content) {
+      const content = message.message?.content;
+      if (Array.isArray(content)) {
+        for (const contentPart of content) {
+          if (typeof contentPart !== "object" || contentPart === null) {
+            continue;
+          }
+
           if (
             contentPart.type === "tool-call" &&
+            "toolName" in contentPart &&
             contentPart.toolName === "generateImage"
           ) {
             console.log("Found generateImage tool call:", contentPart);
 
-            const args = contentPart.args as {
+            const args = ("args" in contentPart ? contentPart.args : {}) as {
               description?: string;
               hairstyle?: string;
               clothing?: string;
@@ -393,6 +456,10 @@ export const generateResponse = internalAction({
               );
               console.log("Image request created successfully");
               // Only create one image request per response
+              await ctx.runMutation(
+                internal.features.ai.mutations.finalizePendingPromptState,
+                { conversationId, promptMessageId },
+              );
               return null;
             } catch (error) {
               console.error(
@@ -404,6 +471,11 @@ export const generateResponse = internalAction({
         }
       }
     }
+
+    await ctx.runMutation(
+      internal.features.ai.mutations.finalizePendingPromptState,
+      { conversationId, promptMessageId },
+    );
 
     return null;
   },

@@ -89,8 +89,7 @@ export function UserImageRequestBubble({
       <View className="flex-row justify-end mb-3 px-4">
         <View className="max-w-[80%]">
           <View className="bg-pink-500 rounded-2xl rounded-br-sm px-4 py-3 flex-row items-center">
-            <Camera size={18} color="white" />
-            <Text className="text-white ml-2">
+            <Text className="text-white">
               {data.message || "Send me a selfie"}
             </Text>
           </View>

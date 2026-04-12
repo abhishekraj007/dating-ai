@@ -1,4 +1,4 @@
-import { View, Pressable, ScrollView } from "react-native";
+import { View, Pressable } from "react-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Text } from "@/components/ui/text";
 import { BottomSheet, useThemeColor } from "heroui-native";
@@ -102,18 +102,22 @@ interface TopicItemProps {
   icon: LucideIcon;
   label: string;
   onPress: () => void;
+  isLast?: boolean;
 }
 
-function TopicItem({ icon: Icon, label, onPress }: TopicItemProps) {
+function TopicItem({ icon: Icon, label, onPress, isLast }: TopicItemProps) {
   const accentColor = useThemeColor("accent");
-  const foregroundColor = useThemeColor("foreground");
   const borderColor = useThemeColor("border");
 
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-center gap-3 py-4 border-b active:opacity-70"
-      style={{ borderBottomColor: borderColor }}
+      className="flex-row items-center gap-3 py-4  active:opacity-70"
+      style={
+        isLast
+          ? undefined
+          : { borderBottomWidth: 1, borderBottomColor: borderColor }
+      }
     >
       <Icon size={20} color={accentColor} />
       <Text className="flex-1 text-foreground">{label}</Text>
@@ -138,24 +142,34 @@ export function TopicsSheet({
   };
 
   return (
-    <CustomBottomSheet isOpen={isOpen} onClose={onClose}>
-      <View className="flex-1 px-4">
-        <BottomSheet.Title className="text-center">Topics</BottomSheet.Title>
-        <ScrollView
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {CONVERSATION_TOPICS.map((topic) => (
-            <TopicItem
-              key={topic.id}
-              icon={topic.icon}
-              label={topic.label}
-              onPress={() => handleSelectTopic(topic)}
-            />
-          ))}
-        </ScrollView>
+    <CustomBottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      snapPoints={["70%"]}
+      scrollBehavior="scrollable"
+    >
+      <View className="px-4 pt-5">
+        <BottomSheet.Title className="text-center mb-4">
+          Topics
+        </BottomSheet.Title>
       </View>
+      <BottomSheetScrollView
+        // style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 48, paddingBottom: 16 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+      >
+        {CONVERSATION_TOPICS.map((topic, index) => (
+          <TopicItem
+            key={topic.id}
+            icon={topic.icon}
+            label={topic.label}
+            onPress={() => handleSelectTopic(topic)}
+            isLast={index === CONVERSATION_TOPICS.length - 1}
+          />
+        ))}
+      </BottomSheetScrollView>
     </CustomBottomSheet>
   );
 }

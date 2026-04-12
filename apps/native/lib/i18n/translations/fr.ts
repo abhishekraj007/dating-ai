@@ -292,7 +292,7 @@ export const fr: TranslationMap = {
   "imageRequest.scene": "Scène",
   "imageRequest.extraDetailsLabel": "Détails supplémentaires",
   "imageRequest.extraDetailsPlaceholder":
-    "Ajoutez tout ce que l'IA doit aussi prendre en compte...",
+    "Quel type de photo aimeriez-vous voir ?",
   "imageRequest.generatePhoto": "Générer la photo",
   "imageRequest.insufficientCredits":
     "Crédits insuffisants. Vous avez besoin d'au moins 5 crédits.",

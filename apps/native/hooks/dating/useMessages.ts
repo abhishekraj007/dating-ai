@@ -391,6 +391,9 @@ export function useSendMessage() {
   const retryFailedResponse = useMutation(
     api.features.ai.mutations.retryFailedResponse,
   );
+  const stopResponseMutation = useMutation(
+    api.features.ai.mutations.stopResponse,
+  );
 
   // Enhanced send with local optimistic update for instant feedback
   const sendMessageWithOptimistic = (
@@ -433,7 +436,11 @@ export function useSendMessage() {
     return retryFailedResponse(args);
   };
 
-  return { sendMessage, sendMessageWithOptimistic, retryMessage };
+  const stopResponse = (args: { conversationId: Id<"aiConversations"> }) => {
+    return stopResponseMutation(args);
+  };
+
+  return { sendMessage, sendMessageWithOptimistic, retryMessage, stopResponse };
 }
 
 export function useDeleteMessage() {

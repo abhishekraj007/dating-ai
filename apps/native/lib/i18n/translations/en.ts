@@ -190,6 +190,7 @@ export const en: TranslationMap = {
   "chat.retry": "Retry",
   "chat.retrying": "Retrying...",
   "chat.retryFailed": "Couldn't retry the message. Please try again.",
+  "chat.stopFailed": "Couldn't stop the response. Please try again.",
   "chat.errorRateLimited": "I'm having trouble right now :(",
   "chat.errorGeneric": "I'm having a bad day today :(",
   "chat.quiz": "Quiz",
@@ -305,7 +306,7 @@ export const en: TranslationMap = {
   "imageRequest.scene": "Scene",
   "imageRequest.extraDetailsLabel": "Extra details",
   "imageRequest.extraDetailsPlaceholder":
-    "Add anything else you want the AI to consider...",
+    "Enter what kind of pic you want to see...",
   "imageRequest.generatePhoto": "Send a Photo",
   "imageRequest.insufficientCredits":
     "Insufficient credits. You need at least 5 credits.",

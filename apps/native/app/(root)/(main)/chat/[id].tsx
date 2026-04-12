@@ -92,6 +92,7 @@ export default function ChatScreen() {
     dismissKeyboard,
 
     // Message input
+    message,
     setMessage,
 
     // Typing indicator
@@ -111,6 +112,7 @@ export default function ChatScreen() {
 
     // Handlers
     handleSend,
+    handleStopResponse,
     handleOpenImageSheet,
     handleImageRequest,
     handleStartQuiz,
@@ -431,8 +433,10 @@ export default function ChatScreen() {
                   ]}
                 >
                   <KeyboardComposer
+                    text={message}
                     placeholder={t("chat.typeMessage")}
                     onSend={handleSend}
+                    onStop={handleStopResponse}
                     onChangeText={setMessage}
                     onHeightChange={setComposerHeight}
                     onKeyboardHeightChange={setKeyboardHeight}

@@ -280,7 +280,7 @@ export const hi: TranslationMap = {
   "imageRequest.scene": "सीन",
   "imageRequest.extraDetailsLabel": "अतिरिक्त जानकारी",
   "imageRequest.extraDetailsPlaceholder":
-    "और कुछ लिखें जिसे AI को भी ध्यान में रखना चाहिए...",
+    "आप किस तरह की फोटो देखना चाहते हैं?",
   "imageRequest.generatePhoto": "फोटो बनाएं",
   "imageRequest.insufficientCredits":
     "क्रेडिट कम हैं। कम से कम 5 क्रेडिट चाहिए।",

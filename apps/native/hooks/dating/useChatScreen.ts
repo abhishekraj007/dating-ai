@@ -22,7 +22,9 @@ export function useChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [message, setMessage] = useState("");
+  const [isStopRequested, setIsStopRequested] = useState(false);
   const listRef = useRef<any>(null);
+  const lastSubmittedInputRef = useRef("");
 
   // Keyboard composer state
   const [composerHeight, setComposerHeight] = useState(48);
@@ -48,7 +50,7 @@ export function useChatScreen() {
     isAITyping,
   } = useMessages(threadId);
 
-  const { sendMessage, sendMessageWithOptimistic, retryMessage } =
+  const { sendMessage, sendMessageWithOptimistic, retryMessage, stopResponse } =
     useSendMessage();
 
   // Credits for client-side checking
@@ -137,7 +139,8 @@ export function useChatScreen() {
     !isAITyping &&
     !hasAIResponseAfterSend;
 
-  const showTypingIndicator = isAITyping || isWaitingForAI;
+  const showTypingIndicator =
+    !isStopRequested && (isAITyping || isWaitingForAI);
 
   // Chat scroll behavior
   const { shouldLoadMore, handleScroll, scrollToBottom } = useChatScroll({
@@ -175,6 +178,15 @@ export function useChatScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isAITyping && !isWaitingForAI) {
+      setIsStopRequested(false);
+      if (hasAIResponseAfterSend) {
+        lastSubmittedInputRef.current = "";
+      }
+    }
+  }, [hasAIResponseAfterSend, isAITyping, isWaitingForAI]);
+
   const sendConversationMessage = useCallback(
     async (content: string, options?: { optimistic?: boolean }) => {
       if (!id || isSending) {
@@ -186,6 +198,7 @@ export function useChatScreen() {
         return false;
       }
 
+      setIsStopRequested(false);
       setIsSending(true);
       startPendingAssistantState();
 
@@ -238,6 +251,7 @@ export function useChatScreen() {
 
       const content = text.trim();
 
+      lastSubmittedInputRef.current = content;
       dismissKeyboard();
       setMessage("");
       void sendConversationMessage(content, { optimistic: true });
@@ -247,6 +261,28 @@ export function useChatScreen() {
     },
     [dismissKeyboard, id, isSending, sendConversationMessage, scrollToBottom],
   );
+
+  const handleStopResponse = useCallback(async () => {
+    if (!id || !showTypingIndicator) {
+      return;
+    }
+
+    clearPendingAssistantState();
+    setIsStopRequested(true);
+    setIsSending(false);
+
+    if (lastSubmittedInputRef.current) {
+      setMessage(lastSubmittedInputRef.current);
+    }
+
+    try {
+      await stopResponse({ conversationId: id as Id<"aiConversations"> });
+    } catch (error) {
+      setIsStopRequested(false);
+      console.error("Failed to stop response:", error);
+      Alert.alert(t("alerts.error"), t("chat.stopFailed"));
+    }
+  }, [clearPendingAssistantState, id, showTypingIndicator, stopResponse, t]);
 
   const handleImageRequest = useCallback(
     async (options: ImageRequestOptions) => {
@@ -528,6 +564,7 @@ export function useChatScreen() {
 
     // Handlers
     handleSend,
+    handleStopResponse,
     handleOpenImageSheet,
     handleImageRequest,
     handleStartQuiz,

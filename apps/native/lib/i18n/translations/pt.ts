@@ -285,7 +285,7 @@ export const pt: TranslationMap = {
   "imageRequest.scene": "Cena",
   "imageRequest.extraDetailsLabel": "Detalhes extras",
   "imageRequest.extraDetailsPlaceholder":
-    "Adicione qualquer outra coisa que a IA deva considerar...",
+    "Que tipo de foto você gostaria de ver?",
   "imageRequest.generatePhoto": "Gerar foto",
   "imageRequest.insufficientCredits":
     "Créditos insuficientes. Você precisa de pelo menos 5 créditos.",

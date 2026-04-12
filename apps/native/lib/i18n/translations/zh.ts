@@ -263,7 +263,7 @@ export const zh: TranslationMap = {
   "imageRequest.clothing": "服装",
   "imageRequest.scene": "场景",
   "imageRequest.extraDetailsLabel": "补充说明",
-  "imageRequest.extraDetailsPlaceholder": "补充任何希望 AI 一起考虑的细节...",
+  "imageRequest.extraDetailsPlaceholder": "你想看什么样的照片？",
   "imageRequest.generatePhoto": "生成照片",
   "imageRequest.insufficientCredits": "积分不足。至少需要 5 积分。",
   "match.title": "匹配成功！",

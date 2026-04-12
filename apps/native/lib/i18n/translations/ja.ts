@@ -282,7 +282,7 @@ export const ja: TranslationMap = {
   "imageRequest.scene": "シーン",
   "imageRequest.extraDetailsLabel": "追加の詳細",
   "imageRequest.extraDetailsPlaceholder":
-    "AIに考慮してほしい内容を追加してください...",
+    "どんな写真が見たいですか？",
   "imageRequest.generatePhoto": "写真を生成",
   "imageRequest.insufficientCredits":
     "クレジットが不足しています。最低5クレジットが必要です。",

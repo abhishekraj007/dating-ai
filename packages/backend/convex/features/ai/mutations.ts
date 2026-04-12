@@ -1,7 +1,12 @@
 import { v } from "convex/values";
 import { mutation, internalMutation } from "../../_generated/server";
 import { internal } from "../../_generated/api";
-import { createThread, saveMessage } from "@convex-dev/agent";
+import {
+  abortStream,
+  createThread,
+  listStreams,
+  saveMessage,
+} from "@convex-dev/agent";
 import { components } from "../../_generated/api";
 import { authComponent } from "../../lib/betterAuth";
 import {
@@ -133,6 +138,7 @@ export const sendMessage = mutation({
       lastMessageAt: Date.now(),
       relationshipLevel: newLevel,
       compatibilityScore: newScore,
+      pendingPromptMessageId: messageId,
     });
 
     // Schedule async AI response generation with pre-fetched data
@@ -198,6 +204,10 @@ export const retryFailedResponse = mutation({
       throw new Error("AI response already in progress");
     }
 
+    await ctx.db.patch(conversationId, {
+      pendingPromptMessageId: promptMessageId,
+    });
+
     await ctx.scheduler.runAfter(
       0,
       internal.features.ai.actions.generateResponse,
@@ -209,6 +219,87 @@ export const retryFailedResponse = mutation({
         aiProfileId: conversation.aiProfileId,
       },
     );
+
+    return null;
+  },
+});
+
+export const stopResponse = mutation({
+  args: {
+    conversationId: v.id("aiConversations"),
+  },
+  returns: v.null(),
+  handler: async (ctx, { conversationId }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    const conversation = await ctx.db.get(conversationId);
+    if (!conversation || conversation.userId !== user._id) {
+      throw new Error("Conversation not found");
+    }
+
+    const promptMessageId = conversation.pendingPromptMessageId ?? null;
+    if (!promptMessageId) {
+      return null;
+    }
+
+    const cancelledPromptMessageIds = Array.from(
+      new Set([
+        ...(conversation.cancelledPromptMessageIds ?? []),
+        promptMessageId,
+      ]),
+    );
+
+    await ctx.db.patch(conversationId, {
+      cancelledPromptMessageIds,
+    });
+
+    const activeStreams = await listStreams(ctx, components.agent, {
+      threadId: conversation.threadId,
+      includeStatuses: ["streaming"],
+    });
+
+    const latestStream = activeStreams.sort(
+      (left, right) => right.order - left.order,
+    )[0];
+
+    if (latestStream) {
+      await abortStream(ctx, components.agent, {
+        threadId: conversation.threadId,
+        order: latestStream.order,
+        reason: "user_stop",
+      });
+    }
+
+    return null;
+  },
+});
+
+export const finalizePendingPromptState = internalMutation({
+  args: {
+    conversationId: v.id("aiConversations"),
+    promptMessageId: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { conversationId, promptMessageId }) => {
+    const conversation = await ctx.db.get(conversationId);
+    if (!conversation) {
+      return null;
+    }
+
+    const cancelledPromptMessageIds = (
+      conversation.cancelledPromptMessageIds ?? []
+    ).filter((messageId) => messageId !== promptMessageId);
+
+    await ctx.db.patch(conversationId, {
+      pendingPromptMessageId:
+        conversation.pendingPromptMessageId === promptMessageId
+          ? null
+          : conversation.pendingPromptMessageId,
+      cancelledPromptMessageIds,
+    });
 
     return null;
   },
@@ -688,8 +779,8 @@ export const requestChatImage = mutation({
       const detailDescription = styleOptions?.description?.trim();
 
       const userMessage = [
-        `Can you send me a selfie${styleDescription ? ` ${styleDescription}` : ""}?`,
-        detailDescription ? `Extra details: ${detailDescription}` : null,
+        detailDescription ? `${detailDescription}` : null,
+        `${styleDescription ? ` ${styleDescription}` : ""}`,
       ]
         .filter(Boolean)
         .join(" ");

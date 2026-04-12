@@ -211,6 +211,8 @@ export default defineSchema({
     compatibilityScore: v.number(), // 0-100, default 60
     messageCount: v.number(), // default 0
     lastMessageAt: v.number(),
+    pendingPromptMessageId: v.optional(v.union(v.string(), v.null())),
+    cancelledPromptMessageIds: v.optional(v.array(v.string())),
     lastMessagePreview: v.optional(v.string()),
     lastMessageRole: v.optional(v.string()),
     profileAvatarImageKey: v.optional(v.string()), // Denormalized for convenience

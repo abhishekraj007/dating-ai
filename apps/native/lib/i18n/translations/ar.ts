@@ -273,7 +273,7 @@ export const ar: TranslationMap = {
   "imageRequest.scene": "المشهد",
   "imageRequest.extraDetailsLabel": "تفاصيل إضافية",
   "imageRequest.extraDetailsPlaceholder":
-    "أضف أي شيء آخر يجب أن يأخذه الذكاء الاصطناعي في الاعتبار...",
+    "ما نوع الصورة التي تريد رؤيتها؟",
   "imageRequest.generatePhoto": "إنشاء صورة",
   "imageRequest.insufficientCredits":
     "رصيد غير كافٍ. تحتاج إلى 5 أرصدة على الأقل.",
