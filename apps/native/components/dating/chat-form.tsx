@@ -6,6 +6,7 @@ import { Button, Spinner, useThemeColor } from "heroui-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Camera,
+  ChevronDown,
   HelpCircle,
   Lightbulb,
   MessageSquare,
@@ -18,9 +19,11 @@ interface ChatFormProps {
   onKeyboardHeightChange: (height: number) => void;
   blurTrigger: number;
   isKeyboardOpen: boolean;
+  showScrollToBottom: boolean;
   message: string;
   onChangeMessage: (text: string) => void;
   onSend: (text: string) => void;
+  onScrollToBottom: () => void;
   onStopResponse: () => void;
   showTypingIndicator: boolean;
   isSending: boolean;
@@ -37,9 +40,11 @@ export function ChatForm({
   onKeyboardHeightChange,
   blurTrigger,
   isKeyboardOpen,
+  showScrollToBottom,
   message,
   onChangeMessage,
   onSend,
+  onScrollToBottom,
   onStopResponse,
   showTypingIndicator,
   isSending,
@@ -55,93 +60,109 @@ export function ChatForm({
 
   return (
     <KeyboardStickyView>
-      <LinearGradient
-        colors={[
-          "rgba(0, 0, 0, 0)",
-          "rgba(0, 0, 0, 0.8)",
-          "rgba(0, 0, 0, 1)",
-        ]}
-        locations={[0, 0.45, 1]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={[
-          styles.composerContainer,
-          {
-            paddingBottom: isKeyboardOpen ? 8 : Math.max(bottom, 8),
-          },
-        ]}
-      >
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          nestedScrollEnabled
-          contentContainerStyle={styles.actionsContent}
-        >
-          <Button
-            variant="secondary"
-            size="sm"
-            onPress={onOpenImageSheet}
-            isDisabled={isRequestingImage}
-          >
-            {isRequestingImage ? (
-              <Spinner size="sm" />
-            ) : (
-              <Camera size={16} color={foregroundColor} />
-            )}
-            <Button.Label>{t("chat.selfie")}</Button.Label>
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onPress={onStartQuiz}
-            isDisabled={isSending}
-          >
-            <HelpCircle size={16} color={foregroundColor} />
-            <Button.Label>{t("chat.quiz")}</Button.Label>
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onPress={onOpenTopicsSheet}
-            isDisabled={isSending}
-          >
-            <MessageSquare size={16} color={foregroundColor} />
-            <Button.Label>{t("chat.topic")}</Button.Label>
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onPress={onOpenSuggestionsSheet}
-            isDisabled={isSending}
-          >
-            <Lightbulb size={16} color={foregroundColor} />
-            <Button.Label>{t("chat.suggestion")}</Button.Label>
-          </Button>
-        </ScrollView>
-        <View style={styles.composerRow}>
-          <View
-            style={[
-              styles.composerWrapper,
-              { height: composerHeight, flex: 1 },
-            ]}
-          >
-            <KeyboardComposer
-              text={message}
-              placeholder={t("chat.typeMessage")}
-              onSend={onSend}
-              onStop={onStopResponse}
-              onChangeText={onChangeMessage}
-              onHeightChange={onComposerHeightChange}
-              onKeyboardHeightChange={onKeyboardHeightChange}
-              isStreaming={showTypingIndicator}
-              blurTrigger={blurTrigger}
-              editable={!isSending}
-              minHeight={48}
-              maxHeight={120}
-            />
+      <View>
+        {showScrollToBottom ? (
+          <View style={styles.scrollToBottomContainer}>
+            <Button
+              variant="secondary"
+              size="sm"
+              isIconOnly
+              onPress={onScrollToBottom}
+              className="rounded-full"
+              style={styles.scrollToBottomButton}
+            >
+              <ChevronDown size={18} color={foregroundColor} />
+            </Button>
           </View>
-        </View>
-      </LinearGradient>
+        ) : null}
+        <LinearGradient
+          colors={[
+            "rgba(0, 0, 0, 0)",
+            "rgba(0, 0, 0, 0.8)",
+            "rgba(0, 0, 0, 1)",
+          ]}
+          locations={[0, 0.45, 1]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={[
+            styles.composerContainer,
+            {
+              paddingBottom: isKeyboardOpen ? 8 : Math.max(bottom, 8),
+            },
+          ]}
+        >
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            nestedScrollEnabled
+            contentContainerStyle={styles.actionsContent}
+          >
+            <Button
+              variant="secondary"
+              size="sm"
+              onPress={onOpenImageSheet}
+              isDisabled={isRequestingImage}
+            >
+              {isRequestingImage ? (
+                <Spinner size="sm" />
+              ) : (
+                <Camera size={16} color={foregroundColor} />
+              )}
+              <Button.Label>{t("chat.selfie")}</Button.Label>
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onPress={onStartQuiz}
+              isDisabled={isSending}
+            >
+              <HelpCircle size={16} color={foregroundColor} />
+              <Button.Label>{t("chat.quiz")}</Button.Label>
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onPress={onOpenTopicsSheet}
+              isDisabled={isSending}
+            >
+              <MessageSquare size={16} color={foregroundColor} />
+              <Button.Label>{t("chat.topic")}</Button.Label>
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onPress={onOpenSuggestionsSheet}
+              isDisabled={isSending}
+            >
+              <Lightbulb size={16} color={foregroundColor} />
+              <Button.Label>{t("chat.suggestion")}</Button.Label>
+            </Button>
+          </ScrollView>
+          <View style={styles.composerRow}>
+            <View
+              style={[
+                styles.composerWrapper,
+                { height: composerHeight, flex: 1 },
+              ]}
+            >
+              <KeyboardComposer
+                text={message}
+                placeholder={t("chat.typeMessage")}
+                onSend={onSend}
+                onStop={onStopResponse}
+                onChangeText={onChangeMessage}
+                onHeightChange={onComposerHeightChange}
+                onKeyboardHeightChange={onKeyboardHeightChange}
+                isStreaming={showTypingIndicator}
+                blurTrigger={blurTrigger}
+                editable={!isSending}
+                minHeight={48}
+                maxHeight={120}
+              />
+            </View>
+          </View>
+        </LinearGradient>
+      </View>
     </KeyboardStickyView>
   );
 }
@@ -149,6 +170,16 @@ export function ChatForm({
 const styles = StyleSheet.create({
   composerContainer: {
     paddingTop: 8,
+  },
+  scrollToBottomContainer: {
+    position: "absolute",
+    top: -48,
+    right: 8,
+    zIndex: 10,
+  },
+  scrollToBottomButton: {
+    width: 32,
+    height: 32,
   },
   actionsContent: {
     paddingHorizontal: 16,

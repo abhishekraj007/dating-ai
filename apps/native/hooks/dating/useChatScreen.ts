@@ -143,7 +143,14 @@ export function useChatScreen() {
     !isStopRequested && (isAITyping || isWaitingForAI);
 
   // Chat scroll behavior
-  const { shouldLoadMore, handleScroll, scrollToBottom } = useChatScroll({
+  const {
+    shouldLoadMore,
+    handleScroll,
+    handleViewableItemsChanged,
+    viewabilityConfig,
+    scrollToBottom,
+    showScrollToBottom,
+  } = useChatScroll({
     listRef,
     messages,
     conversationId: threadId ?? id,
@@ -529,6 +536,10 @@ export function useChatScreen() {
 
     // Scroll handlers
     handleScroll,
+    handleViewableItemsChanged,
+    viewabilityConfig,
+    scrollToBottom,
+    showScrollToBottom,
 
     // Keyboard state
     composerHeight,

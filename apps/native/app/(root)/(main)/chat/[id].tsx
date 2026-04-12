@@ -1,9 +1,4 @@
-import {
-  View,
-  Text,
-  Pressable,
-  useWindowDimensions,
-} from "react-native";
+import { View, Text, Pressable, useWindowDimensions } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -15,11 +10,7 @@ import {
   ScrollShadow,
 } from "heroui-native";
 import { LinearGradient } from "expo-linear-gradient";
-import {
-  ChevronLeft,
-  MoreVertical,
-  Trash2,
-} from "lucide-react-native";
+import { ChevronLeft, MoreVertical, Trash2 } from "lucide-react-native";
 import {
   ChatForm,
   MessageBubble,
@@ -69,6 +60,10 @@ export default function ChatScreen() {
 
     // Scroll handlers
     handleScroll,
+    handleViewableItemsChanged,
+    viewabilityConfig,
+    scrollToBottom,
+    showScrollToBottom,
 
     // Keyboard state
     composerHeight,
@@ -248,6 +243,8 @@ export default function ChatScreen() {
                 keyboardDismissMode="interactive"
                 keyboardShouldPersistTaps="handled"
                 onScroll={handleScroll}
+                onViewableItemsChanged={handleViewableItemsChanged}
+                viewabilityConfig={viewabilityConfig}
                 onScrollBeginDrag={dismissKeyboard}
                 scrollEventThrottle={16}
                 onStartReached={() => {
@@ -340,9 +337,11 @@ export default function ChatScreen() {
             onKeyboardHeightChange={setKeyboardHeight}
             blurTrigger={blurTrigger}
             isKeyboardOpen={isKeyboardOpen}
+            showScrollToBottom={showScrollToBottom}
             message={message}
             onChangeMessage={setMessage}
             onSend={handleSend}
+            onScrollToBottom={() => scrollToBottom(true)}
             onStopResponse={handleStopResponse}
             showTypingIndicator={showTypingIndicator}
             isSending={isSending}
