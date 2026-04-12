@@ -57,6 +57,7 @@ export function ChatForm({
   const { t } = useTranslation();
   const { bottom } = useSafeAreaInsets();
   const foregroundColor = useThemeColor("foreground");
+  const backgroundColor = useThemeColor("background");
 
   return (
     <KeyboardStickyView>
@@ -77,9 +78,9 @@ export function ChatForm({
         ) : null}
         <LinearGradient
           colors={[
-            "rgba(0, 0, 0, 0)",
-            "rgba(0, 0, 0, 0.8)",
-            "rgba(0, 0, 0, 1)",
+            `${backgroundColor}00`,
+            `${backgroundColor}CC`,
+            backgroundColor,
           ]}
           locations={[0, 0.45, 1]}
           start={{ x: 0.5, y: 0 }}
