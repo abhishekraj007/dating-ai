@@ -6,7 +6,7 @@ import { betterAuth } from "better-auth";
 import { authComponent } from "./component";
 
 const siteUrl = process.env.SITE_URL!;
-const nativeAppUrl = process.env.NATIVE_APP_URL || "quotes://";
+const nativeAppUrl = process.env.NATIVE_APP_URL || "datingai://";
 
 export function createAuth(
   ctx: GenericCtx<DataModel>,
