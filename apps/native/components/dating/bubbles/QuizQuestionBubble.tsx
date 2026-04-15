@@ -5,6 +5,7 @@ import Markdown from "react-native-markdown-display";
 import { AIBubbleWrapper } from "./AIBubbleWrapper";
 import { useMarkdownStyles } from "./useMarkdownStyles";
 import type { AIBubbleProps, QuizQuestionData } from "./message-types";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface Props extends AIBubbleProps {
   data: QuizQuestionData;
@@ -26,6 +27,7 @@ export function QuizQuestionBubble({
   profileName,
   time,
 }: Props) {
+  const { t } = useTranslation();
   const markdownStyles = useMarkdownStyles();
   const mutedForeground = useThemeColor("muted");
 
@@ -82,7 +84,7 @@ export function QuizQuestionBubble({
         className="flex-row items-center bg-surface/50 border border-border rounded-full px-4 py-2 self-start"
       >
         <LogOut size={16} color={mutedForeground} />
-        <Text className="text-muted ml-2">End quiz</Text>
+        <Text className="text-muted ml-2">{t("quiz.endQuiz")}</Text>
       </Pressable>
 
       <Text className="text-muted text-xs mt-2">{time}</Text>

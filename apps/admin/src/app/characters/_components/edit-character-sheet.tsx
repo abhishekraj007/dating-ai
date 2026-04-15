@@ -23,6 +23,7 @@ import { Plus, X, ImagePlus, Loader2 } from "lucide-react";
 import { GalleryUpload } from "@/components/gallery-upload";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
 import type {
   AIProfile,
   CharacterFormData,
@@ -56,6 +57,12 @@ const RESPONSE_LENGTHS = [
   { value: "short", label: "Short (1-2 sentences)" },
   { value: "medium", label: "Medium (2-4 sentences)" },
   { value: "long", label: "Long (detailed)" },
+];
+
+const VISIBILITY_PLATFORMS = [
+  { value: "web" as const, label: "Web" },
+  { value: "ios" as const, label: "iOS" },
+  { value: "android" as const, label: "Android" },
 ];
 
 interface EditCharacterSheetProps {
@@ -364,6 +371,46 @@ export function EditCharacterSheet({
                   <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Visibility */}
+            <div className="space-y-2">
+              <Label>Visible On</Label>
+              <div className="space-y-2 rounded-md border border-border/60 p-3">
+                {VISIBILITY_PLATFORMS.map((platform) => {
+                  const checked = formData.visibleOn.includes(platform.value);
+                  return (
+                    <label
+                      key={platform.value}
+                      className="flex cursor-pointer items-center justify-between rounded px-1 py-1.5"
+                    >
+                      <span className="text-sm">{platform.label}</span>
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(nextChecked) => {
+                          const isChecked = nextChecked === true;
+                          const nextValues = isChecked
+                            ? [...formData.visibleOn, platform.value]
+                            : formData.visibleOn.filter(
+                                (value) => value !== platform.value,
+                              );
+
+                          onFormChange({
+                            ...formData,
+                            visibleOn:
+                              nextValues.length > 0
+                                ? Array.from(new Set(nextValues))
+                                : formData.visibleOn,
+                          });
+                        }}
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                At least one platform must remain selected.
+              </p>
             </div>
 
             {/* Communication Style Section */}

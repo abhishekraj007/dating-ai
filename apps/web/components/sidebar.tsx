@@ -144,7 +144,8 @@ export function Sidebar() {
             <div className="p-1">
               {conversations
                 .filter((c): c is NonNullable<typeof c> => c !== null)
-                .map((conv) => (
+                .map((conv) => {
+                  return (
                   <button
                     key={conv._id}
                     className={cn(
@@ -173,7 +174,8 @@ export function Sidebar() {
                       </p>
                     </div>
                   </button>
-                ))}
+                  );
+                })}
             </div>
           )
         ) : // Profiles List (for Explore tab in sidebar)
@@ -195,30 +197,32 @@ export function Sidebar() {
           </div>
         ) : (
           <div className="p-1">
-            {profiles.slice(0, 10).map((profile) => (
-              <button
-                key={profile._id}
-                className={cn(
-                  "w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors text-left",
-                  pathname.includes(profile._id) && "bg-accent",
-                )}
-                onClick={() => handleProfileClick(profile._id)}
-              >
-                <Avatar>
-                  <AvatarImage src={profile.avatarUrl ?? undefined} />
-                  <AvatarFallback>{profile.name[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">
-                    {profile.name}
-                    {profile.age ? `, ${profile.age}` : ""}
-                  </p>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {profile.zodiacSign || profile.occupation || "View profile"}
-                  </p>
-                </div>
-              </button>
-            ))}
+            {profiles.slice(0, 10).map((profile) => {
+              return (
+                <button
+                  key={profile._id}
+                  className={cn(
+                    "w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors text-left",
+                    pathname.includes(profile._id) && "bg-accent",
+                  )}
+                  onClick={() => handleProfileClick(profile._id)}
+                >
+                  <Avatar>
+                    <AvatarImage src={profile.avatarUrl ?? undefined} />
+                    <AvatarFallback>{profile.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">
+                      {profile.name}
+                      {profile.age ? `, ${profile.age}` : ""}
+                    </p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {profile.zodiacSign || profile.occupation || "View profile"}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
       </ScrollArea>

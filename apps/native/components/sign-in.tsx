@@ -1,5 +1,6 @@
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
+import { useTranslation } from "@/hooks/use-translation";
 import {
 	ActivityIndicator,
 	Text,
@@ -9,6 +10,7 @@ import {
 } from "react-native";
 
 export function SignIn() {
+	const { t } = useTranslation();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +27,7 @@ export function SignIn() {
 			},
 			{
 				onError: (error) => {
-					setError(error.error?.message || "Failed to sign in");
+					setError(error.error?.message || t("signIn.failed"));
 					setIsLoading(false);
 				},
 				onSuccess: () => {
@@ -42,7 +44,7 @@ export function SignIn() {
 	return (
 		<View className="mt-6 p-4 bg-card rounded-lg border border-border">
 			<Text className="text-lg font-semibold text-foreground mb-4">
-				Sign In
+				{t("common.signIn")}
 			</Text>
 
 			{error && (
@@ -53,7 +55,7 @@ export function SignIn() {
 
 			<TextInput
 				className="mb-3 p-4 rounded-md bg-input text-foreground border border-input"
-				placeholder="Email"
+				placeholder={t("common.email")}
 				value={email}
 				onChangeText={setEmail}
 				placeholderTextColor="#9CA3AF"
@@ -63,7 +65,7 @@ export function SignIn() {
 
 			<TextInput
 				className="mb-4 p-4 rounded-md bg-input text-foreground border border-input"
-				placeholder="Password"
+				placeholder={t("common.password")}
 				value={password}
 				onChangeText={setPassword}
 				placeholderTextColor="#9CA3AF"
@@ -78,7 +80,9 @@ export function SignIn() {
 				{isLoading ? (
 					<ActivityIndicator size="small" color="#fff" />
 				) : (
-					<Text className="text-primary-foreground font-medium">Sign In</Text>
+					<Text className="text-primary-foreground font-medium">
+						{t("common.signIn")}
+					</Text>
 				)}
 			</TouchableOpacity>
 		</View>

@@ -5,6 +5,12 @@ import { AIBubbleWrapper } from "./AIBubbleWrapper";
 import { useMarkdownStyles } from "./useMarkdownStyles";
 import type { AIBubbleProps, ImageRequestData } from "./message-types";
 
+function shouldRenderAsMarkdown(content: string) {
+  return /(^|\n)(#{1,6}\s|[-*+]\s|\d+\.\s|>|```)|`[^`]+`|\*\*[^*]+\*\*|__[^_]+__|\[[^\]]+\]\([^\)]+\)/m.test(
+    content,
+  );
+}
+
 interface AITextProps extends AIBubbleProps {
   content: string;
 }
@@ -19,6 +25,7 @@ export function AITextBubble({
   time,
 }: AITextProps) {
   const markdownStyles = useMarkdownStyles();
+  const renderMarkdown = shouldRenderAsMarkdown(content);
 
   return (
     <AIBubbleWrapper
@@ -27,7 +34,13 @@ export function AITextBubble({
       time={time}
     >
       <View className="bg-surface rounded-2xl rounded-tl-sm px-4 py-3">
-        <Markdown style={markdownStyles}>{content}</Markdown>
+        {renderMarkdown ? (
+          <Markdown style={markdownStyles}>{content}</Markdown>
+        ) : (
+          <Text className="text-foreground text-[15px] leading-[22px]">
+            {content}
+          </Text>
+        )}
       </View>
     </AIBubbleWrapper>
   );
@@ -76,8 +89,7 @@ export function UserImageRequestBubble({
       <View className="flex-row justify-end mb-3 px-4">
         <View className="max-w-[80%]">
           <View className="bg-pink-500 rounded-2xl rounded-br-sm px-4 py-3 flex-row items-center">
-            <Camera size={18} color="white" />
-            <Text className="text-white ml-2">
+            <Text className="text-white">
               {data.message || "Send me a selfie"}
             </Text>
           </View>

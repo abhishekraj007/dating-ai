@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
-import { useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import Constants from "expo-constants";
 
@@ -17,15 +17,16 @@ Notifications.setNotificationHandler({
 });
 
 export function usePushNotifications(userId?: string) {
+  const { isAuthenticated } = useConvexAuth();
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const recordToken = useMutation(
-    api.pushNotifications.recordPushNotificationToken
+    api.pushNotifications.recordPushNotificationToken,
   );
 
   useEffect(() => {
-    if (!userId) {
+    if (!isAuthenticated || !userId) {
       return;
     }
 
@@ -35,6 +36,9 @@ export function usePushNotifications(userId?: string) {
           setExpoPushToken(token);
           // Register token with backend
           recordToken({ token }).catch((err) => {
+            if (err?.message === "Not authenticated") {
+              return;
+            }
             console.error("Failed to record push token:", err);
             setError(err.message);
           });
@@ -44,7 +48,7 @@ export function usePushNotifications(userId?: string) {
         console.error("Failed to get push token:", err);
         setError(err.message);
       });
-  }, [userId, recordToken]);
+  }, [isAuthenticated, userId, recordToken]);
 
   return { expoPushToken, error };
 }
@@ -75,8 +79,18 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
   }
 
   try {
+    const projectId =
+      Constants.easConfig?.projectId ??
+      Constants.expoConfig?.extra?.eas?.projectId;
+
+    if (!projectId) {
+      throw new Error(
+        "Missing EAS project ID. Run EAS project init for this app and rebuild the native app.",
+      );
+    }
+
     const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId: Constants.expoConfig?.extra?.eas?.projectId,
+      projectId,
     });
     token = tokenData.data;
   } catch (e) {

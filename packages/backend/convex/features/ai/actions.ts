@@ -5,140 +5,126 @@ import { internalAction } from "../../_generated/server";
 import { internal, components } from "../../_generated/api";
 import { createAIProfileAgent } from "./agent";
 import { r2 } from "../../uploads";
-import Replicate from "replicate";
-
-// Initialize Replicate client
-const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
-});
+import { saveMessage } from "@convex-dev/agent";
+import { generateImageWithFallback } from "./imageGeneration";
 
 // Check if we're in development mode based on Convex deployment URL
 // Dev deployments typically have animal-based names like "cheery-akita"
 const isDev = process.env.CONVEX_CLOUD_URL?.includes("cheery-akita") ?? false;
 
-/**
- * Image generation result type
- */
-type ImageGenerationResult =
-  | {
-      success: true;
-      imageUrl: string;
-    }
-  | {
-      success: false;
-      error: string;
+type ChatErrorCode = "rate_limited" | "generation_failed";
+
+function getChatErrorDetails(error: unknown): {
+  code: ChatErrorCode;
+  errorMessage: string;
+} {
+  const typedError = error as {
+    message?: string;
+    lastError?: {
+      statusCode?: number;
+      responseBody?: string;
+      data?: {
+        error?: {
+          metadata?: {
+            raw?: string;
+          };
+        };
+      };
     };
+  };
 
-/**
- * Generate image using placeholder service (for development).
- * Returns a random image - fast and free for testing.
- */
-async function generateImageDev(): Promise<ImageGenerationResult> {
-  try {
-    // Use picsum.photos - reliable placeholder image service
-    // Generate a random ID to get different images each time
-    const randomId = Math.floor(Math.random() * 1000);
-    const width = 512;
-    const height = 768; // Portrait aspect ratio
+  const rawDetails = [
+    typedError.lastError?.data?.error?.metadata?.raw,
+    typedError.lastError?.responseBody,
+    typedError.message,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join(" | ");
 
-    // Get image info first to get the actual download URL
-    const infoResponse = await fetch(
-      `https://picsum.photos/id/${randomId}/info`
-    );
+  const code =
+    typedError.lastError?.statusCode === 429 ||
+    /rate.limit|temporarily rate-limited|retry shortly|statusCode\":429/i.test(
+      rawDetails,
+    )
+      ? "rate_limited"
+      : "generation_failed";
 
-    if (!infoResponse.ok) {
-      // If specific ID fails, use random endpoint
-      const imageUrl = `https://picsum.photos/${width}/${height}?random=${Date.now()}`;
-      console.log("[Dev] Generated image URL (random):", imageUrl);
-      return { success: true, imageUrl };
-    }
-
-    const info = await infoResponse.json();
-    const imageUrl = `https://picsum.photos/id/${info.id}/${width}/${height}`;
-    console.log("[Dev] Generated image URL:", imageUrl);
-
-    return { success: true, imageUrl };
-  } catch (error) {
-    console.error("[Dev] Image generation failed:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+  return {
+    code,
+    errorMessage:
+      rawDetails ||
+      (error instanceof Error ? error.message : "Unknown generation error"),
+  };
 }
 
-/**
- * Generate image using Replicate's Flux model (for production).
- * Uses the profile's avatar as reference for character consistency.
- */
-async function generateImageProd(
-  prompt: string,
-  referenceImageUrl: string | null
-): Promise<ImageGenerationResult> {
-  try {
-    // Build input parameters for Flux
-    const fluxInput: Record<string, unknown> = {
-      prompt,
-      go_fast: true,
-      guidance: 3.5,
-      num_outputs: 1,
-      aspect_ratio: "9:16", // Portrait aspect ratio for selfies
-      output_format: "webp",
-      output_quality: 90,
-      num_inference_steps: 28,
-    };
+function isPromptCancelled(
+  conversation: {
+    cancelledPromptMessageIds?: Array<string>;
+  } | null,
+  promptMessageId: string,
+) {
+  return (
+    conversation?.cancelledPromptMessageIds?.includes(promptMessageId) ?? false
+  );
+}
 
-    // Add reference image if available for character consistency
-    if (referenceImageUrl) {
-      fluxInput.image = referenceImageUrl;
-      fluxInput.prompt_strength = 0.75;
-    } else {
-      fluxInput.prompt_strength = 0.8;
-    }
+async function failPendingAssistantMessages(
+  ctx: {
+    runQuery: (...args: Array<any>) => Promise<any>;
+    runMutation: (...args: Array<any>) => Promise<any>;
+  },
+  threadId: string,
+  errorMessage: string,
+) {
+  const pendingMessages = await ctx.runQuery(
+    components.agent.messages.listMessagesByThreadId,
+    {
+      threadId,
+      order: "desc",
+      statuses: ["pending"],
+      paginationOpts: { numItems: 10, cursor: null },
+    },
+  );
 
-    console.log("[Prod] Generating image with Replicate Flux");
+  await Promise.all(
+    pendingMessages.page.map((message: { _id: string }) =>
+      ctx.runMutation(components.agent.messages.updateMessage, {
+        messageId: message._id,
+        patch: {
+          status: "failed",
+          error: errorMessage,
+          finishReason: "error",
+        },
+      }),
+    ),
+  );
+}
 
-    const output = await replicate.run("black-forest-labs/flux-dev", {
-      input: fluxInput,
-    });
-
-    console.log(
-      "[Prod] Replicate output type:",
-      typeof output,
-      Array.isArray(output) ? "array" : "not array"
-    );
-
-    // Extract URL from FileOutput object
-    const fileOutput = Array.isArray(output) ? output[0] : output;
-
-    let imageUrl: string;
-    if (
-      fileOutput &&
-      typeof fileOutput === "object" &&
-      "url" in fileOutput &&
-      typeof fileOutput.url === "function"
-    ) {
-      const urlResult = fileOutput.url();
-      imageUrl = urlResult.toString();
-    } else if (typeof fileOutput === "string") {
-      imageUrl = fileOutput;
-    } else {
-      throw new Error(`Unexpected output format: ${typeof fileOutput}`);
-    }
-
-    if (!imageUrl) {
-      throw new Error("No image URL returned from Replicate");
-    }
-
-    console.log("[Prod] Generated image URL:", imageUrl);
-    return { success: true, imageUrl };
-  } catch (error) {
-    console.error("[Prod] Image generation failed:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+async function saveRetryableChatErrorMessage(
+  ctx: any,
+  args: {
+    threadId: string;
+    userId: string;
+    promptMessageId: string;
+    agentName: string;
+    code: ChatErrorCode;
+  },
+) {
+  await saveMessage(ctx, components.agent, {
+    threadId: args.threadId,
+    userId: args.userId,
+    promptMessageId: args.promptMessageId,
+    message: {
+      role: "assistant",
+      content: JSON.stringify({
+        type: "chat_error",
+        code: args.code,
+        promptMessageId: args.promptMessageId,
+        retryable: true,
+      }),
+    },
+    agentName: args.agentName,
+  });
 }
 
 /**
@@ -150,57 +136,129 @@ export const generateResponse = internalAction({
   args: {
     conversationId: v.id("aiConversations"),
     promptMessageId: v.string(),
+    // Pre-fetched data to avoid redundant queries (optional for backwards compat)
+    threadId: v.optional(v.string()),
+    userId: v.optional(v.string()),
+    aiProfileId: v.optional(v.id("aiProfiles")),
   },
-  handler: async (ctx, { conversationId, promptMessageId }) => {
-    // Get conversation
-    const conversation = await ctx.runQuery(
+  returns: v.null(),
+  handler: async (
+    ctx,
+    { conversationId, promptMessageId, threadId, userId, aiProfileId },
+  ) => {
+    const latestConversation = await ctx.runQuery(
       internal.features.ai.internalQueries.getConversationInternal,
-      { conversationId }
+      { conversationId },
     );
 
-    if (!conversation) {
+    if (!latestConversation) {
       console.error("Conversation not found:", conversationId);
       return null;
     }
 
-    // Get AI profile
+    if (isPromptCancelled(latestConversation, promptMessageId)) {
+      await ctx.runMutation(
+        internal.features.ai.mutations.finalizePendingPromptState,
+        { conversationId, promptMessageId },
+      );
+      return null;
+    }
+
+    // Use pre-fetched data if available, otherwise fetch (backwards compatibility)
+    let convThreadId = threadId;
+    let convUserId = userId;
+    let profileId = aiProfileId;
+
+    if (!convThreadId || !convUserId || !profileId) {
+      const conversation = latestConversation;
+
+      if (!conversation) {
+        console.error("Conversation not found:", conversationId);
+        return null;
+      }
+      convThreadId = conversation.threadId;
+      convUserId = conversation.userId;
+      profileId = conversation.aiProfileId;
+    }
+
+    // Get AI profile (still needed for building agent prompt)
     const profile = await ctx.runQuery(
       internal.features.ai.internalQueries.getProfileInternal,
-      { profileId: conversation.aiProfileId }
+      { profileId: profileId! },
     );
 
     if (!profile) {
-      console.error("Profile not found:", conversation.aiProfileId);
+      console.error("Profile not found:", profileId);
       return null;
     }
 
     // Create dynamic agent for this profile
     const agent = createAIProfileAgent(profile);
 
-    // Generate streaming response
-    const result = await agent.streamText(
-      ctx,
-      { threadId: conversation.threadId, userId: conversation.userId },
-      { promptMessageId },
-      { saveStreamDeltas: true }
+    let result;
+
+    try {
+      // Generate streaming response
+      result = await agent.streamText(
+        ctx,
+        { threadId: convThreadId!, userId: convUserId! },
+        { promptMessageId },
+        { saveStreamDeltas: true },
+      );
+    } catch (error) {
+      const currentConversation = await ctx.runQuery(
+        internal.features.ai.internalQueries.getConversationInternal,
+        { conversationId },
+      );
+
+      if (isPromptCancelled(currentConversation, promptMessageId)) {
+        await ctx.runMutation(
+          internal.features.ai.mutations.finalizePendingPromptState,
+          { conversationId, promptMessageId },
+        );
+        return null;
+      }
+
+      const { code, errorMessage } = getChatErrorDetails(error);
+
+      console.error("Failed to generate AI response:", error);
+
+      await failPendingAssistantMessages(ctx, convThreadId!, errorMessage);
+
+      try {
+        await saveRetryableChatErrorMessage(ctx, {
+          threadId: convThreadId!,
+          userId: convUserId!,
+          promptMessageId,
+          agentName: profile.name,
+          code,
+        });
+      } catch (messageError) {
+        console.error(
+          "Failed to save retryable chat error message:",
+          messageError,
+        );
+      }
+
+      await ctx.runMutation(
+        internal.features.ai.mutations.finalizePendingPromptState,
+        { conversationId, promptMessageId },
+      );
+
+      return null;
+    }
+
+    const currentConversation = await ctx.runQuery(
+      internal.features.ai.internalQueries.getConversationInternal,
+      { conversationId },
     );
 
-    // Wait for the stream to complete by awaiting the text
-    const fullText = await result.text;
-    console.log("Stream completed, response text length:", fullText.length);
-
-    // Get the saved messages to check for tool calls
-    // When using saveStreamDeltas, tool calls are saved directly to the message in the database
-    const savedMessages = result.savedMessages;
-    console.log("Saved messages count:", savedMessages?.length ?? 0);
-
-    if (savedMessages && savedMessages.length > 0) {
-      // Log the saved messages structure
-      console.log("Saved messages:", JSON.stringify(savedMessages, null, 2));
-
-      for (const msgId of savedMessages) {
-        console.log("Checking message ID:", msgId);
-      }
+    if (isPromptCancelled(currentConversation, promptMessageId)) {
+      await ctx.runMutation(
+        internal.features.ai.mutations.finalizePendingPromptState,
+        { conversationId, promptMessageId },
+      );
+      return null;
     }
 
     // Alternative approach: Query the thread messages directly to find tool calls
@@ -208,10 +266,10 @@ export const generateResponse = internalAction({
     const messagesResult = await ctx.runQuery(
       components.agent.messages.listMessagesByThreadId,
       {
-        threadId: conversation.threadId,
+        threadId: convThreadId!,
         order: "desc",
         paginationOpts: { numItems: 5, cursor: null },
-      }
+      },
     );
 
     console.log("Thread messages count:", messagesResult.page.length);
@@ -228,15 +286,21 @@ export const generateResponse = internalAction({
       }
 
       // Check if this message has tool calls in its content
-      if (message.message?.content && Array.isArray(message.message.content)) {
-        for (const contentPart of message.message.content) {
+      const content = message.message?.content;
+      if (Array.isArray(content)) {
+        for (const contentPart of content) {
+          if (typeof contentPart !== "object" || contentPart === null) {
+            continue;
+          }
+
           if (
             contentPart.type === "tool-call" &&
+            "toolName" in contentPart &&
             contentPart.toolName === "generateImage"
           ) {
             console.log("Found generateImage tool call:", contentPart);
 
-            const args = contentPart.args as {
+            const args = ("args" in contentPart ? contentPart.args : {}) as {
               description?: string;
               hairstyle?: string;
               clothing?: string;
@@ -249,8 +313,8 @@ export const generateResponse = internalAction({
                 internal.features.ai.mutations.createChatImageRequestInternal,
                 {
                   conversationId,
-                  userId: conversation.userId,
-                  aiProfileId: conversation.aiProfileId,
+                  userId: convUserId!,
+                  aiProfileId: profileId!,
                   prompt: args.description || "A selfie",
                   styleOptions: {
                     hairstyle: args.hairstyle,
@@ -258,21 +322,30 @@ export const generateResponse = internalAction({
                     scene: args.scene,
                     description: args.description,
                   },
-                }
+                },
               );
               console.log("Image request created successfully");
               // Only create one image request per response
+              await ctx.runMutation(
+                internal.features.ai.mutations.finalizePendingPromptState,
+                { conversationId, promptMessageId },
+              );
               return null;
             } catch (error) {
               console.error(
                 "Failed to create image request from agent:",
-                error
+                error,
               );
             }
           }
         }
       }
     }
+
+    await ctx.runMutation(
+      internal.features.ai.mutations.finalizePendingPromptState,
+      { conversationId, promptMessageId },
+    );
 
     return null;
   },
@@ -288,7 +361,7 @@ function buildImagePrompt(
     clothing?: string;
     scene?: string;
     description?: string;
-  }
+  },
 ): string {
   const baseDescription = [
     `A photorealistic selfie of a ${profile.age ?? 25}-year-old`,
@@ -312,7 +385,7 @@ function buildImagePrompt(
     : "";
 
   const qualityTags =
-    "high quality, natural lighting, iPhone selfie style, casual pose, authentic, candid";
+    "preserve the same identity and facial features as the reference image, high quality, natural lighting, iPhone selfie style, casual pose, authentic, candid";
 
   return `${baseDescription}${styleDescription ? `, ${styleDescription}` : ""}${additionalContext}. ${qualityTags}`;
 }
@@ -322,16 +395,9 @@ function buildImagePrompt(
  * Used as reference image for consistent character generation.
  */
 async function getProfileAvatarUrl(
-  ctx: {
-    runQuery: typeof internal.features.ai.internalQueries.getProfileInternal extends (
-      ...args: infer A
-    ) => infer R
-      ? (...args: A) => R
-      : never;
-  },
-  avatarImageKey: string | undefined
+  avatarImageKey: string | undefined,
 ): Promise<string | null> {
-  if (!avatarImageKey) {
+  if (!avatarImageKey || avatarImageKey === "default-avatar") {
     return null;
   }
 
@@ -356,7 +422,7 @@ export const generateChatImage = internalAction({
   },
   handler: async (
     ctx,
-    { requestId }
+    { requestId },
   ): Promise<
     | { success: true; imageKey: string }
     | { success: false; error: string }
@@ -368,13 +434,13 @@ export const generateChatImage = internalAction({
       {
         requestId,
         status: "processing",
-      }
+      },
     );
 
     // Get request details
     const request = await ctx.runQuery(
       internal.features.ai.internalQueries.getChatImageRequestInternal,
-      { requestId }
+      { requestId },
     );
 
     if (!request) {
@@ -385,7 +451,7 @@ export const generateChatImage = internalAction({
     // Get AI profile for reference image and details
     const profile = await ctx.runQuery(
       internal.features.ai.internalQueries.getProfileInternal,
-      { profileId: request.aiProfileId }
+      { profileId: request.aiProfileId },
     );
 
     if (!profile) {
@@ -395,7 +461,7 @@ export const generateChatImage = internalAction({
           requestId,
           status: "failed",
           errorMessage: "Profile not found",
-        }
+        },
       );
       return null;
     }
@@ -403,49 +469,45 @@ export const generateChatImage = internalAction({
     try {
       console.log("Generating image, isDev:", isDev);
 
-      let imageResult: ImageGenerationResult;
+      const prompt = buildImagePrompt(
+        {
+          name: profile.name,
+          gender: profile.gender,
+          age: profile.age,
+        },
+        request.styleOptions ?? {},
+      );
 
-      if (isDev) {
-        // Use Nekos API for development (fast and free)
-        imageResult = await generateImageDev();
-      } else {
-        // Use Replicate Flux for production
-        const prompt = buildImagePrompt(
-          {
-            name: profile.name,
-            gender: profile.gender,
-            age: profile.age,
-          },
-          request.styleOptions ?? {}
-        );
+      console.log("Generating image with prompt:", prompt);
 
-        console.log("Generating image with prompt:", prompt);
+      const referenceImageUrl = await getProfileAvatarUrl(
+        profile.avatarImageKey,
+      );
 
-        // Get the profile's avatar URL as reference image for consistency
-        let referenceImageUrl: string | null = null;
-        if (profile.avatarImageKey) {
-          referenceImageUrl = await r2.getUrl(profile.avatarImageKey);
-          console.log(
-            "Using reference image:",
-            referenceImageUrl ? "yes" : "no"
-          );
-        }
+      console.log("Using reference image:", referenceImageUrl ? "yes" : "no");
 
-        imageResult = await generateImageProd(prompt, referenceImageUrl);
-      }
+      const imageResult = await generateImageWithFallback({
+        prompt,
+        aspectRatio: "9:16",
+        referenceImageUrls: referenceImageUrl ? [referenceImageUrl] : [],
+        isDev,
+        devWidth: 512,
+        devHeight: 768,
+      });
 
       if (!imageResult.success) {
         throw new Error(imageResult.error);
       }
 
       const imageUrl = imageResult.imageUrl;
+      console.log("Image generated with model:", imageResult.model);
       console.log("Image URL:", imageUrl);
 
       // Download the image and upload to R2
       const imageResponse = await fetch(imageUrl);
       if (!imageResponse.ok) {
         throw new Error(
-          `Failed to fetch generated image: ${imageResponse.status}`
+          `Failed to fetch generated image: ${imageResponse.status}`,
         );
       }
 
@@ -475,7 +537,7 @@ export const generateChatImage = internalAction({
           requestId,
           status: "completed",
           imageKey,
-        }
+        },
       );
 
       console.log("Image generated and saved successfully:", imageKey);
@@ -491,7 +553,7 @@ export const generateChatImage = internalAction({
           status: "failed",
           errorMessage:
             error instanceof Error ? error.message : "Unknown error occurred",
-        }
+        },
       );
 
       return { success: false, error: String(error) };
@@ -512,7 +574,7 @@ export const generateVoiceMessage = internalAction({
     // Get conversation
     const conversation = await ctx.runQuery(
       internal.features.ai.internalQueries.getConversationInternal,
-      { conversationId }
+      { conversationId },
     );
 
     if (!conversation) {
@@ -523,7 +585,7 @@ export const generateVoiceMessage = internalAction({
     // Get AI profile for voice ID
     const profile = await ctx.runQuery(
       internal.features.ai.internalQueries.getProfileInternal,
-      { profileId: conversation.aiProfileId }
+      { profileId: conversation.aiProfileId },
     );
 
     if (!profile) {

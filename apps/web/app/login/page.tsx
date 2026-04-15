@@ -28,7 +28,9 @@ export default function LoginPage() {
     try {
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        // Must be absolute URL for multi-app auth
+        callbackURL:
+          typeof window !== "undefined" ? `${window.location.origin}/` : "/",
       });
     } catch (error) {
       toast.error("Failed to sign in with Google");

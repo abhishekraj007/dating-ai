@@ -1,16 +1,15 @@
 {
   "expo": {
     "name": "dating-ai",
-    "slug": "dating-ai",
+    "slug": "datingai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "quotes",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.noosperai.quotes"
+      "bundleIdentifier": "com.noosperai.datingai"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,9 +18,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.noosperai.quotes"
+      "package": "com.noosperai.datingai"
     },
     "web": {
       "output": "static",
@@ -48,6 +46,13 @@
           "icon": "./assets/images/icon.png",
           "color": "#ffffff"
         }
+      ],
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": true,
+          "supportsPictureInPicture": true
+        }
       ]
     ],
     "experiments": {
@@ -55,13 +60,11 @@
       "reactCompiler": true
     },
     "extra": {
-      "react-native": {
-        "bridgeless": false
-      },
       "router": {},
       "eas": {
-        "projectId": "10557409-a012-4b82-ae6c-a8c0cf6e970b"
+        "projectId": "30076408-2843-4f4f-9288-b94bd6ff262e"
       }
-    }
+    },
+    "owner": "abhishekrajemail"
   }
 }

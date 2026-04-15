@@ -1,10 +1,12 @@
 import { Stack } from "expo-router";
 import { useNavigationOptions } from "@/hooks/useNavigationOptions";
 import { useAppTheme } from "@/contexts/app-theme-context";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function MainLayout() {
   const { standard } = useNavigationOptions();
   const { isDark } = useAppTheme();
+  const { t } = useTranslation();
 
   return (
     <Stack initialRouteName="(tabs)">
@@ -21,8 +23,8 @@ export default function MainLayout() {
         name="profile/[id]"
         options={{
           ...standard,
-          title: "Profile",
-          presentation: "modal",
+          title: t("nav.profile"),
+          // presentation: "modal",
           headerShown: false,
         }}
       />
@@ -32,7 +34,7 @@ export default function MainLayout() {
         name="chat/[id]"
         options={{
           ...standard,
-          title: "Chat",
+          title: t("nav.chat"),
           headerShown: false,
         }}
       />
@@ -42,7 +44,7 @@ export default function MainLayout() {
         name="create-character"
         options={{
           ...standard,
-          title: "Create New AI Character",
+          title: t("nav.createCharacter"),
           presentation: "modal",
           headerShown: false,
         }}
@@ -53,22 +55,22 @@ export default function MainLayout() {
         name="filter"
         options={{
           ...standard,
-          title: "Filter",
+          title: t("nav.filter"),
           presentation: "modal",
           headerShown: false,
         }}
       />
 
       {/* Legacy/utility screens */}
-      <Stack.Screen
+      {/* <Stack.Screen
         name="index"
         options={{
           ...standard,
-          title: "Home",
+          title: t("nav.home"),
           headerTitle: "",
           headerShown: false,
         }}
-      />
+      /> */}
       <Stack.Screen
         name="buy-credits"
         options={{
@@ -82,27 +84,27 @@ export default function MainLayout() {
       <Stack.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: t("nav.settings"),
           presentation: "modal",
           headerBackButtonDisplayMode: "generic",
           headerBlurEffect: isDark ? "dark" : "light",
-          headerBackTitle: "Back",
+          headerBackTitle: t("common.back"),
           ...standard,
         }}
       />
       <Stack.Screen
         name="uploads"
         options={{
-          title: "Uploads",
-          headerBackTitle: "Back",
+          title: t("nav.uploads"),
+          headerBackTitle: t("common.back"),
           ...standard,
         }}
       />
       <Stack.Screen
         name="notifications"
         options={{
-          title: "Notifications",
-          headerBackTitle: "Back",
+          title: t("nav.notifications"),
+          headerBackTitle: t("common.back"),
           ...standard,
         }}
       />

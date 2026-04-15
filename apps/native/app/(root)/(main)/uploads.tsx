@@ -9,10 +9,12 @@ import { Button, Card, Spinner } from "heroui-native";
 import { Ionicons } from "@expo/vector-icons";
 import { withUniwind } from "uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "@/hooks/use-translation";
 
 const StyledIonicons = withUniwind(Ionicons);
 
 export default function UploadsScreen() {
+  const { t } = useTranslation();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -27,8 +29,8 @@ export default function UploadsScreen() {
 
     if (permissionResult.granted === false) {
       Alert.alert(
-        "Permission Required",
-        "Permission to access camera roll is required!"
+        t("uploads.permissionRequired"),
+        t("uploads.permissionRequiredDescription"),
       );
       return;
     }
@@ -73,27 +75,27 @@ export default function UploadsScreen() {
       // Step 4: Sync metadata
       await syncMetadata({ key: result.key });
 
-      Alert.alert("Success", "Image uploaded successfully!");
+      Alert.alert(t("alerts.success"), t("uploads.uploadSuccess"));
       setSelectedImage(null);
     } catch (error) {
       console.error("Upload error:", error);
-      Alert.alert("Error", "Failed to upload image");
+      Alert.alert(t("alerts.error"), t("uploads.uploadFailed"));
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleDelete = async (key: string) => {
-    Alert.alert("Delete File", "Are you sure you want to delete this file?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("uploads.deleteFile"), t("uploads.deleteConfirm"), [
+      { text: t("alerts.cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("alerts.delete"),
         style: "destructive",
         onPress: async () => {
           try {
             await deleteUpload({ key });
           } catch (error) {
-            Alert.alert("Error", "Failed to delete file");
+            Alert.alert(t("alerts.error"), t("uploads.deleteFailed"));
           }
         },
       },
@@ -128,17 +130,17 @@ export default function UploadsScreen() {
         {/* Header */}
         <View className="gap-2">
           <Text className="text-4xl font-bold text-foreground">
-            File Uploads
+            {t("uploads.title")}
           </Text>
           <Text className="text-sm text-muted">
-            Upload and manage your files with Cloudflare R2
+            {t("uploads.subtitle")}
           </Text>
         </View>
 
         {/* Upload Card */}
         <Card>
           <Card.Body className="gap-4">
-            <Card.Title>Upload New File</Card.Title>
+            <Card.Title>{t("uploads.uploadNewFile")}</Card.Title>
 
             {selectedImage && (
               <View className="rounded-xl overflow-hidden">
@@ -163,7 +165,7 @@ export default function UploadsScreen() {
                   size={18}
                   className="text-accent-soft-foreground"
                 />
-                <Button.Label>Select Image</Button.Label>
+                <Button.Label>{t("uploads.selectImage")}</Button.Label>
               </Button>
 
               <Button
@@ -180,7 +182,7 @@ export default function UploadsScreen() {
                       size={18}
                       className="text-accent-foreground"
                     />
-                    <Button.Label>Upload</Button.Label>
+                    <Button.Label>{t("common.upload")}</Button.Label>
                   </>
                 )}
               </Button>
@@ -192,9 +194,9 @@ export default function UploadsScreen() {
         <Card>
           <Card.Body className="gap-4">
             <View className="flex-row items-center justify-between">
-              <Card.Title>Your Uploads</Card.Title>
+              <Card.Title>{t("uploads.yourUploads")}</Card.Title>
               <Text className="text-sm text-muted">
-                {uploads?.length || 0} files
+                {t("uploads.filesCount", { count: uploads?.length || 0 })}
               </Text>
             </View>
 
@@ -210,7 +212,7 @@ export default function UploadsScreen() {
                   className="text-muted opacity-50 mb-2"
                 />
                 <Text className="text-muted text-center">
-                  Please sign in to view your uploads
+                  {t("uploads.signInToView")}
                 </Text>
               </View>
             ) : uploads.length === 0 ? (
@@ -221,7 +223,7 @@ export default function UploadsScreen() {
                   className="text-muted opacity-50 mb-2"
                 />
                 <Text className="text-muted text-center">
-                  No files uploaded yet
+                  {t("uploads.empty")}
                 </Text>
               </View>
             ) : (

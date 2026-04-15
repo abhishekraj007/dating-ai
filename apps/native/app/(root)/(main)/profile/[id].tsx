@@ -6,24 +6,34 @@ import {
   StatusBar,
 } from "react-native";
 import { Image } from "expo-image";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { ZoomableImage } from "@/components/zoomable-image";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Chip, Skeleton, useThemeColor } from "heroui-native";
 import { X, Share2, MoreVertical } from "lucide-react-native";
-import { useAIProfile } from "@/hooks/dating";
+import { useAIProfile, useCredits } from "@/hooks/dating";
 import { useStartConversation, useConversationByProfile } from "@/hooks/dating";
-import { InterestChip, CompatibilityIndicator } from "@/components/dating";
+import {
+  InterestChip,
+  CompatibilityIndicator,
+  BlurredPremiumImage,
+} from "@/components/dating";
 import { useState, useCallback } from "react";
 import { Text } from "@/components";
 import { LinearGradient } from "expo-linear-gradient";
 import { useConvexAuth } from "convex/react";
-import { isAndroid } from "@/utils";
+import { getChipTone, isAndroid } from "@/utils";
+import { useTranslation } from "@/hooks/use-translation";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const photoWidth = (screenWidth - 48) / 2;
 const heroImageHeight = screenHeight * 0.45;
 
 export default function ProfileDetailScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -34,10 +44,17 @@ export default function ProfileDetailScreen() {
   const { conversation } = useConversationByProfile(id);
   const { startConversation } = useStartConversation();
   const { isAuthenticated } = useConvexAuth();
+  const { isPremium } = useCredits();
   const [isStartingChat, setIsStartingChat] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [hasImageError, setHasImageError] = useState(false);
 
   const handleImageLoad = useCallback(() => {
+    setIsImageLoaded(true);
+  }, []);
+
+  const handleImageError = useCallback(() => {
+    setHasImageError(true);
     setIsImageLoaded(true);
   }, []);
 
@@ -46,6 +63,7 @@ export default function ProfileDetailScreen() {
 
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
+      router.back();
       router.push("/(root)/(auth)");
       return;
     }
@@ -72,55 +90,103 @@ export default function ProfileDetailScreen() {
     return (
       <View style={{ flex: 1 }} className="bg-background">
         <StatusBar barStyle="light-content" />
-        {/* Header buttons - absolute positioned */}
+
+        {/* Back button */}
         <View
           style={{
             position: "absolute",
-            top: 16,
-            left: 0,
-            right: 0,
+            top: insets.top + 16,
+            left: 16,
             zIndex: 10,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            paddingHorizontal: 16,
           }}
         >
           <Button
-            variant="tertiary"
+            variant="secondary"
             size="sm"
             isIconOnly
-            style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
             onPress={() => router.back()}
+            className="rounded-full"
           >
-            <X size={24} color="#fff" />
+            <X size={20} color="#fff" />
           </Button>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <Button
-              variant="tertiary"
-              size="sm"
-              isIconOnly
-              style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
-            >
-              <Share2 size={20} color="#fff" />
-            </Button>
-            <Button
-              variant="tertiary"
-              size="sm"
-              isIconOnly
-              style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
-            >
-              <MoreVertical size={20} color="#fff" />
-            </Button>
-          </View>
         </View>
-        <View className="px-4" style={{ paddingTop: insets.top }}>
-          <Skeleton
-            style={{ width: "100%", height: heroImageHeight }}
-            className="rounded-none mb-4"
-          />
-          <Skeleton className="h-8 w-32 rounded-lg mb-2" />
-          <Skeleton className="h-4 w-full rounded-lg mb-4" />
-          <Skeleton className="h-20 w-full rounded-lg" />
+
+        <ScrollView
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1 }}
+        >
+          {/* Hero image skeleton */}
+          <View style={{ width: screenWidth, height: heroImageHeight }}>
+            <Skeleton
+              style={{ width: "100%", height: "100%" }}
+              className="rounded-none"
+            />
+            {/* Name & age overlay */}
+            <View
+              style={{
+                position: "absolute",
+                left: 16,
+                bottom: 16,
+                gap: 6,
+              }}
+            >
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+              >
+                <Skeleton className="h-7 w-32 rounded-lg" />
+                <Skeleton className="h-6 w-14 rounded-lg" />
+              </View>
+              <Skeleton className="h-4 w-44 rounded-lg" />
+            </View>
+          </View>
+
+          {/* About me */}
+          <View className="px-4 mt-6">
+            <Skeleton className="h-4 w-24 rounded-lg mb-2" />
+            <Skeleton className="h-4 w-full rounded-lg mb-1.5" />
+            <Skeleton className="h-4 w-full rounded-lg mb-1.5" />
+            <Skeleton className="h-4 w-3/4 rounded-lg" />
+          </View>
+
+          {/* Looking for */}
+          <View className="px-4 mt-6">
+            <Skeleton className="h-4 w-28 rounded-lg mb-2" />
+            <Skeleton className="h-4 w-full rounded-lg mb-1.5" />
+            <Skeleton className="h-4 w-2/3 rounded-lg" />
+          </View>
+
+          {/* Personality chips */}
+          <View className="px-4 mt-6">
+            <Skeleton className="h-4 w-28 rounded-lg mb-2" />
+            <View className="flex-row flex-wrap gap-2">
+              <Skeleton className="h-7 w-20 rounded-full" />
+              <Skeleton className="h-7 w-24 rounded-full" />
+              <Skeleton className="h-7 w-16 rounded-full" />
+              <Skeleton className="h-7 w-28 rounded-full" />
+            </View>
+          </View>
+
+          {/* Interest chips */}
+          <View className="px-4 mt-6">
+            <Skeleton className="h-4 w-24 rounded-lg mb-2" />
+            <View className="flex-row flex-wrap gap-2">
+              <Skeleton className="h-7 w-36 rounded-full" />
+              <Skeleton className="h-7 w-40 rounded-full" />
+              <Skeleton className="h-7 w-20 rounded-full" />
+            </View>
+          </View>
+
+          <View className="h-24" />
+        </ScrollView>
+
+        {/* Chat button skeleton */}
+        <View
+          className="absolute left-0 right-0 px-4 pb-4 pt-2"
+          style={{ bottom: insets.bottom }}
+        >
+          <Skeleton className="h-12 w-full rounded-xl" />
         </View>
       </View>
     );
@@ -139,10 +205,10 @@ export default function ProfileDetailScreen() {
           }}
         >
           <Text className="text-foreground text-xl font-semibold">
-            Profile not found
+            {t("profile.notFound")}
           </Text>
           <Button className="mt-4" onPress={() => router.back()}>
-            <Button.Label>Go Back</Button.Label>
+            <Button.Label>{t("common.goBack")}</Button.Label>
           </Button>
         </View>
       </View>
@@ -159,7 +225,7 @@ export default function ProfileDetailScreen() {
       <View
         style={{
           position: "absolute",
-          top: isAndroid ? insets.top + 16 : 16,
+          top: insets.top + 16,
           paddingHorizontal: 16,
           left: 0,
           right: 0,
@@ -169,15 +235,17 @@ export default function ProfileDetailScreen() {
         }}
       >
         <Button
-          variant="tertiary"
+          variant="secondary"
           size="sm"
           isIconOnly
-          style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
           onPress={() => router.back()}
+          className="rounded-full"
         >
-          <X size={24} color="#fff" />
+          <X size={20} color="#fff" />
         </Button>
-        <View style={{ flexDirection: "row", gap: 8 }}>
+        {/* Hide for now */}
+        {/* <View style={{ flexDirection: "row", gap: 8 }}>
           <Button
             variant="tertiary"
             size="sm"
@@ -194,7 +262,7 @@ export default function ProfileDetailScreen() {
           >
             <MoreVertical size={20} color="#fff" />
           </Button>
-        </View>
+        </View> */}
       </View>
 
       <ScrollView
@@ -217,58 +285,76 @@ export default function ProfileDetailScreen() {
               }}
             />
           )}
-          <Image
-            source={
-              profile.avatarUrl
-                ? { uri: profile.avatarUrl }
-                : require("@/assets/images/login-bg.jpeg")
-            }
+          <Link.AppleZoomTarget>
+            <ZoomableImage
+              source={
+                profile.avatarUrl && !hasImageError
+                  ? { uri: profile.avatarUrl }
+                  : require("@/assets/images/login-bg.jpeg")
+              }
+              style={{
+                width: "100%",
+                height: "100%",
+                opacity: isImageLoaded ? 1 : 0,
+              }}
+              contentFit="cover"
+              contentPosition="top"
+              cachePolicy="memory-disk"
+              transition={300}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
+          </Link.AppleZoomTarget>
+
+          <LinearGradient
+            pointerEvents="none"
+            colors={["transparent", "rgba(0,0,0,0.3)", "rgba(0,0,0,1)"]}
+            locations={[0.4, 0.6, 1]}
+            // locations={[0, 0.72, 1]}
             style={{
-              width: "100%",
-              height: "100%",
-              opacity: isImageLoaded ? 1 : 0,
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: "50%",
             }}
-            contentFit="cover"
-            contentPosition="top"
-            cachePolicy="memory-disk"
-            transition={300}
-            onLoad={handleImageLoad}
           />
-        </View>
 
-        {/* Name and badges */}
-        <View className="px-4 mt-4">
-          <Text className="text-foreground text-2xl font-bold">
-            {profile.name}
-          </Text>
-          {profile.username && (
-            <Text variant="muted" className="text-sm mt-1">
-              @{profile.username}
-            </Text>
-          )}
-
-          <View className="flex-row flex-wrap gap-2 mt-3">
-            {profile.age && (
-              <Chip variant="secondary" size="sm">
-                <Chip.Label>
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              paddingHorizontal: 16,
+              paddingBottom: 16,
+              gap: 6,
+            }}
+          >
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+            >
+              <Text
+                size="lg"
+                weight="bold"
+                // className="text-white text-3xl font-bold"
+              >
+                {profile.name}
+              </Text>
+              {profile.age ? (
+                <Text className="text-white/90 text-xl font-semibold">
                   {genderSymbol} {profile.age}
-                </Chip.Label>
-              </Chip>
-            )}
-            {profile.zodiacSign && (
-              <Chip variant="secondary" size="sm">
-                <Chip.Label>{profile.zodiacSign}</Chip.Label>
-              </Chip>
-            )}
-            {profile.occupation && (
-              <Chip variant="secondary" size="sm">
-                <Chip.Label>{profile.occupation}</Chip.Label>
-              </Chip>
-            )}
-            {profile.mbtiType && (
-              <Chip variant="secondary" size="sm">
-                <Chip.Label>{profile.mbtiType}</Chip.Label>
-              </Chip>
+                </Text>
+              ) : null}
+            </View>
+
+            {(profile.zodiacSign || profile.occupation) && (
+              <Text className="text-white/90 text-base">
+                {profile.zodiacSign ?? ""}
+                {profile.zodiacSign && profile.occupation ? " • " : ""}
+                {profile.occupation ?? ""}
+              </Text>
             )}
           </View>
         </View>
@@ -276,7 +362,9 @@ export default function ProfileDetailScreen() {
         {/* About me */}
         {profile.bio && (
           <View className="px-4 mt-6">
-            <Text className="text-foreground font-semibold mb-2">About me</Text>
+            <Text variant="semi-muted" className="font-semibold mb-2">
+              {t("profile.aboutMe")}
+            </Text>
             <Text variant="muted" className="leading-6">
               {profile.bio}
             </Text>
@@ -286,8 +374,8 @@ export default function ProfileDetailScreen() {
         {/* Relationship Goal */}
         {profile.relationshipGoal && (
           <View className="px-4 mt-6">
-            <Text className="text-foreground font-semibold mb-2">
-              Looking for
+            <Text variant="semi-muted" className="font-semibold mb-2">
+              {t("profile.lookingFor")}
             </Text>
             <Text variant="muted" className="leading-6">
               {profile.relationshipGoal}
@@ -298,15 +386,31 @@ export default function ProfileDetailScreen() {
         {/* Personality Traits */}
         {profile.personalityTraits && profile.personalityTraits.length > 0 && (
           <View className="px-4 mt-6">
-            <Text className="text-foreground font-semibold mb-2">
-              Personality
+            <Text variant="semi-muted" className="font-semibold mb-2">
+              {t("profile.personality")}
             </Text>
             <View className="flex-row flex-wrap gap-2">
-              {profile.personalityTraits.map((trait, index) => (
-                <Chip key={index} variant="secondary" size="sm">
-                  <Chip.Label>{trait}</Chip.Label>
-                </Chip>
-              ))}
+              {profile.personalityTraits.map((trait, index) => {
+                const tone = getChipTone(
+                  `${profile._id}-trait-${trait}-${index}`,
+                );
+                return (
+                  <Chip
+                    key={index}
+                    variant="secondary"
+                    size="sm"
+                    style={{
+                      backgroundColor: tone.backgroundColor,
+                      borderColor: tone.borderColor,
+                      borderWidth: 0.5,
+                    }}
+                  >
+                    <Chip.Label style={{ color: tone.textColor }}>
+                      {trait}
+                    </Chip.Label>
+                  </Chip>
+                );
+              })}
             </View>
           </View>
         )}
@@ -314,12 +418,16 @@ export default function ProfileDetailScreen() {
         {/* Interests */}
         {profile.interests && profile.interests.length > 0 && (
           <View className="px-4 mt-6">
-            <Text className="text-foreground font-semibold mb-2">
-              Interests
+            <Text variant="semi-muted" className="font-semibold mb-2">
+              {t("profile.interests")}
             </Text>
             <View className="flex-row flex-wrap gap-2">
               {profile.interests.map((interest, index) => (
-                <InterestChip key={index} interest={interest} />
+                <InterestChip
+                  key={index}
+                  interest={interest}
+                  colorSeed={`${profile._id}-interest-${interest}-${index}`}
+                />
               ))}
             </View>
           </View>
@@ -328,26 +436,36 @@ export default function ProfileDetailScreen() {
         {/* Photos grid */}
         {profile.profileImageUrls && profile.profileImageUrls.length > 0 && (
           <View className="px-4 mt-6">
-            <Text className="text-foreground font-semibold mb-2">Photos</Text>
+            <Text variant="semi-muted" className="font-semibold mb-2">
+              {t("profile.photos")}
+            </Text>
             <View className="flex-row flex-wrap gap-2">
-              {profile.profileImageUrls.map((url, index) => (
-                <Pressable
-                  key={index}
-                  style={{ width: photoWidth, height: photoWidth }}
-                >
-                  <Image
+              {profile.profileImageUrls.map((url, index) =>
+                isPremium ? (
+                  <ZoomableImage
+                    key={index}
                     source={{ uri: url }}
                     style={{
-                      width: "100%",
-                      height: "100%",
+                      width: photoWidth,
+                      height: photoWidth,
                       borderRadius: 12,
                     }}
                     contentFit="cover"
                     cachePolicy="memory-disk"
                     transition={200}
                   />
-                </Pressable>
-              ))}
+                ) : (
+                  <BlurredPremiumImage
+                    key={index}
+                    imageUrl={url}
+                    width={photoWidth}
+                    height={photoWidth}
+                    profileName={profile.name}
+                    profileAvatar={profile.avatarUrl}
+                    borderRadius={12}
+                  />
+                ),
+              )}
             </View>
           </View>
         )}
@@ -356,7 +474,7 @@ export default function ProfileDetailScreen() {
         {conversation && (
           <View className="px-4 mt-6 items-center">
             <Text className="text-foreground font-semibold mb-2">
-              Compatibility
+              {t("profile.compatibility")}
             </Text>
             <CompatibilityIndicator
               score={conversation.compatibilityScore}
@@ -374,7 +492,9 @@ export default function ProfileDetailScreen() {
         style={{ bottom: insets.bottom }}
       >
         <Button onPress={handleChat} isDisabled={isStartingChat}>
-          <Button.Label>{isStartingChat ? "Starting..." : "Chat"}</Button.Label>
+          <Button.Label>
+            {isStartingChat ? t("common.starting") : t("common.chat")}
+          </Button.Label>
         </Button>
       </View>
     </View>

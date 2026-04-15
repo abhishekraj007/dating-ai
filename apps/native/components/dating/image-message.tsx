@@ -3,6 +3,8 @@ import { Image } from "expo-image";
 import { useState } from "react";
 import { X } from "lucide-react-native";
 import { Button } from "heroui-native";
+import { Text } from "@/components/ui/text";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface ImageMessageProps {
   imageUrl: string;
@@ -17,6 +19,7 @@ export const ImageMessage = ({
   isUser,
   isSelfie = false,
 }: ImageMessageProps) => {
+  const { t } = useTranslation();
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   return (
@@ -36,7 +39,7 @@ export const ImageMessage = ({
           />
           {isSelfie && (
             <View className="absolute top-2 left-2 bg-pink-500 px-2 py-1 rounded-full">
-              <View className="text-white text-xs">AI Selfie</View>
+              <Text className="text-white text-xs">{t("chat.selfieLabel")}</Text>
             </View>
           )}
         </View>
@@ -75,4 +78,3 @@ export const ImageMessage = ({
     </>
   );
 };
-

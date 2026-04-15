@@ -15,23 +15,39 @@ export default defineSchema({
       v.union(
         v.literal("manual"), // Admin granted
         v.literal("subscription"), // From active subscription
-        v.literal("lifetime") // Lifetime access
-      )
+        v.literal("lifetime"), // Lifetime access
+      ),
     ),
     premiumGrantedAt: v.optional(v.number()),
     premiumExpiresAt: v.optional(v.number()), // null = lifetime/subscription-based
     // Onboarding status
     hasCompletedOnboarding: v.optional(v.boolean()),
-  }).index("by_auth_user_id", ["authUserId"]),
+  })
+    .index("by_auth_user_id", ["authUserId"])
+    .index("by_email", ["email"]),
 
   // User preferences for AI profile matching (from onboarding)
   userPreferences: defineTable({
     userId: v.string(), // Better Auth user ID
+    appLanguage: v.optional(
+      v.union(
+        v.literal("en"),
+        v.literal("es"),
+        v.literal("fr"),
+        v.literal("de"),
+        v.literal("pt"),
+        v.literal("hi"),
+        v.literal("ja"),
+        v.literal("ko"),
+        v.literal("zh"),
+        v.literal("ar"),
+      ),
+    ),
     // Gender preference
     genderPreference: v.union(
       v.literal("female"),
       v.literal("male"),
-      v.literal("both")
+      v.literal("both"),
     ),
     // Age range preference
     ageMin: v.number(), // Default: 18
@@ -51,7 +67,7 @@ export default defineSchema({
     action: v.union(
       v.literal("like"), // Swiped right
       v.literal("skip"), // Swiped left
-      v.literal("superlike") // Future: super like feature
+      v.literal("superlike"), // Future: super like feature
     ),
     createdAt: v.number(),
   })
@@ -76,7 +92,7 @@ export default defineSchema({
       v.literal("canceled"),
       v.literal("expired"),
       v.literal("past_due"),
-      v.literal("trialing")
+      v.literal("trialing"),
     ),
     productType: v.optional(v.string()), // e.g., "monthly", "yearly" - derived from webhook
 
@@ -112,7 +128,7 @@ export default defineSchema({
       v.literal("paid"),
       v.literal("pending"),
       v.literal("failed"),
-      v.literal("refunded")
+      v.literal("refunded"),
     ),
     createdAt: v.number(),
   })
@@ -139,10 +155,15 @@ export default defineSchema({
     gender: v.union(v.literal("female"), v.literal("male")),
     avatarImageKey: v.optional(v.string()), // R2 key for main avatar (optional for seed data)
     isUserCreated: v.boolean(),
+    visibleOn: v.optional(
+      v.array(
+        v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
+      ),
+    ),
     status: v.union(
       v.literal("active"),
       v.literal("pending"),
-      v.literal("archived")
+      v.literal("archived"),
     ),
     // Optional profile fields - AI adapts if missing
     age: v.optional(v.number()),
@@ -167,13 +188,19 @@ export default defineSchema({
         usesEmojis: v.optional(v.boolean()), // Whether to use emojis frequently
         usesSlang: v.optional(v.boolean()), // Gen-Z slang, abbreviations
         flirtLevel: v.optional(v.number()), // 1-5, how flirty the responses are
-      })
+      }),
     ),
   })
     .index("by_gender", ["gender"])
     .index("by_user", ["createdByUserId"])
     .index("by_status_and_gender", ["status", "gender"])
-    .index("by_username", ["username"]),
+    .index("by_username", ["username"])
+    .index("by_system_created_at", ["isUserCreated", "createdAt"])
+    .index("by_system_status_created_at", [
+      "isUserCreated",
+      "status",
+      "createdAt",
+    ]),
 
   // Conversation metadata - links Agent threads to AI profiles
   aiConversations: defineTable({
@@ -184,6 +211,12 @@ export default defineSchema({
     compatibilityScore: v.number(), // 0-100, default 60
     messageCount: v.number(), // default 0
     lastMessageAt: v.number(),
+    pendingPromptMessageId: v.optional(v.union(v.string(), v.null())),
+    cancelledPromptMessageIds: v.optional(v.array(v.string())),
+    lastMessagePreview: v.optional(v.string()),
+    lastMessageRole: v.optional(v.string()),
+    profileAvatarImageKey: v.optional(v.string()), // Denormalized for convenience
+    profileName: v.optional(v.string()), // Denormalized for convenience
   })
     .index("by_user", ["userId"])
     .index("by_user_and_profile", ["userId", "aiProfileId"])
@@ -201,14 +234,15 @@ export default defineSchema({
         hairstyle: v.optional(v.string()),
         clothing: v.optional(v.string()),
         scene: v.optional(v.string()),
-      })
+        description: v.optional(v.string()),
+      }),
     ),
     imageKey: v.optional(v.string()), // R2 key when complete
     status: v.union(
       v.literal("pending"),
       v.literal("processing"),
       v.literal("completed"),
-      v.literal("failed")
+      v.literal("failed"),
     ),
     replicateJobId: v.optional(v.string()),
     errorMessage: v.optional(v.string()),
@@ -218,6 +252,52 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_status", ["status"]),
 
+  // System AI profile generation jobs (manual + cron)
+  profileGenerationJobs: defineTable({
+    source: v.union(v.literal("manual"), v.literal("cron")),
+    status: v.union(
+      v.literal("queued"),
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    triggeredByUserId: v.optional(v.string()),
+    preferredGender: v.optional(
+      v.union(v.literal("female"), v.literal("male")),
+    ),
+    preferredOccupation: v.optional(v.string()),
+    preferredInterests: v.optional(v.array(v.string())),
+    selectedGender: v.optional(v.union(v.literal("female"), v.literal("male"))),
+    attempts: v.optional(v.number()),
+    createdProfileId: v.optional(v.id("aiProfiles")),
+    errorMessage: v.optional(v.string()),
+    progress: v.optional(
+      v.object({
+        currentStep: v.string(),
+        completedSteps: v.array(v.string()),
+        stepModels: v.optional(
+          v.array(
+            v.object({
+              step: v.string(),
+              model: v.string(),
+            }),
+          ),
+        ),
+        message: v.optional(v.string()),
+        totalSteps: v.number(),
+        completedStepCount: v.number(),
+      }),
+    ),
+    retriedAt: v.optional(v.number()),
+    startedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_created_at", ["createdAt"])
+    .index("by_status", ["status"])
+    .index("by_source_and_status", ["source", "status"]),
+
   // Quiz sessions for interactive quizzes in chat
   quizSessions: defineTable({
     conversationId: v.id("aiConversations"),
@@ -226,7 +306,7 @@ export default defineSchema({
     status: v.union(
       v.literal("active"),
       v.literal("completed"),
-      v.literal("cancelled")
+      v.literal("cancelled"),
     ),
     // Quiz questions and answers
     questions: v.array(
@@ -237,7 +317,7 @@ export default defineSchema({
         correctIndex: v.number(), // 0-3
         userAnswer: v.optional(v.number()), // User's selected index
         isCorrect: v.optional(v.boolean()),
-      })
+      }),
     ),
     currentQuestionIndex: v.number(),
     score: v.number(), // Correct answers count
@@ -270,4 +350,21 @@ export default defineSchema({
     .index("by_type", ["type"])
     .index("by_type_active", ["type", "isActive"])
     .index("by_type_order", ["type", "order"]),
+
+  // App configuration managed from admin panel
+  // Enables changing URLs and identifiers without shipping app updates
+  appConfig: defineTable({
+    key: v.string(), // singleton key, currently "global"
+    baseWebUrl: v.optional(v.string()),
+    termsUrl: v.optional(v.string()),
+    privacyUrl: v.optional(v.string()),
+    helpCenterUrl: v.optional(v.string()),
+    supportUrl: v.optional(v.string()),
+    shareUrl: v.optional(v.string()),
+    iosAppStoreId: v.optional(v.string()),
+    androidAppId: v.optional(v.string()),
+    showMyCreationTab: v.optional(v.boolean()),
+    updatedAt: v.number(),
+    updatedBy: v.string(),
+  }).index("by_key", ["key"]),
 });

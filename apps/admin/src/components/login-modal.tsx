@@ -37,8 +37,13 @@ export function LoginModal({ open, onOpenChange, returnUrl }: LoginModalProps) {
     }
   }, []);
 
-  // Get return URL from props or current path
-  const callbackURL = returnUrl || currentPath;
+  // Get return URL from props or current path - must be absolute URL for multi-app auth
+  const callbackURL =
+    typeof window !== "undefined"
+      ? returnUrl
+        ? `${window.location.origin}${returnUrl}`
+        : `${window.location.origin}${currentPath}`
+      : "/";
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);

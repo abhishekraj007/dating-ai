@@ -3,16 +3,14 @@
 import * as React from "react";
 import {
   BookOpen,
-  Home,
+  Bell,
   LayoutDashboard,
-  CheckSquare,
-  CreditCard,
   Settings,
   LogOut,
   ChevronUp,
-  User2,
   Upload,
   Users,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
@@ -57,6 +55,16 @@ const menuItems = [
     url: "/uploads",
     icon: Upload,
   },
+  {
+    title: "App Config",
+    url: "/app-config",
+    icon: SlidersHorizontal,
+  },
+  {
+    title: "Notifications",
+    url: "/notifications",
+    icon: Bell,
+  },
 ];
 
 export function AppSidebar({ isLoading = false }: { isLoading?: boolean }) {
@@ -78,7 +86,7 @@ export function AppSidebar({ isLoading = false }: { isLoading?: boolean }) {
             <BookOpen className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
-            <span className="font-semibold text-sm">Chating AI</span>
+            <span className="text-sm font-semibold">Chating AI</span>
             {premiumStatus?.isPremium && (
               <span className="text-xs text-muted-foreground">Premium</span>
             )}

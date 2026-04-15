@@ -19,9 +19,11 @@ import {
   useFilterOptions,
   type GenderPreference,
 } from "@/hooks/dating";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function FilterScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const accentColor = useThemeColor("accent");
   const foregroundColor = useThemeColor("foreground");
@@ -53,7 +55,7 @@ export default function FilterScreen() {
     setSelectedZodiacs((prev) =>
       prev.includes(zodiac)
         ? prev.filter((z) => z !== zodiac)
-        : [...prev, zodiac]
+        : [...prev, zodiac],
     );
   };
 
@@ -61,7 +63,7 @@ export default function FilterScreen() {
     setSelectedInterests((prev) =>
       prev.includes(interest)
         ? prev.filter((i) => i !== interest)
-        : [...prev, interest]
+        : [...prev, interest],
     );
   };
 
@@ -100,10 +102,13 @@ export default function FilterScreen() {
             size="sm"
             isIconOnly
             onPress={() => router.back()}
+            className="rounded-full"
           >
             <X size={24} color={foregroundColor} />
           </Button>
-          <Text className="text-foreground text-lg font-semibold">Filter</Text>
+          <Text className="text-foreground text-lg font-semibold">
+            {t("filter.title")}
+          </Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -116,10 +121,47 @@ export default function FilterScreen() {
             contentContainerStyle={{ paddingBottom: 16, paddingTop: 8 }}
             showsVerticalScrollIndicator={false}
           >
+            {/* Gender Preference */}
+            <View className="px-4 mb-6">
+              <Text className="text-foreground font-semibold mb-2">
+                {t("filter.interestedIn")}
+              </Text>
+              <View className="flex-row gap-2 flex-wrap">
+                {isLoadingOptions ? (
+                  <>
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-8 w-20 rounded-full" />
+                    ))}
+                  </>
+                ) : (
+                  options.genders.map((gender) => (
+                    <Chip
+                      key={gender.value}
+                      size="md"
+                      variant={
+                        genderPreference === gender.value
+                          ? "primary"
+                          : "secondary"
+                      }
+                      color={
+                        genderPreference === gender.value ? "accent" : "default"
+                      }
+                      onPress={() =>
+                        setGenderPreference(gender.value as GenderPreference)
+                      }
+                    >
+                      <Chip.Label>{gender.label}</Chip.Label>
+                    </Chip>
+                  ))
+                )}
+              </View>
+            </View>
             {/* Age Range */}
             <View className="px-4 mb-6">
               <View className="flex-row justify-between mb-2">
-                <Text className="text-foreground font-semibold">Age Range</Text>
+                <Text className="text-foreground font-semibold">
+                  {t("filter.age")}
+                </Text>
               </View>
               <View className="flex-row gap-2 flex-wrap">
                 {isLoadingOptions ? (
@@ -152,53 +194,11 @@ export default function FilterScreen() {
               </View>
             </View>
 
-            {/* Gender Preference */}
-            <View className="px-4 mb-6">
-              <Text className="text-foreground font-semibold mb-2">
-                Show me
-              </Text>
-              <View className="flex-row gap-4">
-                {isLoadingOptions ? (
-                  <>
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-6 w-16 rounded-full" />
-                    ))}
-                  </>
-                ) : (
-                  options.genders.map((gender) => (
-                    <Pressable
-                      key={gender.value}
-                      onPress={() =>
-                        setGenderPreference(gender.value as GenderPreference)
-                      }
-                      className="flex-row items-center gap-2"
-                    >
-                      <View
-                        className="w-5 h-5 rounded-full border-2 items-center justify-center"
-                        style={{
-                          borderColor:
-                            genderPreference === gender.value
-                              ? accentColor
-                              : borderColor,
-                        }}
-                      >
-                        {genderPreference === gender.value && (
-                          <View
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: accentColor }}
-                          />
-                        )}
-                      </View>
-                      <Text className="text-foreground">{gender.label}</Text>
-                    </Pressable>
-                  ))
-                )}
-              </View>
-            </View>
-
             {/* Zodiac Signs */}
             <View className="px-4 mb-6">
-              <Text className="text-foreground font-semibold mb-3">Zodiac</Text>
+              <Text className="text-foreground font-semibold mb-3">
+                {t("filter.zodiac")}
+              </Text>
               <View className="flex-row flex-wrap gap-2">
                 {isLoadingOptions ? (
                   <>
@@ -233,7 +233,7 @@ export default function FilterScreen() {
             {/* Interests */}
             <View className="px-4 mb-6">
               <Text className="text-foreground font-semibold mb-3">
-                Interests
+                {t("filter.interests")}
               </Text>
               <View className="flex-row flex-wrap gap-2">
                 {isLoadingOptions ? (
@@ -281,14 +281,16 @@ export default function FilterScreen() {
             onPress={handleReset}
             isDisabled={isSaving}
           >
-            <Button.Label>Reset</Button.Label>
+            <Button.Label>{t("common.reset")}</Button.Label>
           </Button>
           <Button
             style={{ flex: 1 }}
             onPress={handleApply}
             isDisabled={isSaving}
           >
-            <Button.Label>{isSaving ? "Saving..." : "Apply"}</Button.Label>
+            <Button.Label>
+              {isSaving ? t("common.saving") : t("common.apply")}
+            </Button.Label>
           </Button>
         </View>
       </SafeAreaView>

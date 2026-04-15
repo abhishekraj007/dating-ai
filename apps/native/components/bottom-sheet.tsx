@@ -1,100 +1,100 @@
-import BottomSheet, {
-  BottomSheetBackdrop,
-  BottomSheetView,
+import { useEffect, useRef, type FC, type ReactNode } from "react";
+import { useWindowDimensions } from "react-native";
+import GorhomBottomSheet, {
+  type BottomSheetFooterProps,
 } from "@gorhom/bottom-sheet";
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-} from "react";
-import { StyleSheet } from "react-native";
-import type { BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
-import { useTheme } from "@react-navigation/native";
-import { useThemeColor } from "heroui-native";
+import { BottomSheet, useThemeColor } from "heroui-native";
 
 interface CustomBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  children: React.ReactNode;
-  snapPoints?: string[];
+  children: ReactNode;
+  snapPoints?: Array<string | number>;
+  scrollBehavior?: "default" | "scrollable";
+  keyboardBehavior?: "interactive" | "extend" | "fillParent";
+  footerComponent?: FC<BottomSheetFooterProps>;
 }
 
-export const CustomBottomSheet = forwardRef<
-  BottomSheet,
-  CustomBottomSheetProps
->(({ isOpen, onClose, children, snapPoints = ["65%"] }, ref) => {
-  // const { colors } = useTheme();
-  const background = useThemeColor("background");
-  const border = useThemeColor("border");
-
-  const bottomSheetRef = useRef<BottomSheet>(null);
-
-  // Expose the ref methods to parent
-  useImperativeHandle(ref, () => bottomSheetRef.current as BottomSheet);
+export function CustomBottomSheet({
+  isOpen,
+  onClose,
+  children,
+  snapPoints,
+  scrollBehavior = "default",
+  keyboardBehavior = "interactive",
+  footerComponent,
+}: CustomBottomSheetProps) {
+  const sheetRef = useRef<GorhomBottomSheet>(null);
+  const { height } = useWindowDimensions();
+  const overlayColor = useThemeColor("overlay");
+  const separatorColor = useThemeColor("separator");
+  const hasSnapPoints = Boolean(snapPoints?.length);
 
   useEffect(() => {
-    if (isOpen) {
-      bottomSheetRef.current?.expand();
-    } else {
-      bottomSheetRef.current?.close();
+    if (scrollBehavior !== "scrollable") {
+      return;
     }
-  }, [isOpen]);
 
-  const renderBackdrop = useCallback(
-    (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.5}
-        pressBehavior="close"
-      />
-    ),
-    []
-  );
+    if (!isOpen) {
+      sheetRef.current?.close();
+      return;
+    }
 
-  const handleSheetChanges = useCallback(
-    (index: number) => {
-      if (index === -1) {
-        onClose();
-      }
-    },
-    [onClose]
-  );
+    if (hasSnapPoints) {
+      sheetRef.current?.snapToIndex(0);
+      return;
+    }
+
+    sheetRef.current?.expand();
+  }, [hasSnapPoints, isOpen, scrollBehavior]);
 
   return (
     <BottomSheet
-      ref={bottomSheetRef}
-      index={-1}
-      snapPoints={snapPoints}
-      enablePanDownToClose
-      backdropComponent={renderBackdrop}
-      onChange={handleSheetChanges}
-      backgroundStyle={{
-        backgroundColor: background,
+      isOpen={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
       }}
-      handleIndicatorStyle={{
-        backgroundColor: border,
-        width: 40,
-        height: 4,
-      }}
-      enableDynamicSizing={false}
     >
-      <BottomSheetView style={styles.contentContainer}>
-        {children}
-      </BottomSheetView>
+      <BottomSheet.Portal>
+        <BottomSheet.Overlay />
+        {scrollBehavior === "scrollable" ? (
+          <GorhomBottomSheet
+            ref={sheetRef}
+            index={-1}
+            animateOnMount={false}
+            onClose={onClose}
+            keyboardBehavior={keyboardBehavior}
+            keyboardBlurBehavior="restore"
+            android_keyboardInputMode="adjustResize"
+            enableBlurKeyboardOnGesture
+            enablePanDownToClose
+            enableDynamicSizing={!hasSnapPoints}
+            maxDynamicContentSize={hasSnapPoints ? undefined : height * 0.85}
+            footerComponent={footerComponent}
+            backgroundStyle={{
+              backgroundColor: overlayColor,
+              borderTopLeftRadius: 32,
+              borderTopRightRadius: 32,
+              borderCurve: "continuous",
+            }}
+            handleIndicatorStyle={{ backgroundColor: separatorColor }}
+            {...(hasSnapPoints ? { snapPoints } : {})}
+          >
+            {children}
+          </GorhomBottomSheet>
+        ) : (
+          <BottomSheet.Content
+            keyboardBehavior={keyboardBehavior}
+            keyboardBlurBehavior="restore"
+            android_keyboardInputMode="adjustResize"
+            enableBlurKeyboardOnGesture
+            enableDynamicSizing={!snapPoints}
+            {...(snapPoints ? { snapPoints } : {})}
+          >
+            {children}
+          </BottomSheet.Content>
+        )}
+      </BottomSheet.Portal>
     </BottomSheet>
   );
-});
-
-CustomBottomSheet.displayName = "CustomBottomSheet";
-
-const styles = StyleSheet.create({
-  contentContainer: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-  },
-});
+}

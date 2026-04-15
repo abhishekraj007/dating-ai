@@ -5,10 +5,12 @@ import {
   type QuizAnswerResultData,
   type ImageRequestData,
   type ImageResponseData,
+  type ChatErrorData,
 } from "./bubbles";
 import { QuizQuestionBubble } from "./bubbles/QuizQuestionBubble";
 import { QuizResultBubble } from "./bubbles/QuizResultBubble";
 import { QuizStartBubble } from "./bubbles/QuizStartBubble";
+import { ChatErrorBubble } from "./bubbles/ChatErrorBubble";
 import { ImageRequestBubble, ImageResponseBubble } from "./bubbles/ImageBubble";
 import {
   AITextBubble,
@@ -25,6 +27,8 @@ interface MessageBubbleProps {
   isQuizActive?: boolean;
   onQuizAnswer?: (answer: string) => void;
   onEndQuiz?: () => void;
+  onRetryChatError?: (promptMessageId: string) => void;
+  isRetrying?: boolean;
   onLongPress?: () => void;
 }
 
@@ -41,6 +45,8 @@ export const MessageBubble = ({
   isQuizActive = false,
   onQuizAnswer,
   onEndQuiz,
+  onRetryChatError,
+  isRetrying = false,
   onLongPress,
 }: MessageBubbleProps) => {
   const time = format(new Date(timestamp), "HH:mm");
@@ -114,6 +120,16 @@ export const MessageBubble = ({
         return (
           <ImageResponseBubble
             data={structuredContent as ImageResponseData}
+            {...bubbleProps}
+          />
+        );
+
+      case "chat_error":
+        return (
+          <ChatErrorBubble
+            data={structuredContent as ChatErrorData}
+            onRetry={onRetryChatError}
+            isRetrying={isRetrying}
             {...bubbleProps}
           />
         );

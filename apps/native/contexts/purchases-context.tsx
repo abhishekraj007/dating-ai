@@ -22,7 +22,7 @@ interface PurchasesContextType {
 }
 
 const PurchasesContext = createContext<PurchasesContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export function PurchasesProvider({ children }: { children: React.ReactNode }) {
@@ -32,7 +32,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
     PurchasesPackage[]
   >([]);
   const [creditPackages, setCreditPackages] = useState<PurchasesStoreProduct[]>(
-    []
+    [],
   );
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -40,7 +40,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useConvexAuth();
   const userAndProfile = useQuery(
     api.user.fetchUserAndProfile,
-    isAuthenticated ? {} : "skip"
+    isAuthenticated ? {} : "skip",
   );
 
   const addCredits = useMutation(api.purchases.addCredits);
@@ -92,6 +92,9 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
       console.log("revenuecat-> Configuring SDK anonymously");
 
       // Configure RevenueCat without a user ID (creates anonymous ID)
+
+      Purchases.setLogLevel(Purchases.LOG_LEVEL.ERROR);
+
       await Purchases.configure({ apiKey });
 
       const info = await Purchases.getCustomerInfo();
@@ -122,7 +125,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
       const subscriptions = allPackages.filter(
         (pkg) =>
           pkg.product.productType === "AUTO_RENEWABLE_SUBSCRIPTION" ||
-          pkg.product.productCategory === "SUBSCRIPTION"
+          pkg.product.productCategory === "SUBSCRIPTION",
       );
 
       setSubscriptionPackages(subscriptions);
@@ -139,7 +142,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
 
     const products = await Purchases.getProducts(
       CREDIT_OPTIONS.map((option) => option.id),
-      Purchases.PRODUCT_CATEGORY.NON_SUBSCRIPTION
+      Purchases.PRODUCT_CATEGORY.NON_SUBSCRIPTION,
     );
 
     setCreditPackages(products);
@@ -209,7 +212,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
         case PAYWALL_RESULT.PURCHASED:
         case PAYWALL_RESULT.RESTORED:
           console.log(
-            "[RevenueCat] Purchase successful, refreshing customer info..."
+            "[RevenueCat] Purchase successful, refreshing customer info...",
           );
           // Refresh customer info after successful purchase
           const info = await Purchases.getCustomerInfo();
@@ -224,7 +227,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
             const expiresAt =
               info.entitlements.active["premium"].expirationDate;
             console.log(
-              "[RevenueCat] Premium entitlement found, syncing with backend..."
+              "[RevenueCat] Premium entitlement found, syncing with backend...",
             );
             await upgradeToPremium({
               expiresAt: expiresAt ? new Date(expiresAt).getTime() : undefined,
@@ -232,7 +235,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
             console.log("[RevenueCat] Backend sync complete");
           } else {
             console.warn(
-              "[RevenueCat] No premium entitlement found after purchase"
+              "[RevenueCat] No premium entitlement found after purchase",
             );
           }
           break;
@@ -243,7 +246,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
 
         case PAYWALL_RESULT.NOT_PRESENTED:
           console.warn(
-            "[RevenueCat] Paywall was not presented - user may already have access"
+            "[RevenueCat] Paywall was not presented - user may already have access",
           );
           break;
 

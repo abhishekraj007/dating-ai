@@ -35,6 +35,7 @@ export interface ImageRequestData {
     hairstyle?: string;
     clothing?: string;
     scene?: string;
+    description?: string;
   };
 }
 
@@ -45,6 +46,14 @@ export interface ImageResponseData {
   prompt?: string;
 }
 
+export interface ChatErrorData {
+  type: "chat_error";
+  code?: "rate_limited" | "generation_failed";
+  promptMessageId?: string;
+  retryable?: boolean;
+  message?: string;
+}
+
 export type StructuredContent =
   | QuizQuestionData
   | QuizAnswerResultData
@@ -52,6 +61,7 @@ export type StructuredContent =
   | QuizEndData
   | ImageRequestData
   | ImageResponseData
+  | ChatErrorData
   | { type: string; message?: string };
 
 // Shared props for AI bubble components
@@ -66,7 +76,7 @@ export interface AIBubbleProps {
  * Returns null if not valid JSON or missing type field.
  */
 export function parseStructuredContent(
-  content: string
+  content: string,
 ): StructuredContent | null {
   try {
     const parsed = JSON.parse(content);

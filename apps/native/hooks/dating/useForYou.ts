@@ -1,9 +1,22 @@
 import { useQuery, useMutation, useConvexAuth } from "convex/react";
+import { usePaginatedQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend";
 import type { Id } from "@dating-ai/backend";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useFocusEffect } from "expo-router";
+
 export type GenderPreference = "female" | "male" | "both";
 export type InteractionAction = "like" | "skip" | "superlike";
+
+export const DEFAULT_USER_PREFERENCES: UserPreferences = {
+  genderPreference: "female",
+  ageMin: 18,
+  ageMax: 99,
+  zodiacPreferences: [],
+  interestPreferences: [],
+};
 
 export interface UserPreferences {
   genderPreference: GenderPreference;
@@ -21,37 +34,175 @@ export interface ForYouProfile {
   zodiacSign?: string;
   bio?: string;
   interests?: string[];
+  avatarImageKey?: string;
   avatarUrl: string | null;
+}
+
+type AppPlatform = "web" | "ios" | "android";
+
+function getCurrentPlatform(): AppPlatform {
+  const platform = process.env.EXPO_OS;
+  if (platform === "ios" || platform === "android" || platform === "web") {
+    return platform;
+  }
+  return "web";
 }
 
 /**
  * Hook to get profiles for the For You feed.
+ * Uses paginated query for infinite loading.
  */
-export function useForYouProfiles(limit?: number) {
-  const profiles = useQuery(
-    api.features.preferences.queries.getForYouProfiles,
+export function useForYouProfiles(initialNumItems: number = 20) {
+  const platform = getCurrentPlatform();
+  const { preferences } = useUserPreferences();
+  const genderPreference =
+    preferences?.genderPreference ?? DEFAULT_USER_PREFERENCES.genderPreference;
+  const ageMin = preferences?.ageMin ?? DEFAULT_USER_PREFERENCES.ageMin;
+  const ageMax = preferences?.ageMax ?? DEFAULT_USER_PREFERENCES.ageMax;
+  const zodiacPreferences = [...(preferences?.zodiacPreferences ?? [])].sort();
+  const interestPreferences = [
+    ...(preferences?.interestPreferences ?? []),
+  ].sort();
+  const filterSignature = JSON.stringify({
+    genderPreference,
+    ageMin,
+    ageMax,
+    zodiacPreferences,
+    interestPreferences,
+  });
+  const { results, status, loadMore, isLoading } = usePaginatedQuery(
+    api.features.preferences.queries.getForYouProfilesPaginated,
     {
-      limit,
-    }
+      platform,
+      genderPreference,
+      ageMin,
+      ageMax,
+      zodiacPreferences,
+      interestPreferences,
+    },
+    { initialNumItems },
   );
+  const seenProfileIdsRef = useRef(new Set<string>());
+  const removedProfileIdsRef = useRef(new Set<string>());
+  const [profiles, setProfiles] = useState<ForYouProfile[]>([]);
+
+  useEffect(() => {
+    seenProfileIdsRef.current = new Set();
+    removedProfileIdsRef.current = new Set();
+    setProfiles([]);
+  }, [filterSignature]);
+
+  useEffect(() => {
+    if (!results || results.length === 0) {
+      return;
+    }
+
+    setProfiles((currentProfiles) => {
+      let hasChanges = false;
+      const nextProfiles = [...currentProfiles];
+
+      for (const profile of results as ForYouProfile[]) {
+        const profileId = String(profile._id);
+
+        if (
+          seenProfileIdsRef.current.has(profileId) ||
+          removedProfileIdsRef.current.has(profileId)
+        ) {
+          continue;
+        }
+
+        seenProfileIdsRef.current.add(profileId);
+        nextProfiles.push(profile);
+        hasChanges = true;
+      }
+
+      return hasChanges ? nextProfiles : currentProfiles;
+    });
+  }, [results]);
+
+  const removeProfile = useCallback((profileId: Id<"aiProfiles">) => {
+    const normalizedProfileId = String(profileId);
+    removedProfileIdsRef.current.add(normalizedProfileId);
+    seenProfileIdsRef.current.add(normalizedProfileId);
+
+    setProfiles((currentProfiles) =>
+      currentProfiles.filter((profile) => profile._id !== profileId),
+    );
+  }, []);
+
+  const restoreProfile = useCallback((profile: ForYouProfile) => {
+    const profileId = String(profile._id);
+    removedProfileIdsRef.current.delete(profileId);
+    seenProfileIdsRef.current.add(profileId);
+
+    setProfiles((currentProfiles) => {
+      if (currentProfiles.some((current) => current._id === profile._id)) {
+        return currentProfiles;
+      }
+
+      return [profile, ...currentProfiles];
+    });
+  }, []);
 
   return {
-    profiles: profiles ?? [],
-    isLoading: profiles === undefined,
+    profiles,
+    isLoading: profiles.length === 0 && isLoading,
+    status,
+    loadMore,
+    removeProfile,
+    restoreProfile,
   };
 }
 
-/**
- * Hook to get user preferences.
- */
 export function useUserPreferences() {
-  const preferences = useQuery(
-    api.features.preferences.queries.getUserPreferences
+  const { isAuthenticated } = useConvexAuth();
+  const convexPreferences = useQuery(
+    api.features.preferences.queries.getUserPreferences,
+  );
+
+  const [localPreferences, setLocalPreferences] =
+    useState<UserPreferences | null>(null);
+  const [isLoadingLocal, setIsLoadingLocal] = useState(true);
+
+  const loadLocalPreferences = useCallback(async () => {
+    try {
+      const json = await AsyncStorage.getItem("user_preferences");
+      if (json) {
+        setLocalPreferences(JSON.parse(json));
+      } else {
+        setLocalPreferences(null);
+      }
+    } catch (e) {
+      console.error("Failed to load local preferences", e);
+    } finally {
+      setIsLoadingLocal(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setIsLoadingLocal(false);
+      return;
+    }
+
+    setIsLoadingLocal(true);
+    void loadLocalPreferences();
+  }, [isAuthenticated, loadLocalPreferences]);
+
+  // Reload local preferences when screen focuses (to catch updates from Filter screen)
+  useFocusEffect(
+    useCallback(() => {
+      if (!isAuthenticated) {
+        loadLocalPreferences();
+      }
+    }, [isAuthenticated, loadLocalPreferences]),
   );
 
   return {
-    preferences,
-    isLoading: preferences === undefined,
+    preferences: isAuthenticated ? convexPreferences : localPreferences,
+    isLoading: isAuthenticated
+      ? convexPreferences === undefined
+      : isLoadingLocal,
   };
 }
 
@@ -63,7 +214,7 @@ export function useUserPreferences() {
 export function useSavePreferences() {
   const { isAuthenticated } = useConvexAuth();
   const savePreferencesMutation = useMutation(
-    api.features.preferences.queries.saveUserPreferences
+    api.features.preferences.queries.saveUserPreferences,
   );
 
   const savePreferences = async (preferences: UserPreferences) => {
@@ -71,8 +222,9 @@ export function useSavePreferences() {
     if (isAuthenticated) {
       return savePreferencesMutation(preferences);
     }
-    // For unauthenticated users, just return without saving
-    // The filter will be applied locally in the UI
+
+    // For unauthenticated users, save locally
+    await AsyncStorage.setItem("user_preferences", JSON.stringify(preferences));
     return null;
   };
 
@@ -86,7 +238,7 @@ export function useSavePreferences() {
 export function useProfileInteraction() {
   const { isAuthenticated } = useConvexAuth();
   const recordInteraction = useMutation(
-    api.features.preferences.queries.recordProfileInteraction
+    api.features.preferences.queries.recordProfileInteraction,
   );
 
   const likeProfile = async (aiProfileId: Id<"aiProfiles">) => {
@@ -138,10 +290,10 @@ export function useLikedProfiles() {
  */
 export function useOnboardingStatus() {
   const hasCompleted = useQuery(
-    api.features.preferences.queries.hasCompletedOnboarding
+    api.features.preferences.queries.hasCompletedOnboarding,
   );
   const completeOnboarding = useMutation(
-    api.features.preferences.queries.completeOnboarding
+    api.features.preferences.queries.completeOnboarding,
   );
 
   return {

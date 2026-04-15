@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Expo Dev Client (8082)",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["dev", "--", "--dev-client", "--port", "8082"],
+      "options": {
+        "cwd": "${workspaceFolder}/apps/native"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

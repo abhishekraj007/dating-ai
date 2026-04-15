@@ -1,7 +1,11 @@
 // Dating AI Hooks
 // Custom hooks for managing dating AI state and API calls
 
-export { useAIProfiles, useAIProfile } from "./useAIProfiles";
+export {
+  useAIProfiles,
+  useAIProfile,
+  useExploreProfiles,
+} from "./useAIProfiles";
 export {
   useConversations,
   useConversation,
@@ -23,6 +27,8 @@ export {
 } from "./useUserCreatedProfiles";
 export { useRequestChatImage } from "./useImageRequest";
 export type { ImageRequestOptions } from "./useImageRequest";
+export { useCredits, CREDIT_COSTS } from "./useCredits";
+export type { CreditAction } from "./useCredits";
 export {
   useForYouProfiles,
   useUserPreferences,
@@ -45,3 +51,4 @@ export type {
   InterestOption,
   FilterOptions,
 } from "./useFilterOptions";
+export { useChatScreen } from "./useChatScreen";

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useConversation } from "@/hooks/use-conversations";
 import { useMessages, useSendMessage } from "@/hooks/use-messages";
+import type { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +49,7 @@ export default function ChatPage({ params }: ChatPageProps) {
 
     try {
       await sendMessage({
-        conversationId: conversationId as any,
+        conversationId: conversationId as Id<"aiConversations">,
         content,
       });
     } catch (error) {

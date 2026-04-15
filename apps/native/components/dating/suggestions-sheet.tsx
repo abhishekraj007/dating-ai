@@ -1,11 +1,9 @@
-import { View, ScrollView, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Text } from "@/components/ui/text";
-import { Spinner, useThemeColor } from "heroui-native";
+import { BottomSheet, Spinner, useThemeColor } from "heroui-native";
 import { CustomBottomSheet } from "@/components/bottom-sheet";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MessageSquare, RefreshCw } from "lucide-react-native";
-import type BottomSheet from "@gorhom/bottom-sheet";
-import { forwardRef } from "react";
+import { RefreshCw } from "lucide-react-native";
 
 // Default conversation suggestions when AI-generated ones aren't available
 export const DEFAULT_SUGGESTIONS = [
@@ -22,17 +20,21 @@ export const DEFAULT_SUGGESTIONS = [
 interface SuggestionItemProps {
   suggestion: string;
   onPress: () => void;
+  isLast?: boolean;
 }
 
-function SuggestionItem({ suggestion, onPress }: SuggestionItemProps) {
+function SuggestionItem({ suggestion, onPress, isLast }: SuggestionItemProps) {
   const borderColor = useThemeColor("border");
-  const foregroundColor = useThemeColor("foreground");
 
   return (
     <Pressable
       onPress={onPress}
-      className="py-4 border-b active:opacity-70"
-      style={{ borderBottomColor: borderColor }}
+      className="flex-row items-center gap-3 py-4  active:opacity-70"
+      style={
+        isLast
+          ? undefined
+          : { borderBottomWidth: 1, borderBottomColor: borderColor }
+      }
     >
       <Text className="text-foreground leading-6">{suggestion}</Text>
     </Pressable>
@@ -48,84 +50,76 @@ interface SuggestionsSheetProps {
   onRefresh?: () => void;
 }
 
-export const SuggestionsSheet = forwardRef<BottomSheet, SuggestionsSheetProps>(
-  (
-    {
-      isOpen,
-      onClose,
-      onSelectSuggestion,
-      suggestions = [...DEFAULT_SUGGESTIONS],
-      isLoading = false,
-      onRefresh,
-    },
-    ref
-  ) => {
-    const insets = useSafeAreaInsets();
-    const accentColor = useThemeColor("accent");
-    const mutedColor = useThemeColor("muted");
+export function SuggestionsSheet({
+  isOpen,
+  onClose,
+  onSelectSuggestion,
+  suggestions = [...DEFAULT_SUGGESTIONS],
+  isLoading = false,
+  onRefresh,
+}: SuggestionsSheetProps) {
+  const mutedColor = useThemeColor("muted");
 
-    const handleSelectSuggestion = (suggestion: string) => {
-      onSelectSuggestion(suggestion);
-      onClose();
-    };
+  const handleSelectSuggestion = (suggestion: string) => {
+    onSelectSuggestion(suggestion);
+    onClose();
+  };
 
-    return (
-      <CustomBottomSheet
-        ref={ref}
-        isOpen={isOpen}
-        onClose={onClose}
-        snapPoints={["70%"]}
-      >
-        <View className="flex-1 px-4">
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="w-10" />
-            <Text className="text-lg font-semibold text-foreground text-center">
-              Suggestion
-            </Text>
-            {onRefresh ? (
-              <Pressable
-                onPress={onRefresh}
-                disabled={isLoading}
-                className="w-10 h-10 items-center justify-center active:opacity-70"
-              >
-                {isLoading ? (
-                  <Spinner size="sm" />
-                ) : (
-                  <RefreshCw size={20} color={mutedColor} />
-                )}
-              </Pressable>
-            ) : (
-              <View className="w-10" />
-            )}
-          </View>
-
-          {isLoading ? (
-            <View className="flex-1 items-center justify-center py-12">
-              <Spinner size="lg" />
-              <Text className="text-muted-foreground mt-4">
-                Generating suggestions...
-              </Text>
-            </View>
-          ) : (
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{
-                paddingBottom: Math.max(insets.bottom, 32) + 16,
-              }}
+  return (
+    <CustomBottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      scrollBehavior="scrollable"
+    >
+      <View className="px-4 pt-5">
+        <View className="flex-row items-center justify-between mb-4">
+          <View className="w-10" />
+          <BottomSheet.Title className="text-center">
+            Suggestion
+          </BottomSheet.Title>
+          {onRefresh ? (
+            <Pressable
+              onPress={onRefresh}
+              disabled={isLoading}
+              className="w-10 h-10 items-center justify-center active:opacity-70"
             >
-              {suggestions.map((suggestion, index) => (
-                <SuggestionItem
-                  key={`${suggestion.slice(0, 20)}-${index}`}
-                  suggestion={suggestion}
-                  onPress={() => handleSelectSuggestion(suggestion)}
-                />
-              ))}
-            </ScrollView>
+              {isLoading ? (
+                <Spinner size="sm" />
+              ) : (
+                <RefreshCw size={20} color={mutedColor} />
+              )}
+            </Pressable>
+          ) : (
+            <View className="w-10" />
           )}
         </View>
-      </CustomBottomSheet>
-    );
-  }
-);
+      </View>
 
-SuggestionsSheet.displayName = "SuggestionsSheet";
+      {isLoading ? (
+        <View className="flex-1 items-center justify-center px-4 py-12">
+          <Spinner size="lg" />
+          <Text className="text-muted-foreground mt-4">
+            Generating suggestions...
+          </Text>
+        </View>
+      ) : (
+        <BottomSheetScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 16 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+        >
+          {suggestions.map((suggestion, index) => (
+            <SuggestionItem
+              key={`${suggestion.slice(0, 20)}-${index}`}
+              suggestion={suggestion}
+              onPress={() => handleSelectSuggestion(suggestion)}
+              isLast={index === suggestions.length - 1}
+            />
+          ))}
+        </BottomSheetScrollView>
+      )}
+    </CustomBottomSheet>
+  );
+}

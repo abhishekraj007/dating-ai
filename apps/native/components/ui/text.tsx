@@ -7,6 +7,7 @@ import { useThemeColor } from "heroui-native";
 
 type TextVariant =
   | "default"
+  | "semi-muted"
   | "muted"
   | "accent"
   | "success"
@@ -65,6 +66,7 @@ export function Text({
     success: successColor,
     warning: warningColor,
     danger: dangerColor,
+    "semi-muted": foregroundColor,
   };
 
   const color = variantColors[variant];
@@ -72,7 +74,14 @@ export function Text({
   const fontWeight = weightStyles[weight];
 
   return (
-    <RNText style={[{ color, fontWeight }, sizeStyle, style]} {...props}>
+    <RNText
+      style={[
+        { color, fontWeight, opacity: variant === "semi-muted" ? 0.9 : 1 },
+        sizeStyle,
+        style,
+      ]}
+      {...props}
+    >
       {children}
     </RNText>
   );

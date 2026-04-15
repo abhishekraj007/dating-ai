@@ -1,31 +1,107 @@
-import { View, StyleSheet, useWindowDimensions } from "react-native";
+import {
+  View,
+  StyleSheet,
+  useWindowDimensions,
+  Pressable,
+  Platform,
+} from "react-native";
 import { Text } from "@/components/ui/text";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Button, Skeleton, useThemeColor } from "heroui-native";
-import { Heart, SlidersHorizontal } from "lucide-react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useState, useCallback } from "react";
-import { Header } from "@/components";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { X, Heart } from "lucide-react-native";
+import { Skeleton } from "heroui-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  interpolate,
+  Extrapolation,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ProfileSwipeCard } from "@/components/dating/profile-swipe-card";
+import { MatchModal } from "@/components/dating/match-modal";
+import type { ForYouProfile } from "@/hooks/dating/useForYou";
 import {
   useForYouProfiles,
   useProfileInteraction,
 } from "@/hooks/dating/useForYou";
+import { useStartConversation } from "@/hooks/dating";
 import type { Id } from "@dating-ai/backend";
+import { ForYouHeroUISkeleton } from "@/components/dating/for-you-skeleton";
 
 export default function ForYouScreen() {
+  return <ForYouContent />;
+}
+
+function ForYouContent() {
   const router = useRouter();
-  const accentColor = useThemeColor("accent");
-  const foregroundColor = useThemeColor("foreground");
+  const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
 
-  const { profiles, isLoading } = useForYouProfiles(20);
+  const {
+    profiles,
+    isLoading,
+    status,
+    loadMore,
+    removeProfile,
+    restoreProfile,
+  } = useForYouProfiles(20);
   const { likeProfile, skipProfile, isAuthenticated } = useProfileInteraction();
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loadingChatting, setLoadingChatting] = useState(false);
+  const { startConversation } = useStartConversation();
+  const lastPrefetchAtMs = useRef(0);
 
-  const currentProfile = profiles[currentIndex];
-  const nextProfile = profiles[currentIndex + 1];
+  const currentProfile = profiles[0];
+  const nextProfile = profiles[1];
+
+  // Prefetch more profiles when nearing the end of loaded batch
+  useEffect(() => {
+    const remaining = profiles.length;
+    const now = Date.now();
+    if (
+      remaining <= 5 &&
+      status === "CanLoadMore" &&
+      now - lastPrefetchAtMs.current > 600
+    ) {
+      lastPrefetchAtMs.current = now;
+      loadMore(20);
+    }
+  }, [profiles.length, status, loadMore]);
+
+  // Track drag position for button animations
+  const dragX = useSharedValue(0);
+  const SWIPE_THRESHOLD = 120;
+
+  // Position buttons just above the tab bar
+  const bottomPadding =
+    Platform.OS === "android" ? Math.max(insets.bottom, 8) : 24;
+  const actionButtonsBottom = bottomPadding;
+  const bottomUiHeight = actionButtonsBottom + 120;
+
+  // Animated styles for buttons
+  const skipButtonStyle = useAnimatedStyle(() => {
+    const scale = interpolate(
+      dragX.value,
+      [-SWIPE_THRESHOLD, -SWIPE_THRESHOLD * 0.35, 0],
+      [1.25, 1, 1],
+      Extrapolation.CLAMP,
+    );
+    return { transform: [{ scale }] };
+  });
+
+  const likeButtonStyle = useAnimatedStyle(() => {
+    const scale = interpolate(
+      dragX.value,
+      [0, SWIPE_THRESHOLD * 0.35, SWIPE_THRESHOLD],
+      [1, 1, 1.25],
+      Extrapolation.CLAMP,
+    );
+    return { transform: [{ scale }] };
+  });
+
+  const [showMatchModal, setShowMatchModal] = useState(false);
+  const [matchedProfile, setMatchedProfile] = useState<ForYouProfile | null>(
+    null,
+  );
 
   const navigateToLogin = useCallback(() => {
     router.push("/(root)/(auth)");
@@ -33,115 +109,214 @@ export default function ForYouScreen() {
 
   const handleSwipeLeft = useCallback(async () => {
     if (!currentProfile) return;
-    // Auth check is done in the card component - this only gets called if authenticated
-    await skipProfile(currentProfile._id as Id<"aiProfiles">);
-    setCurrentIndex((prev) => prev + 1);
-  }, [currentProfile, skipProfile]);
+    removeProfile(currentProfile._id as Id<"aiProfiles">);
+
+    try {
+      await skipProfile(currentProfile._id as Id<"aiProfiles">);
+    } catch (error) {
+      restoreProfile(currentProfile);
+      console.error("Failed to skip profile:", error);
+    }
+  }, [currentProfile, removeProfile, restoreProfile, skipProfile]);
 
   const handleSwipeRight = useCallback(async () => {
     if (!currentProfile) return;
-    // Auth check is done in the card component - this only gets called if authenticated
-    await likeProfile(currentProfile._id as Id<"aiProfiles">);
-    // Navigate to profile detail or start chat
-    router.push(`/profile/${currentProfile._id}`);
-    setCurrentIndex((prev) => prev + 1);
-  }, [currentProfile, likeProfile, router]);
+    removeProfile(currentProfile._id as Id<"aiProfiles">);
+
+    try {
+      await likeProfile(currentProfile._id as Id<"aiProfiles">);
+      setMatchedProfile(currentProfile);
+      setShowMatchModal(true);
+    } catch (error) {
+      restoreProfile(currentProfile);
+      console.error("Failed to like profile:", error);
+    }
+  }, [currentProfile, likeProfile, removeProfile, restoreProfile]);
+
+  const handleSkipPress = useCallback(async () => {
+    if (!currentProfile) return;
+    dragX.value = 0;
+    if (!isAuthenticated) {
+      navigateToLogin();
+      return;
+    }
+    removeProfile(currentProfile._id as Id<"aiProfiles">);
+
+    try {
+      await skipProfile(currentProfile._id as Id<"aiProfiles">);
+    } catch (error) {
+      restoreProfile(currentProfile);
+      console.error("Failed to skip profile:", error);
+    }
+  }, [
+    currentProfile,
+    skipProfile,
+    isAuthenticated,
+    navigateToLogin,
+    removeProfile,
+    restoreProfile,
+  ]);
+
+  const handleLikePress = useCallback(async () => {
+    if (!currentProfile) return;
+    dragX.value = 0;
+    if (!isAuthenticated) {
+      navigateToLogin();
+      return;
+    }
+    removeProfile(currentProfile._id as Id<"aiProfiles">);
+
+    try {
+      await likeProfile(currentProfile._id as Id<"aiProfiles">);
+      setMatchedProfile(currentProfile);
+      setShowMatchModal(true);
+    } catch (error) {
+      restoreProfile(currentProfile);
+      console.error("Failed to like profile:", error);
+    }
+  }, [
+    currentProfile,
+    likeProfile,
+    isAuthenticated,
+    navigateToLogin,
+    removeProfile,
+    restoreProfile,
+  ]);
+
+  const handleMatchClose = useCallback(() => {
+    setShowMatchModal(false);
+    setMatchedProfile(null);
+  }, []);
+
+  const handleSkipForNow = useCallback(() => {
+    setShowMatchModal(false);
+    setMatchedProfile(null);
+  }, []);
+
+  const handleStartChatting = useCallback(async () => {
+    if (matchedProfile) {
+      try {
+        setLoadingChatting(true);
+        const conversationId = await startConversation({
+          aiProfileId: matchedProfile._id as Id<"aiProfiles">,
+        });
+        setShowMatchModal(false);
+        router.push(`/chat/${conversationId}`);
+      } catch (error) {
+        console.error("Failed to start conversation:", error);
+      } finally {
+        setLoadingChatting(false);
+      }
+      setMatchedProfile(null);
+    }
+  }, [matchedProfile, router, startConversation]);
 
   const handleCardPress = useCallback(() => {
     if (!currentProfile) return;
     router.push(`/profile/${currentProfile._id}`);
   }, [currentProfile, router]);
 
-  const handleFilterPress = () => {
-    router.push("/filter");
-  };
-
-  // Calculate card height based on window dimensions
-  // Account for header (~56px), tab bar (~80px), safe area (~50px), and padding
-  const cardHeight = height - 220;
+  // Full screen card (tab bar overlays)
+  const cardHeight = height - insets.bottom - 40;
 
   return (
     <View className="flex-1 bg-background">
-      <SafeAreaView
-        style={{
-          flex: 1,
-        }}
-        edges={["top"]}
-      >
-        {/* Header */}
-        <View className="flex-row items-center justify-between px-4 py-2">
-          <Button variant="tertiary" size="sm" isIconOnly>
-            <Heart size={24} color={accentColor} />
-          </Button>
-          <Text className="text-foreground text-xl font-bold">For You</Text>
-          <Button
-            variant="tertiary"
-            size="sm"
-            isIconOnly
-            onPress={handleFilterPress}
-          >
-            <SlidersHorizontal size={20} color={foregroundColor} />
-          </Button>
-        </View>
-
-        {/* Card Stack */}
-        <GestureHandlerRootView
-          style={styles.cardContainer}
-          // height={cardHeight}
-        >
-          {isLoading ? (
-            <View className="flex-1 items-center justify-center px-4">
-              <Skeleton
-                className="rounded-2xl"
-                style={{ width: "100%", height: cardHeight }}
+      {/* Card Stack - Full Screen */}
+      <View style={styles.cardContainer}>
+        {isLoading ? (
+          <ForYouHeroUISkeleton cardHeight={cardHeight} />
+        ) : profiles.length === 0 ? (
+          <View className="flex-1 items-center justify-center px-6">
+            {status === "CanLoadMore" || status === "LoadingMore" ? (
+              <ForYouHeroUISkeleton cardHeight={cardHeight} />
+            ) : (
+              <>
+                <Text className="text-xl font-semibold mb-2">
+                  No more profiles
+                </Text>
+                <Text className="text-center text-muted">
+                  You've seen all available profiles. Check back later for more!
+                </Text>
+              </>
+            )}
+          </View>
+        ) : currentProfile ? (
+          <>
+            {/* Next card (behind) - slightly smaller and offset */}
+            {nextProfile && (
+              <ProfileSwipeCard
+                key={nextProfile._id}
+                profile={nextProfile}
+                onSwipeLeft={() => {}}
+                onSwipeRight={() => {}}
+                onPress={() => {}}
+                isFirst={false}
+                cardHeight={cardHeight}
+                isAuthenticated={isAuthenticated}
+                bottomUiHeight={bottomUiHeight}
               />
-            </View>
-          ) : currentIndex >= profiles.length ? (
-            <View className="flex-1 items-center justify-center px-6">
-              <Text className="text-xl font-semibold mb-2">
-                No more profiles
-              </Text>
-              <Text className="text-center mb-6">
-                You've seen all available profiles. Adjust your filters or check
-                back later!
-              </Text>
-              <Button onPress={handleFilterPress}>
-                <Button.Label>Adjust Filters</Button.Label>
-              </Button>
-            </View>
-          ) : (
-            <>
-              {/* Next card (behind) - slightly smaller and offset */}
-              {nextProfile && (
-                <ProfileSwipeCard
-                  key={nextProfile._id}
-                  profile={nextProfile}
-                  onSwipeLeft={() => {}}
-                  onSwipeRight={() => {}}
-                  onPress={() => {}}
-                  isFirst={false}
-                  cardHeight={cardHeight}
-                  isAuthenticated={isAuthenticated}
-                />
-              )}
-              {/* Current card (front) */}
-              {currentProfile && (
-                <ProfileSwipeCard
-                  key={currentProfile._id}
-                  profile={currentProfile}
-                  onSwipeLeft={handleSwipeLeft}
-                  onSwipeRight={handleSwipeRight}
-                  onPress={handleCardPress}
-                  onAuthRequired={navigateToLogin}
-                  isFirst={true}
-                  cardHeight={cardHeight}
-                  isAuthenticated={isAuthenticated}
-                />
-              )}
-            </>
-          )}
-        </GestureHandlerRootView>
-      </SafeAreaView>
+            )}
+            {/* Current card (front) */}
+            {currentProfile && (
+              <ProfileSwipeCard
+                key={currentProfile._id}
+                profile={currentProfile}
+                onSwipeLeft={handleSwipeLeft}
+                onSwipeRight={handleSwipeRight}
+                onPress={handleCardPress}
+                onAuthRequired={navigateToLogin}
+                dragX={dragX}
+                bottomUiHeight={bottomUiHeight}
+                isFirst={true}
+                cardHeight={cardHeight}
+                isAuthenticated={isAuthenticated}
+              />
+            )}
+          </>
+        ) : (
+          <ForYouHeroUISkeleton cardHeight={cardHeight} />
+        )}
+      </View>
+
+      {/* Fixed Action Buttons */}
+      {currentProfile && !isLoading && (
+        <View
+          style={[
+            styles.actionButtonsContainer,
+            { bottom: actionButtonsBottom },
+          ]}
+        >
+          <Animated.View style={skipButtonStyle}>
+            <Pressable
+              disabled={isLoading}
+              onPress={handleSkipPress}
+              style={[styles.actionButton, styles.skipButton]}
+            >
+              <X size={32} color="white" />
+            </Pressable>
+          </Animated.View>
+
+          <Animated.View style={likeButtonStyle}>
+            <Pressable
+              disabled={isLoading}
+              onPress={handleLikePress}
+              style={[styles.actionButton, styles.likeButton]}
+            >
+              <Heart size={32} color="white" fill="white" />
+            </Pressable>
+          </Animated.View>
+        </View>
+      )}
+
+      {/* Match Modal */}
+      <MatchModal
+        visible={showMatchModal}
+        profile={matchedProfile}
+        onClose={handleMatchClose}
+        onSkipForNow={handleSkipForNow}
+        onStartChatting={handleStartChatting}
+        isLoading={loadingChatting}
+      />
     </View>
   );
 }
@@ -151,7 +326,59 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "flex-start",
-    paddingHorizontal: 16,
-    paddingTop: 8,
+  },
+  heroSkeletonStatusPillWrap: {
+    position: "absolute",
+    top: 20,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 1,
+  },
+  heroSkeletonContentWrap: {
+    position: "absolute",
+    left: 24,
+    right: 24,
+    bottom: 160,
+  },
+  heroSkeletonChipRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 10,
+  },
+  heroSkeletonButtonsRow: {
+    position: "absolute",
+    left: 24,
+    right: 24,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  actionButtonsContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    zIndex: 10,
+  },
+  actionButton: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 18,
+    elevation: 12,
+  },
+  skipButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+  },
+  likeButton: {
+    backgroundColor: "#ec4899",
   },
 });

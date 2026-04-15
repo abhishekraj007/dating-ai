@@ -7,7 +7,6 @@ export default function AuthLayout() {
         name="index"
         options={{
           headerShown: false,
-          presentation: "modal",
         }}
       />
     </Stack>

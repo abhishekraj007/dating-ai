@@ -14,6 +14,7 @@ import { useCreateAIProfile } from "@/hooks/dating";
 import { PhotoUploadSlot } from "@/components/dating";
 import { useThemeColor } from "heroui-native";
 import { Text } from "@/components";
+import { useTranslation } from "@/hooks/use-translation";
 
 const AGES = Array.from({ length: 43 }, (_, i) => i + 18); // 18-60
 const GENDERS = ["female", "male"] as const;
@@ -34,6 +35,7 @@ const ZODIAC_SIGNS = [
 
 export default function CreateCharacterScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const foregroundColor = useThemeColor("foreground");
   const mutedColor = useThemeColor("muted");
   const { createProfile } = useCreateAIProfile();
@@ -67,15 +69,15 @@ export default function CreateCharacterScreen() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert("Error", "Please enter a name for your character");
+      Alert.alert(t("alerts.error"), t("createCharacter.errorMissingName"));
       return;
     }
     if (!gender) {
-      Alert.alert("Error", "Please select a gender");
+      Alert.alert(t("alerts.error"), t("createCharacter.errorMissingGender"));
       return;
     }
     if (!avatarImageKey) {
-      Alert.alert("Error", "Please upload a main photo");
+      Alert.alert(t("alerts.error"), t("createCharacter.errorMissingPhoto"));
       return;
     }
 
@@ -120,7 +122,7 @@ export default function CreateCharacterScreen() {
             <X size={24} color={foregroundColor} />
           </Button>
           <Text className="text-foreground text-lg font-semibold">
-            Create New AI Character
+            {t("createCharacter.title")}
           </Text>
           <View style={{ width: 40 }} />
         </View>
@@ -136,21 +138,20 @@ export default function CreateCharacterScreen() {
               onPress={() => {
                 // TODO: Implement image picker
                 Alert.alert(
-                  "Coming Soon",
-                  "Image upload will be implemented with R2 integration"
+                  t("common.comingSoon"),
+                  t("createCharacter.imageUploadSoon"),
                 );
               }}
             >
               <Camera size={48} color={mutedColor} />
               <Text className="text-foreground font-medium mt-2">
-                Upload a photo
+                {t("createCharacter.uploadPhoto")}
               </Text>
               <Text className="text-muted text-xs text-center mt-1 px-8">
-                This will be the main photo of your AI character. Give your best
-                photo!
+                {t("createCharacter.uploadPhotoDescription")}
               </Text>
               <Text className="text-muted text-xs mt-1">
-                (Supported format: jpg, png, & gif)
+                {t("createCharacter.supportedFormats")}
               </Text>
             </Pressable>
           </View>
@@ -158,9 +159,9 @@ export default function CreateCharacterScreen() {
           {/* Form fields */}
           <View className="gap-4">
             <TextField>
-              <TextField.Label>Name</TextField.Label>
+              <TextField.Label>{t("createCharacter.name")}</TextField.Label>
               <TextField.Input
-                placeholder="Enter Name"
+                placeholder={t("createCharacter.namePlaceholder")}
                 value={name}
                 onChangeText={setName}
               />
@@ -168,13 +169,17 @@ export default function CreateCharacterScreen() {
 
             {/* Age Picker */}
             <View>
-              <Text className="text-foreground font-medium mb-2">Age</Text>
+              <Text className="text-foreground font-medium mb-2">
+                {t("createCharacter.age")}
+              </Text>
               <Pressable
                 className="flex-row items-center justify-between bg-surface rounded-lg px-4 py-3 border border-border"
                 onPress={() => setShowAgePicker(!showAgePicker)}
               >
                 <Text className={age ? "text-foreground" : "text-muted"}>
-                  {age ? `${age} years old` : "Select Age"}
+                  {age
+                    ? t("createCharacter.ageValue", { age })
+                    : t("createCharacter.selectAge")}
                 </Text>
                 <ChevronDown size={20} color={mutedColor} />
               </Pressable>
@@ -201,7 +206,9 @@ export default function CreateCharacterScreen() {
 
             {/* Gender Picker */}
             <View>
-              <Text className="text-foreground font-medium mb-2">Gender</Text>
+              <Text className="text-foreground font-medium mb-2">
+                {t("createCharacter.gender")}
+              </Text>
               <Pressable
                 className="flex-row items-center justify-between bg-surface rounded-lg px-4 py-3 border border-border"
                 onPress={() => setShowGenderPicker(!showGenderPicker)}
@@ -211,7 +218,7 @@ export default function CreateCharacterScreen() {
                     gender ? "text-foreground capitalize" : "text-muted"
                   }
                 >
-                  {gender ? gender : "Select Gender"}
+                  {gender ? gender : t("createCharacter.selectGender")}
                 </Text>
                 <ChevronDown size={20} color={mutedColor} />
               </Pressable>
@@ -235,13 +242,15 @@ export default function CreateCharacterScreen() {
 
             {/* Zodiac Picker */}
             <View>
-              <Text className="text-foreground font-medium mb-2">Zodiac</Text>
+              <Text className="text-foreground font-medium mb-2">
+                {t("createCharacter.zodiac")}
+              </Text>
               <Pressable
                 className="flex-row items-center justify-between bg-surface rounded-lg px-4 py-3 border border-border"
                 onPress={() => setShowZodiacPicker(!showZodiacPicker)}
               >
                 <Text className={zodiacSign ? "text-foreground" : "text-muted"}>
-                  {zodiacSign || "Select Zodiac"}
+                  {zodiacSign || t("createCharacter.selectZodiac")}
                 </Text>
                 <ChevronDown size={20} color={mutedColor} />
               </Pressable>
@@ -267,18 +276,18 @@ export default function CreateCharacterScreen() {
             </View>
 
             <TextField>
-              <TextField.Label>Occupation</TextField.Label>
+              <TextField.Label>{t("createCharacter.occupation")}</TextField.Label>
               <TextField.Input
-                placeholder="e.g. Designer, Model, Traveler, etc."
+                placeholder={t("createCharacter.occupationPlaceholder")}
                 value={occupation}
                 onChangeText={setOccupation}
               />
             </TextField>
 
             <TextField>
-              <TextField.Label>About me</TextField.Label>
+              <TextField.Label>{t("createCharacter.aboutMe")}</TextField.Label>
               <TextField.Input
-                placeholder="Add important information about your AI character, such as introduction, background, interests, lifestyle, etc."
+                placeholder={t("createCharacter.aboutMePlaceholder")}
                 value={bio}
                 onChangeText={setBio}
                 multiline
@@ -290,7 +299,7 @@ export default function CreateCharacterScreen() {
             {/* Interests */}
             <View>
               <Text className="text-foreground font-medium mb-2">
-                Interests
+                {t("createCharacter.interests")}
               </Text>
               <View className="flex-row flex-wrap gap-2 mb-2">
                 {interests.map((interest) => (
@@ -303,7 +312,7 @@ export default function CreateCharacterScreen() {
                 <View className="flex-1">
                   <TextField>
                     <TextField.Input
-                      placeholder="Add interest"
+                      placeholder={t("createCharacter.addInterest")}
                       value={newInterest}
                       onChangeText={setNewInterest}
                       onSubmitEditing={handleAddInterest}
@@ -323,7 +332,9 @@ export default function CreateCharacterScreen() {
 
             {/* Additional Photos */}
             <View>
-              <Text className="text-foreground font-medium mb-2">Photos</Text>
+              <Text className="text-foreground font-medium mb-2">
+                {t("createCharacter.photos")}
+              </Text>
               <View className="flex-row flex-wrap gap-2">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <View key={i} className="w-[48%]">
@@ -331,8 +342,8 @@ export default function CreateCharacterScreen() {
                       imageUrl={profileImageKeys[i]}
                       onPress={() => {
                         Alert.alert(
-                          "Coming Soon",
-                          "Image upload will be implemented"
+                          t("common.comingSoon"),
+                          t("createCharacter.imageUploadSoon"),
                         );
                       }}
                     />
@@ -343,17 +354,23 @@ export default function CreateCharacterScreen() {
 
             {/* Language and Voice */}
             <Pressable className="flex-row items-center justify-between py-3 border-b border-border">
-              <Text className="text-foreground font-medium">Language</Text>
+              <Text className="text-foreground font-medium">
+                {t("common.language")}
+              </Text>
               <View className="flex-row items-center">
-                <Text className="text-muted mr-2">English</Text>
+                <Text className="text-muted mr-2">{t("language.english")}</Text>
                 <ChevronRight size={20} color={mutedColor} />
               </View>
             </Pressable>
 
             <Pressable className="flex-row items-center justify-between py-3 border-b border-border">
-              <Text className="text-foreground font-medium">Voice</Text>
+              <Text className="text-foreground font-medium">
+                {t("createCharacter.voice")}
+              </Text>
               <View className="flex-row items-center">
-                <Text className="text-muted mr-2">Default</Text>
+                <Text className="text-muted mr-2">
+                  {t("common.default")}
+                </Text>
                 <ChevronRight size={20} color={mutedColor} />
               </View>
             </Pressable>
@@ -369,14 +386,16 @@ export default function CreateCharacterScreen() {
             className="flex-1"
             onPress={() => router.back()}
           >
-            <Button.Label>Cancel</Button.Label>
+            <Button.Label>{t("alerts.cancel")}</Button.Label>
           </Button>
           <Button
             className="flex-1"
             onPress={handleSave}
             isDisabled={isSaving || !name.trim() || !gender}
           >
-            <Button.Label>{isSaving ? "Saving..." : "Save"}</Button.Label>
+            <Button.Label>
+              {isSaving ? t("common.saving") : t("common.save")}
+            </Button.Label>
           </Button>
         </View>
       </SafeAreaView>

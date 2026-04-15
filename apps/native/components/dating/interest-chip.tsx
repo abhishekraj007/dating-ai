@@ -1,33 +1,5 @@
-import { View, Text } from "react-native";
 import { Chip } from "heroui-native";
-import {
-  Plane,
-  Film,
-  Music,
-  Camera,
-  Shirt,
-  Book,
-  Utensils,
-  Dumbbell,
-  Gamepad2,
-  Palette,
-  Heart,
-} from "lucide-react-native";
-
-// Map interest names to icons
-const interestIcons: Record<string, typeof Plane> = {
-  travel: Plane,
-  movies: Film,
-  music: Music,
-  photography: Camera,
-  fashion: Shirt,
-  reading: Book,
-  cooking: Utensils,
-  fitness: Dumbbell,
-  gaming: Gamepad2,
-  art: Palette,
-  default: Heart,
-};
+import { getChipTone, type ChipToneVariant } from "@/utils";
 
 // Map interest names to emojis (fallback)
 const interestEmojis: Record<string, string> = {
@@ -47,23 +19,34 @@ interface InterestChipProps {
   interest: string;
   showIcon?: boolean;
   onRemove?: () => void;
+  colorSeed?: string | number;
+  toneVariant?: ChipToneVariant;
 }
 
 export const InterestChip = ({
   interest,
   showIcon = true,
-  onRemove,
+  colorSeed,
+  toneVariant = "solid",
 }: InterestChipProps) => {
   const normalizedInterest = interest.toLowerCase();
   const emoji = interestEmojis[normalizedInterest] || "";
+  const tone = getChipTone(colorSeed ?? normalizedInterest, toneVariant);
 
   return (
-    <Chip variant="secondary" size="sm">
-      <Chip.Label>
+    <Chip
+      variant="secondary"
+      size="sm"
+      style={{
+        backgroundColor: tone.backgroundColor,
+        borderColor: tone.borderColor,
+        borderWidth: 0.5,
+      }}
+    >
+      <Chip.Label style={{ color: tone.textColor }}>
         {showIcon && emoji && `${emoji} `}
         {interest}
       </Chip.Label>
     </Chip>
   );
 };
-

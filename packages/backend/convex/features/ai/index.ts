@@ -27,6 +27,7 @@ export {
 export {
   startConversation,
   sendMessage,
+  retryFailedResponse,
   deleteMessage,
   createAIProfile,
   updateAIProfile,
@@ -40,3 +41,12 @@ export {
 // Seed functions
 export { seedAIProfiles, triggerSeed } from "./seed";
 export { triggerGenZSeed, getGenZProfileCount } from "./seed_genz";
+export {
+  adminGenerateSystemProfile,
+  adminRetryProfileGeneration,
+  enqueueCronProfileGeneration,
+  cleanupOldProfileGenerationJobsInternal,
+  getProfileGenerationJobs,
+  getProfileGenerationOptions,
+} from "./profileGeneration";
+export { runSystemProfileGeneration } from "./profileGenerationActions";

@@ -2,6 +2,7 @@ import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
 import { Camera, X } from "lucide-react-native";
 import { Button, useThemeColor } from "heroui-native";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface PhotoUploadSlotProps {
   imageUrl?: string | null;
@@ -20,6 +21,7 @@ export const PhotoUploadSlot = ({
   isMain = false,
   placeholder = "Upload photos",
 }: PhotoUploadSlotProps) => {
+  const { t } = useTranslation();
   const mutedColor = useThemeColor("muted");
 
   if (isLoading) {
@@ -55,7 +57,7 @@ export const PhotoUploadSlot = ({
         )}
         {isMain && (
           <View className="absolute bottom-1 left-1 bg-pink-500 px-2 py-0.5 rounded-full">
-            <Text className="text-white text-xs">Main</Text>
+            <Text className="text-white text-xs">{t("common.main")}</Text>
           </View>
         )}
       </View>
@@ -69,7 +71,9 @@ export const PhotoUploadSlot = ({
     >
       <Camera size={24} color={mutedColor} />
       <Text className="text-muted text-xs mt-1 text-center px-2">
-        {placeholder}
+        {placeholder === "Upload photos"
+          ? t("createCharacter.uploadPhotos")
+          : placeholder}
       </Text>
     </Pressable>
   );

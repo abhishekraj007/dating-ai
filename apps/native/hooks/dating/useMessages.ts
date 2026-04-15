@@ -1,10 +1,13 @@
 import { useMutation } from "convex/react";
 import { api } from "@dating-ai/backend";
-import { useMemo, useCallback, useEffect } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { useUIMessages } from "@convex-dev/agent/react";
 
 const PAGE_SIZE = 20;
+
+// Store for optimistic messages per thread (triggers re-render via useState)
+type OptimisticMessage = ProcessedMessage & { isOptimistic: true };
 
 interface ProcessedMessage {
   _id: string;
@@ -28,13 +31,43 @@ function updateCache(threadId: string, messages: ProcessedMessage[]): void {
   messagesCache.set(threadId, messages);
 }
 
+function getStructuredMessagePayload(value: string): string | null {
+  try {
+    const parsed = JSON.parse(value);
+
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      typeof parsed.type !== "string"
+    ) {
+      return null;
+    }
+
+    if (
+      parsed.type === "quiz_question" ||
+      parsed.type === "quiz_start" ||
+      parsed.type === "quiz_end" ||
+      parsed.type === "quiz_answer_result" ||
+      parsed.type === "image_request" ||
+      parsed.type === "image_response" ||
+      parsed.type === "chat_error"
+    ) {
+      return JSON.stringify(parsed);
+    }
+  } catch {
+    // Not valid JSON, treat as plain text.
+  }
+
+  return null;
+}
+
 /**
  * Extract all structured tool outputs from message parts.
  * Returns an array since a single message can have multiple tool calls.
- * Also extracts structured content from text parts (like image_response).
+ * Also extracts structured content from text parts.
  */
 function extractToolOutputs(msg: any): string[] {
-  const outputs: string[] = [];
+  const outputs = new Set<string>();
 
   if (msg.parts && Array.isArray(msg.parts)) {
     for (const part of msg.parts) {
@@ -45,41 +78,54 @@ function extractToolOutputs(msg: any): string[] {
         part.state === "output-available"
       ) {
         try {
-          const parsed = JSON.parse(part.output);
-          // If it's a structured type we care about, add it
-          if (
-            parsed.type === "quiz_question" ||
-            parsed.type === "quiz_start" ||
-            parsed.type === "quiz_end" ||
-            parsed.type === "quiz_answer_result" ||
-            parsed.type === "image_request" ||
-            parsed.type === "image_response"
-          ) {
-            outputs.push(part.output);
+          const payload = getStructuredMessagePayload(part.output);
+          if (payload) {
+            outputs.add(payload);
           }
         } catch {
           // Not valid JSON, skip
         }
       }
 
-      // Also check text parts for structured content (like image_response)
-      // These are added as separate messages by the image generation action
+      // Also check text parts for structured content.
       if (part.type === "text" && part.text && part.state === "done") {
-        try {
-          const parsed = JSON.parse(part.text);
-          // Only extract image_response from text parts
-          // (other structured types come from tool outputs)
-          if (parsed.type === "image_response") {
-            outputs.push(part.text);
-          }
-        } catch {
-          // Not valid JSON, skip (most text parts are plain text)
+        const payload = getStructuredMessagePayload(part.text);
+        if (payload) {
+          outputs.add(payload);
         }
       }
     }
   }
 
-  return outputs;
+  return Array.from(outputs);
+}
+
+function extractMessageText(msg: any): string {
+  if (msg.parts && Array.isArray(msg.parts)) {
+    const textFromParts = msg.parts
+      .filter(
+        (part: any) =>
+          part.type === "text" &&
+          typeof part.text === "string" &&
+          part.text.trim() !== "" &&
+          getStructuredMessagePayload(part.text) === null,
+      )
+      .map((part: any) => part.text)
+      .join(" ")
+      .trim();
+
+    if (textFromParts) {
+      return textFromParts;
+    }
+  }
+
+  return typeof msg.text === "string" ? msg.text : "";
+}
+
+function hasVisibleAssistantContent(msg: any): boolean {
+  return (
+    extractToolOutputs(msg).length > 0 || extractMessageText(msg).trim() !== ""
+  );
 }
 
 /**
@@ -88,6 +134,7 @@ function extractToolOutputs(msg: any): string[] {
  */
 function processMessage(msg: any, index: number): ProcessedMessage[] {
   const baseId = msg._id || msg.id || msg.key || `msg-${index}`;
+  const messageText = extractMessageText(msg);
 
   // For user messages, just use text
   if (msg.role === "user") {
@@ -96,7 +143,7 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
         _id: baseId,
         _creationTime: msg._creationTime,
         role: msg.role,
-        content: msg.text || "",
+        content: messageText,
         order: msg.order,
         isStreaming: false,
       },
@@ -124,11 +171,40 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
       _id: baseId,
       _creationTime: msg._creationTime,
       role: msg.role,
-      content: msg.text || "",
+      content: messageText,
       order: msg.order,
       isStreaming: msg.status === "streaming",
     },
   ];
+}
+
+// Global state for optimistic messages - shared across hook instances
+let optimisticMessagesMap: Map<string, ProcessedMessage[]> = new Map();
+let optimisticListeners: Map<string, Set<() => void>> = new Map();
+
+function addOptimisticMessage(threadId: string, message: ProcessedMessage) {
+  const current = optimisticMessagesMap.get(threadId) ?? [];
+  optimisticMessagesMap.set(threadId, [...current, message]);
+  // Notify listeners
+  optimisticListeners.get(threadId)?.forEach((cb) => cb());
+}
+
+function clearOptimisticMessages(threadId: string) {
+  optimisticMessagesMap.set(threadId, []);
+  optimisticListeners.get(threadId)?.forEach((cb) => cb());
+}
+
+function removeOptimisticMessage(threadId: string, messageId: string) {
+  const current = optimisticMessagesMap.get(threadId) ?? [];
+  optimisticMessagesMap.set(
+    threadId,
+    current.filter((message) => message._id !== messageId),
+  );
+  optimisticListeners.get(threadId)?.forEach((cb) => cb());
+}
+
+function getOptimisticMessages(threadId: string): ProcessedMessage[] {
+  return optimisticMessagesMap.get(threadId) ?? [];
 }
 
 /**
@@ -139,12 +215,28 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
  * @param threadId - The thread ID from the conversation
  */
 export function useMessages(threadId: string | undefined) {
+  // Local state to trigger re-renders when optimistic messages change
+  const [optimisticVersion, setOptimisticVersion] = useState(0);
+
+  // Subscribe to optimistic message changes for this thread
+  useEffect(() => {
+    if (!threadId) return;
+    const listener = () => setOptimisticVersion((v) => v + 1);
+    if (!optimisticListeners.has(threadId)) {
+      optimisticListeners.set(threadId, new Set());
+    }
+    optimisticListeners.get(threadId)!.add(listener);
+    return () => {
+      optimisticListeners.get(threadId)?.delete(listener);
+    };
+  }, [threadId]);
+
   // Use the useUIMessages hook from @convex-dev/agent/react
   // This handles pagination internally and accumulates pages
   const { results, status, loadMore } = useUIMessages(
     api.features.ai.queries.listThreadMessages,
     threadId ? { threadId } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: PAGE_SIZE, stream: true },
   );
 
   // Get cached messages for this thread (computed once per threadId change)
@@ -154,11 +246,21 @@ export function useMessages(threadId: string | undefined) {
   }, [threadId]);
 
   // Process all accumulated messages from the query
-  const processedMessages = useMemo(() => {
-    if (!results || results.length === 0) return [];
+  const { processedMessages, hasStreamingMessage } = useMemo(() => {
+    if (!results || results.length === 0) {
+      return { processedMessages: [], hasStreamingMessage: false };
+    }
 
     const allMessages: ProcessedMessage[] = [];
+
     results.forEach((msg: any, index: number) => {
+      const hasVisibleContent =
+        msg.role !== "assistant" || hasVisibleAssistantContent(msg);
+
+      if (msg.role === "assistant" && !hasVisibleContent) {
+        return;
+      }
+
       const processed = processMessage(msg, index);
       allMessages.push(...processed);
     });
@@ -166,49 +268,88 @@ export function useMessages(threadId: string | undefined) {
     // Sort by order to ensure correct sequence
     allMessages.sort((a, b) => a.order - b.order);
 
-    return allMessages;
+    const lastRawMessage = results[results.length - 1];
+    const hasStreamingTail =
+      lastRawMessage?.role === "assistant" &&
+      (lastRawMessage.status === "streaming" ||
+        lastRawMessage.status === "pending") &&
+      !hasVisibleAssistantContent(lastRawMessage);
+
+    return {
+      processedMessages: allMessages,
+      hasStreamingMessage: hasStreamingTail,
+    };
   }, [results]);
 
-  // Merge fresh messages with cached messages
-  // This ensures we don't lose older messages when returning to the screen
+  // Get optimistic messages for this thread
+  const optimisticMessages = useMemo(() => {
+    if (!threadId) return [];
+    return getOptimisticMessages(threadId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threadId, optimisticVersion]);
+
+  // Clear optimistic messages when real messages arrive with matching content
+  useEffect(() => {
+    if (!threadId || processedMessages.length === 0) return;
+    const optimistic = getOptimisticMessages(threadId);
+    if (optimistic.length === 0) return;
+
+    // Check if any optimistic message content now exists in real messages
+    const realContents = new Set(
+      processedMessages.filter((m) => m.role === "user").map((m) => m.content),
+    );
+    const hasMatchingReal = optimistic.some((o) => realContents.has(o.content));
+
+    if (hasMatchingReal) {
+      clearOptimisticMessages(threadId);
+    }
+  }, [threadId, processedMessages]);
+
+  // Merge fresh messages with cached messages and optimistic messages
   const messages = useMemo(() => {
     if (!threadId) return [];
 
+    // Start with base messages
+    let baseMessages: ProcessedMessage[] = [];
+
     // If still loading first page, show cached messages
     if (status === "LoadingFirstPage") {
-      return cachedMessages;
+      baseMessages = cachedMessages;
+    } else if (processedMessages.length === 0) {
+      baseMessages = cachedMessages;
+    } else if (cachedMessages.length <= processedMessages.length) {
+      baseMessages = processedMessages;
+    } else {
+      // Merge cache with fresh
+      const oldestFreshOrder = Math.min(
+        ...processedMessages.map((m) => m.order),
+      );
+      const olderFromCache = cachedMessages.filter(
+        (m) => m.order < oldestFreshOrder,
+      );
+      baseMessages = [...olderFromCache, ...processedMessages];
     }
 
-    // If no fresh messages yet, return cache
-    if (processedMessages.length === 0) {
-      return cachedMessages;
-    }
-
-    // If cache is empty or smaller, just use fresh messages
-    if (cachedMessages.length <= processedMessages.length) {
-      return processedMessages;
-    }
-
-    // IMPORTANT: Cache has MORE messages than current query results
-    // This happens when user loaded older messages, left, and came back
-    // We need to merge: use fresh data for recent messages, cache for older ones
-
-    // Find the oldest message in fresh data
-    const oldestFreshOrder = Math.min(...processedMessages.map((m) => m.order));
-
-    // Get older messages from cache that aren't in fresh data
-    const olderFromCache = cachedMessages.filter(
-      (m) => m.order < oldestFreshOrder
+    // Filter out optimistic messages whose content already exists in real messages
+    // This prevents a transient double-count (real + optimistic) that causes scroll jitter
+    const realUserContents = new Set(
+      baseMessages.filter((m) => m.role === "user").map((m) => m.content),
+    );
+    const activeOptimistic = optimisticMessages.filter(
+      (o) => !realUserContents.has(o.content),
     );
 
-    // Combine: older cached messages + fresh messages
-    const merged = [...olderFromCache, ...processedMessages];
+    const allMessages = [...baseMessages, ...activeOptimistic];
 
     // Sort by order
-    merged.sort((a, b) => a.order - b.order);
+    allMessages.sort((a, b) => a.order - b.order);
 
-    return merged;
-  }, [threadId, processedMessages, status, cachedMessages]);
+    // Final filter: remove any assistant messages with empty content
+    // This catches edge cases from cache or merged results
+    return allMessages.filter(
+      (m) => m.role === "user" || (m.content && m.content.trim() !== ""),
+    );
+  }, [threadId, processedMessages, status, cachedMessages, optimisticMessages]);
 
   // Update cache whenever we have messages to cache
   // This happens after messages are computed to include merged results
@@ -241,23 +382,75 @@ export function useMessages(threadId: string | undefined) {
     isLoadingMore: status === "LoadingMore",
     hasMore: status === "CanLoadMore",
     loadMore: handleLoadMore,
+    isAITyping: hasStreamingMessage,
   };
 }
 
 export function useSendMessage() {
   const sendMessage = useMutation(api.features.ai.mutations.sendMessage);
+  const retryFailedResponse = useMutation(
+    api.features.ai.mutations.retryFailedResponse,
+  );
+  const stopResponseMutation = useMutation(
+    api.features.ai.mutations.stopResponse,
+  );
 
-  return { sendMessage };
+  // Enhanced send with local optimistic update for instant feedback
+  const sendMessageWithOptimistic = (
+    args: { conversationId: Id<"aiConversations">; content: string },
+    threadId?: string,
+  ) => {
+    // Add optimistic message immediately for instant UI feedback
+    if (threadId) {
+      const cachedMessages = getCachedMessages(threadId) ?? [];
+      const maxOrder =
+        cachedMessages.length > 0
+          ? Math.max(...cachedMessages.map((m) => m.order)) + 1
+          : 0;
+
+      const optimisticMessage: ProcessedMessage = {
+        _id: `optimistic-${Date.now()}`,
+        _creationTime: Date.now(),
+        role: "user",
+        content: args.content,
+        order: maxOrder + 0.5, // Use .5 to ensure it sorts after real messages with same order
+        isStreaming: false,
+      };
+
+      // Add to optimistic messages (triggers re-render via listener)
+      addOptimisticMessage(threadId, optimisticMessage);
+
+      return sendMessage(args).catch((error) => {
+        removeOptimisticMessage(threadId, optimisticMessage._id);
+        throw error;
+      });
+    }
+
+    return sendMessage(args);
+  };
+
+  const retryMessage = (args: {
+    conversationId: Id<"aiConversations">;
+    promptMessageId: string;
+  }) => {
+    return retryFailedResponse(args);
+  };
+
+  const stopResponse = (args: { conversationId: Id<"aiConversations"> }) => {
+    return stopResponseMutation(args);
+  };
+
+  return { sendMessage, sendMessageWithOptimistic, retryMessage, stopResponse };
 }
 
 export function useDeleteMessage() {
   const deleteMessageMutation = useMutation(
-    api.features.ai.mutations.deleteMessage
+    api.features.ai.mutations.deleteMessage,
   );
 
   const deleteMessage = async (
     conversationId: string,
-    messageOrder: number
+    messageOrder: number,
   ) => {
     return await deleteMessageMutation({
       conversationId: conversationId as Id<"aiConversations">,

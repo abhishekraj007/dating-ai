@@ -1,8 +1,8 @@
-import { View, ScrollView, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Text } from "@/components/ui/text";
-import { useThemeColor } from "heroui-native";
+import { BottomSheet, useThemeColor } from "heroui-native";
 import { CustomBottomSheet } from "@/components/bottom-sheet";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Plane,
   Palette,
@@ -18,8 +18,6 @@ import {
   Dumbbell,
   type LucideIcon,
 } from "lucide-react-native";
-import type BottomSheet from "@gorhom/bottom-sheet";
-import { forwardRef } from "react";
 
 // Conversation topic categories
 export const CONVERSATION_TOPICS = [
@@ -104,18 +102,22 @@ interface TopicItemProps {
   icon: LucideIcon;
   label: string;
   onPress: () => void;
+  isLast?: boolean;
 }
 
-function TopicItem({ icon: Icon, label, onPress }: TopicItemProps) {
+function TopicItem({ icon: Icon, label, onPress, isLast }: TopicItemProps) {
   const accentColor = useThemeColor("accent");
-  const foregroundColor = useThemeColor("foreground");
   const borderColor = useThemeColor("border");
 
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-center gap-3 py-4 border-b active:opacity-70"
-      style={{ borderBottomColor: borderColor }}
+      className="flex-row items-center gap-3 py-4  active:opacity-70"
+      style={
+        isLast
+          ? undefined
+          : { borderBottomWidth: 1, borderBottomColor: borderColor }
+      }
     >
       <Icon size={20} color={accentColor} />
       <Text className="flex-1 text-foreground">{label}</Text>
@@ -129,47 +131,45 @@ interface TopicsSheetProps {
   onSelectTopic: (topic: (typeof CONVERSATION_TOPICS)[number]) => void;
 }
 
-export const TopicsSheet = forwardRef<BottomSheet, TopicsSheetProps>(
-  ({ isOpen, onClose, onSelectTopic }, ref) => {
-    const insets = useSafeAreaInsets();
+export function TopicsSheet({
+  isOpen,
+  onClose,
+  onSelectTopic,
+}: TopicsSheetProps) {
+  const handleSelectTopic = (topic: (typeof CONVERSATION_TOPICS)[number]) => {
+    onSelectTopic(topic);
+    onClose();
+  };
 
-    const handleSelectTopic = (topic: (typeof CONVERSATION_TOPICS)[number]) => {
-      onSelectTopic(topic);
-      onClose();
-    };
-
-    return (
-      <CustomBottomSheet
-        ref={ref}
-        isOpen={isOpen}
-        onClose={onClose}
-        snapPoints={["70%"]}
+  return (
+    <CustomBottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      snapPoints={["70%"]}
+      scrollBehavior="scrollable"
+    >
+      <View className="px-4 pt-5">
+        <BottomSheet.Title className="text-center mb-4">
+          Topics
+        </BottomSheet.Title>
+      </View>
+      <BottomSheetScrollView
+        // style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 48, paddingBottom: 16 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
       >
-        <View className="flex-1 px-4">
-          <Text className="text-lg font-semibold text-foreground text-center mb-4">
-            Topic
-          </Text>
-
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingBottom: Math.max(insets.bottom, 32) + 100,
-              flex: 1,
-            }}
-          >
-            {CONVERSATION_TOPICS.map((topic) => (
-              <TopicItem
-                key={topic.id}
-                icon={topic.icon}
-                label={topic.label}
-                onPress={() => handleSelectTopic(topic)}
-              />
-            ))}
-          </ScrollView>
-        </View>
-      </CustomBottomSheet>
-    );
-  }
-);
-
-TopicsSheet.displayName = "TopicsSheet";
+        {CONVERSATION_TOPICS.map((topic, index) => (
+          <TopicItem
+            key={topic.id}
+            icon={topic.icon}
+            label={topic.label}
+            onPress={() => handleSelectTopic(topic)}
+            isLast={index === CONVERSATION_TOPICS.length - 1}
+          />
+        ))}
+      </BottomSheetScrollView>
+    </CustomBottomSheet>
+  );
+}

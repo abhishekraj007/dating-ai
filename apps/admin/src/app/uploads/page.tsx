@@ -14,6 +14,10 @@ import {
 import { ProtectedRoute } from "@/components/protected-route";
 import { Upload, Loader2, Trash2, Image as ImageIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PageShell } from "@/components/admin/page-shell";
+import { PageHeader } from "@/components/admin/page-header";
+import { EmptyState } from "@/components/admin/empty-state";
+import { StatChip } from "@/components/admin/stat-chip";
 
 export default function UploadsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -95,12 +99,16 @@ export default function UploadsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="container mx-auto p-4 md:p-8 max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">File Uploads</h1>
-          <p className="text-muted-foreground">
-            Upload and manage your files with Cloudflare R2
-          </p>
+      <PageShell className="max-w-[1400px]">
+        <PageHeader
+          title="Uploads"
+          subtitle="Upload and manage files in Cloudflare R2."
+        />
+        <div className="mb-4 flex flex-wrap gap-2">
+          <StatChip label="total files" value={uploads?.length ?? 0} variant="outline" />
+          {selectedFile ? (
+            <StatChip label="selected" value={selectedFile.name} />
+          ) : null}
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -168,8 +176,11 @@ export default function UploadsPage() {
                   </div>
                 ) : uploads.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <ImageIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No files uploaded yet</p>
+                    <EmptyState
+                      title="No uploads yet"
+                      description="Upload files to start using assets in your admin workflows."
+                      icon={<ImageIcon className="mx-auto h-10 w-10 opacity-60" />}
+                    />
                   </div>
                 ) : (
                   <ScrollArea className="h-[600px]">
@@ -233,7 +244,7 @@ export default function UploadsPage() {
             </Card>
           </div>
         </div>
-      </div>
+      </PageShell>
     </ProtectedRoute>
   );
 }

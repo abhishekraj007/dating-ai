@@ -5,6 +5,7 @@ import { paginationOptsValidator } from "convex/server";
 import { listUIMessages, syncStreams, vStreamArgs } from "@convex-dev/agent";
 import { r2 } from "../../uploads";
 import { authComponent } from "../../lib/betterAuth";
+import { buildAiProfileAvatarUrl } from "../../lib/aiProfileAvatar";
 
 /**
  * Get all active AI profiles with optional gender filter.
@@ -16,8 +17,14 @@ export const getProfiles = query({
     gender: v.optional(v.union(v.literal("female"), v.literal("male"))),
     limit: v.optional(v.number()),
     excludeExistingConversations: v.optional(v.boolean()),
+    platform: v.optional(
+      v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
+    ),
   },
-  handler: async (ctx, { gender, limit, excludeExistingConversations }) => {
+  handler: async (
+    ctx,
+    { gender, limit, excludeExistingConversations, platform },
+  ) => {
     let profilesQuery = ctx.db
       .query("aiProfiles")
       .withIndex("by_status_and_gender", (q) => {
@@ -27,7 +34,7 @@ export const getProfiles = query({
         return q.eq("status", "active");
       });
 
-    let profiles = await profilesQuery.take(limit ?? 50);
+    let profiles = await profilesQuery.order("desc").take(limit ?? 50);
 
     // Optionally filter out profiles the user already has conversations with
     if (excludeExistingConversations) {
@@ -40,27 +47,35 @@ export const getProfiles = query({
           .collect();
 
         const conversationProfileIds = new Set(
-          conversations.map((c) => c.aiProfileId.toString())
+          conversations.map((c) => c.aiProfileId.toString()),
         );
 
         // Filter out profiles that already have conversations
         profiles = profiles.filter(
-          (p) => !conversationProfileIds.has(p._id.toString())
+          (p) => !conversationProfileIds.has(p._id.toString()),
         );
       }
     }
 
+    const visibleProfiles = profiles.filter((profile) => {
+      if (!platform) return true;
+      // Backward compatibility: if unset, assume visible everywhere.
+      if (!profile.visibleOn || profile.visibleOn.length === 0) return true;
+      return profile.visibleOn.includes(platform);
+    });
+
     // Generate signed URLs for avatars
     return Promise.all(
-      profiles.map(async (profile) => {
-        const avatarUrl = profile.avatarImageKey
-          ? await r2.getUrl(profile.avatarImageKey)
-          : null;
+      visibleProfiles.map(async (profile) => {
+        const avatarUrl = buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        );
         return {
           ...profile,
           avatarUrl,
         };
-      })
+      }),
     );
   },
 });
@@ -79,9 +94,10 @@ export const getProfile = query({
     }
 
     // Get signed URLs for all images
-    const avatarUrl = profile.avatarImageKey
-      ? await r2.getUrl(profile.avatarImageKey)
-      : null;
+    const avatarUrl = buildAiProfileAvatarUrl(
+      profile._id,
+      profile.avatarImageKey,
+    );
 
     const profileImageUrls = profile.profileImageKeys
       ? await Promise.all(profile.profileImageKeys.map((key) => r2.getUrl(key)))
@@ -124,14 +140,15 @@ export const getUserCreatedProfiles = query({
     // Generate signed URLs
     return Promise.all(
       profiles.map(async (profile) => {
-        const avatarUrl = profile.avatarImageKey
-          ? await r2.getUrl(profile.avatarImageKey)
-          : null;
+        const avatarUrl = buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        );
         return {
           ...profile,
           avatarUrl,
         };
-      })
+      }),
     );
   },
 });
@@ -159,9 +176,10 @@ export const getUserConversations = query({
         const profile = await ctx.db.get(conv.aiProfileId);
         if (!profile) return null;
 
-        const avatarUrl = profile.avatarImageKey
-          ? await r2.getUrl(profile.avatarImageKey)
-          : null;
+        const avatarUrl = buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        );
 
         // Get last message from agent thread
         const messagesResult = await ctx.runQuery(
@@ -170,7 +188,7 @@ export const getUserConversations = query({
             threadId: conv.threadId,
             order: "desc",
             paginationOpts: { numItems: 1, cursor: null },
-          }
+          },
         );
 
         const lastMessage = messagesResult.page[0];
@@ -190,7 +208,7 @@ export const getUserConversations = query({
               }
             : null,
         };
-      })
+      }),
     ).then((results) => results.filter(Boolean));
   },
 });
@@ -218,9 +236,10 @@ export const getConversation = query({
       return null;
     }
 
-    const avatarUrl = profile.avatarImageKey
-      ? await r2.getUrl(profile.avatarImageKey)
-      : null;
+    const avatarUrl = buildAiProfileAvatarUrl(
+      profile._id,
+      profile.avatarImageKey,
+    );
 
     return {
       ...conversation,
@@ -248,7 +267,7 @@ export const getConversationByProfile = query({
     const conversation = await ctx.db
       .query("aiConversations")
       .withIndex("by_user_and_profile", (q) =>
-        q.eq("userId", user._id).eq("aiProfileId", aiProfileId)
+        q.eq("userId", user._id).eq("aiProfileId", aiProfileId),
       )
       .first();
 
@@ -323,7 +342,7 @@ export const listThreadMessages = query({
         page: [],
         continueCursor: "",
         isDone: true,
-        streams: { deltas: [], cursors: {} },
+        streams: { kind: "deltas" as const, deltas: [], cursors: {} },
       };
     }
 
@@ -349,24 +368,84 @@ export const listThreadMessages = query({
  * Returns profiles with signed image URLs.
  */
 export const getSystemProfiles = query({
-  args: {},
-  handler: async (ctx) => {
-    // Get all profiles that are not user-created
-    const profiles = await ctx.db.query("aiProfiles").collect();
+  args: {
+    search: v.optional(v.string()),
+    statusFilter: v.optional(
+      v.union(v.literal("active"), v.literal("pending"), v.literal("archived")),
+    ),
+    recentOnly: v.optional(v.boolean()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
 
-    // Filter to only system profiles (not user-created)
-    const systemProfiles = profiles.filter((p) => !p.isUserCreated);
+    const userProfile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
+      .unique();
+
+    if (!userProfile?.isAdmin) {
+      throw new Error("Admin access required");
+    }
+
+    const limit = Math.max(1, Math.min(args.limit ?? 80, 200));
+    const search = args.search?.trim().toLowerCase();
+    const hasSearch = Boolean(search);
+    const recentCutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const scanLimit = Math.max(limit * (hasSearch ? 8 : 2), 160);
+
+    const profiles = args.statusFilter
+      ? await ctx.db
+          .query("aiProfiles")
+          .withIndex("by_system_status_created_at", (q) =>
+            q.eq("isUserCreated", false).eq("status", args.statusFilter!),
+          )
+          .order("desc")
+          .take(scanLimit)
+      : await ctx.db
+          .query("aiProfiles")
+          .withIndex("by_system_created_at", (q) =>
+            q.eq("isUserCreated", false),
+          )
+          .order("desc")
+          .take(scanLimit);
+
+    const filteredProfiles = profiles.filter((profile) => {
+      if (args.recentOnly) {
+        const createdAt = profile.createdAt ?? profile._creationTime;
+        if (createdAt < recentCutoff) return false;
+      }
+
+      if (!hasSearch) return true;
+
+      const haystack = [
+        profile.name,
+        profile.occupation ?? "",
+        profile.bio ?? "",
+        ...(profile.interests ?? []),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(search!);
+    });
+
+    const systemProfiles = filteredProfiles.slice(0, limit);
 
     // Generate signed URLs for avatars and gallery images
     return Promise.all(
       systemProfiles.map(async (profile) => {
-        const avatarUrl = profile.avatarImageKey
-          ? await r2.getUrl(profile.avatarImageKey)
-          : null;
+        const avatarUrl = buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        );
 
         const profileImageUrls = profile.profileImageKeys
           ? await Promise.all(
-              profile.profileImageKeys.map((key) => r2.getUrl(key))
+              profile.profileImageKeys.map((key) => r2.getUrl(key)),
             )
           : [];
 
@@ -375,7 +454,38 @@ export const getSystemProfiles = query({
           avatarUrl,
           profileImageUrls,
         };
-      })
+      }),
     );
+  },
+});
+
+/**
+ * Get a fresh signed URL for a chat image using its permanent imageKey.
+ * Used when displaying images in chat to avoid expired URL issues.
+ */
+export const getChatImageUrl = query({
+  args: {
+    imageKey: v.string(),
+  },
+  handler: async (ctx, { imageKey }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      return null;
+    }
+
+    // Verify the imageKey belongs to this user's chat images
+    // imageKey format: chatImages/{userId}/{profileId}/{requestId}.jpg
+    const keyParts = imageKey.split("/");
+    if (keyParts[0] !== "chatImages" || keyParts.length < 4) {
+      return null; // Invalid key format
+    }
+
+    // Generate fresh signed URL
+    try {
+      const signedUrl = await r2.getUrl(imageKey);
+      return signedUrl;
+    } catch {
+      return null;
+    }
   },
 });

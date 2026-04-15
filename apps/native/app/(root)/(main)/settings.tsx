@@ -2,7 +2,7 @@ import { api, useConvexAuth, useQuery } from "@dating-ai/backend";
 import {
   Button,
   Card,
-  Divider,
+  Separator,
   Spinner,
   Surface,
   Switch,
@@ -26,6 +26,7 @@ import {
 } from "lucide-react-native";
 import { router } from "expo-router";
 import { useNotificationSettings } from "@/hooks/useNotificationSettings";
+import { useTranslation } from "@/hooks/use-translation";
 
 type ThemeOption = {
   id: string;
@@ -83,6 +84,7 @@ const availableThemes: ThemeOption[] = [
 ];
 
 export default function SettingsRoute() {
+  const { t } = useTranslation();
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const userData = useQuery(api.user.fetchUserAndProfile);
   const { currentTheme, toggleTheme, isLight, isDark, setTheme } =
@@ -95,6 +97,7 @@ export default function SettingsRoute() {
     isEnabled: notificationsEnabled,
     isRequesting,
     enableNotifications,
+    disableNotifications,
   } = useNotificationSettings();
 
   const getCurrentThemeId = () => {
@@ -111,23 +114,20 @@ export default function SettingsRoute() {
   };
 
   const handleNotificationToggle = async (enabled: boolean) => {
-    if (enabled) {
-      try {
+    try {
+      if (enabled) {
         await enableNotifications();
-        Alert.alert("Success", "Notifications enabled successfully!");
-      } catch (error) {
-        Alert.alert(
-          "Error",
-          error instanceof Error
-            ? error.message
-            : "Failed to enable notifications"
-        );
+        Alert.alert(t("alerts.success"), t("notifications.permissionsGranted"));
+        return;
       }
-    } else {
+
+      await disableNotifications();
+    } catch (error) {
       Alert.alert(
-        "Disable Notifications",
-        "To disable notifications, please go to your device settings.",
-        [{ text: "OK" }]
+        t("alerts.error"),
+        error instanceof Error
+          ? error.message
+          : t("notifications.requestFailed"),
       );
     }
   };
@@ -153,9 +153,12 @@ export default function SettingsRoute() {
         onError: (ctx) => {
           setIsDeletingUser(false);
           console.error(ctx.error);
-          Alert.alert("Error", ctx.error.message || "Failed to delete user");
+          Alert.alert(
+            t("alerts.error"),
+            ctx.error.message || t("account.actions.delete"),
+          );
         },
-      }
+      },
     );
   };
 
@@ -175,14 +178,16 @@ export default function SettingsRoute() {
       >
         {/* User Profile Section */}
         <Surface className="p-5 gap-4">
-          <Text className="text-xl font-semibold text-foreground">Profile</Text>
-          <Divider />
+          <Text className="text-xl font-semibold text-foreground">
+            {t("nav.profile")}
+          </Text>
+          <Separator />
 
           <View className="gap-3">
             <View className="flex-row items-center gap-3">
               <User size={18} color={muted} />
               <Text className="text-base text-muted flex-1">
-                {userData.profile?.name || "No name set"}
+                {userData.profile?.name || t("account.profile.noName")}
               </Text>
             </View>
 
@@ -196,7 +201,7 @@ export default function SettingsRoute() {
             <View className="flex-row items-center gap-3">
               <Calendar size={18} color={muted} />
               <Text className="text-sm text-muted flex-1">
-                Joined{" "}
+                {t("settings.joined")}{" "}
                 {new Date(userData.userMetadata.createdAt).toLocaleDateString()}
               </Text>
             </View>
@@ -208,14 +213,16 @@ export default function SettingsRoute() {
           <View className="flex-row items-center gap-2">
             <Palette size={20} color={foreground} />
             <Text className="text-xl font-semibold text-foreground">
-              Appearance
+              {t("account.item.appearance")}
             </Text>
           </View>
-          <Divider />
+          <Separator />
 
           {/* Theme Mode Toggle */}
           <View className="gap-2">
-            <Text className="text-sm font-medium text-muted">Theme Mode</Text>
+            <Text className="text-sm font-medium text-muted">
+              {t("settings.themeMode")}
+            </Text>
             <View className="flex-row gap-3">
               <Button
                 variant="primary"
@@ -233,7 +240,9 @@ export default function SettingsRoute() {
                   </Animated.View>
                 )}
                 <Text className="text-white text-base font-medium">
-                  {currentTheme === "light" ? "Light" : "Dark"}
+                  {currentTheme === "light"
+                    ? t("appearance.light")
+                    : t("appearance.dark")}
                 </Text>
               </Button>
             </View>
@@ -241,7 +250,9 @@ export default function SettingsRoute() {
 
           {/* Theme Selection */}
           <View className="gap-2">
-            <Text className="text-sm font-medium text-muted">Color Theme</Text>
+            <Text className="text-sm font-medium text-muted">
+              {t("settings.colorTheme")}
+            </Text>
             <View className="px-5 py-8 bg-overlay">
               <View className="flex-row justify-around">
                 {availableThemes.map((theme) => (
@@ -262,18 +273,18 @@ export default function SettingsRoute() {
           <View className="flex-row items-center gap-2">
             <Bell size={20} color={foreground} />
             <Text className="text-xl font-semibold text-foreground">
-              Notifications
+              {t("nav.notifications")}
             </Text>
           </View>
-          <Divider />
+          <Separator />
 
           <View className="flex-row items-center justify-between">
             <View className="flex-1 gap-1">
               <Text className="text-base text-foreground font-medium">
-                Push Notifications
+                {t("notifications.statusTitle")}
               </Text>
               <Text className="text-sm text-muted">
-                Receive notifications about important updates
+                {t("settings.notificationsDescription")}
               </Text>
             </View>
             <Switch
@@ -288,40 +299,39 @@ export default function SettingsRoute() {
 
         {/* Danger Zone */}
         <Surface className="p-5 gap-4">
-          <Text className="text-xl font-semibold text-danger">Danger Zone</Text>
-          <Divider />
+          <Text className="text-xl font-semibold text-danger">
+            {t("account.actions.dangerTitle")}
+          </Text>
+          <Separator />
 
           <View className="gap-3">
             <Text className="text-sm text-muted">
-              Once you delete your account, there is no going back. Please be
-              certain.
+              {t("account.actions.dangerDescription")}
             </Text>
 
             <Button
-              variant="destructive"
+              variant="danger"
               size="md"
               isDisabled={isDeletingUser}
               onPress={() => {
-                Alert.alert(
-                  "Delete Account",
-                  "Are you sure you want to permanently delete your account? This action cannot be undone.",
-                  [
-                    {
-                      text: "Cancel",
-                      style: "cancel",
-                    },
-                    {
-                      text: "Delete",
-                      style: "destructive",
-                      onPress: handleDeleteUser,
-                    },
-                  ]
-                );
+                Alert.alert(t("alerts.deleteTitle"), t("alerts.deleteBody"), [
+                  {
+                    text: t("alerts.cancel"),
+                    style: "cancel",
+                  },
+                  {
+                    text: t("alerts.delete"),
+                    style: "destructive",
+                    onPress: handleDeleteUser,
+                  },
+                ]);
               }}
             >
               <Trash size={18} color={textDanger} />
               <Text className="text-danger-foreground font-medium">
-                {isDeletingUser ? "Deleting..." : "Delete Account"}
+                {isDeletingUser
+                  ? t("account.actions.deleting")
+                  : t("account.actions.delete")}
               </Text>
               {isDeletingUser && <Spinner size="sm" />}
             </Button>
@@ -333,6 +343,7 @@ export default function SettingsRoute() {
 }
 
 const SignOutButton = () => {
+  const { t } = useTranslation();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
@@ -348,10 +359,13 @@ const SignOutButton = () => {
         },
         onError: (ctx) => {
           console.error(ctx.error);
-          Alert.alert("Error", ctx.error.message || "Failed to sign out");
+          Alert.alert(
+            t("alerts.error"),
+            ctx.error.message || t("signIn.failed"),
+          );
           setIsSigningOut(false);
         },
-      }
+      },
     );
 
     console.log(data, error);
@@ -363,13 +377,13 @@ const SignOutButton = () => {
       variant="tertiary"
       isDisabled={isSigningOut}
       onPress={() => {
-        Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+        Alert.alert(t("alerts.signOutTitle"), t("alerts.signOutBody"), [
           {
-            text: "Cancel",
+            text: t("alerts.cancel"),
             style: "cancel",
           },
           {
-            text: "Sign Out",
+            text: t("account.actions.signOut"),
             onPress: async () => {
               await handleSignOut();
             },
@@ -378,7 +392,7 @@ const SignOutButton = () => {
       }}
     >
       {/* <Text className="text-foreground"> */}
-      Sign Out
+      {t("account.actions.signOut")}
       {/* </Text> */}
     </Button>
   );

@@ -9,16 +9,25 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as crons from "../crons.js";
 import type * as features_ai_actions from "../features/ai/actions.js";
 import type * as features_ai_agent from "../features/ai/agent.js";
 import type * as features_ai_genz_profiles_data from "../features/ai/genz_profiles_data.js";
 import type * as features_ai_genz_profiles_male from "../features/ai/genz_profiles_male.js";
+import type * as features_ai_imageGeneration from "../features/ai/imageGeneration.js";
 import type * as features_ai_index from "../features/ai/index.js";
 import type * as features_ai_internalQueries from "../features/ai/internalQueries.js";
 import type * as features_ai_mutations from "../features/ai/mutations.js";
+import type * as features_ai_profileGeneration from "../features/ai/profileGeneration.js";
+import type * as features_ai_profileGenerationActions from "../features/ai/profileGenerationActions.js";
 import type * as features_ai_queries from "../features/ai/queries.js";
 import type * as features_ai_seed from "../features/ai/seed.js";
 import type * as features_ai_seed_genz from "../features/ai/seed_genz.js";
+import type * as features_appConfig_guards from "../features/appConfig/guards.js";
+import type * as features_appConfig_index from "../features/appConfig/index.js";
+import type * as features_appConfig_mutations from "../features/appConfig/mutations.js";
+import type * as features_appConfig_queries from "../features/appConfig/queries.js";
+import type * as features_appConfig_shared from "../features/appConfig/shared.js";
 import type * as features_credits_index from "../features/credits/index.js";
 import type * as features_credits_mutations from "../features/credits/mutations.js";
 import type * as features_credits_queries from "../features/credits/queries.js";
@@ -35,6 +44,7 @@ import type * as features_subscriptions_mutations from "../features/subscription
 import type * as features_subscriptions_queries from "../features/subscriptions/queries.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
+import type * as lib_aiProfileAvatar from "../lib/aiProfileAvatar.js";
 import type * as lib_betterAuth_component from "../lib/betterAuth/component.js";
 import type * as lib_betterAuth_createAuth from "../lib/betterAuth/createAuth.js";
 import type * as lib_betterAuth_index from "../lib/betterAuth/index.js";
@@ -57,16 +67,25 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  crons: typeof crons;
   "features/ai/actions": typeof features_ai_actions;
   "features/ai/agent": typeof features_ai_agent;
   "features/ai/genz_profiles_data": typeof features_ai_genz_profiles_data;
   "features/ai/genz_profiles_male": typeof features_ai_genz_profiles_male;
+  "features/ai/imageGeneration": typeof features_ai_imageGeneration;
   "features/ai/index": typeof features_ai_index;
   "features/ai/internalQueries": typeof features_ai_internalQueries;
   "features/ai/mutations": typeof features_ai_mutations;
+  "features/ai/profileGeneration": typeof features_ai_profileGeneration;
+  "features/ai/profileGenerationActions": typeof features_ai_profileGenerationActions;
   "features/ai/queries": typeof features_ai_queries;
   "features/ai/seed": typeof features_ai_seed;
   "features/ai/seed_genz": typeof features_ai_seed_genz;
+  "features/appConfig/guards": typeof features_appConfig_guards;
+  "features/appConfig/index": typeof features_appConfig_index;
+  "features/appConfig/mutations": typeof features_appConfig_mutations;
+  "features/appConfig/queries": typeof features_appConfig_queries;
+  "features/appConfig/shared": typeof features_appConfig_shared;
   "features/credits/index": typeof features_credits_index;
   "features/credits/mutations": typeof features_credits_mutations;
   "features/credits/queries": typeof features_credits_queries;
@@ -83,6 +102,7 @@ declare const fullApi: ApiFromModules<{
   "features/subscriptions/queries": typeof features_subscriptions_queries;
   healthCheck: typeof healthCheck;
   http: typeof http;
+  "lib/aiProfileAvatar": typeof lib_aiProfileAvatar;
   "lib/betterAuth/component": typeof lib_betterAuth_component;
   "lib/betterAuth/createAuth": typeof lib_betterAuth_createAuth;
   "lib/betterAuth/index": typeof lib_betterAuth_index;

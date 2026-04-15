@@ -4,11 +4,13 @@ export { QuizQuestionBubble } from "./QuizQuestionBubble";
 export { QuizResultBubble } from "./QuizResultBubble";
 export { QuizStartBubble } from "./QuizStartBubble";
 export { ImageRequestBubble, ImageResponseBubble } from "./ImageBubble";
+export { ChatErrorBubble } from "./ChatErrorBubble";
 export {
   AITextBubble,
   UserTextBubble,
   UserImageRequestBubble,
 } from "./TextBubble";
+export { TypingIndicator } from "./TypingIndicator";
 
 // Types and utilities
 export * from "./message-types";

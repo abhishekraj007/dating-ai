@@ -112,17 +112,12 @@ function validateUserId(userIdString: string): string {
  * Main webhook handler
  */
 export const handleRevenueCatWebhook = httpAction(async (ctx, request) => {
-  console.log(
-    "[REVENUECAT WEBHOOK] Received webhook",
-    JSON.stringify(request.headers, null, 2),
-  );
-
   try {
     // Verify webhook signature (optional but recommended)
     const authHeader = request.headers.get("Authorization");
     const expectedAuth = process.env.REVENUECAT_WEBHOOK_SECRET;
 
-    if (expectedAuth && authHeader !== `Bearer ${expectedAuth}`) {
+    if (expectedAuth && authHeader !== expectedAuth) {
       console.error("[REVENUECAT WEBHOOK] Invalid authorization");
       return new Response("Unauthorized", { status: 401 });
     }
