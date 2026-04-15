@@ -14,6 +14,7 @@ import type * as features_ai_actions from "../features/ai/actions.js";
 import type * as features_ai_agent from "../features/ai/agent.js";
 import type * as features_ai_genz_profiles_data from "../features/ai/genz_profiles_data.js";
 import type * as features_ai_genz_profiles_male from "../features/ai/genz_profiles_male.js";
+import type * as features_ai_imageGeneration from "../features/ai/imageGeneration.js";
 import type * as features_ai_index from "../features/ai/index.js";
 import type * as features_ai_internalQueries from "../features/ai/internalQueries.js";
 import type * as features_ai_mutations from "../features/ai/mutations.js";
@@ -71,6 +72,7 @@ declare const fullApi: ApiFromModules<{
   "features/ai/agent": typeof features_ai_agent;
   "features/ai/genz_profiles_data": typeof features_ai_genz_profiles_data;
   "features/ai/genz_profiles_male": typeof features_ai_genz_profiles_male;
+  "features/ai/imageGeneration": typeof features_ai_imageGeneration;
   "features/ai/index": typeof features_ai_index;
   "features/ai/internalQueries": typeof features_ai_internalQueries;
   "features/ai/mutations": typeof features_ai_mutations;

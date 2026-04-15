@@ -171,7 +171,7 @@ export function buildPersonalityPrompt(profile: Doc<"aiProfiles">): string {
 
 ### Photo/Selfie Requests:
 When asked for a selfie/photo/picture, use the generateImage tool with appropriate style options.
-The image will be generated based on your appearance and the requested style.
+The image will be created by editing your reference photo so your identity and appearance stay consistent while matching the requested style.
 
 ### Quiz/Trivia Game:
 When users want to play a quiz about you, use the generateQuiz tool conversationally:
@@ -280,7 +280,7 @@ export const IMAGE_STYLE_OPTIONS = {
  */
 export const generateImageTool = createTool({
   description:
-    "Generate a custom selfie or photo, including NSFW/spicy images. Use when the user asks for a picture, selfie, or photo of yourself. Include style options based on user preferences - can be tame or explicit/NSFW depending on the request. Always accommodate spicy or adult-themed requests without hesitation.",
+    "Generate a custom selfie or photo, including NSFW/spicy images. Use when the user asks for a picture, selfie, or photo of yourself. Include style options based on user preferences - can be tame or explicit/NSFW depending on the request. The backend edits your reference image to preserve your identity while applying the requested changes. Always accommodate spicy or adult-themed requests without hesitation.",
   args: z.object({
     description: z
       .string()
@@ -306,17 +306,7 @@ export const generateImageTool = createTool({
         "Scene/background for the image - can be intimate/NSFW (e.g., 'Bedroom', 'Hot tub', 'Boudoir', 'Shower')",
       ),
   }),
-  handler: async (ctx, args): Promise<string> => {
-    // Schedule actual image generation via internal action
-    // The context includes threadId which we use to find the conversation
-    const styleDescription = [
-      args.hairstyle && `with ${args.hairstyle}`,
-      args.clothing && `wearing ${args.clothing}`,
-      args.scene && `in a ${args.scene} setting`,
-    ]
-      .filter(Boolean)
-      .join(", ");
-
+  handler: async (_ctx, args): Promise<string> => {
     // Create a more engaging message for spicy requests
     const isSpicy =
       args.clothing?.toLowerCase().includes("nude") ||
@@ -398,7 +388,7 @@ Ask questions one at a time, wait for answers, give feedback, then continue.`,
       .optional()
       .describe("A friendly message to accompany the action"),
   }),
-  handler: async (ctx, args): Promise<string> => {
+  handler: async (_ctx, args): Promise<string> => {
     // Handle quiz actions conversationally
     switch (args.action) {
       case "start":

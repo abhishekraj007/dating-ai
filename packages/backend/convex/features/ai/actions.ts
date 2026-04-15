@@ -5,30 +5,12 @@ import { internalAction } from "../../_generated/server";
 import { internal, components } from "../../_generated/api";
 import { createAIProfileAgent } from "./agent";
 import { r2 } from "../../uploads";
-import Replicate from "replicate";
 import { saveMessage } from "@convex-dev/agent";
-
-// Initialize Replicate client
-const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
-});
+import { generateImageWithFallback } from "./imageGeneration";
 
 // Check if we're in development mode based on Convex deployment URL
 // Dev deployments typically have animal-based names like "cheery-akita"
 const isDev = process.env.CONVEX_CLOUD_URL?.includes("cheery-akita") ?? false;
-
-/**
- * Image generation result type
- */
-type ImageGenerationResult =
-  | {
-      success: true;
-      imageUrl: string;
-    }
-  | {
-      success: false;
-      error: string;
-    };
 
 type ChatErrorCode = "rate_limited" | "generation_failed";
 
@@ -143,118 +125,6 @@ async function saveRetryableChatErrorMessage(
     },
     agentName: args.agentName,
   });
-}
-
-/**
- * Generate image using placeholder service (for development).
- * Returns a random image - fast and free for testing.
- */
-async function generateImageDev(): Promise<ImageGenerationResult> {
-  try {
-    // Use picsum.photos - reliable placeholder image service
-    // Generate a random ID to get different images each time
-    const randomId = Math.floor(Math.random() * 1000);
-    const width = 512;
-    const height = 768; // Portrait aspect ratio
-
-    // Get image info first to get the actual download URL
-    const infoResponse = await fetch(
-      `https://picsum.photos/id/${randomId}/info`,
-    );
-
-    if (!infoResponse.ok) {
-      // If specific ID fails, use random endpoint
-      const imageUrl = `https://picsum.photos/${width}/${height}?random=${Date.now()}`;
-      console.log("[Dev] Generated image URL (random):", imageUrl);
-      return { success: true, imageUrl };
-    }
-
-    const info = await infoResponse.json();
-    const imageUrl = `https://picsum.photos/id/${info.id}/${width}/${height}`;
-    console.log("[Dev] Generated image URL:", imageUrl);
-
-    return { success: true, imageUrl };
-  } catch (error) {
-    console.error("[Dev] Image generation failed:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}
-
-/**
- * Generate image using Replicate's Flux model (for production).
- * Uses the profile's avatar as reference for character consistency.
- */
-async function generateImageProd(
-  prompt: string,
-  referenceImageUrl: string | null,
-): Promise<ImageGenerationResult> {
-  try {
-    // Build input parameters for Flux
-    const fluxInput: Record<string, unknown> = {
-      prompt,
-      go_fast: true,
-      guidance: 3.5,
-      num_outputs: 1,
-      aspect_ratio: "9:16", // Portrait aspect ratio for selfies
-      output_format: "webp",
-      output_quality: 90,
-      num_inference_steps: 28,
-    };
-
-    // Add reference image if available for character consistency
-    if (referenceImageUrl) {
-      fluxInput.image = referenceImageUrl;
-      fluxInput.prompt_strength = 0.75;
-    } else {
-      fluxInput.prompt_strength = 0.8;
-    }
-
-    console.log("[Prod] Generating image with Replicate Flux");
-
-    const output = await replicate.run("black-forest-labs/flux-dev", {
-      input: fluxInput,
-    });
-
-    console.log(
-      "[Prod] Replicate output type:",
-      typeof output,
-      Array.isArray(output) ? "array" : "not array",
-    );
-
-    // Extract URL from FileOutput object
-    const fileOutput = Array.isArray(output) ? output[0] : output;
-
-    let imageUrl: string;
-    if (
-      fileOutput &&
-      typeof fileOutput === "object" &&
-      "url" in fileOutput &&
-      typeof fileOutput.url === "function"
-    ) {
-      const urlResult = fileOutput.url();
-      imageUrl = urlResult.toString();
-    } else if (typeof fileOutput === "string") {
-      imageUrl = fileOutput;
-    } else {
-      throw new Error(`Unexpected output format: ${typeof fileOutput}`);
-    }
-
-    if (!imageUrl) {
-      throw new Error("No image URL returned from Replicate");
-    }
-
-    console.log("[Prod] Generated image URL:", imageUrl);
-    return { success: true, imageUrl };
-  } catch (error) {
-    console.error("[Prod] Image generation failed:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
 }
 
 /**
@@ -515,7 +385,7 @@ function buildImagePrompt(
     : "";
 
   const qualityTags =
-    "high quality, natural lighting, iPhone selfie style, casual pose, authentic, candid";
+    "preserve the same identity and facial features as the reference image, high quality, natural lighting, iPhone selfie style, casual pose, authentic, candid";
 
   return `${baseDescription}${styleDescription ? `, ${styleDescription}` : ""}${additionalContext}. ${qualityTags}`;
 }
@@ -525,13 +395,6 @@ function buildImagePrompt(
  * Used as reference image for consistent character generation.
  */
 async function getProfileAvatarUrl(
-  ctx: {
-    runQuery: typeof internal.features.ai.internalQueries.getProfileInternal extends (
-      ...args: infer A
-    ) => infer R
-      ? (...args: A) => R
-      : never;
-  },
   avatarImageKey: string | undefined,
 ): Promise<string | null> {
   if (!avatarImageKey || avatarImageKey === "default-avatar") {
@@ -606,42 +469,38 @@ export const generateChatImage = internalAction({
     try {
       console.log("Generating image, isDev:", isDev);
 
-      let imageResult: ImageGenerationResult;
+      const prompt = buildImagePrompt(
+        {
+          name: profile.name,
+          gender: profile.gender,
+          age: profile.age,
+        },
+        request.styleOptions ?? {},
+      );
 
-      if (isDev) {
-        // Use Nekos API for development (fast and free)
-        imageResult = await generateImageDev();
-      } else {
-        // Use Replicate Flux for production
-        const prompt = buildImagePrompt(
-          {
-            name: profile.name,
-            gender: profile.gender,
-            age: profile.age,
-          },
-          request.styleOptions ?? {},
-        );
+      console.log("Generating image with prompt:", prompt);
 
-        console.log("Generating image with prompt:", prompt);
+      const referenceImageUrl = await getProfileAvatarUrl(
+        profile.avatarImageKey,
+      );
 
-        // Get the profile's avatar URL as reference image for consistency
-        let referenceImageUrl: string | null = null;
-        if (profile.avatarImageKey) {
-          referenceImageUrl = await r2.getUrl(profile.avatarImageKey);
-          console.log(
-            "Using reference image:",
-            referenceImageUrl ? "yes" : "no",
-          );
-        }
+      console.log("Using reference image:", referenceImageUrl ? "yes" : "no");
 
-        imageResult = await generateImageProd(prompt, referenceImageUrl);
-      }
+      const imageResult = await generateImageWithFallback({
+        prompt,
+        aspectRatio: "9:16",
+        referenceImageUrls: referenceImageUrl ? [referenceImageUrl] : [],
+        isDev,
+        devWidth: 512,
+        devHeight: 768,
+      });
 
       if (!imageResult.success) {
         throw new Error(imageResult.error);
       }
 
       const imageUrl = imageResult.imageUrl;
+      console.log("Image generated with model:", imageResult.model);
       console.log("Image URL:", imageUrl);
 
       // Download the image and upload to R2

@@ -2,11 +2,11 @@
 
 import { v } from "convex/values";
 import { internalAction } from "../../_generated/server";
-import Replicate from "replicate";
 import { r2 } from "../../uploads";
 import { z } from "zod";
 import { generateText, Output } from "ai";
 import { createGateway } from "@ai-sdk/gateway";
+import { generateImageWithFallback } from "./imageGeneration";
 
 type Gender = "female" | "male";
 type GenerationFailureCode =
@@ -171,10 +171,6 @@ const MBTI_TYPES = [
   "INFJ",
   "ESTP",
 ];
-
-const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
-});
 
 const isDev = process.env.CONVEX_CLOUD_URL?.includes("cheery-akita") ?? false;
 const aiGatewayApiKey = process.env.AI_GATEWAY_API_KEY;
@@ -727,90 +723,6 @@ function thresholdForAttempt(attempt: number): number {
   return 0.6;
 }
 
-async function generateImageDev(): Promise<
-  { success: true; imageUrl: string } | { success: false; error: string }
-> {
-  try {
-    const width = 768;
-    const height = 1024;
-    const randomId = Math.floor(Math.random() * 1000);
-    const imageUrl = `https://picsum.photos/id/${randomId}/${width}/${height}`;
-    return { success: true, imageUrl };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}
-
-async function generateImageProd(
-  prompt: string,
-  referenceImageUrl: string | null,
-): Promise<
-  { success: true; imageUrl: string } | { success: false; error: string }
-> {
-  try {
-    const fluxInput: Record<string, unknown> = {
-      prompt,
-      go_fast: true,
-      guidance: 3.5,
-      num_outputs: 1,
-      aspect_ratio: "3:4",
-      output_format: "webp",
-      output_quality: 90,
-      num_inference_steps: 28,
-    };
-
-    if (referenceImageUrl) {
-      fluxInput.image = referenceImageUrl;
-      fluxInput.prompt_strength = 0.72;
-    } else {
-      fluxInput.prompt_strength = 0.8;
-    }
-
-    const output = await replicate.run("black-forest-labs/flux-dev", {
-      input: fluxInput,
-    });
-    const fileOutput = Array.isArray(output) ? output[0] : output;
-
-    let imageUrl = "";
-    if (
-      fileOutput &&
-      typeof fileOutput === "object" &&
-      "url" in fileOutput &&
-      typeof fileOutput.url === "function"
-    ) {
-      imageUrl = String(fileOutput.url());
-    } else if (typeof fileOutput === "string") {
-      imageUrl = fileOutput;
-    }
-
-    if (!imageUrl) {
-      return { success: false, error: "No image URL returned from provider" };
-    }
-
-    return { success: true, imageUrl };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}
-
-async function generateConsistentProfileImage(
-  prompt: string,
-  referenceImageUrl: string | null,
-): Promise<
-  { success: true; imageUrl: string } | { success: false; error: string }
-> {
-  if (isDev) {
-    return generateImageDev();
-  }
-  return generateImageProd(prompt, referenceImageUrl);
-}
-
 function buildAvatarPrompt(candidate: ProfileCandidate): string {
   return `Photorealistic dating app portrait of ${candidate.name}, ${candidate.age} year old ${candidate.gender}, ${candidate.occupation}, natural daylight, shallow depth of field, high detail, realistic skin texture, cinematic portrait`;
 }
@@ -821,9 +733,9 @@ function buildShowcasePrompts(
 ): string[] {
   const [interestA = "coffee", interestB = "music"] = candidate.interests;
   const prompts = [
-    `Photorealistic lifestyle photo of ${candidate.name} enjoying ${interestA.toLowerCase()} at a stylish cafe, natural candid vibe, detailed face`,
-    `Photorealistic full-body portrait of ${candidate.name} on a city street at golden hour, confident expression, modern outfit, detailed face`,
-    `Photorealistic portrait of ${candidate.name} during ${interestB.toLowerCase()}, warm atmosphere, authentic candid moment, detailed face`,
+    `Edit the reference image into a photorealistic lifestyle photo of the same ${candidate.name} enjoying ${interestA.toLowerCase()} at a stylish cafe, natural candid vibe, preserve facial identity and body features`,
+    `Edit the reference image into a photorealistic full-body portrait of the same ${candidate.name} on a city street at golden hour, confident expression, modern outfit, preserve facial identity and body features`,
+    `Edit the reference image into a photorealistic portrait of the same ${candidate.name} during ${interestB.toLowerCase()}, warm atmosphere, authentic candid moment, preserve facial identity and body features`,
   ];
   return shuffle(prompts).slice(0, count);
 }
@@ -903,10 +815,14 @@ async function createAndStoreGeneratedImage(
     generationAttempt <= 2;
     generationAttempt += 1
   ) {
-    const imageResult = await generateConsistentProfileImage(
+    const imageResult = await generateImageWithFallback({
       prompt,
-      referenceImageUrl,
-    );
+      aspectRatio: "3:4",
+      referenceImageUrls: referenceImageUrl ? [referenceImageUrl] : [],
+      isDev,
+      devWidth: 768,
+      devHeight: 1024,
+    });
     if (!imageResult.success) {
       lastError = new GenerationFailureError(
         "image_generation_retry_exhausted",
@@ -975,8 +891,10 @@ function upsertStepModel(
   return next;
 }
 
-function imageGenerationModelName(): string {
-  return isDev ? "picsum.photos (dev)" : "black-forest-labs/flux-dev";
+function imageGenerationModelName(isDev: boolean): string {
+  return isDev
+    ? "picsum.photos (dev)"
+    : "google/nano-banana-2 -> bytedance/seedream-5-lite -> qwen/qwen-image-edit-2511";
 }
 
 export const runSystemProfileGeneration = internalAction({
@@ -1112,7 +1030,7 @@ export const runSystemProfileGeneration = internalAction({
       stepModels = upsertStepModel(
         stepModels,
         "avatar_generation",
-        imageGenerationModelName(),
+        imageGenerationModelName(isDev),
       );
       await updateJobProgress(
         ctx,
@@ -1138,7 +1056,7 @@ export const runSystemProfileGeneration = internalAction({
       stepModels = upsertStepModel(
         stepModels,
         "showcase_generation",
-        imageGenerationModelName(),
+        imageGenerationModelName(isDev),
       );
       await updateJobProgress(
         ctx,
