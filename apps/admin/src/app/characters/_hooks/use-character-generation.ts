@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery, useConvexAuth } from "convex/react";
+import { useAction, useMutation, useQuery, useConvexAuth } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { toast } from "sonner";
 
@@ -20,6 +20,8 @@ type GenerationInput = {
     vibe?: string;
     expression?: string;
   };
+  referenceSubjectDescriptor?: string;
+  referenceImageUrl?: string;
 };
 
 type ProfileGenerationOption = {
@@ -71,7 +73,10 @@ type GenerationJob = {
 
 export function useCharacterGeneration() {
   const { isAuthenticated } = useConvexAuth();
-  const userData = useQuery(api.user.fetchUserAndProfile, isAuthenticated ? {} : "skip");
+  const userData = useQuery(
+    api.user.fetchUserAndProfile,
+    isAuthenticated ? {} : "skip",
+  );
   const isAdmin = userData?.profile?.isAdmin === true;
   const generateProfile = useMutation(
     (api as any).features.ai.profileGeneration.adminGenerateSystemProfile,
@@ -88,7 +93,12 @@ export function useCharacterGeneration() {
     isAuthenticated && isAdmin ? {} : "skip",
   ) as ProfileGenerationOptions | null | undefined;
 
+  const analyzePhotoAction = useAction(
+    (api as any).features.ai.profileGenerationActions.analyzeReferencePhoto,
+  );
+
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isAnalyzingPhoto, setIsAnalyzingPhoto] = useState(false);
 
   const runningCount =
     jobs?.filter(
@@ -116,6 +126,8 @@ export function useCharacterGeneration() {
             ? input.preferredInterests
             : undefined,
         appearanceOverrides: input?.appearanceOverrides,
+        referenceSubjectDescriptor: input?.referenceSubjectDescriptor,
+        referenceImageUrl: input?.referenceImageUrl,
       });
       toast.success("Character generation queued");
     } catch (error) {
@@ -142,8 +154,53 @@ export function useCharacterGeneration() {
     }
   };
 
+  const analyzePhoto = async (file: File) => {
+    if (!isAuthenticated || !isAdmin) {
+      toast.error("Admin access required");
+      return null;
+    }
+
+    const validTypes = ["image/jpeg", "image/png", "image/webp"] as const;
+    if (!validTypes.includes(file.type as any)) {
+      toast.error("Only JPEG, PNG, or WebP images are supported");
+      return null;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be under 10MB");
+      return null;
+    }
+
+    setIsAnalyzingPhoto(true);
+    try {
+      const buffer = await file.arrayBuffer();
+      const base64 = btoa(
+        new Uint8Array(buffer).reduce(
+          (data, byte) => data + String.fromCharCode(byte),
+          "",
+        ),
+      );
+
+      const result = await analyzePhotoAction({
+        imageBase64: base64,
+        mimeType: file.type as "image/jpeg" | "image/png" | "image/webp",
+      });
+
+      toast.success("Photo analyzed — reference data extracted");
+      return result;
+    } catch (error) {
+      toast.error("Failed to analyze reference photo");
+      console.error(error);
+      return null;
+    } finally {
+      setIsAnalyzingPhoto(false);
+    }
+  };
+
   return {
     isGenerating,
+    isAnalyzingPhoto,
+    analyzePhoto,
     triggerGeneration,
     retryGeneration,
     runningCount,

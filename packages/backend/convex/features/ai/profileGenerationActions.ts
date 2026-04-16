@@ -1,12 +1,14 @@
 "use node";
 
 import { v } from "convex/values";
-import { internalAction } from "../../_generated/server";
+import { action, internalAction } from "../../_generated/server";
 import { r2 } from "../../uploads";
 import { z } from "zod";
 import { generateText, Output } from "ai";
 import { createGateway } from "@ai-sdk/gateway";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateImageWithFallback } from "./imageGeneration";
+import { internal, api } from "../../_generated/api";
 import {
   type Gender,
   type AvatarShotStyle,
@@ -312,13 +314,16 @@ function sampleAppearanceProfile(
   overrides?: AppearanceOverrides,
 ): AppearanceProfile {
   const hairColor = overrides?.hairColor || randomItem(HAIR_COLORS);
-  const hairStyle = overrides?.hairStyle ||
+  const hairStyle =
+    overrides?.hairStyle ||
     (gender === "female"
       ? randomItem(HAIR_STYLES_FEMALE)
       : randomItem(HAIR_STYLES_MALE));
-  const build = overrides?.build ||
+  const build =
+    overrides?.build ||
     (gender === "female" ? randomItem(BUILDS_FEMALE) : randomItem(BUILDS_MALE));
-  const outfit = overrides?.outfit ||
+  const outfit =
+    overrides?.outfit ||
     (gender === "female"
       ? randomItem(OUTFIT_STYLES_FEMALE)
       : randomItem(OUTFIT_STYLES_MALE));
@@ -564,7 +569,8 @@ function toCandidateFromBlueprint(
 
   // Prefer LLM-provided location, fall back to archetype-derived one.
   const location =
-    blueprint.location?.trim() || locationForArchetype(appearance.cityArchetype);
+    blueprint.location?.trim() ||
+    locationForArchetype(appearance.cityArchetype);
 
   return {
     name: blueprint.name.trim(),
@@ -1183,6 +1189,8 @@ export const runSystemProfileGeneration = internalAction({
         expression: v.optional(v.string()),
       }),
     ),
+    referenceSubjectDescriptor: v.optional(v.string()),
+    referenceImageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const normalizedPreferences: GenerationPreferences = {
@@ -1234,6 +1242,11 @@ export const runSystemProfileGeneration = internalAction({
         selectedGender,
         args.appearanceOverrides ?? undefined,
       );
+
+      // In reference mode, the LLM-provided descriptor replaces the
+      // computed one, keeping all image prompts visually anchored to
+      // the reference photo's style.
+      const isReferenceMode = Boolean(args.referenceSubjectDescriptor);
 
       const existingProfiles = (await ctx.runQuery(
         "features/ai/profileGeneration:listSystemProfilesInternal" as any,
@@ -1324,15 +1337,18 @@ export const runSystemProfileGeneration = internalAction({
         `Profile blueprint generated in ${attempts} attempt${attempts > 1 ? "s" : ""}. Creating avatar...`,
       );
 
-      const subjectDescriptor = buildCanonicalSubjectDescriptor(
-        candidate,
-        appearance,
-      );
+      const subjectDescriptor = isReferenceMode
+        ? args.referenceSubjectDescriptor!
+        : buildCanonicalSubjectDescriptor(candidate, appearance);
+
+      const avatarPrompt = isReferenceMode
+        ? `Create a different person photo inspired by given reference image, face should be slightly different, Change the outfit color.\n\n${buildAvatarPrompt(candidate, appearance, subjectDescriptor)}`
+        : buildAvatarPrompt(candidate, appearance, subjectDescriptor);
 
       const avatarImageKey = await createAndStoreGeneratedImage(
         ctx,
-        buildAvatarPrompt(candidate, appearance, subjectDescriptor),
-        null,
+        avatarPrompt,
+        isReferenceMode ? (args.referenceImageUrl ?? null) : null,
         `aiProfiles/generated/${jobId}/avatar`,
       );
       completedSteps = [...completedSteps, "avatar_generation"];
@@ -1511,5 +1527,141 @@ export const runSystemProfileGeneration = internalAction({
       );
       return { success: false, jobId };
     }
+  },
+});
+
+/**
+ * Analyze a reference photo using a vision model.
+ * Returns a subject descriptor for image generation (the consistency anchor
+ * reused across avatar + showcase prompts) and suggested profile fields.
+ * The descriptor describes a NEW character inspired by the photo's style —
+ * similar look but a subtly different face.
+ */
+export const analyzeReferencePhoto = action({
+  args: {
+    imageBase64: v.string(),
+    mimeType: v.union(
+      v.literal("image/jpeg"),
+      v.literal("image/png"),
+      v.literal("image/webp"),
+    ),
+  },
+  returns: v.object({
+    subjectDescriptor: v.string(),
+    suggestedGender: v.union(v.literal("female"), v.literal("male")),
+    suggestedAge: v.number(),
+    suggestedOccupation: v.optional(v.string()),
+    suggestedVibe: v.optional(v.string()),
+    suggestedExpression: v.optional(v.string()),
+    referenceImageUrl: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    // Admin-only: verify via query
+    const userData: any = await ctx.runQuery(api.user.fetchUserAndProfile, {});
+    if (!userData?.profile?.isAdmin) {
+      throw new Error("Admin access required");
+    }
+
+    const openRouterApiKey = process.env.OPENROUTER_API_KEY;
+    if (!openRouterApiKey) {
+      throw new Error("OPENROUTER_API_KEY not configured");
+    }
+
+    const openRouter = createOpenRouter({ apiKey: openRouterApiKey });
+
+    const analysisPrompt = `You are an expert at creating image generation prompts for photorealistic portrait generation.
+
+Analyze this reference photo and produce a "subject descriptor" — a single comma-separated natural-language string that describes a NEW fictional person inspired by this photo. The new person should share the same overall style, aesthetic, and vibe, but have a SUBTLY DIFFERENT face (different nose shape, slightly different jawline, different eye spacing).
+
+The subject descriptor MUST follow this exact structure (comma-separated parts):
+"a {age}-year-old {woman/man}, {skin tone}, {skin detail}, {hair length and color} hair, {eye shape} {eye color} eyes, {body build}, including chest size, stomach type, wearing {outfit description}, {style signature}"
+
+Also extract these fields from the photo:
+- "gender": "female" or "male"
+- "age": estimated age as a number (18-35 range)
+- "occupation": a plausible occupation that matches the person's style (optional)
+- "vibe": overall aesthetic vibe in 1-3 words (e.g. "warm bohemian", "cool minimalist")
+- "expression": the person's expression in 1-2 words (e.g. "warm smile", "confident gaze")
+
+Return a JSON object with these fields:
+{
+  "subjectDescriptor": "the full comma-separated descriptor string",
+  "gender": "female" or "male",
+  "age": number,
+  "occupation": "string or null",
+  "vibe": "string or null",
+  "expression": "string or null"
+}
+
+Return ONLY valid JSON, no markdown fences.`;
+
+    const imageDataUrl = `data:${args.mimeType};base64,${args.imageBase64}`;
+
+    const result = await generateText({
+      model: openRouter.chat("openai/gpt-5.4-nano"),
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              image: imageDataUrl,
+            },
+            { type: "text", text: analysisPrompt },
+          ],
+        },
+      ],
+    });
+
+    const text = result.text.trim();
+    const jsonStr = text.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+
+    let parsed: Record<string, any>;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      throw new Error("Failed to parse vision model response as JSON");
+    }
+
+    if (
+      typeof parsed.subjectDescriptor !== "string" ||
+      !parsed.subjectDescriptor
+    ) {
+      throw new Error("Vision model did not return a valid subjectDescriptor");
+    }
+
+    const gender =
+      parsed.gender === "male" ? ("male" as const) : ("female" as const);
+    const age =
+      typeof parsed.age === "number" && parsed.age >= 18 && parsed.age <= 50
+        ? parsed.age
+        : 25;
+
+    // Store the reference image to R2 so the image generation models
+    // can use it as a visual reference later.
+    const imageBytes = Uint8Array.from(atob(args.imageBase64), (c) =>
+      c.charCodeAt(0),
+    );
+    const ext =
+      args.mimeType === "image/png"
+        ? "png"
+        : args.mimeType === "image/webp"
+          ? "webp"
+          : "jpg";
+    const r2Key = `aiProfiles/references/${crypto.randomUUID()}.${ext}`;
+    await r2.store(ctx, imageBytes, r2Key);
+    const referenceImageUrl = await r2.getUrl(r2Key);
+
+    return {
+      subjectDescriptor: parsed.subjectDescriptor,
+      suggestedGender: gender,
+      suggestedAge: age,
+      suggestedOccupation:
+        typeof parsed.occupation === "string" ? parsed.occupation : undefined,
+      suggestedVibe: typeof parsed.vibe === "string" ? parsed.vibe : undefined,
+      suggestedExpression:
+        typeof parsed.expression === "string" ? parsed.expression : undefined,
+      referenceImageUrl,
+    };
   },
 });

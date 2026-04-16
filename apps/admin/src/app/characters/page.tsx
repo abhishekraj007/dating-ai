@@ -60,6 +60,8 @@ export default function CharactersPage() {
     failedCount,
     jobs,
     generationOptions,
+    isAnalyzingPhoto,
+    analyzePhoto,
   } = useCharacterGeneration();
   const {
     selectedProfile,
@@ -145,6 +147,8 @@ export default function CharactersPage() {
             occupationOptions={generationOptions?.occupations ?? []}
             interestOptions={generationOptions?.interests ?? []}
             appearanceOptions={generationOptions?.appearance}
+            isAnalyzingPhoto={isAnalyzingPhoto}
+            onAnalyzePhoto={analyzePhoto}
           />
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:max-w-sm">
