@@ -473,14 +473,29 @@ export const getChatImageUrl = query({
       return null;
     }
 
-    // Verify the imageKey belongs to this user's chat images
-    // imageKey format: chatImages/{userId}/{profileId}/{requestId}.jpg
+    // Verify the imageKey belongs to this user's chat images.
+    // imageKey format: chatImages/{userId}/{profileId}/{requestId}.{ext}
     const keyParts = imageKey.split("/");
-    if (keyParts[0] !== "chatImages" || keyParts.length < 4) {
-      return null; // Invalid key format
+    if (
+      keyParts[0] !== "chatImages" ||
+      keyParts.length < 4 ||
+      keyParts[1] !== user._id
+    ) {
+      return null;
     }
 
-    // Generate fresh signed URL
+    // Cross-check the chatImages table: a completed row owned by this user
+    // must exist. This prevents any residual path where someone crafts a key
+    // with the right prefix but no corresponding DB record.
+    const chatImage = await ctx.db
+      .query("chatImages")
+      .withIndex("by_image_key", (q) => q.eq("imageKey", imageKey))
+      .first();
+
+    if (!chatImage || chatImage.userId !== user._id || chatImage.status !== "completed") {
+      return null;
+    }
+
     try {
       const signedUrl = await r2.getUrl(imageKey);
       return signedUrl;

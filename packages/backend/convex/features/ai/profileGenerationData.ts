@@ -310,7 +310,6 @@ export const SKIN_TONES = [
 ];
 
 export const SKIN_CUES = [
-  "a light dusting of freckles across the nose and cheeks",
   "a single small beauty mark near the mouth",
   "subtle dimples when smiling",
   "a faint scar on the left eyebrow",
@@ -501,7 +500,8 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       "walking casually or sitting on a low wall, looking out or slightly away from the camera",
     setting:
       "on a city rooftop or in a park with distant skyline softly out of focus",
-    composition: "full-body or three-quarter framing, subject slightly off-center",
+    composition:
+      "full-body or three-quarter framing, subject slightly off-center",
     lighting: "bright afternoon daylight, soft natural shadows",
     style: "editorial candid, 50mm lens, shallow depth of field",
     requireDaylight: true,
@@ -511,7 +511,8 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
     buildAction: () =>
       "sitting at a small table with a drink, mid-conversation, caught laughing softly",
     setting: "inside a cozy low-lit bar or bistro with warm string-lights",
-    composition: "chest-up candid framing, slight tilt, background softly blurred",
+    composition:
+      "chest-up candid framing, slight tilt, background softly blurred",
     lighting: "warm tungsten and candlelight, moody but flattering",
     style: "film-look night photo, noticeable but pleasant grain",
   },
@@ -541,7 +542,9 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
     id: "activity_gym_climb",
     buildAction: (c) => {
       const interest = c.interests.find((i) =>
-        /gym|bouldering|climbing|yoga|running|cycling|skate|tennis|surfing|dance|salsa/i.test(i),
+        /gym|bouldering|climbing|yoga|running|cycling|skate|tennis|surfing|dance|salsa/i.test(
+          i,
+        ),
       );
       if (interest) {
         return `in the middle of ${interest.toLowerCase()}, focused and mid-motion`;
@@ -552,7 +555,8 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       "at a climbing gym, pilates studio, or track, authentic sports environment",
     composition:
       "three-quarter action framing, a hint of motion blur in limbs but face sharp",
-    lighting: "bright functional indoor lighting or daylight through large windows",
+    lighting:
+      "bright functional indoor lighting or daylight through large windows",
     style: "sports-documentary feel, natural skin, minimal color grading",
     interestAffinity: [
       "Gym",
@@ -603,7 +607,8 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       "curled up with a book or laptop, wrapped in an oversized sweater",
     setting:
       "on a couch or by a window, soft throws and a plant or two in view",
-    composition: "three-quarter lifestyle framing, cozy setting clearly visible",
+    composition:
+      "three-quarter lifestyle framing, cozy setting clearly visible",
     lighting: "soft morning window light, gentle contrast",
     style: "slow-living editorial, warm tones",
   },
@@ -632,10 +637,8 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
     id: "water_beach_dock",
     buildAction: () =>
       "sitting on the edge of a wooden dock or walking barefoot on wet sand",
-    setting:
-      "at a calm lake dock or quiet beach in early evening",
-    composition:
-      "full-body or three-quarter wide environmental shot",
+    setting: "at a calm lake dock or quiet beach in early evening",
+    composition: "full-body or three-quarter wide environmental shot",
     lighting: "soft golden-hour sun reflecting off the water",
     style: "editorial travel feel, natural tones, subtle film grain",
     vibeAffinity: ["coastal", "clean-girl", "soft-minimal", "Y2K"],
