@@ -22,6 +22,9 @@ export default defineSchema({
     premiumExpiresAt: v.optional(v.number()), // null = lifetime/subscription-based
     // Onboarding status
     hasCompletedOnboarding: v.optional(v.boolean()),
+    // Storage quota tracking (enforced in onSyncMetadata)
+    storageBytesUsed: v.optional(v.number()),
+    uploadCount: v.optional(v.number()),
   })
     .index("by_auth_user_id", ["authUserId"])
     .index("by_email", ["email"]),
@@ -147,6 +150,20 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_key", ["key"]),
 
+  // Pending admin-initiated uploads for AI profile images.
+  // Acts as a short-lived ticket: `onSyncMetadata` requires a matching row
+  // before auto-patching an aiProfile record. Prevents any future hole where
+  // a non-admin caller could spoof the `aiProfiles/...` key prefix.
+  pendingAdminUploads: defineTable({
+    key: v.string(), // R2 object key reserved for this upload
+    profileId: v.id("aiProfiles"),
+    type: v.union(v.literal("avatar"), v.literal("gallery")),
+    adminUserId: v.string(), // Better Auth user ID of the admin who initiated
+    expiresAt: v.number(), // Unix ms; rows past this are ignored and should be GC'd
+  })
+    .index("by_key", ["key"])
+    .index("by_expires_at", ["expiresAt"]),
+
   // AI Profiles - pre-seeded + user-created AI characters
   aiProfiles: defineTable({
     // Required fields
@@ -250,7 +267,8 @@ export default defineSchema({
   })
     .index("by_conversation", ["conversationId"])
     .index("by_user", ["userId"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_image_key", ["imageKey"]),
 
   // System AI profile generation jobs (manual + cron)
   profileGenerationJobs: defineTable({

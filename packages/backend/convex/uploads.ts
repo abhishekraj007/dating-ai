@@ -3,6 +3,11 @@ import { mutation, query, internalMutation } from "./_generated/server";
 import { components, internal } from "./_generated/api";
 import { R2, type R2Callbacks } from "@convex-dev/r2";
 import { authComponent } from "./lib/betterAuth";
+import { rateLimiter } from "./lib/rateLimit";
+import {
+  getUserStorageQuota,
+  validateUploadMetadata,
+} from "./lib/uploadValidation";
 
 // Initialize the R2 component
 export const r2 = new R2(components.r2);
@@ -18,6 +23,10 @@ export const generateUploadUrlWithUser = mutation({
     if (!user) {
       throw new Error("Not authenticated");
     }
+    await rateLimiter.limit(ctx, "uploadUrlMint", {
+      key: user._id,
+      throws: true,
+    });
     // Create a key with userId prefix so we can extract it later
     const key = `${user._id}/${crypto.randomUUID()}`;
     return await r2.generateUploadUrl(key);
@@ -28,15 +37,21 @@ export const generateUploadUrlWithUser = mutation({
 export const { generateUploadUrl, syncMetadata, onSyncMetadata } = r2.clientApi(
   {
     callbacks,
-    checkUpload: async (ctx, bucket) => {
+    checkUpload: async (ctx, _bucket) => {
       // Verify the user is authenticated before allowing upload
       const user = await authComponent.safeGetAuthUser(ctx as any);
       if (!user) {
         throw new Error("Not authenticated");
       }
+      // Rate-limit public upload URL minting (the @convex-dev/r2 default key
+      // is a random UUID, so we can only gate this by user here).
+      await rateLimiter.limit(ctx as any, "uploadUrlMint", {
+        key: user._id,
+        throws: true,
+      });
     },
     onSyncMetadata: async (ctx, args) => {
-      // This runs after metadata sync, so r2.getMetadata will work
+      // This runs after metadata sync, so r2.getMetadata will work.
       // args: { bucket: string; key: string; isNew: boolean }
       const metadata = await r2.getMetadata(ctx, args.key);
 
@@ -45,31 +60,68 @@ export const { generateUploadUrl, syncMetadata, onSyncMetadata } = r2.clientApi(
         return;
       }
 
-      // Check if this is an AI profile image upload
-      // Format: aiProfiles/{profileId}/{type}/{uuid}
-      if (args.key.startsWith("aiProfiles/")) {
-        const parts = args.key.split("/");
-        const profileId = parts[1];
-        const type = parts[2]; // "avatar" or "gallery"
-
-        if (profileId && type) {
-          await ctx.runMutation(internal.uploads.updateAIProfileImage, {
-            profileId: profileId as any,
-            key: args.key,
-            type: type as "avatar" | "gallery",
-          });
+      // --- MIME + size validation ---------------------------------------
+      const invalidReason = validateUploadMetadata(
+        metadata.contentType,
+        metadata.size,
+      );
+      if (invalidReason) {
+        console.warn(
+          `[onSyncMetadata] rejecting upload ${args.key}: ${invalidReason}`,
+        );
+        try {
+          await r2.deleteObject(ctx, args.key);
+        } catch (err) {
+          console.error(
+            `[onSyncMetadata] failed to delete invalid upload ${args.key}:`,
+            err,
+          );
         }
         return;
       }
 
-      // Extract userId from key (format: userId/uuid)
-      const userId = args.key.split("/")[0];
-      if (!userId) {
-        console.error("No userId found in key:", args.key);
+      // --- Routing: internal keys ---------------------------------------
+      // AI generation stores showcase/avatar images under this prefix BEFORE
+      // the aiProfiles row exists. The profile generation flow itself patches
+      // the profile record with these keys — we must NOT try to do so here
+      // (parts[1] is the jobId, not a valid v.id("aiProfiles")).
+      if (args.key.startsWith("aiProfiles/generated/")) {
         return;
       }
 
-      // Create the upload record
+      // --- Routing: admin-initiated aiProfiles uploads ------------------
+      // Format: aiProfiles/{profileId}/{avatar|gallery}/{uuid}
+      // Require a matching `pendingAdminUploads` row (defense-in-depth so
+      // no future caller can spoof this prefix to hijack a profile avatar).
+      if (args.key.startsWith("aiProfiles/")) {
+        await ctx.runMutation(internal.uploads.applyAdminProfileImage, {
+          key: args.key,
+        });
+        return;
+      }
+
+      // --- Routing: chat image keys -------------------------------------
+      // `chatImages/{userId}/{profileId}/{requestId}.{ext}` are written by
+      // internal generation actions via `r2.store`. They are tracked via the
+      // `chatImages` table, not the generic `uploads` table, and their quota
+      // is covered by the credit charge.
+      if (args.key.startsWith("chatImages/")) {
+        return;
+      }
+
+      // --- Routing: user-owned uploads ----------------------------------
+      // Format: {userId}/{uuid}
+      const userId = args.key.split("/")[0];
+      if (!userId) {
+        console.error("No userId found in key:", args.key);
+        try {
+          await r2.deleteObject(ctx, args.key);
+        } catch {
+          /* swallow */
+        }
+        return;
+      }
+
       await ctx.runMutation(internal.uploads.createUploadRecord, {
         key: args.key,
         userId,
@@ -77,10 +129,82 @@ export const { generateUploadUrl, syncMetadata, onSyncMetadata } = r2.clientApi(
         contentLength: metadata.size || 0,
       });
     },
-  }
+  },
 );
 
-// Mutation to associate an upload with the current user
+/**
+ * Internal mutation: apply an admin-initiated AI profile image upload.
+ * Requires a matching non-expired `pendingAdminUploads` row.
+ * Deletes the R2 object if no ticket exists.
+ */
+export const applyAdminProfileImage = internalMutation({
+  args: { key: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { key }) => {
+    const ticket = await ctx.db
+      .query("pendingAdminUploads")
+      .withIndex("by_key", (q) => q.eq("key", key))
+      .first();
+
+    if (!ticket || ticket.expiresAt < Date.now()) {
+      console.warn(
+        `[applyAdminProfileImage] rejecting key without valid admin ticket: ${key}`,
+      );
+      try {
+        await r2.deleteObject(ctx, key);
+      } catch (err) {
+        console.error(
+          `[applyAdminProfileImage] failed to delete orphan: ${key}`,
+          err,
+        );
+      }
+      return null;
+    }
+
+    // Verify profile still exists and is an admin-editable (non user-created) row
+    const profile = await ctx.db.get(ticket.profileId);
+    if (!profile || profile.isUserCreated) {
+      console.warn(
+        `[applyAdminProfileImage] stale ticket: profile missing or user-created: ${ticket.profileId}`,
+      );
+      await ctx.db.delete(ticket._id);
+      try {
+        await r2.deleteObject(ctx, key);
+      } catch {
+        /* swallow */
+      }
+      return null;
+    }
+
+    if (ticket.type === "avatar") {
+      await ctx.db.patch(ticket.profileId, { avatarImageKey: key });
+    } else {
+      const currentKeys = profile.profileImageKeys ?? [];
+      if (currentKeys.length >= 10) {
+        console.warn(
+          `[applyAdminProfileImage] gallery limit reached for profile ${ticket.profileId}; deleting upload`,
+        );
+        try {
+          await r2.deleteObject(ctx, key);
+        } catch {
+          /* swallow */
+        }
+      } else {
+        await ctx.db.patch(ticket.profileId, {
+          profileImageKeys: [...currentKeys, key],
+        });
+      }
+    }
+
+    // Ticket consumed — delete regardless of outcome
+    await ctx.db.delete(ticket._id);
+    return null;
+  },
+});
+
+// Mutation to associate an upload with the current user.
+// Only the user owning the key prefix may associate the upload; this blocks
+// one user from claiming another user's orphan row.
 export const associateUpload = mutation({
   args: {
     key: v.string(),
@@ -89,6 +213,12 @@ export const associateUpload = mutation({
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new Error("Not authenticated");
+    }
+
+    // Enforce ownership by key prefix. Our key format for user uploads is
+    // `{userId}/{uuid}` — any other shape is not associable by a user.
+    if (!args.key.startsWith(`${user._id}/`)) {
+      throw new Error("Not authorized for this key");
     }
 
     // Get metadata from R2
@@ -104,27 +234,27 @@ export const associateUpload = mutation({
       .first();
 
     if (existing) {
-      // Update the userId if it's not set
-      if (!existing.userId) {
-        await ctx.db.patch(existing._id, {
-          userId: user._id,
-        });
-      }
-      return;
+      // Idempotent: if already ours, nothing to do.
+      if (existing.userId === user._id) return;
+      // Someone else owns the row — do NOT overwrite.
+      throw new Error("Upload already associated with another user");
     }
 
-    // Create new record
-    await ctx.db.insert("uploads", {
+    // Create new record via the internal mutation so we share the quota code path.
+    await ctx.runMutation(internal.uploads.createUploadRecord, {
       key: args.key,
       userId: user._id,
       contentType: metadata.contentType || "application/octet-stream",
       contentLength: metadata.size || 0,
-      uploadedAt: Date.now(),
     });
   },
 });
 
-// Internal mutation to create upload records
+/**
+ * Internal mutation to create upload records.
+ * Enforces per-user storage quota and upload count limit.
+ * Deletes the R2 object and rejects if the user is over quota.
+ */
 export const createUploadRecord = internalMutation({
   args: {
     key: v.string(),
@@ -133,7 +263,44 @@ export const createUploadRecord = internalMutation({
     contentLength: v.number(),
     isNew: v.optional(v.boolean()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
+    // Idempotency: if a row already exists for this key, don't double-insert.
+    const existing = await ctx.db
+      .query("uploads")
+      .withIndex("by_key", (q) => q.eq("key", args.key))
+      .first();
+    if (existing) return null;
+
+    // Look up the user's profile to enforce quota.
+    const userProfile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", args.userId))
+      .unique();
+
+    const quota = getUserStorageQuota(userProfile?.isPremium);
+    const currentBytes = userProfile?.storageBytesUsed ?? 0;
+    const currentCount = userProfile?.uploadCount ?? 0;
+
+    // Hard per-user limits: storage bytes + file count.
+    const exceedsBytes = currentBytes + args.contentLength > quota;
+    const exceedsCount = currentCount >= 500;
+    if (exceedsBytes || exceedsCount) {
+      console.warn(
+        `[createUploadRecord] quota exceeded for user ${args.userId}: ` +
+          `bytesUsed=${currentBytes}, incoming=${args.contentLength}, quota=${quota}, count=${currentCount}`,
+      );
+      try {
+        await r2.deleteObject(ctx, args.key);
+      } catch (err) {
+        console.error(
+          `[createUploadRecord] failed to delete over-quota upload ${args.key}:`,
+          err,
+        );
+      }
+      return null;
+    }
+
     await ctx.db.insert("uploads", {
       key: args.key,
       userId: args.userId,
@@ -141,6 +308,15 @@ export const createUploadRecord = internalMutation({
       contentLength: args.contentLength,
       uploadedAt: Date.now(),
     });
+
+    if (userProfile) {
+      await ctx.db.patch(userProfile._id, {
+        storageBytesUsed: currentBytes + args.contentLength,
+        uploadCount: currentCount + 1,
+      });
+    }
+
+    return null;
   },
 });
 
@@ -177,7 +353,7 @@ export const listUserUploads = query({
             url: null,
           };
         }
-      })
+      }),
     );
   },
 });
@@ -234,37 +410,50 @@ export const deleteUpload = mutation({
 
     // Delete from database
     await ctx.db.delete(upload._id);
+
+    // Decrement quota counters for the owning user.
+    const userProfile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
+      .unique();
+    if (userProfile) {
+      await ctx.db.patch(userProfile._id, {
+        storageBytesUsed: Math.max(
+          0,
+          (userProfile.storageBytesUsed ?? 0) - upload.contentLength,
+        ),
+        uploadCount: Math.max(0, (userProfile.uploadCount ?? 0) - 1),
+      });
+    }
   },
 });
 
-// Internal mutation to update AI profile with new image
-export const updateAIProfileImage = internalMutation({
-  args: {
-    profileId: v.id("aiProfiles"),
-    key: v.string(),
-    type: v.union(v.literal("avatar"), v.literal("gallery")),
-  },
-  handler: async (ctx, { profileId, key, type }) => {
-    const profile = await ctx.db.get(profileId);
-    if (!profile) {
-      console.error("AI profile not found:", profileId);
-      return;
-    }
+// Note: the old `updateAIProfileImage` internalMutation was replaced by
+// `applyAdminProfileImage` above, which additionally requires a matching
+// `pendingAdminUploads` row and enforces non-user-created profiles.
 
-    if (type === "avatar") {
-      // If there's an existing avatar, we could delete it here
-      // For now, just update the key
-      await ctx.db.patch(profileId, { avatarImageKey: key });
-    } else {
-      // Gallery image - append to the array
-      const currentKeys = profile.profileImageKeys ?? [];
-      if (currentKeys.length >= 10) {
-        console.error("Gallery image limit reached for profile:", profileId);
-        return;
+/**
+ * Internal mutation: delete an expired `pendingAdminUploads` row and its R2
+ * object (if still present). Used by the cron cleanup job.
+ */
+export const gcExpiredAdminUploads = internalMutation({
+  args: { limit: v.optional(v.number()) },
+  returns: v.number(),
+  handler: async (ctx, { limit }) => {
+    const cap = Math.min(Math.max(limit ?? 50, 1), 200);
+    const now = Date.now();
+    const rows = await ctx.db
+      .query("pendingAdminUploads")
+      .withIndex("by_expires_at", (q) => q.lt("expiresAt", now))
+      .take(cap);
+    for (const row of rows) {
+      try {
+        await r2.deleteObject(ctx, row.key);
+      } catch {
+        /* object may already be gone */
       }
-      await ctx.db.patch(profileId, {
-        profileImageKeys: [...currentKeys, key],
-      });
+      await ctx.db.delete(row._id);
     }
+    return rows.length;
   },
 });

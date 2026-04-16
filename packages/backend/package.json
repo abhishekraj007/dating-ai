@@ -20,6 +20,7 @@
     "@convex-dev/expo-push-notifications": "^0.3.0",
     "@convex-dev/polar": "^0.6.4",
     "@convex-dev/r2": "^0.8.0",
+    "@convex-dev/rate-limiter": "^0.3.2",
     "@openrouter/ai-sdk-provider": "^1.5.4",
     "@polar-sh/better-auth": "^1.2.1",
     "@polar-sh/sdk": "^0.40.3",

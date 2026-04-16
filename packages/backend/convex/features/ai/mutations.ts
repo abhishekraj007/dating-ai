@@ -15,6 +15,7 @@ import {
   createAIProfileAgent,
 } from "./agent";
 import { r2 } from "../../uploads";
+import { rateLimiter } from "../../lib/rateLimit";
 
 /**
  * Start a new conversation with an AI profile.
@@ -536,6 +537,10 @@ export const adminUpdateProfile = mutation({
 
 /**
  * Admin: Generate upload URL for AI profile images.
+ *
+ * Records a short-lived `pendingAdminUploads` ticket so `onSyncMetadata`
+ * will accept + auto-patch the resulting R2 object. The ticket is consumed
+ * on successful upload or GC'd after TTL.
  */
 export const adminGenerateUploadUrl = mutation({
   args: {
@@ -558,6 +563,12 @@ export const adminGenerateUploadUrl = mutation({
       throw new Error("Admin access required");
     }
 
+    // Rate-limit admin upload URL minting.
+    await rateLimiter.limit(ctx, "adminUploadUrlMint", {
+      key: user._id,
+      throws: true,
+    });
+
     const profile = await ctx.db.get(profileId);
     if (!profile) {
       throw new Error("Profile not found");
@@ -569,6 +580,17 @@ export const adminGenerateUploadUrl = mutation({
 
     // Create a key with aiProfiles prefix and type info
     const key = `aiProfiles/${profileId}/${type}/${crypto.randomUUID()}`;
+
+    // Record a pending-upload ticket (10 min TTL). onSyncMetadata looks this
+    // up to confirm the upload was admin-initiated before patching the profile.
+    await ctx.db.insert("pendingAdminUploads", {
+      key,
+      profileId,
+      type,
+      adminUserId: user._id,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+    });
+
     const { url } = await r2.generateUploadUrl(key);
     return { url, key };
   },

@@ -4,6 +4,7 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { authComponent, createAuth } from "./lib/betterAuth";
 import { r2 } from "./uploads";
+import { isAllowedImageMime } from "./lib/uploadValidation";
 // import * as PolarWebhooks from "./lib/polarWebhooks";
 import { handleRevenueCatWebhook } from "./lib/revenuecatWebhooks";
 
@@ -56,16 +57,36 @@ http.route({
       return new Response("Avatar not found", { status: 404 });
     }
 
-    const upstream = await fetch(signedUrl, {
-      cache: "no-store",
-    });
+    let upstream: Response;
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      upstream = await fetch(signedUrl, {
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+    } catch {
+      return new Response("Upstream fetch timed out", { status: 502 });
+    }
 
     if (!upstream.ok || !upstream.body) {
       return new Response("Failed to load avatar", { status: 502 });
     }
 
-    const headers = new Headers();
+    // Validate upstream content-type against image MIME allowlist.
     const contentType = upstream.headers.get("content-type");
+    if (!isAllowedImageMime(contentType)) {
+      // Consume the body to release the connection, then reject.
+      try {
+        await upstream.body.cancel();
+      } catch {
+        /* swallow */
+      }
+      return new Response("Disallowed content type", { status: 400 });
+    }
+
+    const headers = new Headers();
     const contentLength = upstream.headers.get("content-length");
     const etag = upstream.headers.get("etag");
     const lastModified = upstream.headers.get("last-modified");
