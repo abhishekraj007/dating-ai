@@ -210,13 +210,40 @@ export default function CharactersPage() {
                 </div>
               ))}
             </div>
-          ) : visibleProfiles.length === 0 ? (
+          ) : visibleProfiles.length === 0 && runningCount === 0 ? (
             <EmptyState
               title="No characters found"
               description="Try clearing search or changing filters to see more profiles."
             />
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: runningCount }).map((_, i) => (
+                <div
+                  key={`generating-${i}`}
+                  className="rounded-xl border border-primary/30 bg-card/60 p-4"
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-12 w-12 rounded-full" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-28" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
+                    </div>
+                    <span className="text-[11px] text-primary animate-pulse">
+                      Generating...
+                    </span>
+                  </div>
+                  <Skeleton className="mb-2 h-5 w-28" />
+                  <Skeleton className="mb-2 h-3 w-full" />
+                  <Skeleton className="mb-3 h-3 w-4/5" />
+                  <div className="mb-3 flex gap-1.5">
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-6 w-12 rounded-full" />
+                  </div>
+                  <Skeleton className="h-14 w-14 rounded-md" />
+                </div>
+              ))}
               {visibleProfiles.map((profile) => {
                 const isNew =
                   (profile.createdAt ?? profile._creationTime ?? 0) >=
