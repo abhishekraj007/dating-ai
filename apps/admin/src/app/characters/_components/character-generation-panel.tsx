@@ -22,6 +22,16 @@ type GenerateCharacterInput = {
   preferredGender?: "female" | "male";
   preferredOccupation?: string;
   preferredInterests?: string[];
+  appearanceOverrides?: {
+    skinTone?: string;
+    hairColor?: string;
+    hairStyle?: string;
+    eyeColor?: string;
+    build?: string;
+    outfit?: string;
+    vibe?: string;
+    expression?: string;
+  };
 };
 
 type InterestOption = {
@@ -96,6 +106,19 @@ interface CharacterGenerationPanelProps {
   onGenerate: (input?: GenerateCharacterInput) => Promise<void>;
   occupationOptions: InterestOption[];
   interestOptions: InterestOption[];
+  appearanceOptions?: {
+    skinTones: string[];
+    hairColors: string[];
+    hairStylesFemale: string[];
+    hairStylesMale: string[];
+    eyeColors: string[];
+    buildsFemale: string[];
+    buildsMale: string[];
+    outfitsFemale: string[];
+    outfitsMale: string[];
+    vibes: string[];
+    expressions: string[];
+  };
 }
 
 export function CharacterGenerationPanel({
@@ -108,6 +131,7 @@ export function CharacterGenerationPanel({
   onGenerate,
   occupationOptions,
   interestOptions,
+  appearanceOptions,
 }: CharacterGenerationPanelProps) {
   const hasRunningJobs = runningCount > 0;
   const [isJobsOpen, setIsJobsOpen] = useState(false);
@@ -398,6 +422,7 @@ export function CharacterGenerationPanel({
             isGenerating={isGenerating}
             occupationOptions={occupationOptions}
             interestOptions={interestOptions}
+            appearanceOptions={appearanceOptions}
           />
         </div>
       </div>

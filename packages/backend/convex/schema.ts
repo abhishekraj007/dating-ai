@@ -193,6 +193,7 @@ export default defineSchema({
     relationshipGoal: v.optional(v.string()),
     mbtiType: v.optional(v.string()),
     language: v.optional(v.string()), // defaults to "en"
+    location: v.optional(v.string()), // e.g. "Brooklyn, NY" or "Melbourne, AU"
     voiceId: v.optional(v.string()), // ElevenLabs voice ID
     voiceType: v.optional(v.string()), // Voice type description (legacy)
     createdAt: v.optional(v.number()), // Creation timestamp (legacy)
