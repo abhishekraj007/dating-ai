@@ -69,7 +69,7 @@ const IMAGE_MODEL_CHAIN: ImageModelConfig[] = [
 ];
 
 const REFERENCE_IMAGE_CONSISTENCY_PREFIX =
-  "keep the facial features of the person in the uploaded image exactly consistent and 100% accurate from the reference image";
+  "The person in the reference image is the same person in this image. Preserve their face shape, skin tone, freckles and marks, eye color, eyebrow shape, hair color, length and texture, and overall body type exactly. Only change outfit, pose, setting, and lighting as described below.";
 
 function extractImageUrl(output: unknown): string | null {
   if (typeof output === "string") {

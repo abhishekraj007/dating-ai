@@ -8,8 +8,10 @@
  * @module
  */
 
+import type * as aiProfiles_seedProfiles from "../aiProfiles/seedProfiles.js";
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
+import type * as datingAgent from "../datingAgent.js";
 import type * as features_ai_actions from "../features/ai/actions.js";
 import type * as features_ai_agent from "../features/ai/agent.js";
 import type * as features_ai_genz_profiles_data from "../features/ai/genz_profiles_data.js";
@@ -20,7 +22,10 @@ import type * as features_ai_internalQueries from "../features/ai/internalQuerie
 import type * as features_ai_mutations from "../features/ai/mutations.js";
 import type * as features_ai_profileGeneration from "../features/ai/profileGeneration.js";
 import type * as features_ai_profileGenerationActions from "../features/ai/profileGenerationActions.js";
+import type * as features_ai_profileGenerationData from "../features/ai/profileGenerationData.js";
+import type * as features_ai_profiles from "../features/ai/profiles.js";
 import type * as features_ai_queries from "../features/ai/queries.js";
+import type * as features_ai_r2Helpers from "../features/ai/r2Helpers.js";
 import type * as features_ai_seed from "../features/ai/seed.js";
 import type * as features_ai_seed_genz from "../features/ai/seed_genz.js";
 import type * as features_appConfig_guards from "../features/appConfig/guards.js";
@@ -30,6 +35,7 @@ import type * as features_appConfig_queries from "../features/appConfig/queries.
 import type * as features_appConfig_shared from "../features/appConfig/shared.js";
 import type * as features_credits_index from "../features/credits/index.js";
 import type * as features_credits_mutations from "../features/credits/mutations.js";
+import type * as features_credits_pricing from "../features/credits/pricing.js";
 import type * as features_credits_queries from "../features/credits/queries.js";
 import type * as features_filters_queries from "../features/filters/queries.js";
 import type * as features_preferences_queries from "../features/preferences/queries.js";
@@ -66,8 +72,10 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "aiProfiles/seedProfiles": typeof aiProfiles_seedProfiles;
   auth: typeof auth;
   crons: typeof crons;
+  datingAgent: typeof datingAgent;
   "features/ai/actions": typeof features_ai_actions;
   "features/ai/agent": typeof features_ai_agent;
   "features/ai/genz_profiles_data": typeof features_ai_genz_profiles_data;
@@ -78,7 +86,10 @@ declare const fullApi: ApiFromModules<{
   "features/ai/mutations": typeof features_ai_mutations;
   "features/ai/profileGeneration": typeof features_ai_profileGeneration;
   "features/ai/profileGenerationActions": typeof features_ai_profileGenerationActions;
+  "features/ai/profileGenerationData": typeof features_ai_profileGenerationData;
+  "features/ai/profiles": typeof features_ai_profiles;
   "features/ai/queries": typeof features_ai_queries;
+  "features/ai/r2Helpers": typeof features_ai_r2Helpers;
   "features/ai/seed": typeof features_ai_seed;
   "features/ai/seed_genz": typeof features_ai_seed_genz;
   "features/appConfig/guards": typeof features_appConfig_guards;
@@ -88,6 +99,7 @@ declare const fullApi: ApiFromModules<{
   "features/appConfig/shared": typeof features_appConfig_shared;
   "features/credits/index": typeof features_credits_index;
   "features/credits/mutations": typeof features_credits_mutations;
+  "features/credits/pricing": typeof features_credits_pricing;
   "features/credits/queries": typeof features_credits_queries;
   "features/filters/queries": typeof features_filters_queries;
   "features/preferences/queries": typeof features_preferences_queries;

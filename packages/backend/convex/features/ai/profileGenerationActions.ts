@@ -7,8 +7,46 @@ import { z } from "zod";
 import { generateText, Output } from "ai";
 import { createGateway } from "@ai-sdk/gateway";
 import { generateImageWithFallback } from "./imageGeneration";
+import {
+  type Gender,
+  type AvatarShotStyle,
+  type ShowcaseScene,
+  FEMALE_WEIGHT,
+  SEMANTIC_SIMILARITY_THRESHOLD,
+  MAX_GENERATION_ATTEMPTS,
+  SHOWCASE_MIN_COUNT,
+  SHOWCASE_MAX_COUNT,
+  SHOWCASE_MIN_SUCCESS,
+  FIRST_NAMES,
+  LAST_NAMES,
+  OCCUPATIONS,
+  INTERESTS,
+  PERSONALITY_TRAITS,
+  ZODIAC_SIGNS,
+  RELATIONSHIP_GOALS,
+  MBTI_TYPES,
+  HAIR_COLORS,
+  HAIR_STYLES_FEMALE,
+  HAIR_STYLES_MALE,
+  EYE_COLORS,
+  EYE_SHAPES,
+  SKIN_TONES,
+  SKIN_CUES,
+  BUILDS_FEMALE,
+  BUILDS_MALE,
+  STYLE_SIGNATURES_FEMALE,
+  STYLE_SIGNATURES_MALE,
+  VIBES,
+  CITY_ARCHETYPES,
+  QUIRKS,
+  EXPRESSIONS,
+  AVATAR_SHOT_STYLES,
+  SHOWCASE_SCENES,
+  BANNED_BIO_PHRASES,
+  STOPWORDS,
+  INLINE_NEGATIVES,
+} from "./profileGenerationData";
 
-type Gender = "female" | "male";
 type GenerationFailureCode =
   | "candidate_uniqueness_exhausted"
   | "profile_model_generation_failed"
@@ -26,9 +64,6 @@ class GenerationFailureError extends Error {
   }
 }
 
-const FEMALE_WEIGHT = 0.75;
-const SEMANTIC_SIMILARITY_THRESHOLD = 0.42;
-const MAX_GENERATION_ATTEMPTS = 12;
 const AI_GATEWAY_BASE_URL =
   process.env.AI_GATEWAY_BASE_URL ?? "https://ai-gateway.vercel.sh/v1/ai";
 const PROFILE_GENERATION_MODEL =
@@ -40,137 +75,6 @@ const PROFILE_GENERATION_FALLBACK_MODELS = (
   .split(",")
   .map((model) => model.trim())
   .filter(Boolean);
-
-const FIRST_NAMES: Record<Gender, string[]> = {
-  female: [
-    "Ava",
-    "Mila",
-    "Ivy",
-    "Nora",
-    "Lena",
-    "Aria",
-    "Zara",
-    "Sage",
-    "Nia",
-    "Maya",
-    "Elise",
-    "Rhea",
-  ],
-  male: [
-    "Kai",
-    "Noah",
-    "Milo",
-    "Axel",
-    "Theo",
-    "Jasper",
-    "Luca",
-    "Ryder",
-    "Aiden",
-    "Dylan",
-    "Evan",
-    "Rowan",
-  ],
-};
-
-const LAST_NAMES = [
-  "Rivera",
-  "Chen",
-  "Park",
-  "Nguyen",
-  "Santos",
-  "Kim",
-  "Wright",
-  "Cruz",
-  "Sharma",
-  "Patel",
-  "Martinez",
-  "Singh",
-];
-
-const OCCUPATIONS: Record<Gender, string[]> = {
-  female: [
-    "Content Creator",
-    "Product Designer",
-    "Photographer",
-    "Barista",
-    "Marketing Strategist",
-    "Dance Instructor",
-    "Startup Founder",
-  ],
-  male: [
-    "Software Engineer",
-    "Music Producer",
-    "Fitness Coach",
-    "Filmmaker",
-    "UX Designer",
-    "Chef",
-    "Entrepreneur",
-  ],
-};
-
-const INTERESTS = [
-  "Travel",
-  "Gym",
-  "Coffee",
-  "Photography",
-  "Gaming",
-  "Music",
-  "Fashion",
-  "Cooking",
-  "Hiking",
-  "Art",
-  "Podcasts",
-  "Movies",
-  "Skincare",
-  "Books",
-  "Tennis",
-];
-
-const PERSONALITY_TRAITS = [
-  "Confident",
-  "Playful",
-  "Adventurous",
-  "Ambitious",
-  "Witty",
-  "Loyal",
-  "Calm",
-  "Outgoing",
-  "Curious",
-  "Romantic",
-];
-
-const ZODIAC_SIGNS = [
-  "Aries",
-  "Taurus",
-  "Gemini",
-  "Cancer",
-  "Leo",
-  "Virgo",
-  "Libra",
-  "Scorpio",
-  "Sagittarius",
-  "Capricorn",
-  "Aquarius",
-  "Pisces",
-];
-
-const RELATIONSHIP_GOALS = [
-  "something meaningful with fun energy",
-  "a slow-burn connection that feels real",
-  "a playful relationship with deep conversations",
-  "a best-friend and partner vibe",
-];
-
-const MBTI_TYPES = [
-  "ENFP",
-  "INFP",
-  "ESFP",
-  "ISFJ",
-  "ENTJ",
-  "INTP",
-  "INFJ",
-  "ESTP",
-];
 
 const isDev = process.env.CONVEX_CLOUD_URL?.includes("cheery-akita") ?? false;
 const aiGatewayApiKey = process.env.AI_GATEWAY_API_KEY;
@@ -217,6 +121,20 @@ type CandidateBuildResult = {
   model: string;
 };
 
+type AppearanceProfile = {
+  ageHint: number;
+  hair: string;
+  eyes: string;
+  skinTone: string;
+  skinCue: string;
+  build: string;
+  signatureStyle: string;
+  vibe: string;
+  cityArchetype: string;
+  quirk: string;
+  expression: string;
+};
+
 type JobProgressStep =
   | "candidate_generation"
   | "avatar_generation"
@@ -235,7 +153,7 @@ const PROFILE_PERSIST_MODEL = "convex-db";
 const profileBlueprintSchema = z.object({
   name: z.string().min(3).max(64),
   username: z.string().min(3).max(40).optional(),
-  age: z.number().int().min(18).max(45),
+  age: z.number().int().min(20).max(34),
   zodiacSign: z.string().min(3).max(16),
   occupation: z.string().min(2).max(80),
   bio: z.string().min(40).max(420),
@@ -372,6 +290,207 @@ function normalizeInterestPreferences(
   return normalized.length > 0 ? normalized : undefined;
 }
 
+function sampleAppearanceProfile(gender: Gender): AppearanceProfile {
+  const hairColor = randomItem(HAIR_COLORS);
+  const hairStyle =
+    gender === "female"
+      ? randomItem(HAIR_STYLES_FEMALE)
+      : randomItem(HAIR_STYLES_MALE);
+  const build =
+    gender === "female" ? randomItem(BUILDS_FEMALE) : randomItem(BUILDS_MALE);
+  const signatureStyle =
+    gender === "female"
+      ? randomItem(STYLE_SIGNATURES_FEMALE)
+      : randomItem(STYLE_SIGNATURES_MALE);
+
+  // Weighted toward 22-29 but allow 20-34.
+  const ageRoll = Math.random();
+  let ageHint: number;
+  if (ageRoll < 0.75) {
+    ageHint = 22 + Math.floor(Math.random() * 8); // 22..29
+  } else if (ageRoll < 0.9) {
+    ageHint = 20 + Math.floor(Math.random() * 2); // 20..21
+  } else {
+    ageHint = 30 + Math.floor(Math.random() * 5); // 30..34
+  }
+
+  const hair = hairStyle.includes("hair")
+    ? hairStyle.replace(/\bhair\b/, `${hairColor} hair`)
+    : `${hairStyle} (${hairColor})`;
+
+  return {
+    ageHint,
+    hair,
+    eyes: `${randomItem(EYE_SHAPES)} ${randomItem(EYE_COLORS)} eyes`,
+    skinTone: randomItem(SKIN_TONES),
+    skinCue: randomItem(SKIN_CUES),
+    build,
+    signatureStyle,
+    vibe: randomItem(VIBES),
+    cityArchetype: randomItem(CITY_ARCHETYPES),
+    quirk: randomItem(QUIRKS),
+    expression: randomItem(EXPRESSIONS),
+  };
+}
+
+function genderNoun(gender: Gender): string {
+  return gender === "female" ? "woman" : "man";
+}
+
+function buildCanonicalSubjectDescriptor(
+  candidate: Pick<ProfileCandidate, "gender" | "age">,
+  appearance: AppearanceProfile,
+): string {
+  // Natural-prose descriptor reused verbatim across avatar + every showcase,
+  // which is the single biggest lever for character consistency on
+  // nano-banana-2 and seedream-5-lite.
+  return [
+    `a ${candidate.age}-year-old ${genderNoun(candidate.gender)}`,
+    appearance.skinTone,
+    appearance.skinCue,
+    `${appearance.hair}`,
+    appearance.eyes,
+    appearance.build,
+    appearance.signatureStyle,
+  ]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
+type ImagePromptInput = {
+  subjectDescriptor: string;
+  action: string;
+  setting: string;
+  composition: string;
+  lighting: string;
+  style: string;
+  expression?: string;
+  vibe?: string;
+  cityArchetype?: string;
+  withReferenceClause: boolean;
+};
+
+function buildImagePromptCore(input: ImagePromptInput): string {
+  const realismCues =
+    "Visible skin texture, natural pores, subtle facial asymmetry, non-retouched skin, authentic everyday look";
+
+  const settingWithContext = [
+    input.setting,
+    input.cityArchetype ? `in a ${input.cityArchetype}` : null,
+    input.vibe ? `${input.vibe} aesthetic` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const parts: string[] = [
+    `Photorealistic portrait of ${input.subjectDescriptor}`,
+    input.expression ? `with ${input.expression}` : null,
+    input.action,
+    settingWithContext,
+    input.composition,
+    input.lighting,
+    input.style,
+    realismCues,
+  ].filter(
+    (part): part is string => typeof part === "string" && part.length > 0,
+  );
+
+  let prompt = parts.join(". ");
+  if (!prompt.endsWith(".")) prompt += ".";
+
+  if (input.withReferenceClause) {
+    prompt += ` Using the reference image as the same person, preserve face shape, skin tone, freckles and marks, eyebrow shape, eye color and shape, hair color, length and texture, and overall body type exactly. Only change outfit, pose, setting, and lighting as described above.`;
+  }
+
+  prompt += ` ${INLINE_NEGATIVES}`;
+  return prompt;
+}
+
+function pickShowcaseScenes(
+  candidate: ProfileCandidate,
+  appearance: AppearanceProfile,
+  count: number,
+  excludeIds: Set<string> = new Set(),
+): ShowcaseScene[] {
+  const candidateInterestSet = new Set(
+    candidate.interests.map((i) => i.toLowerCase()),
+  );
+
+  const vibeLower = appearance.vibe.toLowerCase();
+
+  const pool = SHOWCASE_SCENES.filter((scene) => !excludeIds.has(scene.id));
+
+  // Prefer scenes with matching interests or vibe affinity.
+  const preferred: ShowcaseScene[] = [];
+  const rest: ShowcaseScene[] = [];
+  for (const scene of pool) {
+    const interestMatch =
+      scene.interestAffinity &&
+      scene.interestAffinity.some((i) =>
+        candidateInterestSet.has(i.toLowerCase()),
+      );
+    const vibeMatch =
+      scene.vibeAffinity &&
+      scene.vibeAffinity.some((v) => v.toLowerCase() === vibeLower);
+    if (interestMatch || vibeMatch) {
+      preferred.push(scene);
+    } else {
+      rest.push(scene);
+    }
+  }
+
+  // Pet scene only eligible ~25% of the time.
+  const filterPet = (scenes: ShowcaseScene[]): ShowcaseScene[] =>
+    scenes.filter((scene) => scene.id !== "with_pet" || Math.random() < 0.25);
+
+  const ordered = [
+    ...shuffle(filterPet(preferred)),
+    ...shuffle(filterPet(rest)),
+  ];
+  return ordered.slice(0, count);
+}
+
+function buildShowcasePromptFromScene(
+  scene: ShowcaseScene,
+  candidate: ProfileCandidate,
+  appearance: AppearanceProfile,
+  subjectDescriptor: string,
+): string {
+  return buildImagePromptCore({
+    subjectDescriptor,
+    action: scene.buildAction(candidate),
+    setting: scene.setting,
+    composition: scene.composition,
+    lighting: scene.lighting,
+    style: scene.style,
+    vibe: appearance.vibe,
+    cityArchetype: appearance.cityArchetype,
+    withReferenceClause: true,
+  });
+}
+
+function getBioOpenings(
+  profiles: Array<{ bio?: string }>,
+  maxCount: number,
+  wordsPerOpening: number,
+): string[] {
+  const out: string[] = [];
+  for (const profile of profiles) {
+    if (!profile.bio) continue;
+    const words = profile.bio.trim().split(/\s+/).slice(0, wordsPerOpening);
+    if (words.length === 0) continue;
+    out.push(words.join(" "));
+    if (out.length >= maxCount) break;
+  }
+  return out;
+}
+
+function bioHasBannedPhrase(bio: string): boolean {
+  const lower = bio.toLowerCase();
+  return BANNED_BIO_PHRASES.some((phrase) => lower.includes(phrase));
+}
+
 function toCandidateFromBlueprint(
   blueprint: z.infer<typeof profileBlueprintSchema>,
   gender: Gender,
@@ -452,8 +571,10 @@ async function generateCandidateWithLLM(
     name: string;
     username?: string;
     gender: Gender;
+    bio?: string;
   }>,
   existingUsernames: Set<string>,
+  appearance: AppearanceProfile,
   preferences?: GenerationPreferences,
 ): Promise<CandidateBuildResult> {
   if (!aiGatewayApiKey || !aiGatewayProvider) {
@@ -463,10 +584,17 @@ async function generateCandidateWithLLM(
     );
   }
 
-  const recentSameGenderNames = existingProfiles
-    .filter((profile) => profile.gender === gender)
+  const sameGenderProfiles = existingProfiles.filter(
+    (profile) => profile.gender === gender,
+  );
+  const recentSameGenderNames = sameGenderProfiles
     .slice(0, 80)
     .map((profile) => profile.name);
+  const recentBioOpenings = getBioOpenings(
+    sameGenderProfiles.slice(0, 60),
+    30,
+    6,
+  );
 
   const recentUsernames = Array.from(existingUsernames).slice(0, 120);
 
@@ -486,21 +614,38 @@ async function generateCandidateWithLLM(
   ]
     .filter(Boolean)
     .join("\n");
-  const prompt = `Generate one unique ${gender} dating profile.
-Constraints:
-- age 21-29
-- occupation
-- natural bio (2-3 lines, no cringe)
-- 4-7 interests
-- 3-6 personality traits
-- relationshipGoal short natural phrase
-- optional username and communicationStyle
-- avoid copying names or style from existing list
-${preferenceHints ? `\nUser-selected constraints:\n${preferenceHints}` : ""}
 
-Existing names to avoid: ${recentSameGenderNames.join(", ") || "none"}
-Existing usernames to avoid: ${recentUsernames.join(", ") || "none"}
+  const prompt = `Generate one unique ${gender} dating profile that reads like a real person's, not AI-written.
 
+Soft persona seed (use naturally, do not quote literally):
+- age around ${appearance.ageHint} (allowed range 20-34)
+- lives in a ${appearance.cityArchetype}
+- overall style/aesthetic: ${appearance.vibe}
+- personal quirk to weave in subtly: ${appearance.quirk}
+
+Hard requirements:
+- age integer between 20 and 34
+- occupation: specific and believable (prefer non-generic roles)
+- bio: 2-3 short sentences, 60-240 chars total
+- interests: 4-7 specific items (not vague nouns)
+- personalityTraits: 3-6 short adjectives
+- relationshipGoal: one short natural phrase
+- name must be a believable first + last name
+- username is optional; if provided, lowercase letters/numbers/underscores only
+
+Bio style rules (strict):
+- Do NOT begin the bio with the person's name, "Hey", "Looking for", or the occupation.
+- Must include one concrete, specific detail: a place, an object, a habit, a food, a book, a song - something tangible.
+- Avoid these buzzwords entirely: ${BANNED_BIO_PHRASES.join(", ")}.
+- Short sentence fragments and lowercase are fine; avoid corporate-polished tone.
+- Do not describe physical appearance in the bio - that is handled elsewhere.
+
+Uniqueness rules:
+- Do not reuse any of these existing names: ${recentSameGenderNames.join(", ") || "none"}
+- Do not reuse these usernames: ${recentUsernames.join(", ") || "none"}
+- Do not start the bio with any of these recent opening phrases: ${recentBioOpenings.join(" | ") || "none"}
+
+${preferenceHints ? `User-selected constraints (must honor exactly):\n${preferenceHints}\n` : ""}
 Attempt strategy: ${strategyHint}
 
 Required JSON shape:
@@ -523,6 +668,7 @@ Required JSON shape:
     "flirtLevel": 3
   }
 }`;
+
   const modelsToTry = uniqueModelList([
     PROFILE_GENERATION_MODEL,
     ...PROFILE_GENERATION_FALLBACK_MODELS,
@@ -539,12 +685,18 @@ Required JSON shape:
         }),
         temperature: 1.05,
         system:
-          "You generate highly unique dating profile blueprints for a dating app. Return valid structured output only.",
+          "You generate highly unique, human-sounding dating profile blueprints. Write like a real person, not a copywriter. Return valid structured output only.",
         prompt,
       });
+      const blueprint = result.experimental_output;
+      if (bioHasBannedPhrase(blueprint.bio)) {
+        throw new Error(
+          `bio_contains_banned_phrase: "${blueprint.bio.slice(0, 80)}..."`,
+        );
+      }
       return {
         candidate: toCandidateFromBlueprint(
-          result.experimental_output,
+          blueprint,
           gender,
           existingUsernames,
           preferences,
@@ -572,8 +724,10 @@ async function buildCandidateDynamic(
     name: string;
     username?: string;
     gender: Gender;
+    bio?: string;
   }>,
   existingUsernames: Set<string>,
+  appearance: AppearanceProfile,
   preferences?: GenerationPreferences,
 ): Promise<CandidateBuildResult> {
   try {
@@ -582,6 +736,7 @@ async function buildCandidateDynamic(
       attempt,
       existingProfiles,
       existingUsernames,
+      appearance,
       preferences,
     );
   } catch (error) {
@@ -591,7 +746,12 @@ async function buildCandidateDynamic(
       error,
     );
     return {
-      candidate: buildCandidate(gender, existingUsernames, preferences),
+      candidate: buildCandidate(
+        gender,
+        existingUsernames,
+        appearance,
+        preferences,
+      ),
       model: FALLBACK_TEMPLATE_MODEL,
     };
   }
@@ -600,6 +760,7 @@ async function buildCandidateDynamic(
 function buildCandidate(
   gender: Gender,
   existingUsernames: Set<string>,
+  appearance: AppearanceProfile,
   preferences?: GenerationPreferences,
 ): ProfileCandidate {
   const firstName = randomItem(FIRST_NAMES[gender]);
@@ -614,12 +775,12 @@ function buildCandidate(
   const personalityTraits = shuffle(PERSONALITY_TRAITS).slice(0, 4);
   const occupation =
     preferences?.preferredOccupation ?? randomItem(OCCUPATIONS[gender]);
-  const age = 21 + Math.floor(Math.random() * 8);
+  const age = appearance.ageHint;
   const zodiacSign = randomItem(ZODIAC_SIGNS);
-  const [interestA = "coffee", interestB = "travel", interestC = "music"] =
+  const [interestA = "coffee", interestB = "music", interestC = "books"] =
     interests;
 
-  const bio = `${name.split(" ")[0]} here. ${occupation} by day, ${interestA.toLowerCase()} and ${interestB.toLowerCase()} after hours. I love ${interestC.toLowerCase()} and good conversations that can go from playful to deep.`;
+  const bio = `just moved to a ${appearance.cityArchetype}, still learning its good corners. ${interestA.toLowerCase()} on weekdays, ${interestB.toLowerCase()} on weekends, and always a ${interestC.toLowerCase()} in my bag. ${appearance.quirk}.`;
 
   return {
     name,
@@ -650,7 +811,7 @@ function profileSignature(profile: {
   interests?: string[];
   personalityTraits?: string[];
 }): Set<string> {
-  return tokenize(
+  const tokens = tokenize(
     [
       profile.name,
       profile.occupation ?? "",
@@ -659,6 +820,11 @@ function profileSignature(profile: {
       ...(profile.personalityTraits ?? []),
     ].join(" "),
   );
+  const filtered = new Set<string>();
+  for (const token of tokens) {
+    if (!STOPWORDS.has(token)) filtered.add(token);
+  }
+  return filtered;
 }
 
 function isDuplicateCandidate(
@@ -723,21 +889,55 @@ function thresholdForAttempt(attempt: number): number {
   return 0.6;
 }
 
-function buildAvatarPrompt(candidate: ProfileCandidate): string {
-  return `Photorealistic dating app portrait of ${candidate.name}, ${candidate.age} year old ${candidate.gender}, ${candidate.occupation}, natural daylight, shallow depth of field, high detail, realistic skin texture, cinematic portrait`;
+function buildAvatarPrompt(
+  candidate: ProfileCandidate,
+  appearance: AppearanceProfile,
+  subjectDescriptor: string,
+): string {
+  const shot = randomItem(AVATAR_SHOT_STYLES);
+  return buildImagePromptCore({
+    subjectDescriptor,
+    action: `the kind of everyday profile photo someone would actually use - ${candidate.occupation.toLowerCase()}, relaxed and real`,
+    setting: shot.setting,
+    composition: shot.composition,
+    lighting: shot.lighting,
+    style: shot.style,
+    expression: appearance.expression,
+    vibe: appearance.vibe,
+    cityArchetype: appearance.cityArchetype,
+    withReferenceClause: false,
+  });
 }
+
+function randomShowcaseCount(): number {
+  return (
+    SHOWCASE_MIN_COUNT +
+    Math.floor(Math.random() * (SHOWCASE_MAX_COUNT - SHOWCASE_MIN_COUNT + 1))
+  );
+}
+
+type ShowcaseSlotPrompt = {
+  sceneId: string;
+  prompt: string;
+};
 
 function buildShowcasePrompts(
   candidate: ProfileCandidate,
+  appearance: AppearanceProfile,
+  subjectDescriptor: string,
   count: number,
-): string[] {
-  const [interestA = "coffee", interestB = "music"] = candidate.interests;
-  const prompts = [
-    `Edit the reference image into a photorealistic lifestyle photo of the same ${candidate.name} enjoying ${interestA.toLowerCase()} at a stylish cafe, natural candid vibe, preserve facial identity and body features`,
-    `Edit the reference image into a photorealistic full-body portrait of the same ${candidate.name} on a city street at golden hour, confident expression, modern outfit, preserve facial identity and body features`,
-    `Edit the reference image into a photorealistic portrait of the same ${candidate.name} during ${interestB.toLowerCase()}, warm atmosphere, authentic candid moment, preserve facial identity and body features`,
-  ];
-  return shuffle(prompts).slice(0, count);
+  excludeIds: Set<string> = new Set(),
+): ShowcaseSlotPrompt[] {
+  const scenes = pickShowcaseScenes(candidate, appearance, count, excludeIds);
+  return scenes.map((scene) => ({
+    sceneId: scene.id,
+    prompt: buildShowcasePromptFromScene(
+      scene,
+      candidate,
+      appearance,
+      subjectDescriptor,
+    ),
+  }));
 }
 
 function shouldRetryImageFetch(status: number): boolean {
@@ -953,6 +1153,8 @@ export const runSystemProfileGeneration = internalAction({
         },
       );
 
+      const appearance = sampleAppearanceProfile(selectedGender);
+
       const existingProfiles = (await ctx.runQuery(
         "features/ai/profileGeneration:listSystemProfilesInternal" as any,
         {
@@ -987,6 +1189,7 @@ export const runSystemProfileGeneration = internalAction({
           attempts,
           existingProfiles,
           existingUsernames,
+          appearance,
           normalizedPreferences,
         );
         const fingerprint = candidateFingerprint(generated.candidate);
@@ -1041,18 +1244,28 @@ export const runSystemProfileGeneration = internalAction({
         `Profile blueprint generated in ${attempts} attempt${attempts > 1 ? "s" : ""}. Creating avatar...`,
       );
 
+      const subjectDescriptor = buildCanonicalSubjectDescriptor(
+        candidate,
+        appearance,
+      );
+
       const avatarImageKey = await createAndStoreGeneratedImage(
         ctx,
-        buildAvatarPrompt(candidate),
+        buildAvatarPrompt(candidate, appearance, subjectDescriptor),
         null,
         `aiProfiles/generated/${jobId}/avatar`,
       );
       completedSteps = [...completedSteps, "avatar_generation"];
 
       const avatarReferenceUrl = await r2.getUrl(avatarImageKey);
-      const showcaseCount = Math.random() < 0.5 ? 1 : 2;
-      const showcasePrompts = buildShowcasePrompts(candidate, showcaseCount);
-      const profileImageKeys: string[] = [];
+      const showcaseCount = randomShowcaseCount();
+      const initialPrompts = buildShowcasePrompts(
+        candidate,
+        appearance,
+        subjectDescriptor,
+        showcaseCount,
+      );
+
       stepModels = upsertStepModel(
         stepModels,
         "showcase_generation",
@@ -1064,26 +1277,87 @@ export const runSystemProfileGeneration = internalAction({
         "showcase_generation",
         completedSteps,
         stepModels,
-        `Generating showcase images (0/${showcaseCount})...`,
+        `Generating ${showcaseCount} showcase images in parallel...`,
       );
 
-      for (const [index, prompt] of showcasePrompts.entries()) {
-        const imageKey = await createAndStoreGeneratedImage(
+      // Slot-indexed storage preserves ordering (first slot -> first shot).
+      const profileImageSlots: (string | null)[] = new Array(
+        showcaseCount,
+      ).fill(null);
+      const usedSceneIds = new Set<string>(
+        initialPrompts.map((entry) => entry.sceneId),
+      );
+      let completedCount = 0;
+
+      const runSlot = async (
+        slotIndex: number,
+        slot: ShowcaseSlotPrompt,
+      ): Promise<void> => {
+        const key = await createAndStoreGeneratedImage(
           ctx,
-          prompt,
+          slot.prompt,
           avatarReferenceUrl,
           `aiProfiles/generated/${jobId}/showcase`,
         );
-        profileImageKeys.push(imageKey);
+        profileImageSlots[slotIndex] = key;
+        completedCount += 1;
         await updateJobProgress(
           ctx,
           jobId,
           "showcase_generation",
           completedSteps,
           stepModels,
-          `Generating showcase images (${index + 1}/${showcaseCount})...`,
+          `Showcase images: ${completedCount}/${showcaseCount} done`,
+        );
+      };
+
+      const firstPass = await Promise.allSettled(
+        initialPrompts.map((slot, index) => runSlot(index, slot)),
+      );
+      const failedSlotIndexes = firstPass
+        .map((outcome, index) => (outcome.status === "rejected" ? index : -1))
+        .filter((index) => index >= 0);
+
+      if (failedSlotIndexes.length > 0) {
+        const retryPrompts = buildShowcasePrompts(
+          candidate,
+          appearance,
+          subjectDescriptor,
+          failedSlotIndexes.length,
+          usedSceneIds,
+        );
+        for (const retrySlot of retryPrompts) {
+          usedSceneIds.add(retrySlot.sceneId);
+        }
+        await updateJobProgress(
+          ctx,
+          jobId,
+          "showcase_generation",
+          completedSteps,
+          stepModels,
+          `Retrying ${failedSlotIndexes.length} failed showcase slot${failedSlotIndexes.length > 1 ? "s" : ""}...`,
+        );
+
+        await Promise.allSettled(
+          failedSlotIndexes.map((slotIndex, i) => {
+            const retrySlot = retryPrompts[i];
+            if (!retrySlot) return Promise.resolve();
+            return runSlot(slotIndex, retrySlot);
+          }),
         );
       }
+
+      const profileImageKeys = profileImageSlots.filter(
+        (key): key is string => typeof key === "string",
+      );
+
+      if (profileImageKeys.length < SHOWCASE_MIN_SUCCESS) {
+        throw new GenerationFailureError(
+          "image_generation_retry_exhausted",
+          `Only ${profileImageKeys.length}/${showcaseCount} showcase images succeeded (minimum ${SHOWCASE_MIN_SUCCESS}).`,
+        );
+      }
+
       completedSteps = [...completedSteps, "showcase_generation"];
       stepModels = upsertStepModel(
         stepModels,
