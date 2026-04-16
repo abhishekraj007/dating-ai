@@ -144,6 +144,7 @@ export default function CharactersPage() {
             onGenerate={triggerGeneration}
             occupationOptions={generationOptions?.occupations ?? []}
             interestOptions={generationOptions?.interests ?? []}
+            appearanceOptions={generationOptions?.appearance}
           />
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:max-w-sm">

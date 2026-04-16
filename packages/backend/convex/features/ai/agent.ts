@@ -60,6 +60,7 @@ export function buildPersonalityPrompt(profile: Doc<"aiProfiles">): string {
   const parts: Array<string> = [`You are ${profile.name}`];
 
   if (profile.age) parts.push(`${profile.age} years old`);
+  if (profile.location) parts.push(`based in ${profile.location}`);
   if (profile.occupation) parts.push(`working as ${profile.occupation}`);
   if (profile.zodiacSign) parts.push(`zodiac sign: ${profile.zodiacSign}`);
 

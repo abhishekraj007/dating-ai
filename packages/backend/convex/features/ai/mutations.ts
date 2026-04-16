@@ -322,6 +322,7 @@ export const createAIProfile = mutation({
     personalityTraits: v.optional(v.array(v.string())),
     profileImageKeys: v.optional(v.array(v.string())),
     language: v.optional(v.string()),
+    location: v.optional(v.string()),
     voiceId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -368,6 +369,7 @@ export const createAIProfile = mutation({
       personalityTraits: args.personalityTraits,
       profileImageKeys: args.profileImageKeys,
       language: args.language ?? "en",
+      location: args.location,
       voiceId: args.voiceId,
       createdByUserId: user._id,
     });
@@ -392,6 +394,7 @@ export const updateAIProfile = mutation({
     personalityTraits: v.optional(v.array(v.string())),
     profileImageKeys: v.optional(v.array(v.string())),
     language: v.optional(v.string()),
+    location: v.optional(v.string()),
     voiceId: v.optional(v.string()),
   },
   handler: async (ctx, { profileId, ...updates }) => {
@@ -474,6 +477,7 @@ export const adminUpdateProfile = mutation({
     personalityTraits: v.optional(v.array(v.string())),
     profileImageKeys: v.optional(v.array(v.string())),
     language: v.optional(v.string()),
+    location: v.optional(v.string()),
     voiceId: v.optional(v.string()),
     status: v.optional(
       v.union(v.literal("active"), v.literal("pending"), v.literal("archived")),

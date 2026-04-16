@@ -10,6 +10,16 @@ type GenerationInput = {
   preferredGender?: "female" | "male";
   preferredOccupation?: string;
   preferredInterests?: string[];
+  appearanceOverrides?: {
+    skinTone?: string;
+    hairColor?: string;
+    hairStyle?: string;
+    eyeColor?: string;
+    build?: string;
+    outfit?: string;
+    vibe?: string;
+    expression?: string;
+  };
 };
 
 type ProfileGenerationOption = {
@@ -22,6 +32,19 @@ type ProfileGenerationOptions = {
   genders: ProfileGenerationOption[];
   occupations: ProfileGenerationOption[];
   interests: ProfileGenerationOption[];
+  appearance?: {
+    skinTones: string[];
+    hairColors: string[];
+    hairStylesFemale: string[];
+    hairStylesMale: string[];
+    eyeColors: string[];
+    buildsFemale: string[];
+    buildsMale: string[];
+    outfitsFemale: string[];
+    outfitsMale: string[];
+    vibes: string[];
+    expressions: string[];
+  };
 };
 
 type GenerationJob = {
@@ -92,6 +115,7 @@ export function useCharacterGeneration() {
           input?.preferredInterests && input.preferredInterests.length > 0
             ? input.preferredInterests
             : undefined,
+        appearanceOverrides: input?.appearanceOverrides,
       });
       toast.success("Character generation queued");
     } catch (error) {

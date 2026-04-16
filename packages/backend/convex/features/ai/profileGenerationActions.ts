@@ -36,8 +36,11 @@ import {
   BUILDS_MALE,
   STYLE_SIGNATURES_FEMALE,
   STYLE_SIGNATURES_MALE,
+  OUTFIT_STYLES_FEMALE,
+  OUTFIT_STYLES_MALE,
   VIBES,
   CITY_ARCHETYPES,
+  LOCATIONS_BY_ARCHETYPE,
   QUIRKS,
   EXPRESSIONS,
   AVATAR_SHOT_STYLES,
@@ -92,6 +95,7 @@ type ProfileCandidate = {
   age: number;
   zodiacSign: string;
   occupation: string;
+  location: string;
   bio: string;
   interests: string[];
   personalityTraits: string[];
@@ -128,11 +132,23 @@ type AppearanceProfile = {
   skinTone: string;
   skinCue: string;
   build: string;
+  outfit: string;
   signatureStyle: string;
   vibe: string;
   cityArchetype: string;
   quirk: string;
   expression: string;
+};
+
+type AppearanceOverrides = {
+  skinTone?: string;
+  hairColor?: string;
+  hairStyle?: string;
+  eyeColor?: string;
+  build?: string;
+  outfit?: string;
+  vibe?: string;
+  expression?: string;
 };
 
 type JobProgressStep =
@@ -156,6 +172,7 @@ const profileBlueprintSchema = z.object({
   age: z.number().int().min(20).max(34),
   zodiacSign: z.string().min(3).max(16),
   occupation: z.string().min(2).max(80),
+  location: z.string().min(3).max(60).optional(),
   bio: z.string().min(40).max(420),
   interests: z.array(z.string().min(2).max(40)).min(4).max(7),
   personalityTraits: z.array(z.string().min(2).max(40)).min(3).max(6),
@@ -290,14 +307,21 @@ function normalizeInterestPreferences(
   return normalized.length > 0 ? normalized : undefined;
 }
 
-function sampleAppearanceProfile(gender: Gender): AppearanceProfile {
-  const hairColor = randomItem(HAIR_COLORS);
-  const hairStyle =
-    gender === "female"
+function sampleAppearanceProfile(
+  gender: Gender,
+  overrides?: AppearanceOverrides,
+): AppearanceProfile {
+  const hairColor = overrides?.hairColor || randomItem(HAIR_COLORS);
+  const hairStyle = overrides?.hairStyle ||
+    (gender === "female"
       ? randomItem(HAIR_STYLES_FEMALE)
-      : randomItem(HAIR_STYLES_MALE);
-  const build =
-    gender === "female" ? randomItem(BUILDS_FEMALE) : randomItem(BUILDS_MALE);
+      : randomItem(HAIR_STYLES_MALE));
+  const build = overrides?.build ||
+    (gender === "female" ? randomItem(BUILDS_FEMALE) : randomItem(BUILDS_MALE));
+  const outfit = overrides?.outfit ||
+    (gender === "female"
+      ? randomItem(OUTFIT_STYLES_FEMALE)
+      : randomItem(OUTFIT_STYLES_MALE));
   const signatureStyle =
     gender === "female"
       ? randomItem(STYLE_SIGNATURES_FEMALE)
@@ -321,16 +345,29 @@ function sampleAppearanceProfile(gender: Gender): AppearanceProfile {
   return {
     ageHint,
     hair,
-    eyes: `${randomItem(EYE_SHAPES)} ${randomItem(EYE_COLORS)} eyes`,
-    skinTone: randomItem(SKIN_TONES),
+    eyes: overrides?.eyeColor
+      ? `${randomItem(EYE_SHAPES)} ${overrides.eyeColor} eyes`
+      : `${randomItem(EYE_SHAPES)} ${randomItem(EYE_COLORS)} eyes`,
+    skinTone: overrides?.skinTone || randomItem(SKIN_TONES),
     skinCue: randomItem(SKIN_CUES),
     build,
+    outfit,
     signatureStyle,
-    vibe: randomItem(VIBES),
+    vibe: overrides?.vibe || randomItem(VIBES),
     cityArchetype: randomItem(CITY_ARCHETYPES),
     quirk: randomItem(QUIRKS),
-    expression: randomItem(EXPRESSIONS),
+    expression: overrides?.expression || randomItem(EXPRESSIONS),
   };
+}
+
+function locationForArchetype(archetype: string): string {
+  const pool = LOCATIONS_BY_ARCHETYPE[archetype];
+  if (pool && pool.length > 0) {
+    return randomItem(pool);
+  }
+  // Fallback: pick from any archetype's locations.
+  const allLocations = Object.values(LOCATIONS_BY_ARCHETYPE).flat();
+  return randomItem(allLocations);
 }
 
 function genderNoun(gender: Gender): string {
@@ -351,6 +388,7 @@ function buildCanonicalSubjectDescriptor(
     `${appearance.hair}`,
     appearance.eyes,
     appearance.build,
+    `wearing ${appearance.outfit}`,
     appearance.signatureStyle,
   ]
     .map((part) => part.trim())
@@ -373,7 +411,7 @@ type ImagePromptInput = {
 
 function buildImagePromptCore(input: ImagePromptInput): string {
   const realismCues =
-    "Visible skin texture, natural pores, subtle facial asymmetry, non-retouched skin, authentic everyday look";
+    "Beautiful clear skin, attractive well-proportioned features, photogenic and appealing, high-quality dating profile photo";
 
   const settingWithContext = [
     input.setting,
@@ -400,7 +438,7 @@ function buildImagePromptCore(input: ImagePromptInput): string {
   if (!prompt.endsWith(".")) prompt += ".";
 
   if (input.withReferenceClause) {
-    prompt += ` Using the reference image as the same person, preserve face shape, skin tone, freckles and marks, eyebrow shape, eye color and shape, hair color, length and texture, and overall body type exactly. Only change outfit, pose, setting, and lighting as described above.`;
+    prompt += ` Using the reference image as the same person, preserve face shape, skin tone, eyebrow shape, eye color and shape, hair color, length and texture, and overall body type exactly. Only change outfit, pose, setting, and lighting as described above.`;
   }
 
   prompt += ` ${INLINE_NEGATIVES}`;
@@ -495,6 +533,7 @@ function toCandidateFromBlueprint(
   blueprint: z.infer<typeof profileBlueprintSchema>,
   gender: Gender,
   existingUsernames: Set<string>,
+  appearance: AppearanceProfile,
   preferences?: GenerationPreferences,
 ): ProfileCandidate {
   const sanitizedProvidedUsername = blueprint.username
@@ -523,6 +562,10 @@ function toCandidateFromBlueprint(
     5,
   );
 
+  // Prefer LLM-provided location, fall back to archetype-derived one.
+  const location =
+    blueprint.location?.trim() || locationForArchetype(appearance.cityArchetype);
+
   return {
     name: blueprint.name.trim(),
     username,
@@ -530,6 +573,7 @@ function toCandidateFromBlueprint(
     age: blueprint.age,
     zodiacSign: zodiac,
     occupation: preferences?.preferredOccupation ?? blueprint.occupation.trim(),
+    location,
     bio: blueprint.bio.trim(),
     interests: mergedInterests,
     personalityTraits: uniqueList(blueprint.personalityTraits, 4),
@@ -619,13 +663,16 @@ async function generateCandidateWithLLM(
 
 Soft persona seed (use naturally, do not quote literally):
 - age around ${appearance.ageHint} (allowed range 20-34)
+- appearance: ${appearance.skinTone}, ${appearance.hair}, ${appearance.eyes}
 - lives in a ${appearance.cityArchetype}
 - overall style/aesthetic: ${appearance.vibe}
 - personal quirk to weave in subtly: ${appearance.quirk}
+- pick a name and location that feel culturally coherent with the appearance — no strict rules, just natural
 
 Hard requirements:
 - age integer between 20 and 34
 - occupation: specific and believable (prefer non-generic roles)
+- location: a specific real city in "City, ST" or "City, CC" format (e.g. "Austin, TX", "Berlin, DE") - should feel natural for the persona
 - bio: 2-3 short sentences, 60-240 chars total
 - interests: 4-7 specific items (not vague nouns)
 - personalityTraits: 3-6 short adjectives
@@ -655,6 +702,7 @@ Required JSON shape:
   "age": 24,
   "zodiacSign": "string",
   "occupation": "string",
+  "location": "City, ST or City, CC (optional)",
   "bio": "string",
   "interests": ["string"],
   "personalityTraits": ["string"],
@@ -699,6 +747,7 @@ Required JSON shape:
           blueprint,
           gender,
           existingUsernames,
+          appearance,
           preferences,
         ),
         model: modelName,
@@ -780,7 +829,22 @@ function buildCandidate(
   const [interestA = "coffee", interestB = "music", interestC = "books"] =
     interests;
 
-  const bio = `just moved to a ${appearance.cityArchetype}, still learning its good corners. ${interestA.toLowerCase()} on weekdays, ${interestB.toLowerCase()} on weekends, and always a ${interestC.toLowerCase()} in my bag. ${appearance.quirk}.`;
+  const bioTemplates = [
+    `${interestA.toLowerCase()} addict, ${occupation.toLowerCase()} by day. currently obsessed with ${interestB.toLowerCase()} and finding the best ${interestC.toLowerCase()} spots in the city.`,
+    `split my time between ${interestA.toLowerCase()} and ${interestB.toLowerCase()}. ${appearance.quirk}. looking for someone who doesn't take themselves too seriously.`,
+    `${occupation.toLowerCase()} who can't stop talking about ${interestA.toLowerCase()}. weekends are for ${interestB.toLowerCase()} and ${interestC.toLowerCase()}. ${appearance.quirk}.`,
+    `moved to this ${appearance.cityArchetype} for the ${interestA.toLowerCase()} scene, stayed for the people. ${interestB.toLowerCase()} on my days off. ${appearance.quirk}.`,
+    `probably ${interestA.toLowerCase()} right now. or ${interestB.toLowerCase()}. ${occupation.toLowerCase()} life is busy but i always make time for ${interestC.toLowerCase()}.`,
+    `my friends describe me as the ${interestA.toLowerCase()} person. ${appearance.quirk}. also really into ${interestB.toLowerCase()} lately.`,
+    `${occupation.toLowerCase()} in a ${appearance.cityArchetype}. ${interestA.toLowerCase()} keeps me sane, ${interestB.toLowerCase()} keeps me happy. let's talk about ${interestC.toLowerCase()}.`,
+    `two truths and a lie: i'm a ${occupation.toLowerCase()}, i'm obsessed with ${interestA.toLowerCase()}, and i hate ${interestB.toLowerCase()}. (it's the last one)`,
+    `here for good ${interestA.toLowerCase()} recs and better conversations. ${appearance.quirk}. part-time ${interestB.toLowerCase()} enthusiast.`,
+    `not your typical ${occupation.toLowerCase()}. i'd rather be doing ${interestA.toLowerCase()} or ${interestB.toLowerCase()} than anything else. ${appearance.quirk}.`,
+    `${interestA.toLowerCase()} > everything. currently in my ${interestB.toLowerCase()} era. ${occupation.toLowerCase()} paying the bills. ${appearance.quirk}.`,
+    `${appearance.quirk}. when i'm not working as a ${occupation.toLowerCase()}, you'll find me deep into ${interestA.toLowerCase()} or attempting ${interestB.toLowerCase()}.`,
+  ];
+
+  const bio = randomItem(bioTemplates);
 
   return {
     name,
@@ -789,6 +853,7 @@ function buildCandidate(
     age,
     zodiacSign,
     occupation,
+    location: locationForArchetype(appearance.cityArchetype),
     bio,
     interests,
     personalityTraits,
@@ -1106,6 +1171,18 @@ export const runSystemProfileGeneration = internalAction({
     ),
     preferredOccupation: v.optional(v.string()),
     preferredInterests: v.optional(v.array(v.string())),
+    appearanceOverrides: v.optional(
+      v.object({
+        skinTone: v.optional(v.string()),
+        hairColor: v.optional(v.string()),
+        hairStyle: v.optional(v.string()),
+        eyeColor: v.optional(v.string()),
+        build: v.optional(v.string()),
+        outfit: v.optional(v.string()),
+        vibe: v.optional(v.string()),
+        expression: v.optional(v.string()),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const normalizedPreferences: GenerationPreferences = {
@@ -1153,7 +1230,10 @@ export const runSystemProfileGeneration = internalAction({
         },
       );
 
-      const appearance = sampleAppearanceProfile(selectedGender);
+      const appearance = sampleAppearanceProfile(
+        selectedGender,
+        args.appearanceOverrides ?? undefined,
+      );
 
       const existingProfiles = (await ctx.runQuery(
         "features/ai/profileGeneration:listSystemProfilesInternal" as any,

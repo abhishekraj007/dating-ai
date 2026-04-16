@@ -310,31 +310,39 @@ export const SKIN_TONES = [
 ];
 
 export const SKIN_CUES = [
-  "a single small beauty mark near the mouth",
+  "smooth glowing skin with a natural radiance",
   "subtle dimples when smiling",
-  "a faint scar on the left eyebrow",
-  "clear skin with visible natural pores",
-  "a sunkissed look with a hint of cheek flush",
-  "a tiny mole on the left cheekbone",
-  "soft freckles on the shoulders",
+  "flawless complexion with a soft healthy glow",
+  "clear luminous skin, naturally lit",
+  "a sunkissed golden glow on the cheeks",
+  "dewy fresh skin with a natural highlight",
+  "warm even-toned skin with a slight flush on the cheeks",
 ];
 
 export const BUILDS_FEMALE = [
-  "slim build, around 5'4\"",
-  "petite and soft, around 5'2\"",
-  "athletic build, around 5'6\"",
-  "curvy build, around 5'5\"",
-  "tall and lean, around 5'9\"",
-  "average build with a soft frame, around 5'5\"",
+  "slim toned build, around 5'5\"",
+  "petite with a fit frame, around 5'3\"",
+  "athletic toned build, around 5'7\"",
+  "curvy with a fit waist, around 5'5\"",
+  "tall and slender with long legs, around 5'9\"",
+  "hourglass figure with a toned midsection, around 5'6\"",
+  "voluptuous curvy figure with full hips, around 5'4\"",
+  "thick and curvy with a defined waist, around 5'5\"",
+  "busty athletic build with toned legs, around 5'6\"",
+  "fit petite build with a flat stomach, around 5'2\"",
 ];
 
 export const BUILDS_MALE = [
-  "lean build, around 5'10\"",
-  "athletic build with broad shoulders, around 6'0\"",
-  "tall and wiry, around 6'2\"",
-  "average build, around 5'9\"",
-  "stocky and strong, around 5'11\"",
-  "slim swimmer's build, around 6'1\"",
+  "lean muscular build, around 5'11\"",
+  "athletic build with broad shoulders and defined arms, around 6'0\"",
+  "tall and fit, around 6'2\"",
+  "toned athletic build, around 5'10\"",
+  "muscular and strong, around 6'0\"",
+  "lean swimmer's build with visible definition, around 6'1\"",
+  "broad muscular build with a V-taper, around 6'0\"",
+  "tall athletic build with defined abs, around 6'3\"",
+  "compact muscular build, around 5'9\"",
+  "lean fit surfer build, around 5'11\"",
 ];
 
 export const STYLE_SIGNATURES_FEMALE = [
@@ -355,8 +363,47 @@ export const STYLE_SIGNATURES_MALE = [
   "a subtle sleeve tattoo visible below short sleeves",
   "a simple silver chain around the neck",
   "a vintage watch with a worn leather strap",
-  "a trimmed short beard and a single eyebrow scar",
+  "a trimmed short beard with a clean groomed look",
   "no jewelry, just a clean minimalist look",
+];
+
+export const OUTFIT_STYLES_FEMALE = [
+  // Stylish casual
+  "a fitted crop top and high-waisted jeans",
+  "a flowy summer dress with thin straps",
+  "a tight ribbed tank top and a denim skirt",
+  "an oversized blazer over a lace bralette",
+  "a bodycon mini dress",
+  "a silk camisole and tailored trousers",
+  "a cropped sweater showing a hint of midriff",
+  // Sexy / revealing
+  "a low-cut bodysuit and high-waisted shorts",
+  "a sheer mesh top over a bralette",
+  "a tight mini skirt and an off-shoulder top",
+  "a backless halter dress",
+  "a deep V-neck dress with a thigh-high slit",
+  "a fitted bikini top and a sarong wrap",
+  "a lace-trimmed slip dress",
+  // Athletic / active
+  "a sports bra and yoga leggings",
+  "a matching athletic set showing toned midriff",
+];
+
+export const OUTFIT_STYLES_MALE = [
+  // Stylish casual
+  "a fitted henley with rolled sleeves",
+  "a crisp white t-shirt and dark jeans",
+  "an open button-down shirt over a fitted tee",
+  "a well-fitted polo and chinos",
+  "a leather jacket over a plain crew neck",
+  "a linen shirt with top buttons open",
+  // Athletic / active
+  "a fitted tank top showing defined arms",
+  "athletic shorts and a compression top",
+  // Smart casual
+  "a tailored blazer with no undershirt, chest visible",
+  "a slim turtleneck sweater",
+  "a casual suit jacket with a v-neck underneath",
 ];
 
 export const VIBES = [
@@ -386,6 +433,89 @@ export const CITY_ARCHETYPES = [
   "historic cobblestone old-town",
 ];
 
+// Maps each city archetype to concrete "City, Region" strings for the
+// location field displayed on profile cards and fed to the agent prompt.
+export const LOCATIONS_BY_ARCHETYPE: Record<string, string[]> = {
+  "coastal college town": [
+    "Santa Cruz, CA",
+    "San Luis Obispo, CA",
+    "Wilmington, NC",
+    "Santa Barbara, CA",
+    "Savannah, GA",
+    "Byron Bay, AU",
+    "Brighton, UK",
+  ],
+  "dense creative metro": [
+    "Brooklyn, NY",
+    "Los Angeles, CA",
+    "East London, UK",
+    "Berlin, DE",
+    "Toronto, CA",
+    "Melbourne, AU",
+    "Portland, OR",
+    "Amsterdam, NL",
+  ],
+  "mountain-side city": [
+    "Boulder, CO",
+    "Asheville, NC",
+    "Salt Lake City, UT",
+    "Innsbruck, AT",
+    "Queenstown, NZ",
+    "Banff, CA",
+  ],
+  "beach-suburb": [
+    "Encinitas, CA",
+    "Bondi, AU",
+    "Haleiwa, HI",
+    "Venice Beach, CA",
+    "Gold Coast, AU",
+    "Biarritz, FR",
+  ],
+  "artsy mid-size city": [
+    "Austin, TX",
+    "Nashville, TN",
+    "Lisbon, PT",
+    "Marfa, TX",
+    "Providence, RI",
+    "Ghent, BE",
+    "Oaxaca, MX",
+  ],
+  "warehouse-district neighborhood of a big city": [
+    "Bushwick, NY",
+    "Hackney, UK",
+    "Kreuzberg, DE",
+    "Fitzroy, AU",
+    "Logan Square, IL",
+    "Barrio Italia, CL",
+  ],
+  "quiet tree-lined residential neighborhood": [
+    "Evanston, IL",
+    "Decatur, GA",
+    "Takoma Park, MD",
+    "Fremantle, AU",
+    "Hampstead, UK",
+    "Kichijoji, JP",
+  ],
+  "design-district downtown": [
+    "San Francisco, CA",
+    "Copenhagen, DK",
+    "Stockholm, SE",
+    "Chicago, IL",
+    "Seoul, KR",
+    "Milan, IT",
+    "Helsinki, FI",
+  ],
+  "historic cobblestone old-town": [
+    "Prague, CZ",
+    "Bruges, BE",
+    "Edinburgh, UK",
+    "Cartagena, CO",
+    "Old Montreal, CA",
+    "Tallinn, EE",
+    "Porto, PT",
+  ],
+};
+
 export const QUIRKS = [
   "collects vintage film cameras",
   "always has a book in her bag",
@@ -402,12 +532,13 @@ export const QUIRKS = [
 ];
 
 export const EXPRESSIONS = [
-  "a gentle closed-mouth smile",
-  "a soft laugh mid-motion",
-  "a relaxed neutral expression looking just past the camera",
-  "a warm slight smile, eyes slightly squinted",
-  "a confident half-smile",
-  "looking slightly off-camera with a thoughtful expression",
+  "a warm inviting smile showing teeth",
+  "a soft laugh mid-motion, looking genuinely happy",
+  "a confident smile with direct eye contact",
+  "a playful smirk with slightly raised eyebrow",
+  "a radiant full smile with sparkling eyes",
+  "a flirty glance with a slight lip bite",
+  "a warm slight smile, eyes bright and engaged",
 ];
 
 // --- Avatar shot style library ---
@@ -746,4 +877,4 @@ export const STOPWORDS = new Set([
 ]);
 
 export const INLINE_NEGATIVES =
-  "Avoid glossy airbrushed skin, avoid beauty-ad retouching, avoid uncanny facial symmetry, avoid studio backdrop unless specified, avoid extra fingers or distorted hands, avoid text or watermarks, avoid cartoon or render look.";
+  "Avoid extra fingers or distorted hands, avoid text or watermarks, avoid cartoon or render look, avoid unflattering angles, avoid dull or tired-looking skin, avoid excessive blemishes or acne, avoid uncanny valley AI artifacts.";

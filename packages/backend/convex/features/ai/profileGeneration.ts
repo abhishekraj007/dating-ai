@@ -6,6 +6,19 @@ import {
   query,
 } from "../../_generated/server";
 import { authComponent } from "../../lib/betterAuth";
+import {
+  SKIN_TONES,
+  HAIR_COLORS,
+  HAIR_STYLES_FEMALE,
+  HAIR_STYLES_MALE,
+  EYE_COLORS,
+  BUILDS_FEMALE,
+  BUILDS_MALE,
+  OUTFIT_STYLES_FEMALE,
+  OUTFIT_STYLES_MALE,
+  VIBES,
+  EXPRESSIONS,
+} from "./profileGenerationData";
 
 const PROFILE_OCCUPATION_OPTIONS = [
   "Software Engineer",
@@ -140,6 +153,7 @@ export const createSystemProfileInternal = internalMutation({
     age: v.number(),
     zodiacSign: v.string(),
     occupation: v.string(),
+    location: v.string(),
     bio: v.string(),
     interests: v.array(v.string()),
     personalityTraits: v.array(v.string()),
@@ -168,6 +182,7 @@ export const createSystemProfileInternal = internalMutation({
       age: args.age,
       zodiacSign: args.zodiacSign,
       occupation: args.occupation,
+      location: args.location,
       bio: args.bio,
       interests: args.interests,
       personalityTraits: args.personalityTraits,
@@ -229,6 +244,18 @@ export const adminGenerateSystemProfile = mutation({
     preferredGender: v.optional(v.union(v.literal("female"), v.literal("male"))),
     preferredOccupation: v.optional(v.string()),
     preferredInterests: v.optional(v.array(v.string())),
+    appearanceOverrides: v.optional(
+      v.object({
+        skinTone: v.optional(v.string()),
+        hairColor: v.optional(v.string()),
+        hairStyle: v.optional(v.string()),
+        eyeColor: v.optional(v.string()),
+        build: v.optional(v.string()),
+        outfit: v.optional(v.string()),
+        vibe: v.optional(v.string()),
+        expression: v.optional(v.string()),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
@@ -254,6 +281,7 @@ export const adminGenerateSystemProfile = mutation({
         preferredGender: args.preferredGender,
         preferredOccupation: args.preferredOccupation,
         preferredInterests: args.preferredInterests,
+        appearanceOverrides: args.appearanceOverrides,
       },
     );
 
@@ -381,6 +409,19 @@ export const getProfileGenerationOptions = query({
         label: option.label,
         emoji: option.emoji ?? "",
       })),
+      appearance: {
+        skinTones: SKIN_TONES,
+        hairColors: HAIR_COLORS,
+        hairStylesFemale: HAIR_STYLES_FEMALE,
+        hairStylesMale: HAIR_STYLES_MALE,
+        eyeColors: EYE_COLORS,
+        buildsFemale: BUILDS_FEMALE,
+        buildsMale: BUILDS_MALE,
+        outfitsFemale: OUTFIT_STYLES_FEMALE,
+        outfitsMale: OUTFIT_STYLES_MALE,
+        vibes: VIBES,
+        expressions: EXPRESSIONS,
+      },
     };
   },
 });
