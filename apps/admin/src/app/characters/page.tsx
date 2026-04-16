@@ -24,8 +24,12 @@ export default function CharactersPage() {
     "all" | "active" | "pending" | "new"
   >("all");
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
-  const userData = useQuery(api.user.fetchUserAndProfile, isAuthenticated ? {} : "skip");
-  const canQueryProfiles = isAuthenticated && userData?.profile?.isAdmin === true;
+  const userData = useQuery(
+    api.user.fetchUserAndProfile,
+    isAuthenticated ? {} : "skip",
+  );
+  const canQueryProfiles =
+    isAuthenticated && userData?.profile?.isAdmin === true;
   useEffect(() => {
     const handle = setTimeout(() => {
       setDebouncedSearch(searchQuery.trim());
@@ -33,17 +37,20 @@ export default function CharactersPage() {
     return () => clearTimeout(handle);
   }, [searchQuery]);
 
-  const profiles = useQuery(api.features.ai.queries.getSystemProfiles, canQueryProfiles
-    ? {
-        search: debouncedSearch || undefined,
-        statusFilter:
-          profileFilter === "active" || profileFilter === "pending"
-            ? profileFilter
-            : undefined,
-        recentOnly: profileFilter === "new" ? true : undefined,
-        limit: 120,
-      }
-    : "skip");
+  const profiles = useQuery(
+    api.features.ai.queries.getSystemProfiles,
+    canQueryProfiles
+      ? {
+          search: debouncedSearch || undefined,
+          statusFilter:
+            profileFilter === "active" || profileFilter === "pending"
+              ? profileFilter
+              : undefined,
+          recentOnly: profileFilter === "new" ? true : undefined,
+          limit: 120,
+        }
+      : "skip",
+  );
   const {
     isGenerating,
     triggerGeneration,
@@ -63,11 +70,14 @@ export default function CharactersPage() {
     deletingImageKey,
     formData,
     newInterest,
+    mode,
     avatarInputRef,
     galleryInputRef,
     setFormData,
     setNewInterest,
     setIsSheetOpen,
+    setMode,
+    handleView,
     handleEdit,
     handleClose,
     handleAddInterest,
@@ -87,8 +97,11 @@ export default function CharactersPage() {
   const loader = () => {
     return (
       <PageShell>
-        <PageHeader title="Characters" subtitle="Loading system characters..." />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <PageHeader
+          title="Characters"
+          subtitle="Loading system characters..."
+        />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="border rounded-lg p-4">
               <div className="flex items-center gap-3 mb-3">
@@ -175,7 +188,7 @@ export default function CharactersPage() {
           </div>
 
           {isProfilesLoading ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(8)].map((_, i) => (
                 <div key={i} className="rounded-xl border border-border/60 p-4">
                   <div className="mb-3 flex items-center gap-3">
@@ -202,14 +215,16 @@ export default function CharactersPage() {
               description="Try clearing search or changing filters to see more profiles."
             />
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {visibleProfiles.map((profile) => {
                 const isNew =
-                  (profile.createdAt ?? profile._creationTime ?? 0) >= oneDayAgo;
+                  (profile.createdAt ?? profile._creationTime ?? 0) >=
+                  oneDayAgo;
                 return (
                   <CharacterCard
                     key={profile._id}
                     profile={profile}
+                    onView={handleView}
                     onEdit={handleEdit}
                     isNew={isNew}
                   />
@@ -222,6 +237,8 @@ export default function CharactersPage() {
             isOpen={isSheetOpen}
             onOpenChange={setIsSheetOpen}
             profile={selectedProfile}
+            mode={mode}
+            onModeChange={setMode}
             formData={formData}
             onFormChange={setFormData}
             newInterest={newInterest}

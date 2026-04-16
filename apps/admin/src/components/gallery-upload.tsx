@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ImagePlus, Loader2, X, ZoomIn } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ImageLightbox } from "@/components/image-lightbox";
 
 interface GalleryImage {
   url: string;
@@ -16,8 +17,8 @@ interface GalleryUploadProps {
   maxFiles?: number;
   isUploading?: boolean;
   deletingKey?: string | null;
-  onUpload: () => void;
-  onDelete: (key: string) => void;
+  onUpload?: () => void;
+  onDelete?: (key: string) => void;
   className?: string;
 }
 
@@ -30,7 +31,7 @@ export function GalleryUpload({
   onDelete,
   className,
 }: GalleryUploadProps) {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -41,12 +42,12 @@ export function GalleryUpload({
       </div>
 
       {/* Upload Area - show when no images or can add more */}
-      {images.length < maxFiles && (
+      {onUpload && images.length < maxFiles && (
         <div
           className={cn(
             "relative rounded-lg border-2 border-dashed p-6 text-center transition-colors cursor-pointer",
             "hover:border-primary/50 hover:bg-muted/50",
-            isUploading && "pointer-events-none opacity-50"
+            isUploading && "pointer-events-none opacity-50",
           )}
           onClick={onUpload}
         >
@@ -76,7 +77,8 @@ export function GalleryUpload({
           {images.map((image, i) => (
             <div
               key={image.key ?? i}
-              className="group relative aspect-square rounded-lg overflow-hidden bg-muted"
+              className="group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer"
+              onClick={() => setLightboxIndex(i)}
             >
               <img
                 src={image.url}
@@ -90,7 +92,7 @@ export function GalleryUpload({
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setSelectedImage(image.url);
+                    setLightboxIndex(i);
                   }}
                   variant="secondary"
                   size="icon"
@@ -100,7 +102,7 @@ export function GalleryUpload({
                 </Button>
 
                 {/* Delete Button */}
-                {image.key && (
+                {image.key && onDelete && (
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -124,30 +126,14 @@ export function GalleryUpload({
         </div>
       )}
 
-      {/* Image Preview Modal */}
-      {selectedImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div className="relative max-h-full max-w-full">
-            <img
-              src={selectedImage}
-              alt="Preview"
-              className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <Button
-              onClick={() => setSelectedImage(null)}
-              variant="secondary"
-              size="icon"
-              className="absolute top-2 right-2 h-8 w-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+      <ImageLightbox
+        images={images.map((img) => img.url)}
+        open={lightboxIndex !== null}
+        initialIndex={lightboxIndex ?? 0}
+        onOpenChange={(open) => {
+          if (!open) setLightboxIndex(null);
+        }}
+      />
     </div>
   );
 }

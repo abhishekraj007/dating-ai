@@ -18,16 +18,16 @@ export const getAIProfiles = query({
     if (args.gender !== undefined) {
       profiles = await ctx.db
         .query("aiProfiles")
-        .withIndex("by_gender_and_status", (q) =>
+        .withIndex("by_status_and_gender", (q) =>
           q
-            .eq("gender", args.gender as "male" | "female")
             .eq("status", "active")
+            .eq("gender", args.gender as "male" | "female"),
         )
         .collect();
     } else {
       profiles = await ctx.db
         .query("aiProfiles")
-        .withIndex("by_status", (q) => q.eq("status", "active"))
+        .withIndex("by_status_and_gender", (q) => q.eq("status", "active"))
         .collect();
     }
 
@@ -48,7 +48,7 @@ export const getAIProfiles = query({
           }
         }
         return { ...profile, avatarUrl };
-      })
+      }),
     );
 
     return enriched;
@@ -69,9 +69,7 @@ export const getUserCreatedProfiles = query({
 
     let profiles = await ctx.db
       .query("aiProfiles")
-      .withIndex("by_created_by_user_id", (q) =>
-        q.eq("createdByUserId", user._id)
-      )
+      .withIndex("by_user", (q) => q.eq("createdByUserId", user._id))
       .filter((q) => q.eq(q.field("status"), "active"))
       .collect();
 
@@ -92,7 +90,7 @@ export const getUserCreatedProfiles = query({
           }
         }
         return { ...profile, avatarUrl };
-      })
+      }),
     );
 
     return enriched;
@@ -123,7 +121,7 @@ export const getAIProfileWithImages = query({
     }
 
     const profileImageUrls: string[] = [];
-    for (const key of profile.profileImageKeys) {
+    for (const key of profile.profileImageKeys ?? []) {
       try {
         const url = await r2.getUrl(key);
         profileImageUrls.push(url);
@@ -164,7 +162,7 @@ export const getAIProfile = query({
     }
 
     const profileImageUrls: string[] = [];
-    for (const key of profile.profileImageKeys) {
+    for (const key of profile.profileImageKeys ?? []) {
       try {
         const url = await r2.getUrl(key);
         profileImageUrls.push(url);
@@ -177,9 +175,9 @@ export const getAIProfile = query({
     let conversation = null;
     if (user) {
       conversation = await ctx.db
-        .query("conversations")
-        .withIndex("by_user_id_and_ai_profile_id", (q) =>
-          q.eq("userId", user._id).eq("aiProfileId", args.profileId)
+        .query("aiConversations")
+        .withIndex("by_user_and_profile", (q) =>
+          q.eq("userId", user._id).eq("aiProfileId", args.profileId),
         )
         .first();
     }

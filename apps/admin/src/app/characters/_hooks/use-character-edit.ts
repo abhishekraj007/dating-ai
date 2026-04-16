@@ -106,9 +106,11 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
   const [deletingImageKey, setDeletingImageKey] = useState<string | null>(null);
   const [formData, setFormData] = useState<CharacterFormData>(initialFormData);
   const [newInterest, setNewInterest] = useState("");
+  const [mode, setMode] = useState<"view" | "edit">("view");
 
-  const handleEdit = (profile: AIProfile) => {
+  const openProfile = (profile: AIProfile, nextMode: "view" | "edit") => {
     setSelectedProfileId(profile._id);
+    setMode(nextMode);
     setFormData({
       name: profile.name,
       username: profile.username ?? "",
@@ -136,10 +138,14 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     setIsSheetOpen(true);
   };
 
+  const handleView = (profile: AIProfile) => openProfile(profile, "view");
+  const handleEdit = (profile: AIProfile) => openProfile(profile, "edit");
+
   const handleClose = () => {
     setIsSheetOpen(false);
     setSelectedProfileId(null);
     setNewInterest("");
+    setMode("view");
   };
 
   const handleAddInterest = () => {
@@ -307,6 +313,7 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     deletingImageKey,
     formData,
     newInterest,
+    mode,
     // Refs
     avatarInputRef,
     galleryInputRef,
@@ -314,7 +321,9 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     setFormData,
     setNewInterest,
     setIsSheetOpen,
+    setMode,
     // Handlers
+    handleView,
     handleEdit,
     handleClose,
     handleAddInterest,
