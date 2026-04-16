@@ -12,6 +12,9 @@ import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from "react-native-reanimated";
+import { featureFlags } from "react-native-screens";
+
+featureFlags.experiment.ios26AllowInteractionsDuringTransition = true;
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,

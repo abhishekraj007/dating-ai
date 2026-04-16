@@ -1,4 +1,4 @@
-import { View, Dimensions, ActivityIndicator } from "react-native";
+import { View, Dimensions, ActivityIndicator, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, useRouter } from "expo-router";
 import { Button, Skeleton, useThemeColor, ScrollShadow } from "heroui-native";
@@ -20,6 +20,7 @@ export default function ExploreScreen() {
     router.push("/filter");
   };
   const { profiles, isLoading, status, loadMore } = useExploreProfiles(20);
+  type ExploreProfile = (typeof profiles)[number];
 
   const handleLoadMore = useCallback(() => {
     if (status === "CanLoadMore") {
@@ -33,7 +34,13 @@ export default function ExploreScreen() {
     }
   }, [isLoading, profiles.length, status, loadMore]);
 
-  const renderProfile = ({ item, index }: { item: any; index: number }) => {
+  const renderProfile = ({
+    item,
+    index,
+  }: {
+    item: ExploreProfile;
+    index: number;
+  }) => {
     // 2 columns
     const isLeft = index % 2 === 0;
     const GAP = 12; // Adjusted gap for better spacing
@@ -46,19 +53,17 @@ export default function ExploreScreen() {
         }}
       >
         <Link href={`/(root)/(main)/profile/${item._id}`} asChild>
-          <Link.Trigger>
-            <View>
-              <ProfileCard
-                name={item.name}
-                age={item.age}
-                zodiacSign={item.zodiacSign}
-                avatarUrl={item.avatarUrl}
-                gender={item.gender}
-                isPressable={false}
-                imageWrapper={(image) => <Link.AppleZoom>{image}</Link.AppleZoom>}
-              />
-            </View>
-          </Link.Trigger>
+          <Pressable>
+            <ProfileCard
+              name={item.name}
+              age={item.age}
+              zodiacSign={item.zodiacSign}
+              avatarUrl={item.avatarUrl}
+              gender={item.gender}
+              isPressable={false}
+              imageWrapper={(image) => <Link.AppleZoom>{image}</Link.AppleZoom>}
+            />
+          </Pressable>
         </Link>
       </View>
     );
