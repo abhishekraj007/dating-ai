@@ -19,7 +19,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Plus, X, ImagePlus, Loader2 } from "lucide-react";
+import { Plus, X, ImagePlus, Loader2, Pencil } from "lucide-react";
 import { GalleryUpload } from "@/components/gallery-upload";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -69,6 +69,8 @@ interface EditCharacterSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   profile: AIProfile | null;
+  mode: "view" | "edit";
+  onModeChange: (mode: "view" | "edit") => void;
   formData: CharacterFormData;
   onFormChange: (data: CharacterFormData) => void;
   newInterest: string;
@@ -92,6 +94,8 @@ export function EditCharacterSheet({
   isOpen,
   onOpenChange,
   profile,
+  mode,
+  onModeChange,
   formData,
   onFormChange,
   newInterest,
@@ -110,6 +114,7 @@ export function EditCharacterSheet({
   onSave,
   onClose,
 }: EditCharacterSheetProps) {
+  const isReadOnly = mode === "view";
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent
@@ -117,7 +122,22 @@ export function EditCharacterSheet({
         className="w-full sm:max-w-lg flex flex-col p-0 h-full"
       >
         <SheetHeader className="px-6 py-4 border-b shrink-0">
-          <SheetTitle>Edit Character</SheetTitle>
+          <div className="flex items-center justify-between gap-2">
+            <SheetTitle>
+              {isReadOnly ? "View Character" : "Edit Character"}
+            </SheetTitle>
+            {isReadOnly && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onModeChange("edit")}
+              >
+                <Pencil className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+            )}
+          </div>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6">
@@ -135,42 +155,46 @@ export function EditCharacterSheet({
                       {profile.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <input
-                    ref={avatarInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={onAvatarUpload}
-                  />
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full"
-                    onClick={() => avatarInputRef.current?.click()}
-                    disabled={isUploadingAvatar}
-                  >
-                    {isUploadingAvatar ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <ImagePlus className="h-4 w-4" />
-                    )}
-                  </Button>
-                  {profile.avatarImageKey && (
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      className="absolute top-0 right-0 h-6 w-6 rounded-full"
-                      onClick={() =>
-                        onDeleteImage(profile.avatarImageKey!, "avatar")
-                      }
-                      disabled={deletingImageKey === profile.avatarImageKey}
-                    >
-                      {deletingImageKey === profile.avatarImageKey ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <X className="h-3 w-3" />
+                  {!isReadOnly && (
+                    <>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={onAvatarUpload}
+                      />
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="absolute bottom-0 right-0 h-8 w-8 rounded-full"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={isUploadingAvatar}
+                      >
+                        {isUploadingAvatar ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <ImagePlus className="h-4 w-4" />
+                        )}
+                      </Button>
+                      {profile.avatarImageKey && (
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="absolute top-0 right-0 h-6 w-6 rounded-full"
+                          onClick={() =>
+                            onDeleteImage(profile.avatarImageKey!, "avatar")
+                          }
+                          disabled={deletingImageKey === profile.avatarImageKey}
+                        >
+                          {deletingImageKey === profile.avatarImageKey ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <X className="h-3 w-3" />
+                          )}
+                        </Button>
                       )}
-                    </Button>
+                    </>
                   )}
                 </div>
               </div>
@@ -185,6 +209,7 @@ export function EditCharacterSheet({
                 onChange={(e) =>
                   onFormChange({ ...formData, name: e.target.value })
                 }
+                disabled={isReadOnly}
               />
             </div>
 
@@ -205,6 +230,7 @@ export function EditCharacterSheet({
                     })
                   }
                   placeholder="unique_handle"
+                  disabled={isReadOnly}
                 />
               </div>
             </div>
@@ -219,6 +245,7 @@ export function EditCharacterSheet({
                 onChange={(e) =>
                   onFormChange({ ...formData, age: e.target.value })
                 }
+                disabled={isReadOnly}
               />
             </div>
 
@@ -230,6 +257,7 @@ export function EditCharacterSheet({
                 onValueChange={(value: "female" | "male") =>
                   onFormChange({ ...formData, gender: value })
                 }
+                disabled={isReadOnly}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -249,6 +277,7 @@ export function EditCharacterSheet({
                 onValueChange={(value) =>
                   onFormChange({ ...formData, zodiacSign: value })
                 }
+                disabled={isReadOnly}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select zodiac sign" />
@@ -272,6 +301,7 @@ export function EditCharacterSheet({
                 onChange={(e) =>
                   onFormChange({ ...formData, occupation: e.target.value })
                 }
+                disabled={isReadOnly}
               />
             </div>
 
@@ -285,6 +315,7 @@ export function EditCharacterSheet({
                   onFormChange({ ...formData, bio: e.target.value })
                 }
                 rows={4}
+                disabled={isReadOnly}
               />
             </div>
 
@@ -296,35 +327,39 @@ export function EditCharacterSheet({
                   <Badge
                     key={interest}
                     variant="secondary"
-                    className="cursor-pointer"
-                    onClick={() => onRemoveInterest(interest)}
+                    className={isReadOnly ? undefined : "cursor-pointer"}
+                    onClick={
+                      isReadOnly ? undefined : () => onRemoveInterest(interest)
+                    }
                   >
                     {interest}
-                    <X className="h-3 w-3 ml-1" />
+                    {!isReadOnly && <X className="h-3 w-3 ml-1" />}
                   </Badge>
                 ))}
               </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add interest"
-                  value={newInterest}
-                  onChange={(e) => onNewInterestChange(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      onAddInterest();
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={onAddInterest}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+              {!isReadOnly && (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add interest"
+                    value={newInterest}
+                    onChange={(e) => onNewInterestChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        onAddInterest();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={onAddInterest}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Language */}
@@ -337,6 +372,7 @@ export function EditCharacterSheet({
                   onFormChange({ ...formData, language: e.target.value })
                 }
                 placeholder="en"
+                disabled={isReadOnly}
               />
             </div>
 
@@ -350,6 +386,7 @@ export function EditCharacterSheet({
                   onFormChange({ ...formData, voiceId: e.target.value })
                 }
                 placeholder="ElevenLabs voice ID"
+                disabled={isReadOnly}
               />
             </div>
 
@@ -361,6 +398,7 @@ export function EditCharacterSheet({
                 onValueChange={(value: "active" | "pending" | "archived") =>
                   onFormChange({ ...formData, status: value })
                 }
+                disabled={isReadOnly}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -387,6 +425,7 @@ export function EditCharacterSheet({
                       <span className="text-sm">{platform.label}</span>
                       <Checkbox
                         checked={checked}
+                        disabled={isReadOnly}
                         onCheckedChange={(nextChecked) => {
                           const isChecked = nextChecked === true;
                           const nextValues = isChecked
@@ -431,6 +470,7 @@ export function EditCharacterSheet({
                       },
                     })
                   }
+                  disabled={isReadOnly}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select tone" />
@@ -459,6 +499,7 @@ export function EditCharacterSheet({
                       },
                     })
                   }
+                  disabled={isReadOnly}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -479,6 +520,7 @@ export function EditCharacterSheet({
                 <Switch
                   id="usesEmojis"
                   checked={formData.communicationStyle.usesEmojis}
+                  disabled={isReadOnly}
                   onCheckedChange={(checked) =>
                     onFormChange({
                       ...formData,
@@ -497,6 +539,7 @@ export function EditCharacterSheet({
                 <Switch
                   id="usesSlang"
                   checked={formData.communicationStyle.usesSlang}
+                  disabled={isReadOnly}
                   onCheckedChange={(checked) =>
                     onFormChange({
                       ...formData,
@@ -522,6 +565,7 @@ export function EditCharacterSheet({
                   min={1}
                   max={5}
                   step={1}
+                  disabled={isReadOnly}
                   onValueChange={([value]) =>
                     onFormChange({
                       ...formData,
@@ -538,14 +582,16 @@ export function EditCharacterSheet({
             {/* Gallery Images */}
             {profile && (
               <>
-                <input
-                  ref={galleryInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={onGalleryUpload}
-                />
+                {!isReadOnly && (
+                  <input
+                    ref={galleryInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={onGalleryUpload}
+                  />
+                )}
                 <GalleryUpload
                   images={profile.profileImageUrls.map((url, i) => ({
                     url,
@@ -554,8 +600,16 @@ export function EditCharacterSheet({
                   maxFiles={10}
                   isUploading={isUploadingGallery}
                   deletingKey={deletingImageKey}
-                  onUpload={() => galleryInputRef.current?.click()}
-                  onDelete={(key) => onDeleteImage(key, "gallery")}
+                  onUpload={
+                    isReadOnly
+                      ? undefined
+                      : () => galleryInputRef.current?.click()
+                  }
+                  onDelete={
+                    isReadOnly
+                      ? undefined
+                      : (key) => onDeleteImage(key, "gallery")
+                  }
                 />
               </>
             )}
@@ -563,12 +617,26 @@ export function EditCharacterSheet({
         </div>
 
         <div className="border-t p-4 flex gap-2 shrink-0 bg-background">
-          <Button variant="outline" onClick={onClose} className="flex-1">
-            Cancel
-          </Button>
-          <Button onClick={onSave} disabled={isSaving} className="flex-1">
-            {isSaving ? "Saving..." : "Save"}
-          </Button>
+          {isReadOnly ? (
+            <>
+              <Button variant="outline" onClick={onClose} className="flex-1">
+                Close
+              </Button>
+              <Button onClick={() => onModeChange("edit")} className="flex-1">
+                <Pencil className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={onClose} className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={onSave} disabled={isSaving} className="flex-1">
+                {isSaving ? "Saving..." : "Save"}
+              </Button>
+            </>
+          )}
         </div>
       </SheetContent>
     </Sheet>
