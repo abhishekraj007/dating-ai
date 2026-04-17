@@ -80,7 +80,9 @@ export const createProfileGenerationJobInternal = internalMutation({
   args: {
     source: v.union(v.literal("manual"), v.literal("cron")),
     triggeredByUserId: v.optional(v.string()),
-    preferredGender: v.optional(v.union(v.literal("female"), v.literal("male"))),
+    preferredGender: v.optional(
+      v.union(v.literal("female"), v.literal("male")),
+    ),
     preferredOccupation: v.optional(v.string()),
     preferredInterests: v.optional(v.array(v.string())),
   },
@@ -104,7 +106,12 @@ export const updateProfileGenerationJobInternal = internalMutation({
   args: {
     jobId: v.id("profileGenerationJobs"),
     status: v.optional(
-      v.union(v.literal("queued"), v.literal("processing"), v.literal("completed"), v.literal("failed")),
+      v.union(
+        v.literal("queued"),
+        v.literal("processing"),
+        v.literal("completed"),
+        v.literal("failed"),
+      ),
     ),
     selectedGender: v.optional(v.union(v.literal("female"), v.literal("male"))),
     attempts: v.optional(v.number()),
@@ -241,7 +248,9 @@ export const cleanupOldProfileGenerationJobsInternal = internalMutation({
 
 export const adminGenerateSystemProfile = mutation({
   args: {
-    preferredGender: v.optional(v.union(v.literal("female"), v.literal("male"))),
+    preferredGender: v.optional(
+      v.union(v.literal("female"), v.literal("male")),
+    ),
     preferredOccupation: v.optional(v.string()),
     preferredInterests: v.optional(v.array(v.string())),
     appearanceOverrides: v.optional(
@@ -256,6 +265,8 @@ export const adminGenerateSystemProfile = mutation({
         expression: v.optional(v.string()),
       }),
     ),
+    referenceSubjectDescriptor: v.optional(v.string()),
+    referenceImageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
@@ -282,6 +293,8 @@ export const adminGenerateSystemProfile = mutation({
         preferredOccupation: args.preferredOccupation,
         preferredInterests: args.preferredInterests,
         appearanceOverrides: args.appearanceOverrides,
+        referenceSubjectDescriptor: args.referenceSubjectDescriptor,
+        referenceImageUrl: args.referenceImageUrl,
       },
     );
 

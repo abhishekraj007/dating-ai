@@ -32,6 +32,8 @@ type GenerateCharacterInput = {
     vibe?: string;
     expression?: string;
   };
+  referenceSubjectDescriptor?: string;
+  referenceImageUrl?: string;
 };
 
 type InterestOption = {
@@ -119,6 +121,16 @@ interface CharacterGenerationPanelProps {
     vibes: string[];
     expressions: string[];
   };
+  isAnalyzingPhoto: boolean;
+  onAnalyzePhoto: (file: File) => Promise<{
+    subjectDescriptor: string;
+    suggestedGender: "female" | "male";
+    suggestedAge: number;
+    suggestedOccupation?: string;
+    suggestedVibe?: string;
+    suggestedExpression?: string;
+    referenceImageUrl: string;
+  } | null>;
 }
 
 export function CharacterGenerationPanel({
@@ -132,6 +144,8 @@ export function CharacterGenerationPanel({
   occupationOptions,
   interestOptions,
   appearanceOptions,
+  isAnalyzingPhoto,
+  onAnalyzePhoto,
 }: CharacterGenerationPanelProps) {
   const hasRunningJobs = runningCount > 0;
   const [isJobsOpen, setIsJobsOpen] = useState(false);
@@ -423,6 +437,8 @@ export function CharacterGenerationPanel({
             occupationOptions={occupationOptions}
             interestOptions={interestOptions}
             appearanceOptions={appearanceOptions}
+            isAnalyzingPhoto={isAnalyzingPhoto}
+            onAnalyzePhoto={onAnalyzePhoto}
           />
         </div>
       </div>
