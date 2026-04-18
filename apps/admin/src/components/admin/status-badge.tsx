@@ -8,8 +8,10 @@ type StatusType =
   | "archived"
   | "queued"
   | "processing"
+  | "awaiting_avatar_approval"
   | "completed"
   | "failed"
+  | "cancelled"
   | "retried";
 
 interface StatusBadgeProps {
@@ -22,8 +24,10 @@ const STATUS_LABELS: Record<StatusType, string> = {
   archived: "archived",
   queued: "queued",
   processing: "processing",
+  awaiting_avatar_approval: "awaiting approval",
   completed: "completed",
   failed: "failed",
+  cancelled: "cancelled",
   retried: "retried",
 };
 
@@ -33,7 +37,9 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       ? "destructive"
       : status === "active" || status === "processing"
         ? "default"
-        : status === "queued" || status === "pending"
+        : status === "queued" ||
+            status === "pending" ||
+            status === "awaiting_avatar_approval"
           ? "outline"
           : "secondary";
 
@@ -43,4 +49,3 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     </Badge>
   );
 }
-

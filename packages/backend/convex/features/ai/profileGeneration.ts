@@ -1,4 +1,5 @@
 import { ConvexError, v } from "convex/values";
+import { z } from "zod";
 import {
   internalMutation,
   internalQuery,
@@ -6,6 +7,7 @@ import {
   query,
 } from "../../_generated/server";
 import { authComponent } from "../../lib/betterAuth";
+import { r2 } from "../../uploads";
 import {
   SKIN_TONES,
   HAIR_COLORS,
@@ -44,6 +46,7 @@ const PROFILE_OCCUPATION_OPTIONS = [
 ] as const;
 
 const PROFILE_GENERATION_JOB_RETENTION_DAYS = 5;
+const AWAITING_APPROVAL_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 export const listSystemProfilesInternal = internalQuery({
   args: {
@@ -85,6 +88,22 @@ export const createProfileGenerationJobInternal = internalMutation({
     ),
     preferredOccupation: v.optional(v.string()),
     preferredInterests: v.optional(v.array(v.string())),
+    preferredLocation: v.optional(v.string()),
+    culturalBackground: v.optional(v.string()),
+    referenceSubjectDescriptor: v.optional(v.string()),
+    referenceImageUrl: v.optional(v.string()),
+    appearanceOverrides: v.optional(
+      v.object({
+        skinTone: v.optional(v.string()),
+        hairColor: v.optional(v.string()),
+        hairStyle: v.optional(v.string()),
+        eyeColor: v.optional(v.string()),
+        build: v.optional(v.string()),
+        outfit: v.optional(v.string()),
+        vibe: v.optional(v.string()),
+        expression: v.optional(v.string()),
+      }),
+    ),
   },
   returns: v.id("profileGenerationJobs"),
   handler: async (ctx, args) => {
@@ -96,6 +115,11 @@ export const createProfileGenerationJobInternal = internalMutation({
       preferredGender: args.preferredGender,
       preferredOccupation: args.preferredOccupation,
       preferredInterests: args.preferredInterests,
+      preferredLocation: args.preferredLocation,
+      culturalBackground: args.culturalBackground,
+      referenceSubjectDescriptor: args.referenceSubjectDescriptor,
+      referenceImageUrl: args.referenceImageUrl,
+      appearanceOverrides: args.appearanceOverrides,
       createdAt: now,
       updatedAt: now,
     });
@@ -109,8 +133,10 @@ export const updateProfileGenerationJobInternal = internalMutation({
       v.union(
         v.literal("queued"),
         v.literal("processing"),
+        v.literal("awaiting_avatar_approval"),
         v.literal("completed"),
         v.literal("failed"),
+        v.literal("cancelled"),
       ),
     ),
     selectedGender: v.optional(v.union(v.literal("female"), v.literal("male"))),
@@ -149,6 +175,183 @@ export const updateProfileGenerationJobInternal = internalMutation({
 
     await ctx.db.patch(jobId, patch);
     return null;
+  },
+});
+
+// --- Preview / approval pause plumbing ---
+
+const previewCandidateValidator = v.object({
+  name: v.string(),
+  username: v.string(),
+  gender: v.union(v.literal("female"), v.literal("male")),
+  age: v.number(),
+  zodiacSign: v.string(),
+  occupation: v.string(),
+  location: v.string(),
+  bio: v.string(),
+  interests: v.array(v.string()),
+  personalityTraits: v.array(v.string()),
+  relationshipGoal: v.string(),
+  mbtiType: v.string(),
+  communicationStyle: v.object({
+    tone: v.string(),
+    responseLength: v.string(),
+    usesEmojis: v.boolean(),
+    usesSlang: v.boolean(),
+    flirtLevel: v.number(),
+  }),
+});
+
+const previewAppearanceValidator = v.object({
+  ageHint: v.number(),
+  hair: v.string(),
+  eyes: v.string(),
+  skinTone: v.string(),
+  skinCue: v.string(),
+  build: v.string(),
+  outfit: v.string(),
+  signatureStyle: v.string(),
+  vibe: v.string(),
+  cityArchetype: v.string(),
+  quirk: v.string(),
+  expression: v.string(),
+});
+
+export const writePreviewAndPauseInternal = internalMutation({
+  args: {
+    jobId: v.id("profileGenerationJobs"),
+    selectedGender: v.union(v.literal("female"), v.literal("male")),
+    attempts: v.number(),
+    progress: v.object({
+      currentStep: v.string(),
+      completedSteps: v.array(v.string()),
+      stepModels: v.optional(
+        v.array(
+          v.object({
+            step: v.string(),
+            model: v.string(),
+          }),
+        ),
+      ),
+      message: v.optional(v.string()),
+      totalSteps: v.number(),
+      completedStepCount: v.number(),
+    }),
+    preview: v.object({
+      candidate: previewCandidateValidator,
+      appearance: previewAppearanceValidator,
+      subjectDescriptor: v.string(),
+      isReferenceMode: v.boolean(),
+      avatarImageKey: v.string(),
+      avatarPrompt: v.string(),
+      avatarAttempts: v.number(),
+    }),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.jobId, {
+      status: "awaiting_avatar_approval",
+      selectedGender: args.selectedGender,
+      attempts: args.attempts,
+      progress: args.progress,
+      preview: args.preview,
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+export const updatePreviewAvatarInternal = internalMutation({
+  args: {
+    jobId: v.id("profileGenerationJobs"),
+    avatarImageKey: v.string(),
+    avatarPrompt: v.string(),
+    avatarAttempts: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.jobId);
+    if (!job?.preview) {
+      throw new ConvexError("Job has no preview to update");
+    }
+    await ctx.db.patch(args.jobId, {
+      preview: {
+        ...job.preview,
+        avatarImageKey: args.avatarImageKey,
+        avatarPrompt: args.avatarPrompt,
+        avatarAttempts: args.avatarAttempts,
+      },
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+export const mergePreviewCandidateInternal = internalMutation({
+  args: {
+    jobId: v.id("profileGenerationJobs"),
+    candidatePatch: v.object({
+      name: v.optional(v.string()),
+      age: v.optional(v.number()),
+      occupation: v.optional(v.string()),
+      location: v.optional(v.string()),
+      bio: v.optional(v.string()),
+      interests: v.optional(v.array(v.string())),
+    }),
+    status: v.optional(
+      v.union(v.literal("processing"), v.literal("cancelled")),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.jobId);
+    if (!job?.preview) {
+      throw new ConvexError("Job has no preview to merge into");
+    }
+    const patch: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(args.candidatePatch)) {
+      if (value !== undefined) patch[key] = value;
+    }
+    await ctx.db.patch(args.jobId, {
+      preview: {
+        ...job.preview,
+        candidate: {
+          ...job.preview.candidate,
+          ...patch,
+        },
+      },
+      status: args.status ?? job.status,
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+export const getProfileGenerationJobInternal = internalQuery({
+  args: {
+    jobId: v.id("profileGenerationJobs"),
+  },
+  handler: async (ctx, { jobId }) => {
+    return await ctx.db.get(jobId);
+  },
+});
+
+// Returns the canonical list of active interest values used by end-user
+// filters. Profile generation uses this to constrain LLM output so that
+// generated interests always match something a user can filter on.
+export const listActiveInterestsInternal = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const rows = await ctx.db
+      .query("filterOptions")
+      .withIndex("by_type_active", (q) =>
+        q.eq("type", "interest").eq("isActive", true),
+      )
+      .collect();
+    rows.sort((a, b) => a.order - b.order);
+    return rows
+      .map((row) => row.value)
+      .filter(
+        (value): value is string =>
+          typeof value === "string" && value.length > 0,
+      );
   },
 });
 
@@ -223,10 +426,12 @@ export const cleanupOldProfileGenerationJobsInternal = internalMutation({
   returns: v.object({
     deletedCount: v.number(),
     cutoffTimestamp: v.number(),
+    expiredPreviews: v.number(),
   }),
   handler: async (ctx) => {
+    const now = Date.now();
     const cutoffTimestamp =
-      Date.now() - PROFILE_GENERATION_JOB_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+      now - PROFILE_GENERATION_JOB_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
     const oldJobs = await ctx.db
       .query("profileGenerationJobs")
@@ -235,14 +440,47 @@ export const cleanupOldProfileGenerationJobsInternal = internalMutation({
 
     let deletedCount = 0;
     for (const job of oldJobs) {
-      if (job.status === "queued" || job.status === "processing") {
+      if (
+        job.status === "queued" ||
+        job.status === "processing" ||
+        job.status === "awaiting_avatar_approval"
+      ) {
         continue;
       }
       await ctx.db.delete(job._id);
       deletedCount += 1;
     }
 
-    return { deletedCount, cutoffTimestamp };
+    // Sweep preview-paused jobs that the admin never approved/cancelled.
+    // Mark them as cancelled and schedule R2 cleanup of the avatar.
+    const awaitingCutoff = now - AWAITING_APPROVAL_TTL_MS;
+    const stalePreviews = await ctx.db
+      .query("profileGenerationJobs")
+      .withIndex("by_status", (q) => q.eq("status", "awaiting_avatar_approval"))
+      .collect();
+
+    let expiredPreviews = 0;
+    for (const job of stalePreviews) {
+      if (job.updatedAt >= awaitingCutoff) continue;
+
+      const avatarKey = job.preview?.avatarImageKey;
+      await ctx.db.patch(job._id, {
+        status: "cancelled",
+        errorMessage: "Preview expired without admin approval",
+        completedAt: now,
+        updatedAt: now,
+      });
+      if (avatarKey) {
+        await ctx.scheduler.runAfter(
+          0,
+          "features/ai/profileGenerationActions:cleanupPreviewR2Action" as any,
+          { keys: [avatarKey] },
+        );
+      }
+      expiredPreviews += 1;
+    }
+
+    return { deletedCount, cutoffTimestamp, expiredPreviews };
   },
 });
 
@@ -269,6 +507,9 @@ export const adminGenerateSystemProfile = mutation({
     referenceImageUrl: v.optional(v.string()),
     preferredLocation: v.optional(v.string()),
     culturalBackground: v.optional(v.string()),
+    // Defaults to true for the characters page preview flow. The dashboard
+    // quick-generate button opts out by passing false.
+    pauseForApproval: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
@@ -285,6 +526,33 @@ export const adminGenerateSystemProfile = mutation({
       throw new ConvexError("Admin access required");
     }
 
+    // Default: pause for admin approval. The characters page Sheet
+    // subscribes to the returned `jobId` via `getProfileGenerationJobForAdmin`
+    // and resumes via `adminApproveAvatar` / `adminCancelPreview`. The
+    // dashboard quick-generate button opts out by passing `false`.
+    const pauseForApproval = args.pauseForApproval ?? true;
+
+    // Pre-create the job row when pausing so the client can subscribe to
+    // the id before the scheduled action runs. When not pausing, skip the
+    // pre-create — the action will create its own row (cron-compatible).
+    const existingJobId = pauseForApproval
+      ? ((await ctx.runMutation(
+          "features/ai/profileGeneration:createProfileGenerationJobInternal" as any,
+          {
+            source: "manual",
+            triggeredByUserId: user._id,
+            preferredGender: args.preferredGender,
+            preferredOccupation: args.preferredOccupation,
+            preferredInterests: args.preferredInterests,
+            preferredLocation: args.preferredLocation,
+            culturalBackground: args.culturalBackground,
+            referenceSubjectDescriptor: args.referenceSubjectDescriptor,
+            referenceImageUrl: args.referenceImageUrl,
+            appearanceOverrides: args.appearanceOverrides,
+          },
+        )) as any)
+      : undefined;
+
     await ctx.scheduler.runAfter(
       0,
       "features/ai/profileGenerationActions:runSystemProfileGeneration" as any,
@@ -299,10 +567,12 @@ export const adminGenerateSystemProfile = mutation({
         referenceImageUrl: args.referenceImageUrl,
         preferredLocation: args.preferredLocation,
         culturalBackground: args.culturalBackground,
+        pauseForApproval,
+        existingJobId,
       },
     );
 
-    return { queued: true };
+    return { queued: true, jobId: existingJobId ?? null };
   },
 });
 
@@ -356,6 +626,205 @@ export const adminRetryProfileGeneration = mutation({
     });
 
     return { queued: true };
+  },
+});
+
+// Narrow Zod schema for the only fields the admin is allowed to edit
+// at the preview stage. Everything else is either server-generated
+// (username) or structural and kept from the original LLM output.
+const editedCandidateSchema = z
+  .object({
+    name: z.string().trim().min(1).max(60).optional(),
+    age: z.number().int().min(18).max(50).optional(),
+    occupation: z.string().trim().min(1).max(80).optional(),
+    location: z.string().trim().min(1).max(60).optional(),
+    bio: z.string().trim().min(40).max(240).optional(),
+    interests: z
+      .array(z.string().trim().min(1).max(40))
+      .min(4)
+      .max(7)
+      .optional(),
+  })
+  .strict();
+
+async function assertAdmin(ctx: any) {
+  const user = await authComponent.safeGetAuthUser(ctx);
+  if (!user) throw new ConvexError("Not authenticated");
+
+  const userProfile = await ctx.db
+    .query("profile")
+    .withIndex("by_auth_user_id", (q: any) => q.eq("authUserId", user._id))
+    .unique();
+
+  if (!userProfile?.isAdmin) {
+    throw new ConvexError("Admin access required");
+  }
+  return user;
+}
+
+export const adminRegenerateAvatar = mutation({
+  args: {
+    jobId: v.id("profileGenerationJobs"),
+    editedPrompt: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await assertAdmin(ctx);
+
+    const job = await ctx.db.get(args.jobId);
+    if (!job) throw new ConvexError("Job not found");
+    if (job.status !== "awaiting_avatar_approval") {
+      throw new ConvexError(
+        `Job is not awaiting avatar approval (current status: ${job.status})`,
+      );
+    }
+
+    await ctx.scheduler.runAfter(
+      0,
+      "features/ai/profileGenerationActions:regenerateAvatarAction" as any,
+      {
+        jobId: args.jobId,
+        editedPrompt: args.editedPrompt,
+      },
+    );
+
+    return { scheduled: true };
+  },
+});
+
+export const adminApproveAvatar = mutation({
+  args: {
+    jobId: v.id("profileGenerationJobs"),
+    editedCandidate: v.optional(
+      v.object({
+        name: v.optional(v.string()),
+        age: v.optional(v.number()),
+        occupation: v.optional(v.string()),
+        location: v.optional(v.string()),
+        bio: v.optional(v.string()),
+        interests: v.optional(v.array(v.string())),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    await assertAdmin(ctx);
+
+    const job = await ctx.db.get(args.jobId);
+    if (!job) throw new ConvexError("Job not found");
+    if (job.status !== "awaiting_avatar_approval" || !job.preview) {
+      throw new ConvexError(
+        `Job is not awaiting avatar approval (current status: ${job.status})`,
+      );
+    }
+
+    // Validate the narrow set of editable fields.
+    const parse = editedCandidateSchema.safeParse(args.editedCandidate ?? {});
+    if (!parse.success) {
+      throw new ConvexError(
+        `Invalid edited candidate: ${parse.error.issues
+          .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
+          .join("; ")}`,
+      );
+    }
+    const edited = parse.data;
+
+    const patch: Record<string, unknown> = {};
+    if (edited.name !== undefined) patch.name = edited.name;
+    if (edited.age !== undefined) patch.age = edited.age;
+    if (edited.occupation !== undefined) patch.occupation = edited.occupation;
+    if (edited.location !== undefined) patch.location = edited.location;
+    if (edited.bio !== undefined) patch.bio = edited.bio;
+    if (edited.interests !== undefined) patch.interests = edited.interests;
+
+    await ctx.db.patch(args.jobId, {
+      status: "processing",
+      preview: {
+        ...job.preview,
+        candidate: {
+          ...job.preview.candidate,
+          ...patch,
+        },
+      },
+      updatedAt: Date.now(),
+    });
+
+    await ctx.scheduler.runAfter(
+      0,
+      "features/ai/profileGenerationActions:continueShowcaseAndPersistAction" as any,
+      { jobId: args.jobId },
+    );
+
+    return { scheduled: true };
+  },
+});
+
+export const adminCancelPreview = mutation({
+  args: {
+    jobId: v.id("profileGenerationJobs"),
+  },
+  handler: async (ctx, args) => {
+    await assertAdmin(ctx);
+
+    const job = await ctx.db.get(args.jobId);
+    if (!job) throw new ConvexError("Job not found");
+    if (
+      job.status !== "awaiting_avatar_approval" &&
+      job.status !== "queued" &&
+      job.status !== "processing"
+    ) {
+      // Nothing to cancel for completed/failed/cancelled jobs.
+      return { cancelled: false };
+    }
+
+    const avatarKey = job.preview?.avatarImageKey;
+
+    await ctx.db.patch(args.jobId, {
+      status: "cancelled",
+      completedAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    if (avatarKey) {
+      await ctx.scheduler.runAfter(
+        0,
+        "features/ai/profileGenerationActions:cleanupPreviewR2Action" as any,
+        { keys: [avatarKey] },
+      );
+    }
+
+    return { cancelled: true };
+  },
+});
+
+export const getProfileGenerationJobForAdmin = query({
+  args: {
+    jobId: v.id("profileGenerationJobs"),
+  },
+  handler: async (ctx, { jobId }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) return null;
+
+    const userProfile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
+      .unique();
+    if (!userProfile?.isAdmin) return null;
+
+    const job = await ctx.db.get(jobId);
+    if (!job) return null;
+
+    let previewAvatarUrl: string | null = null;
+    if (job.preview?.avatarImageKey) {
+      try {
+        previewAvatarUrl = await r2.getUrl(job.preview.avatarImageKey);
+      } catch {
+        previewAvatarUrl = null;
+      }
+    }
+
+    return {
+      ...job,
+      previewAvatarUrl,
+    };
   },
 });
 

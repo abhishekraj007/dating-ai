@@ -14,7 +14,7 @@ export function useProfileGenerator() {
   const triggerProfileGeneration = async () => {
     setIsGenerating(true);
     try {
-      await generateProfile({});
+      await generateProfile({ pauseForApproval: false });
       toast.success("Profile generation job queued");
     } catch (error) {
       toast.error("Failed to queue profile generation");
