@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,8 @@ import {
   X,
   Check,
 } from "lucide-react";
+import { AvatarPreviewPanel } from "./avatar-preview-panel";
+import { usePreviewApproval } from "../_hooks/use-preview-approval";
 
 type InterestOption = {
   value: string;
@@ -89,7 +91,7 @@ interface AddCharacterDialogProps {
   occupationOptions: InterestOption[];
   interestOptions: InterestOption[];
   appearanceOptions?: AppearanceOptions;
-  onGenerate: (input?: GenerateCharacterInput) => Promise<void>;
+  onGenerate: (input?: GenerateCharacterInput) => Promise<string | null>;
   isAnalyzingPhoto: boolean;
   onAnalyzePhoto: (file: File) => Promise<ReferenceAnalysis | null>;
 }
@@ -138,6 +140,26 @@ export function AddCharacterDialog({
 }: AddCharacterDialogProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"custom" | "reference">("custom");
+
+  // Preview / approval state machine:
+  //   null          → form view
+  //   jobId         → subscribe + show preview panel
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [previewDirty, setPreviewDirty] = useState(false);
+  const previewState = usePreviewApproval(activeJobId);
+  const previewJob = previewState.job;
+
+  // `preview` is written the moment the avatar is ready. Post-approve we
+  // transition the status back to "processing" but the blob stays, so we
+  // use its presence to distinguish pre-pause vs post-approve.
+  const stage: "form" | "generating_avatar" | "preview" | "processing" =
+    activeJobId === null
+      ? "form"
+      : previewJob?.status === "awaiting_avatar_approval"
+        ? "preview"
+        : previewJob?.status === "processing" && previewJob.preview
+          ? "processing"
+          : "generating_avatar";
 
   // --- Custom tab state ---
   const [gender, setGender] = useState<"female" | "male" | "">("");
@@ -300,17 +322,18 @@ export function AddCharacterDialog({
   // --- Generate handlers ---
   const handleGenerateCustom = async () => {
     try {
-      await onGenerate({
+      const jobId = await onGenerate({
         preferredGender: gender || undefined,
         preferredOccupation: occupation || undefined,
         preferredInterests:
           selectedInterests.length > 0 ? selectedInterests : undefined,
         appearanceOverrides: buildOverrides(),
       });
-      setOpen(false);
-      resetForm();
+      if (jobId) {
+        setActiveJobId(jobId);
+      }
     } catch {
-      // Keep dialog open
+      // Keep dialog open on backend failure
     }
   };
 
@@ -321,7 +344,7 @@ export function AddCharacterDialog({
         refLocation.trim() ||
         referenceAnalysis.suggestedLocation?.trim() ||
         undefined;
-      await onGenerate({
+      const jobId = await onGenerate({
         preferredGender: referenceAnalysis.suggestedGender,
         preferredOccupation:
           refOccupation || referenceAnalysis.suggestedOccupation || undefined,
@@ -332,11 +355,55 @@ export function AddCharacterDialog({
         culturalBackground:
           referenceAnalysis.culturalBackground?.trim() || undefined,
       });
-      setOpen(false);
-      resetForm();
+      if (jobId) {
+        setActiveJobId(jobId);
+      }
     } catch {
-      // Keep dialog open
+      // Keep dialog open on backend failure
     }
+  };
+
+  // Close + reset once the preview flow has reached a terminal state.
+  useEffect(() => {
+    if (!previewJob) return;
+    if (
+      previewJob.status === "completed" ||
+      previewJob.status === "failed" ||
+      previewJob.status === "cancelled"
+    ) {
+      // Small delay so the final toast/status lands.
+      const t = setTimeout(() => {
+        setActiveJobId(null);
+        setPreviewDirty(false);
+        setOpen(false);
+        resetForm();
+      }, 500);
+      return () => clearTimeout(t);
+    }
+    return;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewJob?.status]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      setOpen(true);
+      return;
+    }
+    // Closing attempt. Confirm if there's a live preview with edits,
+    // or if showcase is running (cancelling mid-flight isn't supported).
+    if (stage === "preview" && previewDirty) {
+      const ok = window.confirm(
+        "Discard edits? The generated avatar will be cancelled and cleaned up.",
+      );
+      if (!ok) return;
+    }
+    if (stage === "preview" || stage === "generating_avatar") {
+      void previewState.cancel();
+    }
+    setOpen(false);
+    setActiveJobId(null);
+    setPreviewDirty(false);
+    resetForm();
   };
 
   const activeOverrideCount = [
@@ -353,7 +420,7 @@ export function AddCharacterDialog({
   const canGenerateReference = referenceAnalysis !== null && !isAnalyzingPhoto;
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
@@ -366,333 +433,126 @@ export function AddCharacterDialog({
         onPaste={handlePaste}
       >
         <SheetHeader>
-          <SheetTitle>Generate Character</SheetTitle>
+          <SheetTitle>
+            {stage === "form"
+              ? "Generate Character"
+              : stage === "generating_avatar"
+                ? "Generating Avatar..."
+                : stage === "preview"
+                  ? "Review Avatar"
+                  : "Finalizing..."}
+          </SheetTitle>
           <SheetDescription>
-            {tab === "custom"
-              ? "Set constraints to guide profile generation, or leave empty for fully automatic."
-              : "Upload a reference photo to create a character with a similar look and style."}
+            {stage === "form"
+              ? tab === "custom"
+                ? "Set constraints to guide profile generation, or leave empty for fully automatic."
+                : "Upload a reference photo to create a character with a similar look and style."
+              : stage === "generating_avatar"
+                ? "Creating the first avatar — this usually takes 20–40s."
+                : stage === "preview"
+                  ? "Edit the profile fields, regenerate the avatar, or approve to continue with showcase images."
+                  : "Generating showcase images and saving the profile."}
           </SheetDescription>
         </SheetHeader>
 
-        {/* Tab switcher */}
-        <div className="flex items-center gap-2 px-4 pb-2">
-          <Button
-            type="button"
-            size="sm"
-            variant={tab === "custom" ? "default" : "outline"}
-            onClick={() => setTab("custom")}
-          >
-            Custom
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={tab === "reference" ? "default" : "outline"}
-            onClick={() => setTab("reference")}
-          >
-            <ImagePlus className="mr-1.5 h-3.5 w-3.5" />
-            Reference
-          </Button>
-        </div>
+        {/* === Generating avatar (loading) === */}
+        {stage === "generating_avatar" && (
+          <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-sm text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <p className="text-center">
+              {previewJob?.progress?.message ??
+                "Spinning up profile blueprint..."}
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => handleOpenChange(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
 
-        {/* =================== CUSTOM TAB =================== */}
-        {tab === "custom" && (
+        {/* === Processing (showcase + persist) === */}
+        {stage === "processing" && (
+          <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-sm text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <p className="text-center">
+              {previewJob?.progress?.message ??
+                "Generating showcase images and saving the profile..."}
+            </p>
+          </div>
+        )}
+
+        {/* === Preview (awaiting approval) === */}
+        {stage === "preview" && previewJob && (
+          <AvatarPreviewPanel
+            job={previewJob}
+            interestOptions={interestOptions}
+            onApprove={previewState.approve}
+            onRegenerate={previewState.regenerate}
+            onCancel={async () => {
+              handleOpenChange(false);
+            }}
+            onDirtyChange={setPreviewDirty}
+          />
+        )}
+
+        {/* === Form === */}
+        {stage === "form" && (
           <>
-            <div className="space-y-4 px-4 pb-4">
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Gender</p>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={gender === "female" ? "default" : "outline"}
-                    onClick={() =>
-                      setGender((prev) => (prev === "female" ? "" : "female"))
-                    }
-                  >
-                    Female
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={gender === "male" ? "default" : "outline"}
-                    onClick={() =>
-                      setGender((prev) => (prev === "male" ? "" : "male"))
-                    }
-                  >
-                    Male
-                  </Button>
-                </div>
-              </div>
+            {/* Tab switcher */}
+            <div className="flex items-center gap-2 px-4 pb-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={tab === "custom" ? "default" : "outline"}
+                onClick={() => setTab("custom")}
+              >
+                Custom
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={tab === "reference" ? "default" : "outline"}
+                onClick={() => setTab("reference")}
+              >
+                <ImagePlus className="mr-1.5 h-3.5 w-3.5" />
+                Reference
+              </Button>
+            </div>
 
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Occupation</p>
-                <div className="max-h-28 overflow-y-auto rounded-md border border-border/60 p-2">
-                  <div className="flex flex-wrap gap-2">
-                    {shownOccupations.map((opt) => (
-                      <Badge
-                        key={opt.value}
-                        className="cursor-pointer"
-                        variant={
-                          occupation === opt.value ? "default" : "secondary"
-                        }
+            {/* =================== CUSTOM TAB =================== */}
+            {tab === "custom" && (
+              <>
+                <div className="space-y-4 px-4 pb-4">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Gender</p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={gender === "female" ? "default" : "outline"}
                         onClick={() =>
-                          setOccupation((prev) =>
-                            prev === opt.value ? "" : opt.value,
+                          setGender((prev) =>
+                            prev === "female" ? "" : "female",
                           )
                         }
                       >
-                        {opt.label}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">Interests</p>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedInterests.length}/5 selected
-                  </p>
-                </div>
-                <div className="max-h-52 overflow-y-auto rounded-md border border-border/60 p-2">
-                  {shownInterests.length === 0 ? (
-                    <p className="px-2 py-1 text-xs text-muted-foreground">
-                      No interest options configured.
-                    </p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {shownInterests.map((interest) => (
-                        <Badge
-                          key={interest.value}
-                          className="cursor-pointer"
-                          variant={
-                            selectedInterests.includes(interest.value)
-                              ? "default"
-                              : "secondary"
-                          }
-                          onClick={() => toggleInterest(interest.value)}
-                        >
-                          {interest.label}
-                          {interest.emoji ? ` ${interest.emoji}` : ""}
-                        </Badge>
-                      ))}
+                        Female
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={gender === "male" ? "default" : "outline"}
+                        onClick={() =>
+                          setGender((prev) => (prev === "male" ? "" : "male"))
+                        }
+                      >
+                        Male
+                      </Button>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              {appearanceOptions && (
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between rounded-md border border-border/60 px-3 py-2 text-sm font-medium hover:bg-accent/50 transition-colors"
-                    onClick={() => setShowAppearance((prev) => !prev)}
-                  >
-                    <span>
-                      Appearance Cues
-                      {activeOverrideCount > 0 && (
-                        <Badge variant="secondary" className="ml-2 text-[10px]">
-                          {activeOverrideCount} set
-                        </Badge>
-                      )}
-                    </span>
-                    {showAppearance ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </button>
-
-                  {showAppearance && (
-                    <div className="grid grid-cols-2 gap-3 rounded-md border border-border/40 p-3">
-                      <AppearanceSelect
-                        label="Skin Tone"
-                        options={appearanceOptions.skinTones}
-                        value={skinTone}
-                        onChange={setSkinTone}
-                      />
-                      <AppearanceSelect
-                        label="Hair Color"
-                        options={appearanceOptions.hairColors}
-                        value={hairColor}
-                        onChange={setHairColor}
-                      />
-                      <AppearanceSelect
-                        label="Hair Style"
-                        options={hairStyles ?? []}
-                        value={hairStyle}
-                        onChange={setHairStyle}
-                      />
-                      <AppearanceSelect
-                        label="Eye Color"
-                        options={appearanceOptions.eyeColors}
-                        value={eyeColor}
-                        onChange={setEyeColor}
-                      />
-                      <AppearanceSelect
-                        label="Build"
-                        options={builds ?? []}
-                        value={build}
-                        onChange={setBuild}
-                      />
-                      <AppearanceSelect
-                        label="Outfit"
-                        options={outfits ?? []}
-                        value={outfit}
-                        onChange={setOutfit}
-                      />
-                      <AppearanceSelect
-                        label="Vibe / Aesthetic"
-                        options={appearanceOptions.vibes}
-                        value={vibe}
-                        onChange={setVibe}
-                      />
-                      <AppearanceSelect
-                        label="Expression"
-                        options={appearanceOptions.expressions}
-                        value={expression}
-                        onChange={setExpression}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <SheetFooter className="px-4 pb-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpen(false)}
-                disabled={isGenerating}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={handleGenerateCustom}
-                disabled={isGenerating}
-              >
-                {isGenerating ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Generate
-              </Button>
-            </SheetFooter>
-          </>
-        )}
-
-        {/* =================== REFERENCE TAB =================== */}
-        {tab === "reference" && (
-          <>
-            <div className="space-y-4 px-4 pb-4">
-              {/* Upload / Paste area */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Reference Photo</p>
-                <p className="text-xs text-muted-foreground">
-                  Upload or paste a photo. The AI will analyze it and generate a
-                  new character with a similar (but unique) appearance.
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={handleFileInput}
-                />
-                {referencePreview ? (
-                  <div className="flex items-start gap-4">
-                    <div className="relative shrink-0">
-                      <img
-                        src={referencePreview}
-                        alt="Reference"
-                        className="h-32 w-32 rounded-lg border border-border/60 object-cover"
-                      />
-                      {isAnalyzingPhoto && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 rounded-lg bg-black/60">
-                          <Loader2 className="h-5 w-5 animate-spin text-white" />
-                          <span className="text-[11px] text-white/80">
-                            Analyzing...
-                          </span>
-                        </div>
-                      )}
-                      {!isAnalyzingPhoto && (
-                        <button
-                          type="button"
-                          onClick={clearReference}
-                          className="absolute -right-2 -top-2 rounded-full border border-border bg-background p-0.5 hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-                    {referenceAnalysis && (
-                      <div className="space-y-1 pt-1">
-                        <div className="flex items-center gap-1.5 text-xs text-green-500">
-                          <Check className="h-3.5 w-3.5" />
-                          <span>Analysis complete</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {referenceAnalysis.suggestedGender === "female"
-                            ? "Female"
-                            : "Male"}
-                          {" · ~"}
-                          {referenceAnalysis.suggestedAge} years old
-                        </p>
-                        {referenceAnalysis.suggestedVibe && (
-                          <p className="text-xs text-muted-foreground">
-                            Vibe: {referenceAnalysis.suggestedVibe}
-                          </p>
-                        )}
-                        <p className="mt-1.5 max-w-xs text-[11px] leading-relaxed text-muted-foreground/70 italic">
-                          &ldquo;{referenceAnalysis.subjectDescriptor}&rdquo;
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isAnalyzingPhoto}
-                    className="flex h-32 w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-                  >
-                    <ImagePlus className="h-5 w-5" />
-                    <span>Click to upload or paste an image</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Only show profile fields after analysis is done */}
-              {referenceAnalysis && (
-                <>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium">Location</p>
-                      {referenceAnalysis.culturalBackground && (
-                        <p className="text-[11px] text-muted-foreground">
-                          Cultural background:{" "}
-                          <span className="font-medium text-foreground/80">
-                            {referenceAnalysis.culturalBackground}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                    <Input
-                      value={refLocation}
-                      onChange={(e) => setRefLocation(e.target.value)}
-                      placeholder={
-                        referenceAnalysis.suggestedLocation ??
-                        "City, CC (e.g. Tokyo, JP)"
-                      }
-                      className="h-8 text-xs"
-                    />
-                    <p className="text-[11px] text-muted-foreground">
-                      Used as an exact constraint so the generated name, city,
-                      and country match the person in the reference image.
-                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -704,12 +564,10 @@ export function AddCharacterDialog({
                             key={opt.value}
                             className="cursor-pointer"
                             variant={
-                              refOccupation === opt.value
-                                ? "default"
-                                : "secondary"
+                              occupation === opt.value ? "default" : "secondary"
                             }
                             onClick={() =>
-                              setRefOccupation((prev) =>
+                              setOccupation((prev) =>
                                 prev === opt.value ? "" : opt.value,
                               )
                             }
@@ -725,7 +583,7 @@ export function AddCharacterDialog({
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">Interests</p>
                       <p className="text-xs text-muted-foreground">
-                        {refInterests.length}/5 selected
+                        {selectedInterests.length}/5 selected
                       </p>
                     </div>
                     <div className="max-h-52 overflow-y-auto rounded-md border border-border/60 p-2">
@@ -740,11 +598,11 @@ export function AddCharacterDialog({
                               key={interest.value}
                               className="cursor-pointer"
                               variant={
-                                refInterests.includes(interest.value)
+                                selectedInterests.includes(interest.value)
                                   ? "default"
                                   : "secondary"
                               }
-                              onClick={() => toggleRefInterest(interest.value)}
+                              onClick={() => toggleInterest(interest.value)}
                             >
                               {interest.label}
                               {interest.emoji ? ` ${interest.emoji}` : ""}
@@ -754,30 +612,312 @@ export function AddCharacterDialog({
                       )}
                     </div>
                   </div>
-                </>
-              )}
-            </div>
 
-            <SheetFooter className="px-4 pb-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpen(false)}
-                disabled={isGenerating || isAnalyzingPhoto}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={handleGenerateFromReference}
-                disabled={isGenerating || !canGenerateReference}
-              >
-                {isGenerating ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Generate from Reference
-              </Button>
-            </SheetFooter>
+                  {appearanceOptions && (
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-between rounded-md border border-border/60 px-3 py-2 text-sm font-medium hover:bg-accent/50 transition-colors"
+                        onClick={() => setShowAppearance((prev) => !prev)}
+                      >
+                        <span>
+                          Appearance Cues
+                          {activeOverrideCount > 0 && (
+                            <Badge
+                              variant="secondary"
+                              className="ml-2 text-[10px]"
+                            >
+                              {activeOverrideCount} set
+                            </Badge>
+                          )}
+                        </span>
+                        {showAppearance ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </button>
+
+                      {showAppearance && (
+                        <div className="grid grid-cols-2 gap-3 rounded-md border border-border/40 p-3">
+                          <AppearanceSelect
+                            label="Skin Tone"
+                            options={appearanceOptions.skinTones}
+                            value={skinTone}
+                            onChange={setSkinTone}
+                          />
+                          <AppearanceSelect
+                            label="Hair Color"
+                            options={appearanceOptions.hairColors}
+                            value={hairColor}
+                            onChange={setHairColor}
+                          />
+                          <AppearanceSelect
+                            label="Hair Style"
+                            options={hairStyles ?? []}
+                            value={hairStyle}
+                            onChange={setHairStyle}
+                          />
+                          <AppearanceSelect
+                            label="Eye Color"
+                            options={appearanceOptions.eyeColors}
+                            value={eyeColor}
+                            onChange={setEyeColor}
+                          />
+                          <AppearanceSelect
+                            label="Build"
+                            options={builds ?? []}
+                            value={build}
+                            onChange={setBuild}
+                          />
+                          <AppearanceSelect
+                            label="Outfit"
+                            options={outfits ?? []}
+                            value={outfit}
+                            onChange={setOutfit}
+                          />
+                          <AppearanceSelect
+                            label="Vibe / Aesthetic"
+                            options={appearanceOptions.vibes}
+                            value={vibe}
+                            onChange={setVibe}
+                          />
+                          <AppearanceSelect
+                            label="Expression"
+                            options={appearanceOptions.expressions}
+                            value={expression}
+                            onChange={setExpression}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <SheetFooter className="px-4 pb-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setOpen(false)}
+                    disabled={isGenerating}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleGenerateCustom}
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    Generate
+                  </Button>
+                </SheetFooter>
+              </>
+            )}
+
+            {/* =================== REFERENCE TAB =================== */}
+            {tab === "reference" && (
+              <>
+                <div className="space-y-4 px-4 pb-4">
+                  {/* Upload / Paste area */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Reference Photo</p>
+                    <p className="text-xs text-muted-foreground">
+                      Upload or paste a photo. The AI will analyze it and
+                      generate a new character with a similar (but unique)
+                      appearance.
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleFileInput}
+                    />
+                    {referencePreview ? (
+                      <div className="flex items-start gap-4">
+                        <div className="relative shrink-0">
+                          <img
+                            src={referencePreview}
+                            alt="Reference"
+                            className="h-32 w-32 rounded-lg border border-border/60 object-cover"
+                          />
+                          {isAnalyzingPhoto && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 rounded-lg bg-black/60">
+                              <Loader2 className="h-5 w-5 animate-spin text-white" />
+                              <span className="text-[11px] text-white/80">
+                                Analyzing...
+                              </span>
+                            </div>
+                          )}
+                          {!isAnalyzingPhoto && (
+                            <button
+                              type="button"
+                              onClick={clearReference}
+                              className="absolute -right-2 -top-2 rounded-full border border-border bg-background p-0.5 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
+                        {referenceAnalysis && (
+                          <div className="space-y-1 pt-1">
+                            <div className="flex items-center gap-1.5 text-xs text-green-500">
+                              <Check className="h-3.5 w-3.5" />
+                              <span>Analysis complete</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {referenceAnalysis.suggestedGender === "female"
+                                ? "Female"
+                                : "Male"}
+                              {" · ~"}
+                              {referenceAnalysis.suggestedAge} years old
+                            </p>
+                            {referenceAnalysis.suggestedVibe && (
+                              <p className="text-xs text-muted-foreground">
+                                Vibe: {referenceAnalysis.suggestedVibe}
+                              </p>
+                            )}
+                            <p className="mt-1.5 max-w-xs text-[11px] leading-relaxed text-muted-foreground/70 italic">
+                              &ldquo;{referenceAnalysis.subjectDescriptor}
+                              &rdquo;
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isAnalyzingPhoto}
+                        className="flex h-32 w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                      >
+                        <ImagePlus className="h-5 w-5" />
+                        <span>Click to upload or paste an image</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Only show profile fields after analysis is done */}
+                  {referenceAnalysis && (
+                    <>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium">Location</p>
+                          {referenceAnalysis.culturalBackground && (
+                            <p className="text-[11px] text-muted-foreground">
+                              Cultural background:{" "}
+                              <span className="font-medium text-foreground/80">
+                                {referenceAnalysis.culturalBackground}
+                              </span>
+                            </p>
+                          )}
+                        </div>
+                        <Input
+                          value={refLocation}
+                          onChange={(e) => setRefLocation(e.target.value)}
+                          placeholder={
+                            referenceAnalysis.suggestedLocation ??
+                            "City, CC (e.g. Tokyo, JP)"
+                          }
+                          className="h-8 text-xs"
+                        />
+                        <p className="text-[11px] text-muted-foreground">
+                          Used as an exact constraint so the generated name,
+                          city, and country match the person in the reference
+                          image.
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Occupation</p>
+                        <div className="max-h-28 overflow-y-auto rounded-md border border-border/60 p-2">
+                          <div className="flex flex-wrap gap-2">
+                            {shownOccupations.map((opt) => (
+                              <Badge
+                                key={opt.value}
+                                className="cursor-pointer"
+                                variant={
+                                  refOccupation === opt.value
+                                    ? "default"
+                                    : "secondary"
+                                }
+                                onClick={() =>
+                                  setRefOccupation((prev) =>
+                                    prev === opt.value ? "" : opt.value,
+                                  )
+                                }
+                              >
+                                {opt.label}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium">Interests</p>
+                          <p className="text-xs text-muted-foreground">
+                            {refInterests.length}/5 selected
+                          </p>
+                        </div>
+                        <div className="max-h-52 overflow-y-auto rounded-md border border-border/60 p-2">
+                          {shownInterests.length === 0 ? (
+                            <p className="px-2 py-1 text-xs text-muted-foreground">
+                              No interest options configured.
+                            </p>
+                          ) : (
+                            <div className="flex flex-wrap gap-2">
+                              {shownInterests.map((interest) => (
+                                <Badge
+                                  key={interest.value}
+                                  className="cursor-pointer"
+                                  variant={
+                                    refInterests.includes(interest.value)
+                                      ? "default"
+                                      : "secondary"
+                                  }
+                                  onClick={() =>
+                                    toggleRefInterest(interest.value)
+                                  }
+                                >
+                                  {interest.label}
+                                  {interest.emoji ? ` ${interest.emoji}` : ""}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <SheetFooter className="px-4 pb-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setOpen(false)}
+                    disabled={isGenerating || isAnalyzingPhoto}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleGenerateFromReference}
+                    disabled={isGenerating || !canGenerateReference}
+                  >
+                    {isGenerating ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    Generate from Reference
+                  </Button>
+                </SheetFooter>
+              </>
+            )}
           </>
         )}
       </SheetContent>

@@ -4,7 +4,7 @@ import { v } from "convex/values";
 import { action, internalAction } from "../../_generated/server";
 import { r2 } from "../../uploads";
 import { z } from "zod";
-import { generateText, Output } from "ai";
+import { generateObject, generateText } from "ai";
 import { generateImageWithFallback } from "./imageGeneration";
 import { internal, api } from "../../_generated/api";
 import { gatewayProvider, openRouterProvider } from "./aiProviders";
@@ -164,6 +164,8 @@ const JOB_PROGRESS_STEPS: JobProgressStep[] = [
 const FALLBACK_TEMPLATE_MODEL = "fallback/static-template";
 const PROFILE_PERSIST_MODEL = "convex-db";
 
+// Base (free-form) interests schema used as fallback when no curated library
+// is available. Prefer `buildProfileBlueprintSchema(allowedInterests)` below.
 const profileBlueprintSchema = z.object({
   name: z.string().min(3).max(64),
   username: z.string().min(3).max(40).optional(),
@@ -186,6 +188,23 @@ const profileBlueprintSchema = z.object({
     })
     .optional(),
 });
+
+// Per-call schema: if the caller supplies an interest library, constrain the
+// `interests` field to that set via `z.enum(...)`. Providers receive this as
+// a JSON Schema enum constraint, and the AI SDK rejects off-list items at
+// parse time - so generated profiles can only use values that end-user
+// filters know how to match on.
+function buildProfileBlueprintSchema(allowedInterests: readonly string[]) {
+  if (allowedInterests.length === 0) {
+    return profileBlueprintSchema;
+  }
+  const interestEnum = z.enum(
+    allowedInterests as unknown as [string, ...string[]],
+  );
+  return profileBlueprintSchema.extend({
+    interests: z.array(interestEnum).min(4).max(7),
+  });
+}
 
 function randomItem<T>(items: T[]): T {
   const item = items[Math.floor(Math.random() * items.length)];
@@ -535,6 +554,7 @@ function toCandidateFromBlueprint(
   gender: Gender,
   existingUsernames: Set<string>,
   appearance: AppearanceProfile,
+  allowedInterests: readonly string[],
   preferences?: GenerationPreferences,
 ): ProfileCandidate {
   const sanitizedProvidedUsername = blueprint.username
@@ -556,10 +576,24 @@ function toCandidateFromBlueprint(
   const tone = blueprint.communicationStyle?.tone;
   const responseLength = blueprint.communicationStyle?.responseLength;
 
-  const generatedInterests = uniqueList(blueprint.interests, 5);
-  const preferredInterests = preferences?.preferredInterests ?? [];
+  // Defense-in-depth: even if the schema already restricted the LLM to the
+  // library, any off-list values (e.g. via the free-form fallback schema)
+  // are filtered out here, and we backfill from the library to meet the
+  // 4-item floor before persistence.
+  const libraryPool =
+    allowedInterests.length > 0
+      ? (allowedInterests as readonly string[])
+      : INTERESTS;
+  const allowedSet = new Set(libraryPool);
+  const filteredGenerated = blueprint.interests.filter((i) =>
+    allowedSet.has(i),
+  );
+  const filteredPreferred = (preferences?.preferredInterests ?? []).filter(
+    (i) => allowedSet.has(i),
+  );
+  const backfill = shuffle([...libraryPool]);
   const mergedInterests = uniqueList(
-    [...preferredInterests, ...generatedInterests],
+    [...filteredPreferred, ...filteredGenerated, ...backfill],
     5,
   );
 
@@ -623,6 +657,7 @@ async function generateCandidateWithLLM(
   }>,
   existingUsernames: Set<string>,
   appearance: AppearanceProfile,
+  allowedInterests: readonly string[],
   preferences?: GenerationPreferences,
 ): Promise<CandidateBuildResult> {
   if (!gatewayProvider && !openRouterProvider) {
@@ -652,12 +687,20 @@ async function generateCandidateWithLLM(
       : attempt <= 8
         ? "Increase novelty strongly: different occupation, interests and personality wording."
         : "Maximize uniqueness aggressively while still realistic and natural.";
+  // Only surface preferred interests that are part of the allowed library.
+  // Anything else would violate the enum schema below and force a retry.
+  const allowedInterestSet = new Set(allowedInterests);
+  const validPreferredInterests =
+    preferences?.preferredInterests?.filter((i) =>
+      allowedInterestSet.size === 0 ? true : allowedInterestSet.has(i),
+    ) ?? [];
+
   const preferenceHints = [
     preferences?.preferredOccupation
       ? `- occupation must be exactly: ${preferences.preferredOccupation}`
       : null,
-    preferences?.preferredInterests && preferences.preferredInterests.length > 0
-      ? `- include these interests exactly (at least first 2): ${preferences.preferredInterests.join(", ")}`
+    validPreferredInterests.length > 0
+      ? `- include these interests exactly (at least first 2): ${validPreferredInterests.join(", ")}`
       : null,
     preferences?.preferredLocation
       ? `- location MUST be exactly: ${preferences.preferredLocation} (do not change city, country, or format)`
@@ -694,11 +737,18 @@ Hard requirements:
 - occupation: specific and believable (prefer non-generic roles)
 - location: a specific real city in "City, ST" or "City, CC" format (e.g. "Austin, TX", "Berlin, DE") - should feel natural for the persona
 - bio: 2-3 short sentences, 60-240 chars total
-- interests: 4-7 specific items (not vague nouns)
+- interests: pick 4-7 items${allowedInterests.length > 0 ? ` STRICTLY from the allowed library below. Use the values verbatim (exact spelling and capitalization). Do NOT invent new interests.` : " (specific, not vague nouns)"}
 - personalityTraits: 3-6 short adjectives
 - relationshipGoal: one short natural phrase
 - name must be a believable first + last name
-- username is optional; if provided, lowercase letters/numbers/underscores only
+- username is optional; if provided, lowercase letters/numbers/underscores only${
+    allowedInterests.length > 0
+      ? `
+
+Allowed interests library (pick 4-7, verbatim):
+${allowedInterests.join(", ")}`
+      : ""
+  }
 
 Bio style rules (strict):
 - Do NOT begin the bio with the person's name, "Hey", "Looking for", or the occupation.
@@ -743,10 +793,18 @@ Required JSON shape:
   ]);
   const modelErrors: string[] = [];
 
+  // We use `generateObject` (not `generateText` + `experimental_output`)
+  // because the latter only resolves the output when `finishReason === "stop"`
+  // and throws `NoOutputSpecifiedError` for any other finish reason (length,
+  // tool-calls, content-filter, error). `generateObject` has the correct
+  // structured-output semantics for every provider AI SDK v5 supports.
+  //
+  // `maxRetries: 1` cuts per-model wait time. Each model already retries
+  // internally on transient failures; we don't want compounded retries
+  // ballooning the action to minutes before the outer loop moves on.
   const generateArgs = {
-    experimental_output: Output.object({
-      schema: profileBlueprintSchema,
-    }),
+    schema: buildProfileBlueprintSchema(allowedInterests),
+    maxRetries: 1,
     temperature: 1.05,
     system:
       "You generate highly unique, human-sounding dating profile blueprints. Write like a real person, not a copywriter. Return valid structured output only.",
@@ -768,49 +826,49 @@ Required JSON shape:
         gender,
         existingUsernames,
         appearance,
+        allowedInterests,
         preferences,
       ),
       model: modelName,
     };
   };
 
-  // Phase 1: Try AI Gateway (Vercel)
-  if (gatewayProvider) {
-    for (const modelName of modelsToTry) {
-      console.log("[AI Gateway] Trying model:", modelName);
-      try {
-        const result = await generateText({
-          model: gatewayProvider(modelName),
-          ...generateArgs,
-        });
-        return validateAndReturn(result.experimental_output, modelName);
-      } catch (error) {
-        console.error("[AI Gateway] Model failed:", modelName, error);
-        const message =
-          error instanceof Error ? error.message : "Unknown model error";
-        modelErrors.push(`gateway/${modelName}: ${message}`);
-      }
-    }
-  }
+  // Phase 1: Try OpenRouter
 
-  // Phase 2: Fallback to OpenRouter
   if (openRouterProvider) {
     for (const modelName of modelsToTry) {
       console.log("[OpenRouter] Trying model:", modelName);
       try {
-        const result = await generateText({
+        const result = await generateObject({
           model: openRouterProvider.chat(modelName),
           ...generateArgs,
         });
-        return validateAndReturn(
-          result.experimental_output,
-          `openrouter/${modelName}`,
-        );
+        return validateAndReturn(result.object, `openrouter/${modelName}`);
       } catch (error) {
         console.error("[OpenRouter] Model failed:", modelName, error);
         const message =
           error instanceof Error ? error.message : "Unknown model error";
         modelErrors.push(`openrouter/${modelName}: ${message}`);
+      }
+    }
+  }
+
+  // Phase 2: Fallback to AI Gateway (Vercel)
+
+  if (gatewayProvider) {
+    for (const modelName of modelsToTry) {
+      console.log("[AI Gateway] Trying model:", modelName);
+      try {
+        const result = await generateObject({
+          model: gatewayProvider(modelName),
+          ...generateArgs,
+        });
+        return validateAndReturn(result.object, `gateway/${modelName}`);
+      } catch (error) {
+        console.error("[AI Gateway] Model failed:", modelName, error);
+        const message =
+          error instanceof Error ? error.message : "Unknown model error";
+        modelErrors.push(`gateway/${modelName}: ${message}`);
       }
     }
   }
@@ -832,6 +890,7 @@ async function buildCandidateDynamic(
   }>,
   existingUsernames: Set<string>,
   appearance: AppearanceProfile,
+  allowedInterests: readonly string[],
   preferences?: GenerationPreferences,
 ): Promise<CandidateBuildResult> {
   try {
@@ -841,6 +900,7 @@ async function buildCandidateDynamic(
       existingProfiles,
       existingUsernames,
       appearance,
+      allowedInterests,
       preferences,
     );
   } catch (error) {
@@ -854,6 +914,7 @@ async function buildCandidateDynamic(
         gender,
         existingUsernames,
         appearance,
+        allowedInterests,
         preferences,
       ),
       model: FALLBACK_TEMPLATE_MODEL,
@@ -865,15 +926,26 @@ function buildCandidate(
   gender: Gender,
   existingUsernames: Set<string>,
   appearance: AppearanceProfile,
+  allowedInterests: readonly string[],
   preferences?: GenerationPreferences,
 ): ProfileCandidate {
   const firstName = randomItem(FIRST_NAMES[gender]);
   const lastName = randomItem(LAST_NAMES);
   const name = `${firstName} ${lastName}`;
   const username = buildUsername(name, existingUsernames);
-  const interestPool = shuffle(INTERESTS);
+  // Prefer the live library when available; fall back to the static constant
+  // so this fallback path never produces off-library interests either.
+  const libraryPool =
+    allowedInterests.length > 0
+      ? (allowedInterests as readonly string[])
+      : INTERESTS;
+  const interestPool = shuffle([...libraryPool]);
+  const allowedSet = new Set(libraryPool);
+  const validPreferredInterests = (
+    preferences?.preferredInterests ?? []
+  ).filter((i) => allowedSet.has(i));
   const interests = uniqueList(
-    [...(preferences?.preferredInterests ?? []), ...interestPool],
+    [...validPreferredInterests, ...interestPool],
     5,
   );
   const personalityTraits = shuffle(PERSONALITY_TRAITS).slice(0, 4);
@@ -1221,6 +1293,231 @@ function imageGenerationModelName(isDev: boolean): string {
     : "google/nano-banana-2 -> bytedance/seedream-5-lite -> qwen/qwen-image-edit-2511";
 }
 
+/**
+ * Runs the showcase-image generation pass + profile persistence.
+ * Shared between the cron end-to-end path and the admin approve-preview path.
+ * Throws on failure; caller is expected to mark the job failed with its own
+ * accumulated progress state.
+ */
+async function runShowcaseAndPersistStage(
+  ctx: any,
+  params: {
+    jobId: string;
+    candidate: ProfileCandidate;
+    appearance: AppearanceProfile;
+    subjectDescriptor: string;
+    avatarImageKey: string;
+    selectedGender: Gender;
+    attempts: number;
+    initialCompletedSteps: JobProgressStep[];
+    initialStepModels: StepModelEntry[];
+  },
+): Promise<{ createdProfileId: string }> {
+  const {
+    jobId,
+    candidate,
+    appearance,
+    subjectDescriptor,
+    avatarImageKey,
+    selectedGender,
+    attempts,
+  } = params;
+
+  let completedSteps: JobProgressStep[] = [...params.initialCompletedSteps];
+  let stepModels: StepModelEntry[] = [...params.initialStepModels];
+
+  const avatarReferenceUrl = await r2.getUrl(avatarImageKey);
+  const showcaseCount = randomShowcaseCount();
+  const initialPrompts = buildShowcasePrompts(
+    candidate,
+    appearance,
+    subjectDescriptor,
+    showcaseCount,
+  );
+
+  stepModels = upsertStepModel(
+    stepModels,
+    "showcase_generation",
+    imageGenerationModelName(isDev),
+  );
+  await updateJobProgress(
+    ctx,
+    jobId,
+    "showcase_generation",
+    completedSteps,
+    stepModels,
+    `Generating ${showcaseCount} showcase images in parallel...`,
+  );
+
+  // Slot-indexed storage preserves ordering (first slot -> first shot).
+  const profileImageSlots: (string | null)[] = new Array(showcaseCount).fill(
+    null,
+  );
+  const usedSceneIds = new Set<string>(
+    initialPrompts.map((entry) => entry.sceneId),
+  );
+  let completedCount = 0;
+
+  const runSlot = async (
+    slotIndex: number,
+    slot: ShowcaseSlotPrompt,
+  ): Promise<void> => {
+    const key = await createAndStoreGeneratedImage(
+      ctx,
+      slot.prompt,
+      avatarReferenceUrl,
+      `aiProfiles/generated/${jobId}/showcase`,
+    );
+    profileImageSlots[slotIndex] = key;
+    completedCount += 1;
+    await updateJobProgress(
+      ctx,
+      jobId,
+      "showcase_generation",
+      completedSteps,
+      stepModels,
+      `Showcase images: ${completedCount}/${showcaseCount} done`,
+    );
+  };
+
+  const firstPass = await Promise.allSettled(
+    initialPrompts.map((slot, index) => runSlot(index, slot)),
+  );
+  const failedSlotIndexes = firstPass
+    .map((outcome, index) => (outcome.status === "rejected" ? index : -1))
+    .filter((index) => index >= 0);
+
+  if (failedSlotIndexes.length > 0) {
+    const retryPrompts = buildShowcasePrompts(
+      candidate,
+      appearance,
+      subjectDescriptor,
+      failedSlotIndexes.length,
+      usedSceneIds,
+    );
+    for (const retrySlot of retryPrompts) {
+      usedSceneIds.add(retrySlot.sceneId);
+    }
+    await updateJobProgress(
+      ctx,
+      jobId,
+      "showcase_generation",
+      completedSteps,
+      stepModels,
+      `Retrying ${failedSlotIndexes.length} failed showcase slot${failedSlotIndexes.length > 1 ? "s" : ""}...`,
+    );
+
+    await Promise.allSettled(
+      failedSlotIndexes.map((slotIndex, i) => {
+        const retrySlot = retryPrompts[i];
+        if (!retrySlot) return Promise.resolve();
+        return runSlot(slotIndex, retrySlot);
+      }),
+    );
+  }
+
+  const profileImageKeys = profileImageSlots.filter(
+    (key): key is string => typeof key === "string",
+  );
+
+  if (profileImageKeys.length < SHOWCASE_MIN_SUCCESS) {
+    throw new GenerationFailureError(
+      "image_generation_retry_exhausted",
+      `Only ${profileImageKeys.length}/${showcaseCount} showcase images succeeded (minimum ${SHOWCASE_MIN_SUCCESS}).`,
+    );
+  }
+
+  completedSteps = [...completedSteps, "showcase_generation"];
+  stepModels = upsertStepModel(
+    stepModels,
+    "profile_persist",
+    PROFILE_PERSIST_MODEL,
+  );
+  await updateJobProgress(
+    ctx,
+    jobId,
+    "profile_persist",
+    completedSteps,
+    stepModels,
+    "Saving generated profile...",
+  );
+
+  const createdProfileId = (await ctx.runMutation(
+    "features/ai/profileGeneration:createSystemProfileInternal" as any,
+    {
+      ...candidate,
+      avatarImageKey,
+      profileImageKeys,
+    },
+  )) as string;
+  completedSteps = [...completedSteps, "profile_persist"];
+
+  await ctx.runMutation(
+    "features/ai/profileGeneration:updateProfileGenerationJobInternal" as any,
+    {
+      jobId,
+      status: "completed",
+      selectedGender,
+      attempts,
+      createdProfileId,
+      progress: {
+        currentStep: "completed",
+        completedSteps,
+        stepModels,
+        message: "Profile generation completed successfully.",
+        totalSteps: JOB_PROGRESS_STEPS.length,
+        completedStepCount: completedSteps.length,
+      },
+      completedAt: Date.now(),
+    },
+  );
+
+  return { createdProfileId };
+}
+
+/**
+ * Runs the avatar-generation step. Returns the stored R2 key and the
+ * exact prompt used (so the preview UI can display / edit it).
+ */
+async function generateAvatarForJob(
+  ctx: any,
+  params: {
+    jobId: string;
+    candidate: ProfileCandidate;
+    appearance: AppearanceProfile;
+    subjectDescriptor: string;
+    isReferenceMode: boolean;
+    referenceImageUrl?: string | null;
+    overridePrompt?: string;
+  },
+): Promise<{ avatarImageKey: string; avatarPrompt: string }> {
+  const {
+    jobId,
+    candidate,
+    appearance,
+    subjectDescriptor,
+    isReferenceMode,
+    referenceImageUrl,
+    overridePrompt,
+  } = params;
+
+  const avatarPrompt =
+    overridePrompt?.trim() ||
+    (isReferenceMode
+      ? `Create a different person photo inspired by given reference image, face should be slightly different, Change the outfit color (and pattern style if present).\n\n${buildAvatarPrompt(candidate, appearance, subjectDescriptor)}`
+      : buildAvatarPrompt(candidate, appearance, subjectDescriptor));
+
+  const avatarImageKey = await createAndStoreGeneratedImage(
+    ctx,
+    avatarPrompt,
+    isReferenceMode ? (referenceImageUrl ?? null) : null,
+    `aiProfiles/generated/${jobId}/avatar`,
+    !isReferenceMode,
+  );
+
+  return { avatarImageKey, avatarPrompt };
+}
+
 export const runSystemProfileGeneration = internalAction({
   args: {
     source: v.union(v.literal("manual"), v.literal("cron")),
@@ -1246,6 +1543,14 @@ export const runSystemProfileGeneration = internalAction({
     referenceImageUrl: v.optional(v.string()),
     preferredLocation: v.optional(v.string()),
     culturalBackground: v.optional(v.string()),
+    // When true, pause after the avatar is generated and write a
+    // `preview` snapshot to the job row. Admin then approves to run
+    // showcase + persist via `continueShowcaseAndPersist`. Cron path
+    // leaves this as default (false) for end-to-end generation.
+    pauseForApproval: v.optional(v.boolean()),
+    // Optional: reuse a pre-created job row (manual path pre-creates it so
+    // the client can subscribe to the id before the action starts).
+    existingJobId: v.optional(v.id("profileGenerationJobs")),
   },
   handler: async (ctx, args) => {
     const normalizedPreferences: GenerationPreferences = {
@@ -1255,16 +1560,23 @@ export const runSystemProfileGeneration = internalAction({
       culturalBackground: normalizePreferenceText(args.culturalBackground),
     };
 
-    const jobId = (await ctx.runMutation(
-      "features/ai/profileGeneration:createProfileGenerationJobInternal" as any,
-      {
-        source: args.source,
-        triggeredByUserId: args.triggeredByUserId,
-        preferredGender: args.preferredGender,
-        preferredOccupation: normalizedPreferences.preferredOccupation,
-        preferredInterests: normalizedPreferences.preferredInterests,
-      },
-    )) as string;
+    const jobId: string =
+      args.existingJobId ??
+      ((await ctx.runMutation(
+        "features/ai/profileGeneration:createProfileGenerationJobInternal" as any,
+        {
+          source: args.source,
+          triggeredByUserId: args.triggeredByUserId,
+          preferredGender: args.preferredGender,
+          preferredOccupation: normalizedPreferences.preferredOccupation,
+          preferredInterests: normalizedPreferences.preferredInterests,
+          preferredLocation: normalizedPreferences.preferredLocation,
+          culturalBackground: normalizedPreferences.culturalBackground,
+          referenceSubjectDescriptor: args.referenceSubjectDescriptor,
+          referenceImageUrl: args.referenceImageUrl,
+          appearanceOverrides: args.appearanceOverrides,
+        },
+      )) as string);
     let completedSteps: JobProgressStep[] = [];
     let stepModels: StepModelEntry[] = [];
 
@@ -1327,6 +1639,16 @@ export const runSystemProfileGeneration = internalAction({
           .filter((username): username is string => !!username)
           .map((username) => normalize(username)),
       );
+
+      // Pull the canonical interest library once per job so the LLM schema,
+      // prompt, and fallback template all agree on the same whitelist.
+      // Empty (e.g. unseeded DB) falls back to the INTERESTS constant
+      // inside the helpers via `allowedInterests.length === 0` branches.
+      const allowedInterests = (await ctx.runQuery(
+        "features/ai/profileGeneration:listActiveInterestsInternal" as any,
+        {},
+      )) as string[];
+
       let candidate: ProfileCandidate | null = null;
       let candidateModel = FALLBACK_TEMPLATE_MODEL;
       let attempts = 0;
@@ -1340,6 +1662,7 @@ export const runSystemProfileGeneration = internalAction({
           existingProfiles,
           existingUsernames,
           appearance,
+          allowedInterests,
           normalizedPreferences,
         );
         const fingerprint = candidateFingerprint(generated.candidate);
@@ -1398,164 +1721,60 @@ export const runSystemProfileGeneration = internalAction({
         ? args.referenceSubjectDescriptor!
         : buildCanonicalSubjectDescriptor(candidate, appearance);
 
-      const avatarPrompt = isReferenceMode
-        ? `Create a different person photo inspired by given reference image, face should be slightly different, Change the outfit color (and pattern style if present).\n\n${buildAvatarPrompt(candidate, appearance, subjectDescriptor)}`
-        : buildAvatarPrompt(candidate, appearance, subjectDescriptor);
-
-      const avatarImageKey = await createAndStoreGeneratedImage(
-        ctx,
-        avatarPrompt,
-        isReferenceMode ? (args.referenceImageUrl ?? null) : null,
-        `aiProfiles/generated/${jobId}/avatar`,
-        !isReferenceMode,
-      );
-      completedSteps = [...completedSteps, "avatar_generation"];
-
-      const avatarReferenceUrl = await r2.getUrl(avatarImageKey);
-      const showcaseCount = randomShowcaseCount();
-      const initialPrompts = buildShowcasePrompts(
+      const { avatarImageKey, avatarPrompt } = await generateAvatarForJob(ctx, {
+        jobId,
         candidate,
         appearance,
         subjectDescriptor,
-        showcaseCount,
-      );
+        isReferenceMode,
+        referenceImageUrl: args.referenceImageUrl ?? null,
+      });
+      completedSteps = [...completedSteps, "avatar_generation"];
 
-      stepModels = upsertStepModel(
-        stepModels,
-        "showcase_generation",
-        imageGenerationModelName(isDev),
-      );
-      await updateJobProgress(
-        ctx,
-        jobId,
-        "showcase_generation",
-        completedSteps,
-        stepModels,
-        `Generating ${showcaseCount} showcase images in parallel...`,
-      );
-
-      // Slot-indexed storage preserves ordering (first slot -> first shot).
-      const profileImageSlots: (string | null)[] = new Array(
-        showcaseCount,
-      ).fill(null);
-      const usedSceneIds = new Set<string>(
-        initialPrompts.map((entry) => entry.sceneId),
-      );
-      let completedCount = 0;
-
-      const runSlot = async (
-        slotIndex: number,
-        slot: ShowcaseSlotPrompt,
-      ): Promise<void> => {
-        const key = await createAndStoreGeneratedImage(
-          ctx,
-          slot.prompt,
-          avatarReferenceUrl,
-          `aiProfiles/generated/${jobId}/showcase`,
-        );
-        profileImageSlots[slotIndex] = key;
-        completedCount += 1;
-        await updateJobProgress(
-          ctx,
-          jobId,
-          "showcase_generation",
-          completedSteps,
-          stepModels,
-          `Showcase images: ${completedCount}/${showcaseCount} done`,
-        );
-      };
-
-      const firstPass = await Promise.allSettled(
-        initialPrompts.map((slot, index) => runSlot(index, slot)),
-      );
-      const failedSlotIndexes = firstPass
-        .map((outcome, index) => (outcome.status === "rejected" ? index : -1))
-        .filter((index) => index >= 0);
-
-      if (failedSlotIndexes.length > 0) {
-        const retryPrompts = buildShowcasePrompts(
-          candidate,
-          appearance,
-          subjectDescriptor,
-          failedSlotIndexes.length,
-          usedSceneIds,
-        );
-        for (const retrySlot of retryPrompts) {
-          usedSceneIds.add(retrySlot.sceneId);
-        }
-        await updateJobProgress(
-          ctx,
-          jobId,
-          "showcase_generation",
-          completedSteps,
-          stepModels,
-          `Retrying ${failedSlotIndexes.length} failed showcase slot${failedSlotIndexes.length > 1 ? "s" : ""}...`,
-        );
-
-        await Promise.allSettled(
-          failedSlotIndexes.map((slotIndex, i) => {
-            const retrySlot = retryPrompts[i];
-            if (!retrySlot) return Promise.resolve();
-            return runSlot(slotIndex, retrySlot);
-          }),
-        );
-      }
-
-      const profileImageKeys = profileImageSlots.filter(
-        (key): key is string => typeof key === "string",
-      );
-
-      if (profileImageKeys.length < SHOWCASE_MIN_SUCCESS) {
-        throw new GenerationFailureError(
-          "image_generation_retry_exhausted",
-          `Only ${profileImageKeys.length}/${showcaseCount} showcase images succeeded (minimum ${SHOWCASE_MIN_SUCCESS}).`,
-        );
-      }
-
-      completedSteps = [...completedSteps, "showcase_generation"];
-      stepModels = upsertStepModel(
-        stepModels,
-        "profile_persist",
-        PROFILE_PERSIST_MODEL,
-      );
-      await updateJobProgress(
-        ctx,
-        jobId,
-        "profile_persist",
-        completedSteps,
-        stepModels,
-        "Saving generated profile...",
-      );
-
-      const createdProfileId = (await ctx.runMutation(
-        "features/ai/profileGeneration:createSystemProfileInternal" as any,
-        {
-          ...candidate,
-          avatarImageKey,
-          profileImageKeys,
-        },
-      )) as string;
-      completedSteps = [...completedSteps, "profile_persist"];
-
-      await ctx.runMutation(
-        "features/ai/profileGeneration:updateProfileGenerationJobInternal" as any,
-        {
-          jobId,
-          status: "completed",
-          selectedGender,
-          attempts,
-          createdProfileId,
-          progress: {
-            currentStep: "completed",
-            completedSteps,
-            stepModels,
-            message: "Profile generation completed successfully.",
-            totalSteps: JOB_PROGRESS_STEPS.length,
-            completedStepCount: completedSteps.length,
+      // Manual-approval branch: snapshot the preview and pause here.
+      // The admin UI resumes by calling `continueShowcaseAndPersist`.
+      // Cron passes pauseForApproval=false (default) and skips this.
+      if (args.pauseForApproval) {
+        await ctx.runMutation(
+          "features/ai/profileGeneration:writePreviewAndPauseInternal" as any,
+          {
+            jobId,
+            selectedGender,
+            attempts,
+            progress: {
+              currentStep: "awaiting_avatar_approval",
+              completedSteps,
+              stepModels,
+              message:
+                "Avatar generated. Awaiting admin review before showcase generation.",
+              totalSteps: JOB_PROGRESS_STEPS.length,
+              completedStepCount: completedSteps.length,
+            },
+            preview: {
+              candidate,
+              appearance,
+              subjectDescriptor,
+              isReferenceMode,
+              avatarImageKey,
+              avatarPrompt,
+              avatarAttempts: 1,
+            },
           },
-          completedAt: Date.now(),
-        },
-      );
+        );
+        return { success: true, jobId, paused: true };
+      }
+
+      const { createdProfileId } = await runShowcaseAndPersistStage(ctx, {
+        jobId,
+        candidate,
+        appearance,
+        subjectDescriptor,
+        avatarImageKey,
+        selectedGender,
+        attempts,
+        initialCompletedSteps: completedSteps,
+        initialStepModels: stepModels,
+      });
 
       return { success: true, jobId, createdProfileId };
     } catch (error) {
@@ -1585,6 +1804,178 @@ export const runSystemProfileGeneration = internalAction({
       );
       return { success: false, jobId };
     }
+  },
+});
+
+const MAX_AVATAR_ATTEMPTS = 5;
+
+/**
+ * Regenerates the avatar for a paused `awaiting_avatar_approval` job.
+ * Honors optional `editedPrompt` overrides and enforces a hard attempt cap.
+ * Deletes the previous R2 object immediately on success.
+ */
+export const regenerateAvatarAction = internalAction({
+  args: {
+    jobId: v.id("profileGenerationJobs"),
+    editedPrompt: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const job = (await ctx.runQuery(
+      "features/ai/profileGeneration:getProfileGenerationJobInternal" as any,
+      { jobId: args.jobId },
+    )) as any;
+
+    if (!job) {
+      throw new Error("Job not found");
+    }
+    if (job.status !== "awaiting_avatar_approval" || !job.preview) {
+      throw new Error(
+        `Job is not awaiting avatar approval (current status: ${job.status})`,
+      );
+    }
+    if (job.preview.avatarAttempts >= MAX_AVATAR_ATTEMPTS) {
+      throw new Error(
+        `Avatar regeneration cap (${MAX_AVATAR_ATTEMPTS}) reached`,
+      );
+    }
+
+    const previousAvatarKey = job.preview.avatarImageKey as string;
+
+    try {
+      const { avatarImageKey, avatarPrompt } = await generateAvatarForJob(ctx, {
+        jobId: args.jobId,
+        candidate: job.preview.candidate,
+        appearance: job.preview.appearance,
+        subjectDescriptor: job.preview.subjectDescriptor,
+        isReferenceMode: job.preview.isReferenceMode,
+        referenceImageUrl: job.referenceImageUrl ?? null,
+        overridePrompt: normalizePreferenceText(args.editedPrompt),
+      });
+
+      await ctx.runMutation(
+        "features/ai/profileGeneration:updatePreviewAvatarInternal" as any,
+        {
+          jobId: args.jobId,
+          avatarImageKey,
+          avatarPrompt,
+          avatarAttempts: job.preview.avatarAttempts + 1,
+        },
+      );
+
+      // Best-effort cleanup of the superseded avatar.
+      if (previousAvatarKey && previousAvatarKey !== avatarImageKey) {
+        try {
+          await r2.deleteObject(ctx, previousAvatarKey);
+        } catch (cleanupError) {
+          console.warn(
+            "Failed to delete previous avatar key",
+            previousAvatarKey,
+            cleanupError,
+          );
+        }
+      }
+
+      return { success: true, avatarImageKey };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "avatar regeneration failed";
+      throw new Error(`avatar_regeneration_failed: ${message}`);
+    }
+  },
+});
+
+/**
+ * Resumes a paused job by running the showcase + persist stage.
+ * Accepts an optional `editedCandidate` with a narrow set of admin-editable
+ * fields; validation happens in the calling mutation.
+ */
+export const continueShowcaseAndPersistAction = internalAction({
+  args: {
+    jobId: v.id("profileGenerationJobs"),
+  },
+  handler: async (ctx, args) => {
+    const job = (await ctx.runQuery(
+      "features/ai/profileGeneration:getProfileGenerationJobInternal" as any,
+      { jobId: args.jobId },
+    )) as any;
+
+    if (!job) {
+      throw new Error("Job not found");
+    }
+    if (!job.preview) {
+      throw new Error("Job has no preview snapshot to resume from");
+    }
+
+    // Caller (adminApproveAvatar mutation) has already merged the edited
+    // candidate + set status to "processing".
+    const completedSteps = (job.progress?.completedSteps ?? [
+      "candidate_generation",
+      "avatar_generation",
+    ]) as JobProgressStep[];
+    const stepModels = (job.progress?.stepModels ?? []) as StepModelEntry[];
+
+    try {
+      const { createdProfileId } = await runShowcaseAndPersistStage(ctx, {
+        jobId: args.jobId,
+        candidate: job.preview.candidate,
+        appearance: job.preview.appearance,
+        subjectDescriptor: job.preview.subjectDescriptor,
+        avatarImageKey: job.preview.avatarImageKey,
+        selectedGender: job.selectedGender ?? job.preview.candidate.gender,
+        attempts: job.attempts ?? 1,
+        initialCompletedSteps: completedSteps,
+        initialStepModels: stepModels,
+      });
+
+      return { success: true, createdProfileId };
+    } catch (error) {
+      const errorMessage =
+        error instanceof GenerationFailureError
+          ? `${error.code}: ${error.message}`
+          : error instanceof Error
+            ? `profile_creation_failed: ${error.message}`
+            : "profile_creation_failed: Unknown error";
+
+      await ctx.runMutation(
+        "features/ai/profileGeneration:updateProfileGenerationJobInternal" as any,
+        {
+          jobId: args.jobId,
+          status: "failed",
+          errorMessage,
+          progress: {
+            currentStep: "failed",
+            completedSteps,
+            stepModels,
+            message: errorMessage,
+            totalSteps: JOB_PROGRESS_STEPS.length,
+            completedStepCount: completedSteps.length,
+          },
+          completedAt: Date.now(),
+        },
+      );
+      return { success: false };
+    }
+  },
+});
+
+/**
+ * Deletes R2 objects associated with a cancelled preview job.
+ * Best-effort; logs failures but does not throw.
+ */
+export const cleanupPreviewR2Action = internalAction({
+  args: {
+    keys: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    for (const key of args.keys) {
+      if (!key) continue;
+      try {
+        await r2.deleteObject(ctx, key);
+      } catch (error) {
+        console.warn("cleanupPreviewR2Action: failed to delete", key, error);
+      }
+    }
+    return null;
   },
 });
 

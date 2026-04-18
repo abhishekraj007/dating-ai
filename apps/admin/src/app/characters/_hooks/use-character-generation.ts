@@ -5,7 +5,13 @@ import { useAction, useMutation, useQuery, useConvexAuth } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { toast } from "sonner";
 
-type GenerationJobStatus = "queued" | "processing" | "completed" | "failed";
+type GenerationJobStatus =
+  | "queued"
+  | "processing"
+  | "awaiting_avatar_approval"
+  | "completed"
+  | "failed"
+  | "cancelled";
 type GenerationInput = {
   preferredGender?: "female" | "male";
   preferredOccupation?: string;
@@ -112,15 +118,17 @@ export function useCharacterGeneration() {
     jobs?.filter((job) => job.status === "failed" && !job.retriedAt) ?? [];
   const failedCount = failedJobs.length;
 
-  const triggerGeneration = async (input?: GenerationInput) => {
+  const triggerGeneration = async (
+    input?: GenerationInput,
+  ): Promise<string | null> => {
     if (!isAuthenticated || !isAdmin) {
       toast.error("Admin access required");
-      return;
+      return null;
     }
 
     setIsGenerating(true);
     try {
-      await generateProfile({
+      const result = (await generateProfile({
         preferredGender: input?.preferredGender,
         preferredOccupation: input?.preferredOccupation?.trim() || undefined,
         preferredInterests:
@@ -132,8 +140,9 @@ export function useCharacterGeneration() {
         referenceImageUrl: input?.referenceImageUrl,
         preferredLocation: input?.preferredLocation?.trim() || undefined,
         culturalBackground: input?.culturalBackground?.trim() || undefined,
-      });
-      toast.success("Character generation queued");
+      })) as { queued?: boolean; jobId?: string } | undefined;
+      toast.success("Generating avatar — review when ready");
+      return result?.jobId ?? null;
     } catch (error) {
       toast.error("Failed to queue character generation");
       console.error(error);

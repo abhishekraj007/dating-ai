@@ -46,7 +46,13 @@ type InterestOption = {
 
 type FailedJob = {
   _id: string;
-  status?: "queued" | "processing" | "completed" | "failed";
+  status?:
+    | "queued"
+    | "processing"
+    | "awaiting_avatar_approval"
+    | "completed"
+    | "failed"
+    | "cancelled";
   source?: "manual" | "cron";
   errorMessage?: string;
   createdAt?: number;
@@ -92,11 +98,20 @@ function getStepModel(
 function getJobDisplayStatus(
   status: FailedJob["status"],
   isRetried: boolean,
-): "queued" | "processing" | "completed" | "failed" | "retried" {
+):
+  | "queued"
+  | "processing"
+  | "awaiting_avatar_approval"
+  | "completed"
+  | "failed"
+  | "cancelled"
+  | "retried" {
   if (isRetried) return "retried";
   if (status === "queued") return "queued";
   if (status === "processing") return "processing";
+  if (status === "awaiting_avatar_approval") return "awaiting_avatar_approval";
   if (status === "failed") return "failed";
+  if (status === "cancelled") return "cancelled";
   return "completed";
 }
 
@@ -107,7 +122,7 @@ interface CharacterGenerationPanelProps {
   failedCount: number;
   jobs: FailedJob[];
   onRetryFailed: (jobId: string) => Promise<void>;
-  onGenerate: (input?: GenerateCharacterInput) => Promise<void>;
+  onGenerate: (input?: GenerateCharacterInput) => Promise<string | null>;
   occupationOptions: InterestOption[];
   interestOptions: InterestOption[];
   appearanceOptions?: {
@@ -163,7 +178,11 @@ export function CharacterGenerationPanel({
     if (jobFilter === "failed")
       return job.status === "failed" && !job.retriedAt;
     if (jobFilter === "running")
-      return job.status === "queued" || job.status === "processing";
+      return (
+        job.status === "queued" ||
+        job.status === "processing" ||
+        job.status === "awaiting_avatar_approval"
+      );
     return true;
   });
 
