@@ -22,6 +22,8 @@ type GenerationInput = {
   };
   referenceSubjectDescriptor?: string;
   referenceImageUrl?: string;
+  preferredLocation?: string;
+  culturalBackground?: string;
 };
 
 type ProfileGenerationOption = {
@@ -128,6 +130,8 @@ export function useCharacterGeneration() {
         appearanceOverrides: input?.appearanceOverrides,
         referenceSubjectDescriptor: input?.referenceSubjectDescriptor,
         referenceImageUrl: input?.referenceImageUrl,
+        preferredLocation: input?.preferredLocation?.trim() || undefined,
+        culturalBackground: input?.culturalBackground?.trim() || undefined,
       });
       toast.success("Character generation queued");
     } catch (error) {

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -67,6 +68,8 @@ type GenerateCharacterInput = {
   appearanceOverrides?: AppearanceOverrides;
   referenceSubjectDescriptor?: string;
   referenceImageUrl?: string;
+  preferredLocation?: string;
+  culturalBackground?: string;
 };
 
 type ReferenceAnalysis = {
@@ -76,6 +79,8 @@ type ReferenceAnalysis = {
   suggestedOccupation?: string;
   suggestedVibe?: string;
   suggestedExpression?: string;
+  suggestedLocation?: string;
+  culturalBackground?: string;
   referenceImageUrl: string;
 };
 
@@ -154,6 +159,7 @@ export function AddCharacterDialog({
     useState<ReferenceAnalysis | null>(null);
   const [refOccupation, setRefOccupation] = useState("");
   const [refInterests, setRefInterests] = useState<string[]>([]);
+  const [refLocation, setRefLocation] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const shownInterests = interestOptions.slice(0, 40);
@@ -224,6 +230,7 @@ export function AddCharacterDialog({
     setReferenceAnalysis(null);
     setRefOccupation("");
     setRefInterests([]);
+    setRefLocation("");
   };
 
   const buildOverrides = (): AppearanceOverrides | undefined => {
@@ -251,6 +258,10 @@ export function AddCharacterDialog({
       // Pre-fill occupation if suggested
       if (result.suggestedOccupation) {
         setRefOccupation(result.suggestedOccupation);
+      }
+      // Pre-fill location if suggested
+      if (result.suggestedLocation) {
+        setRefLocation(result.suggestedLocation);
       }
     }
   };
@@ -282,6 +293,7 @@ export function AddCharacterDialog({
     setReferenceAnalysis(null);
     setRefOccupation("");
     setRefInterests([]);
+    setRefLocation("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -305,6 +317,10 @@ export function AddCharacterDialog({
   const handleGenerateFromReference = async () => {
     if (!referenceAnalysis) return;
     try {
+      const resolvedLocation =
+        refLocation.trim() ||
+        referenceAnalysis.suggestedLocation?.trim() ||
+        undefined;
       await onGenerate({
         preferredGender: referenceAnalysis.suggestedGender,
         preferredOccupation:
@@ -312,6 +328,9 @@ export function AddCharacterDialog({
         preferredInterests: refInterests.length > 0 ? refInterests : undefined,
         referenceSubjectDescriptor: referenceAnalysis.subjectDescriptor,
         referenceImageUrl: referenceAnalysis.referenceImageUrl,
+        preferredLocation: resolvedLocation,
+        culturalBackground:
+          referenceAnalysis.culturalBackground?.trim() || undefined,
       });
       setOpen(false);
       resetForm();
@@ -649,6 +668,33 @@ export function AddCharacterDialog({
               {/* Only show profile fields after analysis is done */}
               {referenceAnalysis && (
                 <>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">Location</p>
+                      {referenceAnalysis.culturalBackground && (
+                        <p className="text-[11px] text-muted-foreground">
+                          Cultural background:{" "}
+                          <span className="font-medium text-foreground/80">
+                            {referenceAnalysis.culturalBackground}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                    <Input
+                      value={refLocation}
+                      onChange={(e) => setRefLocation(e.target.value)}
+                      placeholder={
+                        referenceAnalysis.suggestedLocation ??
+                        "City, CC (e.g. Tokyo, JP)"
+                      }
+                      className="h-8 text-xs"
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Used as an exact constraint so the generated name, city,
+                      and country match the person in the reference image.
+                    </p>
+                  </div>
+
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Occupation</p>
                     <div className="max-h-28 overflow-y-auto rounded-md border border-border/60 p-2">

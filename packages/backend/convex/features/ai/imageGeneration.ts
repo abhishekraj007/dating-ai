@@ -132,6 +132,7 @@ export async function generateImageWithFallback(args: {
   prompt: string;
   aspectRatio: string;
   referenceImageUrls?: string[];
+  applyReferenceConsistencyPrefix?: boolean;
   isDev: boolean;
   devWidth: number;
   devHeight: number;
@@ -159,8 +160,10 @@ export async function generateImageWithFallback(args: {
   }
 
   const referenceImageUrls = args.referenceImageUrls?.filter(Boolean) ?? [];
+  const applyReferenceConsistencyPrefix =
+    args.applyReferenceConsistencyPrefix ?? true;
   const prompt =
-    referenceImageUrls.length > 0
+    referenceImageUrls.length > 0 && applyReferenceConsistencyPrefix
       ? `${REFERENCE_IMAGE_CONSISTENCY_PREFIX}. ${args.prompt}`
       : args.prompt;
   const attempts: ImageModelAttempt[] = [];
