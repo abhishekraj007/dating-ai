@@ -13,6 +13,7 @@ import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
 import type * as features_ai_actions from "../features/ai/actions.js";
 import type * as features_ai_agent from "../features/ai/agent.js";
+import type * as features_ai_aiProviders from "../features/ai/aiProviders.js";
 import type * as features_ai_genz_profiles_data from "../features/ai/genz_profiles_data.js";
 import type * as features_ai_genz_profiles_male from "../features/ai/genz_profiles_male.js";
 import type * as features_ai_imageGeneration from "../features/ai/imageGeneration.js";
@@ -78,6 +79,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   "features/ai/actions": typeof features_ai_actions;
   "features/ai/agent": typeof features_ai_agent;
+  "features/ai/aiProviders": typeof features_ai_aiProviders;
   "features/ai/genz_profiles_data": typeof features_ai_genz_profiles_data;
   "features/ai/genz_profiles_male": typeof features_ai_genz_profiles_male;
   "features/ai/imageGeneration": typeof features_ai_imageGeneration;

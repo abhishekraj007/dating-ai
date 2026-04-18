@@ -5,10 +5,9 @@ import { action, internalAction } from "../../_generated/server";
 import { r2 } from "../../uploads";
 import { z } from "zod";
 import { generateText, Output } from "ai";
-import { createGateway } from "@ai-sdk/gateway";
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateImageWithFallback } from "./imageGeneration";
 import { internal, api } from "../../_generated/api";
+import { gatewayProvider, openRouterProvider } from "./aiProviders";
 import {
   type Gender,
   type AvatarShotStyle,
@@ -69,10 +68,11 @@ class GenerationFailureError extends Error {
   }
 }
 
-const AI_GATEWAY_BASE_URL =
-  process.env.AI_GATEWAY_BASE_URL ?? "https://ai-gateway.vercel.sh/v1/ai";
+const IMAGE_ANALYSIS_MODEL =
+  process.env.IMAGE_ANALYSIS_MODEL || "openai/gpt-5.4-nano";
 const PROFILE_GENERATION_MODEL =
-  process.env.PROFILE_GENERATION_MODEL ?? "google/gemini-3-flash";
+  process.env.PROFILE_GENERATION_MODEL ??
+  "google/gemini-3.1-flash-lite-preview";
 const PROFILE_GENERATION_FALLBACK_MODELS = (
   process.env.PROFILE_GENERATION_FALLBACK_MODELS ??
   "google/gemini-2.5-flash,openai/gpt-4.1-mini,anthropic/claude-3-5-haiku-latest"
@@ -82,13 +82,7 @@ const PROFILE_GENERATION_FALLBACK_MODELS = (
   .filter(Boolean);
 
 const isDev = process.env.CONVEX_CLOUD_URL?.includes("cheery-akita") ?? false;
-const aiGatewayApiKey = process.env.AI_GATEWAY_API_KEY;
-const aiGatewayProvider = aiGatewayApiKey
-  ? createGateway({
-      apiKey: aiGatewayApiKey,
-      baseURL: AI_GATEWAY_BASE_URL,
-    })
-  : null;
+// const isDev = false;
 
 type ProfileCandidate = {
   name: string;
@@ -115,6 +109,8 @@ type ProfileCandidate = {
 type GenerationPreferences = {
   preferredOccupation?: string;
   preferredInterests?: string[];
+  preferredLocation?: string;
+  culturalBackground?: string;
 };
 
 type StepModelEntry = {
@@ -567,8 +563,10 @@ function toCandidateFromBlueprint(
     5,
   );
 
-  // Prefer LLM-provided location, fall back to archetype-derived one.
+  // Hard-override with user/reference-supplied location when present;
+  // otherwise prefer LLM-provided location, falling back to archetype-derived.
   const location =
+    preferences?.preferredLocation?.trim() ||
     blueprint.location?.trim() ||
     locationForArchetype(appearance.cityArchetype);
 
@@ -627,10 +625,10 @@ async function generateCandidateWithLLM(
   appearance: AppearanceProfile,
   preferences?: GenerationPreferences,
 ): Promise<CandidateBuildResult> {
-  if (!aiGatewayApiKey || !aiGatewayProvider) {
+  if (!gatewayProvider && !openRouterProvider) {
     throw new GenerationFailureError(
       "profile_model_generation_failed",
-      "AI_GATEWAY_API_KEY is not set",
+      "Neither AI_GATEWAY_API_KEY nor OPENROUTER_API_KEY is set",
     );
   }
 
@@ -661,19 +659,35 @@ async function generateCandidateWithLLM(
     preferences?.preferredInterests && preferences.preferredInterests.length > 0
       ? `- include these interests exactly (at least first 2): ${preferences.preferredInterests.join(", ")}`
       : null,
+    preferences?.preferredLocation
+      ? `- location MUST be exactly: ${preferences.preferredLocation} (do not change city, country, or format)`
+      : null,
+    preferences?.culturalBackground
+      ? `- name must be a believable first + last name for a person of ${preferences.culturalBackground} background${preferences?.preferredLocation ? ` living in ${preferences.preferredLocation}` : ""}; use naming conventions typical for that background (script romanized if non-Latin)`
+      : null,
+    preferences?.culturalBackground
+      ? `- bio should feel culturally coherent with a ${preferences.culturalBackground} background — natural references (foods, places, habits) are fine but do not stereotype`
+      : null,
   ]
     .filter(Boolean)
     .join("\n");
+
+  const livesInLine = preferences?.preferredLocation
+    ? `- lives in ${preferences.preferredLocation}`
+    : `- lives in a ${appearance.cityArchetype}`;
+  const nameHintLine = preferences?.culturalBackground
+    ? `- name must reflect a ${preferences.culturalBackground} cultural background`
+    : `- pick a name and location that feel culturally coherent with the appearance — no strict rules, just natural`;
 
   const prompt = `Generate one unique ${gender} dating profile that reads like a real person's, not AI-written.
 
 Soft persona seed (use naturally, do not quote literally):
 - age around ${appearance.ageHint} (allowed range 20-34)
 - appearance: ${appearance.skinTone}, ${appearance.hair}, ${appearance.eyes}
-- lives in a ${appearance.cityArchetype}
+${livesInLine}
 - overall style/aesthetic: ${appearance.vibe}
 - personal quirk to weave in subtly: ${appearance.quirk}
-- pick a name and location that feel culturally coherent with the appearance — no strict rules, just natural
+${nameHintLine}
 
 Hard requirements:
 - age integer between 20 and 34
@@ -729,40 +743,75 @@ Required JSON shape:
   ]);
   const modelErrors: string[] = [];
 
-  for (const modelName of modelsToTry) {
-    console.log("Trying model:", modelName);
-    try {
-      const result = await generateText({
-        model: aiGatewayProvider(modelName),
-        experimental_output: Output.object({
-          schema: profileBlueprintSchema,
-        }),
-        temperature: 1.05,
-        system:
-          "You generate highly unique, human-sounding dating profile blueprints. Write like a real person, not a copywriter. Return valid structured output only.",
-        prompt,
-      });
-      const blueprint = result.experimental_output;
-      if (bioHasBannedPhrase(blueprint.bio)) {
-        throw new Error(
-          `bio_contains_banned_phrase: "${blueprint.bio.slice(0, 80)}..."`,
-        );
+  const generateArgs = {
+    experimental_output: Output.object({
+      schema: profileBlueprintSchema,
+    }),
+    temperature: 1.05,
+    system:
+      "You generate highly unique, human-sounding dating profile blueprints. Write like a real person, not a copywriter. Return valid structured output only.",
+    prompt,
+  } as const;
+
+  const validateAndReturn = (
+    blueprint: z.infer<typeof profileBlueprintSchema>,
+    modelName: string,
+  ): CandidateBuildResult => {
+    if (bioHasBannedPhrase(blueprint.bio)) {
+      throw new Error(
+        `bio_contains_banned_phrase: "${blueprint.bio.slice(0, 80)}..."`,
+      );
+    }
+    return {
+      candidate: toCandidateFromBlueprint(
+        blueprint,
+        gender,
+        existingUsernames,
+        appearance,
+        preferences,
+      ),
+      model: modelName,
+    };
+  };
+
+  // Phase 1: Try AI Gateway (Vercel)
+  if (gatewayProvider) {
+    for (const modelName of modelsToTry) {
+      console.log("[AI Gateway] Trying model:", modelName);
+      try {
+        const result = await generateText({
+          model: gatewayProvider(modelName),
+          ...generateArgs,
+        });
+        return validateAndReturn(result.experimental_output, modelName);
+      } catch (error) {
+        console.error("[AI Gateway] Model failed:", modelName, error);
+        const message =
+          error instanceof Error ? error.message : "Unknown model error";
+        modelErrors.push(`gateway/${modelName}: ${message}`);
       }
-      return {
-        candidate: toCandidateFromBlueprint(
-          blueprint,
-          gender,
-          existingUsernames,
-          appearance,
-          preferences,
-        ),
-        model: modelName,
-      };
-    } catch (error) {
-      console.error("Model generation failed:", modelName, error);
-      const message =
-        error instanceof Error ? error.message : "Unknown model error";
-      modelErrors.push(`${modelName}: ${message}`);
+    }
+  }
+
+  // Phase 2: Fallback to OpenRouter
+  if (openRouterProvider) {
+    for (const modelName of modelsToTry) {
+      console.log("[OpenRouter] Trying model:", modelName);
+      try {
+        const result = await generateText({
+          model: openRouterProvider.chat(modelName),
+          ...generateArgs,
+        });
+        return validateAndReturn(
+          result.experimental_output,
+          `openrouter/${modelName}`,
+        );
+      } catch (error) {
+        console.error("[OpenRouter] Model failed:", modelName, error);
+        const message =
+          error instanceof Error ? error.message : "Unknown model error";
+        modelErrors.push(`openrouter/${modelName}: ${message}`);
+      }
     }
   }
 
@@ -859,7 +908,9 @@ function buildCandidate(
     age,
     zodiacSign,
     occupation,
-    location: locationForArchetype(appearance.cityArchetype),
+    location:
+      preferences?.preferredLocation?.trim() ||
+      locationForArchetype(appearance.cityArchetype),
     bio,
     interests,
     personalityTraits,
@@ -1078,6 +1129,7 @@ async function createAndStoreGeneratedImage(
   prompt: string,
   referenceImageUrl: string | null,
   keyPrefix: string,
+  applyReferenceConsistencyPrefix = true,
 ): Promise<string> {
   let lastError: Error | null = null;
 
@@ -1090,6 +1142,7 @@ async function createAndStoreGeneratedImage(
       prompt,
       aspectRatio: "3:4",
       referenceImageUrls: referenceImageUrl ? [referenceImageUrl] : [],
+      applyReferenceConsistencyPrefix,
       isDev,
       devWidth: 768,
       devHeight: 1024,
@@ -1191,11 +1244,15 @@ export const runSystemProfileGeneration = internalAction({
     ),
     referenceSubjectDescriptor: v.optional(v.string()),
     referenceImageUrl: v.optional(v.string()),
+    preferredLocation: v.optional(v.string()),
+    culturalBackground: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const normalizedPreferences: GenerationPreferences = {
       preferredOccupation: normalizePreferenceText(args.preferredOccupation),
       preferredInterests: normalizeInterestPreferences(args.preferredInterests),
+      preferredLocation: normalizePreferenceText(args.preferredLocation),
+      culturalBackground: normalizePreferenceText(args.culturalBackground),
     };
 
     const jobId = (await ctx.runMutation(
@@ -1342,7 +1399,7 @@ export const runSystemProfileGeneration = internalAction({
         : buildCanonicalSubjectDescriptor(candidate, appearance);
 
       const avatarPrompt = isReferenceMode
-        ? `Create a different person photo inspired by given reference image, face should be slightly different, Change the outfit color.\n\n${buildAvatarPrompt(candidate, appearance, subjectDescriptor)}`
+        ? `Create a different person photo inspired by given reference image, face should be slightly different, Change the outfit color (and pattern style if present).\n\n${buildAvatarPrompt(candidate, appearance, subjectDescriptor)}`
         : buildAvatarPrompt(candidate, appearance, subjectDescriptor);
 
       const avatarImageKey = await createAndStoreGeneratedImage(
@@ -1350,6 +1407,7 @@ export const runSystemProfileGeneration = internalAction({
         avatarPrompt,
         isReferenceMode ? (args.referenceImageUrl ?? null) : null,
         `aiProfiles/generated/${jobId}/avatar`,
+        !isReferenceMode,
       );
       completedSteps = [...completedSteps, "avatar_generation"];
 
@@ -1553,6 +1611,8 @@ export const analyzeReferencePhoto = action({
     suggestedOccupation: v.optional(v.string()),
     suggestedVibe: v.optional(v.string()),
     suggestedExpression: v.optional(v.string()),
+    suggestedLocation: v.optional(v.string()),
+    culturalBackground: v.optional(v.string()),
     referenceImageUrl: v.string(),
   }),
   handler: async (ctx, args) => {
@@ -1562,26 +1622,25 @@ export const analyzeReferencePhoto = action({
       throw new Error("Admin access required");
     }
 
-    const openRouterApiKey = process.env.OPENROUTER_API_KEY;
-    if (!openRouterApiKey) {
+    if (!openRouterProvider) {
       throw new Error("OPENROUTER_API_KEY not configured");
     }
 
-    const openRouter = createOpenRouter({ apiKey: openRouterApiKey });
-
     const analysisPrompt = `You are an expert at creating image generation prompts for photorealistic portrait generation.
 
-Analyze this reference photo and produce a "subject descriptor" — a single comma-separated natural-language string that describes a NEW fictional person inspired by this photo. The new person should share the same overall style, aesthetic, and vibe, but have a SUBTLY DIFFERENT face (different nose shape, slightly different jawline, different eye spacing).
+Analyze this reference photo and produce a "subject descriptor" — a single comma-separated natural-language string that describes this photo. The new person should share the same overall style, aesthetic, and vibe.
 
 The subject descriptor MUST follow this exact structure (comma-separated parts):
-"a {age}-year-old {woman/man}, {skin tone}, {skin detail}, {hair length and color} hair, {eye shape} {eye color} eyes, {body build}, including chest size, stomach type, wearing {outfit description}, {style signature}"
+"a {age}-year-old {woman/man}, {skin detail}, {hair length and color} hair, make hair style bit differnt, {eye shape} {eye color} eyes, {body build}, including chest size, stomach type, wearing {outfit description}, {style signature}"
 
 Also extract these fields from the photo:
 - "gender": "female" or "male"
 - "age": estimated age as a number (18-35 range)
 - "occupation": a plausible occupation that matches the person's style (optional)
 - "vibe": overall aesthetic vibe in 1-3 words (e.g. "warm bohemian", "cool minimalist")
-- "expression": the person's expression in 1-2 words (e.g. "warm smile", "confident gaze")
+- "expression": the person's expression in 1-2 words
+- "culturalBackground": short adjective describing the person's apparent cultural/ethnic background based ONLY on clearly visible visual cues (e.g. "Japanese", "South Asian", "Afro-Caribbean", "Latina", "Northern European"). If the background is ambiguous or unclear, set this to null. Do NOT stereotype or assume — only infer from obvious cues.
+- "suggestedLocation": a plausible real city in "City, CC" format where someone of this apparent cultural background and style would realistically live (e.g. "Tokyo, JP", "Lagos, NG", "São Paulo, BR", "Berlin, DE"). Pick a real major city. If culturalBackground is null/ambiguous, pick a cosmopolitan city that suits the overall aesthetic. Use ISO 3166-1 alpha-2 country codes.
 
 Return a JSON object with these fields:
 {
@@ -1590,7 +1649,9 @@ Return a JSON object with these fields:
   "age": number,
   "occupation": "string or null",
   "vibe": "string or null",
-  "expression": "string or null"
+  "expression": "string or null",
+  "culturalBackground": "string or null",
+  "suggestedLocation": "City, CC or null"
 }
 
 Return ONLY valid JSON, no markdown fences.`;
@@ -1598,7 +1659,7 @@ Return ONLY valid JSON, no markdown fences.`;
     const imageDataUrl = `data:${args.mimeType};base64,${args.imageBase64}`;
 
     const result = await generateText({
-      model: openRouter.chat("openai/gpt-5.4-nano"),
+      model: openRouterProvider.chat(IMAGE_ANALYSIS_MODEL),
       messages: [
         {
           role: "user",
@@ -1652,6 +1713,16 @@ Return ONLY valid JSON, no markdown fences.`;
     await r2.store(ctx, imageBytes, r2Key);
     const referenceImageUrl = await r2.getUrl(r2Key);
 
+    const sanitizeShortString = (
+      value: unknown,
+      maxLength: number,
+    ): string | undefined => {
+      if (typeof value !== "string") return undefined;
+      const trimmed = value.trim();
+      if (!trimmed || trimmed.toLowerCase() === "null") return undefined;
+      return trimmed.length > maxLength ? trimmed.slice(0, maxLength) : trimmed;
+    };
+
     return {
       subjectDescriptor: parsed.subjectDescriptor,
       suggestedGender: gender,
@@ -1661,6 +1732,8 @@ Return ONLY valid JSON, no markdown fences.`;
       suggestedVibe: typeof parsed.vibe === "string" ? parsed.vibe : undefined,
       suggestedExpression:
         typeof parsed.expression === "string" ? parsed.expression : undefined,
+      suggestedLocation: sanitizeShortString(parsed.suggestedLocation, 60),
+      culturalBackground: sanitizeShortString(parsed.culturalBackground, 40),
       referenceImageUrl,
     };
   },

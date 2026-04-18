@@ -267,6 +267,8 @@ export const adminGenerateSystemProfile = mutation({
     ),
     referenceSubjectDescriptor: v.optional(v.string()),
     referenceImageUrl: v.optional(v.string()),
+    preferredLocation: v.optional(v.string()),
+    culturalBackground: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
@@ -295,6 +297,8 @@ export const adminGenerateSystemProfile = mutation({
         appearanceOverrides: args.appearanceOverrides,
         referenceSubjectDescriptor: args.referenceSubjectDescriptor,
         referenceImageUrl: args.referenceImageUrl,
+        preferredLocation: args.preferredLocation,
+        culturalBackground: args.culturalBackground,
       },
     );
 

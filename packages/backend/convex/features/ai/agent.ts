@@ -1,9 +1,8 @@
-import { createGateway } from "@ai-sdk/gateway";
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { Agent, createTool } from "@convex-dev/agent";
 import { z } from "zod/v3";
 import { components } from "../../_generated/api";
 import type { Doc } from "../../_generated/dataModel";
+import { gatewayProvider, openRouterProvider } from "./aiProviders";
 
 // Default ElevenLabs voice IDs per gender
 export const DEFAULT_VOICES = {
@@ -11,27 +10,24 @@ export const DEFAULT_VOICES = {
   male: "pNInz6obpgDQGcFmaJgB", // Adam
 } as const;
 
-const AI_GATEWAY_BASE_URL =
-  process.env.AI_GATEWAY_BASE_URL ?? "https://ai-gateway.vercel.sh/v1/ai";
 const AI_AGENT_PROVIDER = process.env.AI_AGENT_PROVIDER ?? "gateway";
-const AI_AGENT_MODEL = process.env.AI_AGENT_MODEL ?? "google/gemini-3-flash";
+const AI_AGENT_MODEL =
+  process.env.AI_AGENT_MODEL ?? "google/gemini-3.1-flash-lite-preview";
 const AI_AGENT_EMBEDDING_MODEL =
   process.env.AI_AGENT_EMBEDDING_MODEL ?? "openai/text-embedding-3-small";
 
-const gatewayProvider = createGateway({
-  apiKey: process.env.AI_GATEWAY_API_KEY,
-  baseURL: AI_GATEWAY_BASE_URL,
-});
-const openRouterProvider = createOpenRouter({
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
-
 function getAgentLanguageModel() {
   if (AI_AGENT_PROVIDER === "gateway") {
+    if (!gatewayProvider) {
+      throw new Error("AI_GATEWAY_API_KEY is not set");
+    }
     return gatewayProvider(AI_AGENT_MODEL);
   }
 
   if (AI_AGENT_PROVIDER === "openrouter") {
+    if (!openRouterProvider) {
+      throw new Error("OPENROUTER_API_KEY is not set");
+    }
     return openRouterProvider.chat(AI_AGENT_MODEL);
   }
 
@@ -45,7 +41,7 @@ function getAgentLanguageModel() {
 function getAgentEmbeddingModel() {
   const embeddingModelId = AI_AGENT_EMBEDDING_MODEL.trim();
 
-  if (!embeddingModelId || !process.env.AI_GATEWAY_API_KEY) {
+  if (!embeddingModelId || !gatewayProvider) {
     return undefined;
   }
 
