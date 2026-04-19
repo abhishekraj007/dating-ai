@@ -16,8 +16,8 @@ catalogs:
       specifier: 1.3.27
       version: 1.3.27
     convex:
-      specifier: ^1.27.0
-      version: 1.33.0
+      specifier: ^1.35.1
+      version: 1.35.1
     typescript:
       specifier: ^5
       version: 5.9.3
@@ -34,22 +34,22 @@ importers:
     dependencies:
       '@convex-dev/agent':
         specifier: ^0.3.0
-        version: 0.3.2(@ai-sdk/provider-utils@4.0.23(zod@4.3.6))(ai@5.0.153(zod@4.3.6))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6))(convex@1.33.0(react@19.2.0))(react@19.2.0)
+        version: 0.3.2(@ai-sdk/provider-utils@4.0.23(zod@4.3.6))(ai@5.0.153(zod@4.3.6))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.0))(react@19.2.0)
       '@convex-dev/better-auth':
         specifier: 'catalog:'
-        version: 0.9.11(@standard-schema/spec@1.1.0)(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+        version: 0.9.11(@standard-schema/spec@1.1.0)(better-auth@1.3.27(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       '@convex-dev/polar':
         specifier: ^0.6.4
-        version: 0.6.4(@polar-sh/checkout@0.2.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1))(@polar-sh/sdk@0.40.3)(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
+        version: 0.6.4(@polar-sh/checkout@0.2.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1))(@polar-sh/sdk@0.40.3)(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
       '@convex-dev/r2':
         specifier: ^0.8.0
-        version: 0.8.1(@standard-schema/spec@1.1.0)(convex-svelte@0.0.11(convex@1.33.0(react@19.2.0))(svelte@5.53.11))(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11)(typescript@5.9.3)(zod@4.3.6)
+        version: 0.8.1(@standard-schema/spec@1.1.0)(convex-svelte@0.0.11(convex@1.35.1(react@19.2.0))(svelte@5.53.11))(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11)(typescript@5.9.3)(zod@4.3.6)
       '@dating-ai/backend':
         specifier: workspace:*
         version: link:../../packages/backend
       '@polar-sh/better-auth':
         specifier: ^1.2.1
-        version: 1.8.2(@polar-sh/sdk@0.40.3)(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(better-auth@1.3.27(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1)(zod@4.3.6)
+        version: 1.8.2(@polar-sh/sdk@0.40.3)(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1)(zod@4.3.6)
       '@polar-sh/nextjs':
         specifier: ^0.7.0
         version: 0.7.0(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))
@@ -103,7 +103,7 @@ importers:
         version: 2.1.1
       convex:
         specifier: 'catalog:'
-        version: 1.33.0(react@19.2.0)
+        version: 1.35.1(react@19.2.0)
       lucide-react:
         specifier: ^0.546.0
         version: 0.546.0(react@19.2.0)
@@ -161,13 +161,13 @@ importers:
         version: 7.25.9
       '@better-auth/expo':
         specifier: 1.3.27
-        version: 1.3.27(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(expo-constants@55.0.7)(expo-crypto@55.0.9(expo@55.0.6))(expo-linking@55.0.7)(expo-secure-store@55.0.8(expo@55.0.6))(expo-web-browser@55.0.9(expo@55.0.6)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))
+        version: 1.3.27(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(expo-constants@55.0.7)(expo-crypto@55.0.9(expo@55.0.6))(expo-linking@55.0.7)(expo-secure-store@55.0.8(expo@55.0.6))(expo-web-browser@55.0.9(expo@55.0.6)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))
       '@convex-dev/agent':
         specifier: ^0.3.0
-        version: 0.3.2(@ai-sdk/provider-utils@4.0.23(zod@4.3.6))(ai@5.0.153(zod@4.3.6))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6))(convex@1.33.0(react@19.2.0))(react@19.2.0)
+        version: 0.3.2(@ai-sdk/provider-utils@4.0.23(zod@4.3.6))(ai@5.0.153(zod@4.3.6))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.0))(react@19.2.0)
       '@convex-dev/better-auth':
         specifier: ^0.9.1
-        version: 0.9.11(@standard-schema/spec@1.1.0)(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+        version: 0.9.11(@standard-schema/spec@1.1.0)(better-auth@1.3.27(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       '@dating-ai/backend':
         specifier: workspace:*
         version: link:../../packages/backend
@@ -226,11 +226,11 @@ importers:
         specifier: 1.3.27
         version: 1.3.27(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11)
       convex:
-        specifier: ^1.27.0
-        version: 1.33.0(react@19.2.0)
+        specifier: ^1.35.1
+        version: 1.35.1(react@19.2.0)
       convex-helpers:
         specifier: ^0.1.106
-        version: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
+        version: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
       dotenv-expand:
         specifier: ~11.0.7
         version: 11.0.7
@@ -390,7 +390,7 @@ importers:
         version: 1.3.0(@types/react@19.2.14)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@convex-dev/better-auth':
         specifier: 'catalog:'
-        version: 0.9.11(@standard-schema/spec@1.1.0)(better-auth@1.3.27(next@16.0.10(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+        version: 0.9.11(@standard-schema/spec@1.1.0)(better-auth@1.3.27(next@16.0.10(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       '@dating-ai/backend':
         specifier: workspace:*
         version: link:../../packages/backend
@@ -405,7 +405,7 @@ importers:
         version: 2.1.1
       convex:
         specifier: 'catalog:'
-        version: 1.33.0(react@19.2.0)
+        version: 1.35.1(react@19.2.0)
       lucide-react:
         specifier: ^0.546.0
         version: 0.546.0(react@19.2.0)
@@ -469,31 +469,31 @@ importers:
         version: 2.0.57(zod@4.3.6)
       '@better-auth/expo':
         specifier: 1.3.27
-        version: 1.3.27(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(expo-constants@55.0.7)(expo-crypto@55.0.9(expo@55.0.6))(expo-linking@55.0.7)(expo-secure-store@55.0.8(expo@55.0.6))(expo-web-browser@55.0.9(expo@55.0.6)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))
+        version: 1.3.27(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(expo-constants@55.0.7)(expo-crypto@55.0.9(expo@55.0.6))(expo-linking@55.0.7)(expo-secure-store@55.0.8(expo@55.0.6))(expo-web-browser@55.0.9(expo@55.0.6)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))
       '@convex-dev/agent':
         specifier: ^0.3.0
-        version: 0.3.2(@ai-sdk/provider-utils@4.0.23(zod@4.3.6))(ai@5.0.153(zod@4.3.6))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6))(convex@1.33.0(react@19.2.0))(react@19.2.0)
+        version: 0.3.2(@ai-sdk/provider-utils@4.0.23(zod@4.3.6))(ai@5.0.153(zod@4.3.6))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.0))(react@19.2.0)
       '@convex-dev/better-auth':
         specifier: 'catalog:'
-        version: 0.9.11(@standard-schema/spec@1.1.0)(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+        version: 0.9.11(@standard-schema/spec@1.1.0)(better-auth@1.3.27(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       '@convex-dev/expo-push-notifications':
         specifier: ^0.3.0
-        version: 0.3.1(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
+        version: 0.3.1(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
       '@convex-dev/polar':
         specifier: ^0.6.4
-        version: 0.6.4(@polar-sh/checkout@0.2.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1))(@polar-sh/sdk@0.40.3)(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
+        version: 0.6.4(@polar-sh/checkout@0.2.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1))(@polar-sh/sdk@0.40.3)(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
       '@convex-dev/r2':
         specifier: ^0.8.0
-        version: 0.8.1(@standard-schema/spec@1.1.0)(convex-svelte@0.0.11(convex@1.33.0(react@19.2.0))(svelte@5.53.11))(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11)(typescript@5.9.3)(zod@4.3.6)
+        version: 0.8.1(@standard-schema/spec@1.1.0)(convex-svelte@0.0.11(convex@1.35.1(react@19.2.0))(svelte@5.53.11))(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11)(typescript@5.9.3)(zod@4.3.6)
       '@convex-dev/rate-limiter':
         specifier: ^0.3.2
-        version: 0.3.2(convex@1.33.0(react@19.2.0))(react@19.2.0)
+        version: 0.3.2(convex@1.35.1(react@19.2.0))(react@19.2.0)
       '@openrouter/ai-sdk-provider':
         specifier: ^1.5.4
         version: 1.5.4(ai@5.0.153(zod@4.3.6))(zod@4.3.6)
       '@polar-sh/better-auth':
         specifier: ^1.2.1
-        version: 1.8.2(@polar-sh/sdk@0.40.3)(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(better-auth@1.3.27(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1)(zod@4.3.6)
+        version: 1.8.2(@polar-sh/sdk@0.40.3)(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1)(zod@4.3.6)
       '@polar-sh/sdk':
         specifier: ^0.40.3
         version: 0.40.3
@@ -505,7 +505,7 @@ importers:
         version: 1.3.27(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11)
       convex:
         specifier: 'catalog:'
-        version: 1.33.0(react@19.2.0)
+        version: 1.35.1(react@19.2.0)
       replicate:
         specifier: ^1.4.0
         version: 1.4.0
@@ -5118,18 +5118,21 @@ packages:
       convex: ^1.10.0
       svelte: ^5.0.0
 
-  convex@1.33.0:
-    resolution: {integrity: sha512-xXUAPNUJOEFXnWxseo6LNRYulMXlt2axc6u1oi4uQ4jI5h75qsZnpb+O6V0JRMGPyN+nQg5m5+trFCBv4c7twg==}
+  convex@1.35.1:
+    resolution: {integrity: sha512-g23KrTjBiXqRHzWIN0PVFagKjrmFxWUaOSiBsAWPTpXX2rXl0L1F4PR0YpAcMJEzMgfZR9AGymJvLTM+KA6lsQ==}
     engines: {node: '>=18.0.0', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
       '@auth0/auth0-react': ^2.0.1
       '@clerk/clerk-react': ^4.12.8 || ^5.0.0
+      '@clerk/react': ^6.0.0
       react: ^18.0.0 || ^19.0.0-0 || ^19.0.0
     peerDependenciesMeta:
       '@auth0/auth0-react':
         optional: true
       '@clerk/clerk-react':
+        optional: true
+      '@clerk/react':
         optional: true
       react:
         optional: true
@@ -10456,7 +10459,7 @@ snapshots:
       better-call: 1.0.19
       zod: 4.3.6
 
-  '@better-auth/expo@1.3.27(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(expo-constants@55.0.7)(expo-crypto@55.0.9(expo@55.0.6))(expo-linking@55.0.7)(expo-secure-store@55.0.8(expo@55.0.6))(expo-web-browser@55.0.9(expo@55.0.6)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))':
+  '@better-auth/expo@1.3.27(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(expo-constants@55.0.7)(expo-crypto@55.0.9(expo@55.0.6))(expo-linking@55.0.7)(expo-secure-store@55.0.8(expo@55.0.6))(expo-web-browser@55.0.9(expo@55.0.6)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))':
     dependencies:
       '@better-fetch/fetch': 1.1.18
       better-auth: 1.3.27(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11)
@@ -10473,26 +10476,26 @@ snapshots:
 
   '@borewit/text-codec@0.2.2': {}
 
-  '@convex-dev/action-retrier@0.3.0(convex@1.33.0(react@19.2.0))':
+  '@convex-dev/action-retrier@0.3.0(convex@1.35.1(react@19.2.0))':
     dependencies:
-      convex: 1.33.0(react@19.2.0)
+      convex: 1.35.1(react@19.2.0)
 
-  '@convex-dev/agent@0.3.2(@ai-sdk/provider-utils@4.0.23(zod@4.3.6))(ai@5.0.153(zod@4.3.6))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6))(convex@1.33.0(react@19.2.0))(react@19.2.0)':
+  '@convex-dev/agent@0.3.2(@ai-sdk/provider-utils@4.0.23(zod@4.3.6))(ai@5.0.153(zod@4.3.6))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.0))(react@19.2.0)':
     dependencies:
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
       ai: 5.0.153(zod@4.3.6)
-      convex: 1.33.0(react@19.2.0)
-      convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
+      convex: 1.35.1(react@19.2.0)
+      convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
     optionalDependencies:
       '@ungap/structured-clone': 1.3.0
       react: 19.2.0
 
-  '@convex-dev/better-auth@0.9.11(@standard-schema/spec@1.1.0)(better-auth@1.3.27(next@16.0.10(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)':
+  '@convex-dev/better-auth@0.9.11(@standard-schema/spec@1.1.0)(better-auth@1.3.27(next@16.0.10(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)':
     dependencies:
       better-auth: 1.3.27(next@16.0.10(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       common-tags: 1.8.2
-      convex: 1.33.0(react@19.2.0)
-      convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@3.25.76)
+      convex: 1.35.1(react@19.2.0)
+      convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@3.25.76)
       jose: 6.2.1
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
@@ -10505,12 +10508,12 @@ snapshots:
       - hono
       - typescript
 
-  '@convex-dev/better-auth@0.9.11(@standard-schema/spec@1.1.0)(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)':
+  '@convex-dev/better-auth@0.9.11(@standard-schema/spec@1.1.0)(better-auth@1.3.27(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)':
     dependencies:
       better-auth: 1.3.27(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11)
       common-tags: 1.8.2
-      convex: 1.33.0(react@19.2.0)
-      convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@3.25.76)
+      convex: 1.35.1(react@19.2.0)
+      convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@3.25.76)
       jose: 6.2.1
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
@@ -10523,10 +10526,10 @@ snapshots:
       - hono
       - typescript
 
-  '@convex-dev/expo-push-notifications@0.3.1(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)':
+  '@convex-dev/expo-push-notifications@0.3.1(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)':
     dependencies:
-      convex: 1.33.0(react@19.2.0)
-      convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
+      convex: 1.35.1(react@19.2.0)
+      convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
     transitivePeerDependencies:
       - '@standard-schema/spec'
       - hono
@@ -10534,13 +10537,13 @@ snapshots:
       - typescript
       - zod
 
-  '@convex-dev/polar@0.6.4(@polar-sh/checkout@0.2.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1))(@polar-sh/sdk@0.40.3)(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)':
+  '@convex-dev/polar@0.6.4(@polar-sh/checkout@0.2.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1))(@polar-sh/sdk@0.40.3)(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)':
     dependencies:
       '@polar-sh/checkout': 0.2.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1)
       '@polar-sh/sdk': 0.40.3
       buffer: 6.0.3
-      convex: 1.33.0(react@19.2.0)
-      convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
+      convex: 1.35.1(react@19.2.0)
+      convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
       remeda: 2.33.6
@@ -10551,14 +10554,14 @@ snapshots:
       - typescript
       - zod
 
-  '@convex-dev/r2@0.8.1(@standard-schema/spec@1.1.0)(convex-svelte@0.0.11(convex@1.33.0(react@19.2.0))(svelte@5.53.11))(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11)(typescript@5.9.3)(zod@4.3.6)':
+  '@convex-dev/r2@0.8.1(@standard-schema/spec@1.1.0)(convex-svelte@0.0.11(convex@1.35.1(react@19.2.0))(svelte@5.53.11))(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11)(typescript@5.9.3)(zod@4.3.6)':
     dependencies:
       '@aws-sdk/client-s3': 3.726.1
       '@aws-sdk/s3-request-presigner': 3.1008.0
-      '@convex-dev/action-retrier': 0.3.0(convex@1.33.0(react@19.2.0))
-      convex: 1.33.0(react@19.2.0)
-      convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
-      convex-svelte: 0.0.11(convex@1.33.0(react@19.2.0))(svelte@5.53.11)
+      '@convex-dev/action-retrier': 0.3.0(convex@1.35.1(react@19.2.0))
+      convex: 1.35.1(react@19.2.0)
+      convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6)
+      convex-svelte: 0.0.11(convex@1.35.1(react@19.2.0))(svelte@5.53.11)
       file-type: 20.5.0
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
@@ -10572,9 +10575,9 @@ snapshots:
       - typescript
       - zod
 
-  '@convex-dev/rate-limiter@0.3.2(convex@1.33.0(react@19.2.0))(react@19.2.0)':
+  '@convex-dev/rate-limiter@0.3.2(convex@1.35.1(react@19.2.0))(react@19.2.0)':
     dependencies:
-      convex: 1.33.0(react@19.2.0)
+      convex: 1.35.1(react@19.2.0)
     optionalDependencies:
       react: 19.2.0
 
@@ -11639,7 +11642,7 @@ snapshots:
     dependencies:
       '@polar-sh/sdk': 0.40.3
 
-  '@polar-sh/better-auth@1.8.2(@polar-sh/sdk@0.40.3)(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(better-auth@1.3.27(next@16.0.10(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1)(zod@4.3.6)':
+  '@polar-sh/better-auth@1.8.2(@polar-sh/sdk@0.40.3)(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(svelte@5.53.11))(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1)(zod@4.3.6)':
     dependencies:
       '@polar-sh/checkout': 0.2.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.1.11(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.4)(react@19.2.0)(redux@5.0.1)
       '@polar-sh/sdk': 0.40.3
@@ -15216,9 +15219,9 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@3.25.76):
+  convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@3.25.76):
     dependencies:
-      convex: 1.33.0(react@19.2.0)
+      convex: 1.35.1(react@19.2.0)
     optionalDependencies:
       '@standard-schema/spec': 1.1.0
       hono: 4.12.7
@@ -15226,9 +15229,9 @@ snapshots:
       typescript: 5.9.3
       zod: 3.25.76
 
-  convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.33.0(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6):
+  convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.0))(hono@4.12.7)(react@19.2.0)(typescript@5.9.3)(zod@4.3.6):
     dependencies:
-      convex: 1.33.0(react@19.2.0)
+      convex: 1.35.1(react@19.2.0)
     optionalDependencies:
       '@standard-schema/spec': 1.1.0
       hono: 4.12.7
@@ -15236,12 +15239,12 @@ snapshots:
       typescript: 5.9.3
       zod: 4.3.6
 
-  convex-svelte@0.0.11(convex@1.33.0(react@19.2.0))(svelte@5.53.11):
+  convex-svelte@0.0.11(convex@1.35.1(react@19.2.0))(svelte@5.53.11):
     dependencies:
-      convex: 1.33.0(react@19.2.0)
+      convex: 1.35.1(react@19.2.0)
       svelte: 5.53.11
 
-  convex@1.33.0(react@19.2.0):
+  convex@1.35.1(react@19.2.0):
     dependencies:
       esbuild: 0.27.0
       prettier: 3.8.1
