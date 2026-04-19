@@ -68,8 +68,13 @@ const IMAGE_MODEL_CHAIN: ImageModelConfig[] = [
   },
 ];
 
+// NOTE: We intentionally do NOT include "freckles and marks" here.
+// Image models treat every mention of a skin feature as an emphasis cue and
+// amplify it. Telling the model to preserve freckles caused the showcase
+// images to render noticeably heavier freckling than the reference photo.
+// "Skin tone" alone is sufficient to keep the ethnicity / complexion stable.
 const REFERENCE_IMAGE_CONSISTENCY_PREFIX =
-  "The person in the reference image is the same person in this image. Preserve their face shape, skin tone, freckles and marks, eye color, eyebrow shape, hair color, length and texture, and overall body type exactly. Only change outfit, pose, setting, and lighting as described below.";
+  "The person in the reference image is the same person in this image. Preserve their face shape, skin tone, eye color, eyebrow shape, hair color, length and texture, and overall body type exactly. Only change outfit, pose, setting, and lighting as described below.";
 
 function extractImageUrl(output: unknown): string | null {
   if (typeof output === "string") {
@@ -164,7 +169,7 @@ export async function generateImageWithFallback(args: {
     args.applyReferenceConsistencyPrefix ?? true;
   const prompt =
     referenceImageUrls.length > 0 && applyReferenceConsistencyPrefix
-      ? `${REFERENCE_IMAGE_CONSISTENCY_PREFIX}. ${args.prompt}`
+      ? `${REFERENCE_IMAGE_CONSISTENCY_PREFIX} ${args.prompt}`
       : args.prompt;
   const attempts: ImageModelAttempt[] = [];
 

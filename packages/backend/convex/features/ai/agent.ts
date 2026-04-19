@@ -10,41 +10,72 @@ export const DEFAULT_VOICES = {
   male: "pNInz6obpgDQGcFmaJgB", // Adam
 } as const;
 
-const AI_AGENT_PROVIDER = process.env.AI_AGENT_PROVIDER ?? "gateway";
+export type AgentProvider = "openrouter" | "gateway";
+
+const RAW_AGENT_PROVIDER = (
+  process.env.AI_AGENT_PROVIDER ?? "gateway"
+).toLowerCase();
+const AI_AGENT_PROVIDER: AgentProvider =
+  RAW_AGENT_PROVIDER === "openrouter" ? "openrouter" : "gateway";
 const AI_AGENT_MODEL =
   process.env.AI_AGENT_MODEL ?? "google/gemini-3.1-flash-lite-preview";
 const AI_AGENT_EMBEDDING_MODEL =
   process.env.AI_AGENT_EMBEDDING_MODEL ?? "openai/text-embedding-3-small";
 
-function getAgentLanguageModel() {
-  if (AI_AGENT_PROVIDER === "gateway") {
-    if (!gatewayProvider) {
-      throw new Error("AI_GATEWAY_API_KEY is not set");
-    }
+/**
+ * Returns the agent providers in preferred order: the one set in
+ * `AI_AGENT_PROVIDER` first, then the other as a fallback. Providers whose
+ * API keys are not configured are filtered out so the caller never tries a
+ * provider that is guaranteed to fail.
+ *
+ * Used by `actions.ts::generateResponse` to retry with the fallback provider
+ * if the primary one errors out (e.g. Vercel AI Gateway returning
+ * "insufficient funds" or OpenRouter temporarily rate-limiting).
+ */
+export function getAvailableAgentProviders(): AgentProvider[] {
+  const primary = AI_AGENT_PROVIDER;
+  const fallback: AgentProvider =
+    primary === "openrouter" ? "gateway" : "openrouter";
+  return [primary, fallback].filter((provider) => {
+    if (provider === "gateway") return Boolean(gatewayProvider);
+    if (provider === "openrouter") return Boolean(openRouterProvider);
+    return false;
+  });
+}
+
+function getAgentLanguageModel(provider: AgentProvider) {
+  if (provider === "gateway") {
+    if (!gatewayProvider) return null;
     return gatewayProvider(AI_AGENT_MODEL);
   }
 
-  if (AI_AGENT_PROVIDER === "openrouter") {
-    if (!openRouterProvider) {
-      throw new Error("OPENROUTER_API_KEY is not set");
-    }
+  if (provider === "openrouter") {
+    if (!openRouterProvider) return null;
     return openRouterProvider.chat(AI_AGENT_MODEL);
   }
 
-  console.log("AI_AGENT_PROVIDER", AI_AGENT_PROVIDER);
-
-  throw new Error(
-    `Unsupported AI_AGENT_PROVIDER "${AI_AGENT_PROVIDER}". Expected "gateway" or "openrouter".`,
-  );
+  return null;
 }
 
-function getAgentEmbeddingModel() {
+/**
+ * IMPORTANT: the AI-SDK OpenRouter provider does NOT expose
+ * `textEmbeddingModel(...)`; OpenRouter's API is chat-completion only from
+ * the SDK's perspective. So when the primary provider is OpenRouter we
+ * deliberately return `undefined` here, which causes `createAIProfileAgent`
+ * to configure the Convex Agent with text-search-based context retrieval
+ * instead of vector search. Previously this function always used
+ * `gatewayProvider.textEmbeddingModel(...)`, which meant that setting
+ * `AI_AGENT_PROVIDER=openrouter` still generated Vercel Gateway embedding
+ * calls on every turn - and those calls failed with "insufficient funds"
+ * once the gateway credits ran out, surfacing as a chat-generation error.
+ */
+function getAgentEmbeddingModel(provider: AgentProvider) {
   const embeddingModelId = AI_AGENT_EMBEDDING_MODEL.trim();
+  if (!embeddingModelId) return undefined;
 
-  if (!embeddingModelId || !gatewayProvider) {
-    return undefined;
-  }
+  if (provider === "openrouter") return undefined;
 
+  if (!gatewayProvider) return undefined;
   return gatewayProvider.textEmbeddingModel(embeddingModelId);
 }
 
@@ -448,11 +479,24 @@ Ask questions one at a time, wait for answers, give feedback, then continue.`,
  * Create a dynamic AI agent for a specific profile.
  * This is a stateless factory - creates a lightweight config object on demand.
  * Scales to 100K+ profiles since agents are created per-request, not stored.
+ *
+ * `provider` selects the LLM provider. When omitted, defaults to the one set
+ * in `AI_AGENT_PROVIDER`. Callers (e.g. `generateResponse` in `actions.ts`)
+ * can pass an explicit provider to retry with the fallback after the
+ * primary provider errors out.
  */
-export function createAIProfileAgent(profile: Doc<"aiProfiles">) {
-  const languageModel = getAgentLanguageModel();
-  console.log("Agene using language model:", languageModel);
-  const embeddingModel = getAgentEmbeddingModel();
+export function createAIProfileAgent(
+  profile: Doc<"aiProfiles">,
+  provider: AgentProvider = AI_AGENT_PROVIDER,
+) {
+  const languageModel = getAgentLanguageModel(provider);
+  if (!languageModel) {
+    throw new Error(
+      `AI agent provider "${provider}" is not configured (missing API key).`,
+    );
+  }
+
+  const embeddingModel = getAgentEmbeddingModel(provider);
   const searchOptions = embeddingModel
     ? {
         limit: 5,
@@ -467,7 +511,7 @@ export function createAIProfileAgent(profile: Doc<"aiProfiles">) {
 
   return new Agent(components.agent, {
     name: profile.name,
-    languageModel: getAgentLanguageModel(),
+    languageModel,
     textEmbeddingModel: embeddingModel,
     instructions: buildPersonalityPrompt(profile),
     tools: {

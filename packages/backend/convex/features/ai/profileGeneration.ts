@@ -21,32 +21,12 @@ import {
   VIBES,
   EXPRESSIONS,
 } from "./profileGenerationData";
-
-const PROFILE_OCCUPATION_OPTIONS = [
-  "Software Engineer",
-  "Product Designer",
-  "Data Scientist",
-  "Marketing Manager",
-  "Content Creator",
-  "Photographer",
-  "Nurse",
-  "Doctor",
-  "Teacher",
-  "Lawyer",
-  "Financial Analyst",
-  "Chef",
-  "Fitness Coach",
-  "Architect",
-  "Entrepreneur",
-  "Sales Manager",
-  "UX Researcher",
-  "Project Manager",
-  "HR Specialist",
-  "Civil Engineer",
-] as const;
-
-const PROFILE_GENERATION_JOB_RETENTION_DAYS = 5;
-const AWAITING_APPROVAL_TTL_MS = 30 * 60 * 1000; // 30 minutes
+import {
+  AWAITING_APPROVAL_TTL_MS,
+  PROFILE_GENERATION_JOB_RETENTION_DAYS,
+  PROFILE_OCCUPATION_OPTIONS,
+} from "./profileGen/constants";
+import { assertAdmin } from "./profileGen/adminGuards";
 
 export const listSystemProfilesInternal = internalQuery({
   args: {
@@ -512,19 +492,7 @@ export const adminGenerateSystemProfile = mutation({
     pauseForApproval: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) {
-      throw new ConvexError("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("profile")
-      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
-      .unique();
-
-    if (!userProfile?.isAdmin) {
-      throw new ConvexError("Admin access required");
-    }
+    const user = await assertAdmin(ctx);
 
     // Default: pause for admin approval. The characters page Sheet
     // subscribes to the returned `jobId` via `getProfileGenerationJobForAdmin`
@@ -581,19 +549,7 @@ export const adminRetryProfileGeneration = mutation({
     jobId: v.id("profileGenerationJobs"),
   },
   handler: async (ctx, { jobId }) => {
-    const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) {
-      throw new ConvexError("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("profile")
-      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
-      .unique();
-
-    if (!userProfile?.isAdmin) {
-      throw new ConvexError("Admin access required");
-    }
+    const user = await assertAdmin(ctx);
 
     const job = await ctx.db.get(jobId);
     if (!job) {
@@ -646,21 +602,6 @@ const editedCandidateSchema = z
       .optional(),
   })
   .strict();
-
-async function assertAdmin(ctx: any) {
-  const user = await authComponent.safeGetAuthUser(ctx);
-  if (!user) throw new ConvexError("Not authenticated");
-
-  const userProfile = await ctx.db
-    .query("profile")
-    .withIndex("by_auth_user_id", (q: any) => q.eq("authUserId", user._id))
-    .unique();
-
-  if (!userProfile?.isAdmin) {
-    throw new ConvexError("Admin access required");
-  }
-  return user;
-}
 
 export const adminRegenerateAvatar = mutation({
   args: {

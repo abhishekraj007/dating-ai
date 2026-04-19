@@ -3,7 +3,7 @@
 import { v } from "convex/values";
 import { internalAction } from "../../_generated/server";
 import { internal, components } from "../../_generated/api";
-import { createAIProfileAgent } from "./agent";
+import { createAIProfileAgent, getAvailableAgentProviders } from "./agent";
 import { r2 } from "../../uploads";
 import { saveMessage } from "@convex-dev/agent";
 import { generateImageWithFallback } from "./imageGeneration";
@@ -192,36 +192,67 @@ export const generateResponse = internalAction({
       return null;
     }
 
-    // Create dynamic agent for this profile
-    const agent = createAIProfileAgent(profile);
-
-    let result;
-
-    try {
-      // Generate streaming response
-      result = await agent.streamText(
-        ctx,
-        { threadId: convThreadId!, userId: convUserId! },
-        { promptMessageId },
-        { saveStreamDeltas: true },
+    // Try each configured provider in preferred order (primary first, then
+    // the fallback). This lets us degrade gracefully when the primary
+    // provider errors out - e.g. Vercel AI Gateway returning HTTP 402
+    // "insufficient funds", or OpenRouter temporarily rate-limiting. If the
+    // first provider fails cleanly before any tokens stream, the second
+    // provider gets to retry on the same prompt.
+    const providers = getAvailableAgentProviders();
+    if (providers.length === 0) {
+      console.error(
+        "No AI agent provider configured. Set AI_GATEWAY_API_KEY and/or OPENROUTER_API_KEY.",
       );
-    } catch (error) {
-      const currentConversation = await ctx.runQuery(
-        internal.features.ai.internalQueries.getConversationInternal,
-        { conversationId },
+      await ctx.runMutation(
+        internal.features.ai.mutations.finalizePendingPromptState,
+        { conversationId, promptMessageId },
       );
+      return null;
+    }
 
-      if (isPromptCancelled(currentConversation, promptMessageId)) {
-        await ctx.runMutation(
-          internal.features.ai.mutations.finalizePendingPromptState,
-          { conversationId, promptMessageId },
+    let result: Awaited<
+      ReturnType<ReturnType<typeof createAIProfileAgent>["streamText"]>
+    > | null = null;
+    let lastError: unknown = null;
+
+    for (const provider of providers) {
+      try {
+        const agent = createAIProfileAgent(profile, provider);
+        result = await agent.streamText(
+          ctx,
+          { threadId: convThreadId!, userId: convUserId! },
+          { promptMessageId },
+          { saveStreamDeltas: true },
         );
-        return null;
-      }
+        break;
+      } catch (error) {
+        lastError = error;
+        console.warn(
+          `AI agent provider "${provider}" failed:`,
+          error instanceof Error ? error.message : error,
+        );
 
+        // If the user cancelled mid-attempt, stop immediately - do not try
+        // the fallback provider and do not surface a retryable error.
+        const cancelSnapshot = await ctx.runQuery(
+          internal.features.ai.internalQueries.getConversationInternal,
+          { conversationId },
+        );
+        if (isPromptCancelled(cancelSnapshot, promptMessageId)) {
+          await ctx.runMutation(
+            internal.features.ai.mutations.finalizePendingPromptState,
+            { conversationId, promptMessageId },
+          );
+          return null;
+        }
+      }
+    }
+
+    if (!result) {
+      const error = lastError;
       const { code, errorMessage } = getChatErrorDetails(error);
 
-      console.error("Failed to generate AI response:", error);
+      console.error("All AI agent providers failed:", error);
 
       await failPendingAssistantMessages(ctx, convThreadId!, errorMessage);
 
