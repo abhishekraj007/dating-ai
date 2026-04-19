@@ -33,6 +33,40 @@ export const generateUploadUrlWithUser = mutation({
   },
 });
 
+/**
+ * Mint an upload URL for an admin reference photo used by profile generation.
+ *
+ * The key is scoped to `aiProfiles/references/{uuid}` so that:
+ *  - `onSyncMetadata` skips user-quota tracking for it.
+ *  - The analyze action can verify the prefix before trusting the key.
+ *
+ * Uploading via this flow keeps the image out of Node-action args (5 MiB
+ * limit) - the client PUTs directly to R2, then passes only the key.
+ */
+export const generateReferencePhotoUploadUrl = mutation({
+  args: {},
+  returns: v.object({ url: v.string(), key: v.string() }),
+  handler: async (ctx) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+    const profile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
+      .unique();
+    if (!profile?.isAdmin) {
+      throw new Error("Admin access required");
+    }
+    await rateLimiter.limit(ctx, "uploadUrlMint", {
+      key: user._id,
+      throws: true,
+    });
+    const key = `aiProfiles/references/${crypto.randomUUID()}`;
+    return await r2.generateUploadUrl(key);
+  },
+});
+
 // Generate the client API with upload callbacks
 export const { generateUploadUrl, syncMetadata, onSyncMetadata } = r2.clientApi(
   {
@@ -86,6 +120,14 @@ export const { generateUploadUrl, syncMetadata, onSyncMetadata } = r2.clientApi(
       // the profile record with these keys — we must NOT try to do so here
       // (parts[1] is the jobId, not a valid v.id("aiProfiles")).
       if (args.key.startsWith("aiProfiles/generated/")) {
+        return;
+      }
+
+      // --- Routing: admin reference photos ------------------------------
+      // Short-lived inputs to profile generation. We already validated
+      // MIME + size above; no user-quota tracking and no pending ticket
+      // is needed (the analyze action verifies the key prefix itself).
+      if (args.key.startsWith("aiProfiles/references/")) {
         return;
       }
 

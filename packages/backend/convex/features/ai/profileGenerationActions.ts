@@ -1987,13 +1987,13 @@ export const cleanupPreviewR2Action = internalAction({
  * similar look but a subtly different face.
  */
 export const analyzeReferencePhoto = action({
+  // The image is uploaded directly to R2 by the client (via
+  // `generateReferencePhotoUploadUrl`) and we only receive the resulting key
+  // here. Sending the bytes through action args would trivially exceed the
+  // 5 MiB Node-action args cap once base64-encoded, so we keep the payload
+  // small by reading the object from storage inside the action.
   args: {
-    imageBase64: v.string(),
-    mimeType: v.union(
-      v.literal("image/jpeg"),
-      v.literal("image/png"),
-      v.literal("image/webp"),
-    ),
+    imageKey: v.string(),
   },
   returns: v.object({
     subjectDescriptor: v.string(),
@@ -2016,6 +2016,15 @@ export const analyzeReferencePhoto = action({
     if (!openRouterProvider) {
       throw new Error("OPENROUTER_API_KEY not configured");
     }
+
+    // Defense-in-depth: the upload-URL mutation already scopes keys to this
+    // prefix, but we re-check here so a future caller can't point us at an
+    // arbitrary R2 object (e.g. another user's private upload).
+    if (!args.imageKey.startsWith("aiProfiles/references/")) {
+      throw new Error("Invalid reference image key");
+    }
+
+    const referenceImageUrl = await r2.getUrl(args.imageKey);
 
     const analysisPrompt = `You are an expert at creating image generation prompts for photorealistic portrait generation.
 
@@ -2047,8 +2056,11 @@ Return a JSON object with these fields:
 
 Return ONLY valid JSON, no markdown fences.`;
 
-    const imageDataUrl = `data:${args.mimeType};base64,${args.imageBase64}`;
-
+    // Pass the signed R2 URL directly to the vision model instead of
+    // inlining the bytes as a data URL. The AI SDK forwards URL strings
+    // to providers that can fetch them, and OpenRouter's image inputs
+    // accept remote URLs - so we avoid materializing the (potentially
+    // multi-MB) image in memory here.
     const result = await generateText({
       model: openRouterProvider.chat(IMAGE_ANALYSIS_MODEL),
       messages: [
@@ -2057,7 +2069,7 @@ Return ONLY valid JSON, no markdown fences.`;
           content: [
             {
               type: "image",
-              image: imageDataUrl,
+              image: referenceImageUrl,
             },
             { type: "text", text: analysisPrompt },
           ],
@@ -2088,21 +2100,6 @@ Return ONLY valid JSON, no markdown fences.`;
       typeof parsed.age === "number" && parsed.age >= 18 && parsed.age <= 50
         ? parsed.age
         : 25;
-
-    // Store the reference image to R2 so the image generation models
-    // can use it as a visual reference later.
-    const imageBytes = Uint8Array.from(atob(args.imageBase64), (c) =>
-      c.charCodeAt(0),
-    );
-    const ext =
-      args.mimeType === "image/png"
-        ? "png"
-        : args.mimeType === "image/webp"
-          ? "webp"
-          : "jpg";
-    const r2Key = `aiProfiles/references/${crypto.randomUUID()}.${ext}`;
-    await r2.store(ctx, imageBytes, r2Key);
-    const referenceImageUrl = await r2.getUrl(r2Key);
 
     const sanitizeShortString = (
       value: unknown,
