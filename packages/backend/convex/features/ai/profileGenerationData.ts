@@ -1,5 +1,87 @@
 export type Gender = "female" | "male";
 
+// --- Ethnicity vocabulary ---
+//
+// Vocabulary chosen for how real users self-identify, not anthropological
+// taxonomy. Asia gets specific nationalities because English-speaking users
+// actually distinguish them; Africa/Europe/Latin America get broader buckets
+// because users rarely filter below that level. Matches typical dating-app
+// conventions (Hinge/Bumble) adjusted toward plain-language labels.
+//
+// Used in three places:
+//   1) `aiProfiles.ethnicity` - stored on every generated profile.
+//   2) Candidate blueprint Zod schema - LLM is forced to pick from this list.
+//   3) Vision analysis in reference mode - vision LLM constrained to same list.
+//
+// When adding/removing entries, keep in mind: any value written to
+// `aiProfiles.ethnicity` must appear in this list for the filter UI to match.
+// Old profiles with obsolete values will simply not match the filter.
+export const ETHNICITIES = [
+  "Indian",
+  "Chinese",
+  "Japanese",
+  "Korean",
+  "Vietnamese",
+  "Filipino",
+  "Asian",
+  "Middle Eastern",
+  "Black",
+  "Hispanic",
+  "White",
+  "Mixed",
+] as const;
+
+export type Ethnicity = (typeof ETHNICITIES)[number];
+
+// Broad filter groups expand to the specific stored values they should match.
+// `aiProfiles.ethnicity` always stores exactly one canonical value from
+// `ETHNICITIES`; callers can use these helpers to support wider searches such
+// as "Asian" matching "Indian" and "Japanese" without duplicating fields.
+export const ETHNICITY_FILTER_EXPANSIONS: Record<Ethnicity, readonly Ethnicity[]> =
+  {
+    Indian: ["Indian"],
+    Chinese: ["Chinese"],
+    Japanese: ["Japanese"],
+    Korean: ["Korean"],
+    Vietnamese: ["Vietnamese"],
+    Filipino: ["Filipino"],
+    Asian: [
+      "Asian",
+      "Indian",
+      "Chinese",
+      "Japanese",
+      "Korean",
+      "Vietnamese",
+      "Filipino",
+    ],
+    "Middle Eastern": ["Middle Eastern"],
+    Black: ["Black"],
+    Hispanic: ["Hispanic"],
+    White: ["White"],
+    Mixed: ["Mixed"],
+  };
+
+export function expandEthnicityFilters(
+  ethnicities: readonly Ethnicity[],
+): Ethnicity[] {
+  const expanded = new Set<Ethnicity>();
+  for (const ethnicity of ethnicities) {
+    for (const value of ETHNICITY_FILTER_EXPANSIONS[ethnicity]) {
+      expanded.add(value);
+    }
+  }
+  return Array.from(expanded);
+}
+
+export function ethnicityMatchesFilters(
+  ethnicity: Ethnicity | undefined,
+  filters: readonly Ethnicity[],
+): boolean {
+  if (!ethnicity) return false;
+  if (filters.length === 0) return true;
+  return expandEthnicityFilters(filters).includes(ethnicity);
+}
+
 // --- Tuning knobs ---
 
 export const FEMALE_WEIGHT = 0.75;

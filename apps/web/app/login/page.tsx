@@ -20,7 +20,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace("/");
+      router.replace("/explore");
     }
   }, [isLoading, isAuthenticated, router]);
 
@@ -30,7 +30,9 @@ export default function LoginPage() {
         provider: "google",
         // Must be absolute URL for multi-app auth
         callbackURL:
-          typeof window !== "undefined" ? `${window.location.origin}/` : "/",
+          typeof window !== "undefined"
+            ? `${window.location.origin}/explore`
+            : "/explore",
       });
     } catch (error) {
       toast.error("Failed to sign in with Google");
@@ -52,9 +54,9 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">StatusAI</CardTitle>
+          <CardTitle className="text-3xl font-bold">FeelAI</CardTitle>
           <CardDescription>
-            Sign in to connect with AI companions
+            Sign in to start chatting with AI companions
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

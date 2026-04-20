@@ -1,5 +1,7 @@
 import {
+  type Ethnicity,
   type Gender,
+  ETHNICITIES,
   FIRST_NAMES,
   LAST_NAMES,
   OCCUPATIONS,
@@ -48,6 +50,128 @@ export function getBioOpenings(
 export function bioHasBannedPhrase(bio: string): boolean {
   const lower = bio.toLowerCase();
   return BANNED_BIO_PHRASES.some((phrase) => lower.includes(phrase));
+}
+
+const ETHNICITY_SET = new Set<string>(ETHNICITIES);
+const COUNTRY_CODE_ALIASES: Record<string, string> = {
+  UK: "GB",
+};
+
+const US_STATE_CODES = new Set<string>([
+  "AL",
+  "AK",
+  "AZ",
+  "AR",
+  "CA",
+  "CO",
+  "CT",
+  "DE",
+  "FL",
+  "GA",
+  "HI",
+  "ID",
+  "IL",
+  "IN",
+  "IA",
+  "KS",
+  "KY",
+  "LA",
+  "ME",
+  "MD",
+  "MA",
+  "MI",
+  "MN",
+  "MS",
+  "MO",
+  "MT",
+  "NE",
+  "NV",
+  "NH",
+  "NJ",
+  "NM",
+  "NY",
+  "NC",
+  "ND",
+  "OH",
+  "OK",
+  "OR",
+  "PA",
+  "RI",
+  "SC",
+  "SD",
+  "TN",
+  "TX",
+  "UT",
+  "VT",
+  "VA",
+  "WA",
+  "WV",
+  "WI",
+  "WY",
+  "DC",
+]);
+
+const LOCATION_COUNTRY_OVERRIDES: Record<string, string> = {
+  "Toronto, CA": "CA",
+  "Banff, CA": "CA",
+  "Old Montreal, CA": "CA",
+  "Cartagena, CO": "CO",
+  "Brighton, UK": "GB",
+  "East London, UK": "GB",
+  "Hackney, UK": "GB",
+  "Hampstead, UK": "GB",
+  "Edinburgh, UK": "GB",
+};
+
+/**
+ * Normalize any raw string into a canonical {@link Ethnicity} value. Needed
+ * because the blueprint schema is constrained at Zod parse time but we still
+ * want to defensively coerce in case the enum drifts or a caller passes a
+ * legacy free-form string from an older job row. Falls back to `"Mixed"` as
+ * the least-assumptive bucket when the input is unrecognized.
+ */
+export function coerceEthnicity(value: string | undefined | null): Ethnicity {
+  if (value && ETHNICITY_SET.has(value)) return value as Ethnicity;
+  return "Mixed";
+}
+
+export function normalizeCountryCode(
+  value: string | undefined | null,
+): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(trimmed)) return undefined;
+  return COUNTRY_CODE_ALIASES[trimmed] ?? trimmed;
+}
+
+export function deriveCountryCodeFromLocation(
+  location: string | undefined | null,
+): string | undefined {
+  if (!location) return undefined;
+
+  const trimmed = location.trim();
+  const overridden = LOCATION_COUNTRY_OVERRIDES[trimmed];
+  if (overridden) return overridden;
+
+  const parts = trimmed
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const suffix = parts[parts.length - 1];
+  const normalizedSuffix = normalizeCountryCode(suffix);
+  if (!normalizedSuffix) return undefined;
+  if (US_STATE_CODES.has(normalizedSuffix)) return "US";
+  return normalizedSuffix;
+}
+
+export function resolveCountryCode(
+  location: string | undefined | null,
+  explicitCountryCode?: string | null,
+): string | undefined {
+  return (
+    normalizeCountryCode(explicitCountryCode) ??
+    deriveCountryCodeFromLocation(location)
+  );
 }
 
 export function toCandidateFromBlueprint(
@@ -104,6 +228,18 @@ export function toCandidateFromBlueprint(
     preferences?.preferredLocation?.trim() ||
     blueprint.location?.trim() ||
     locationForArchetype(appearance.cityArchetype);
+  const countryCode = resolveCountryCode(
+    location,
+    preferences?.preferredLocation ? undefined : blueprint.countryCode,
+  );
+
+  // The blueprint schema already constrains `blueprint.ethnicity` to the
+  // enum. Caller-supplied preference wins when present so cron rotation
+  // and admin overrides are authoritative; otherwise we trust the LLM's
+  // pick (which it co-selected with the name + bio for coherence).
+  const ethnicity = coerceEthnicity(
+    preferences?.ethnicity ?? blueprint.ethnicity,
+  );
 
   return {
     name: blueprint.name.trim(),
@@ -113,6 +249,7 @@ export function toCandidateFromBlueprint(
     zodiacSign: zodiac,
     occupation: preferences?.preferredOccupation ?? blueprint.occupation.trim(),
     location,
+    countryCode,
     bio: blueprint.bio.trim(),
     interests: mergedInterests,
     personalityTraits: uniqueList(blueprint.personalityTraits, 4),
@@ -120,6 +257,7 @@ export function toCandidateFromBlueprint(
     mbtiType: /^[EI][NS][FT][JP]$/i.test(normalizedMbti)
       ? normalizedMbti
       : randomItem(MBTI_TYPES),
+    ethnicity,
     communicationStyle: {
       tone:
         tone &&
@@ -198,6 +336,19 @@ export function buildCandidate(
 
   const bio = randomItem(bioTemplates);
 
+  // Fallback ethnicity. This path only runs when every LLM model across every
+  // provider has failed, so it's <1% of generations. We honor the caller's
+  // preference when set; otherwise we default to "White" because the
+  // templated `FIRST_NAMES` pool is majority-Western (Ava/Nora/Noah/Milo/
+  // ...), so any other default would be incoherent with the assigned name.
+  const ethnicity: Ethnicity = coerceEthnicity(
+    preferences?.ethnicity ?? "White",
+  );
+
+  const location =
+    preferences?.preferredLocation?.trim() ||
+    locationForArchetype(appearance.cityArchetype);
+
   return {
     name,
     username,
@@ -205,14 +356,14 @@ export function buildCandidate(
     age,
     zodiacSign,
     occupation,
-    location:
-      preferences?.preferredLocation?.trim() ||
-      locationForArchetype(appearance.cityArchetype),
+    location,
+    countryCode: resolveCountryCode(location),
     bio,
     interests,
     personalityTraits,
     relationshipGoal: randomItem(RELATIONSHIP_GOALS),
     mbtiType: randomItem(MBTI_TYPES),
+    ethnicity,
     communicationStyle: {
       tone: randomItem(["casual", "flirty", "gen-z"]),
       responseLength: randomItem(["short", "medium"]),

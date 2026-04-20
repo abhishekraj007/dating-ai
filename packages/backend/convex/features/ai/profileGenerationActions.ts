@@ -6,7 +6,11 @@ import { action, internalAction } from "../../_generated/server";
 import { api } from "../../_generated/api";
 import { r2 } from "../../uploads";
 import { openRouterProvider } from "./aiProviders";
-import { type Gender, MAX_GENERATION_ATTEMPTS } from "./profileGenerationData";
+import {
+  type Gender,
+  ETHNICITIES,
+  MAX_GENERATION_ATTEMPTS,
+} from "./profileGenerationData";
 import {
   IMAGE_ANALYSIS_MODEL,
   IS_DEV,
@@ -68,7 +72,11 @@ export const runSystemProfileGeneration = internalAction({
     referenceSubjectDescriptor: v.optional(v.string()),
     referenceImageUrl: v.optional(v.string()),
     preferredLocation: v.optional(v.string()),
-    culturalBackground: v.optional(v.string()),
+    // Preferred ethnicity (member of `ETHNICITIES` in
+    // `features/ai/profileGenerationData.ts`). Cron passes a round-robin
+    // value; manual passes the admin-selected value; reference mode passes
+    // the vision model's enum pick.
+    ethnicity: v.optional(v.string()),
     // When true, pause after the avatar is generated and write a
     // `preview` snapshot to the job row. Admin then approves to run
     // showcase + persist via `continueShowcaseAndPersist`. Cron path
@@ -79,11 +87,14 @@ export const runSystemProfileGeneration = internalAction({
     existingJobId: v.optional(v.id("profileGenerationJobs")),
   },
   handler: async (ctx, args) => {
+    // The enum membership is re-validated inside the candidate LLM path
+    // (via `coerceEthnicity`), so we only normalize whitespace here.
+    const normalizedEthnicity = normalizePreferenceText(args.ethnicity);
     const normalizedPreferences: GenerationPreferences = {
       preferredOccupation: normalizePreferenceText(args.preferredOccupation),
       preferredInterests: normalizeInterestPreferences(args.preferredInterests),
       preferredLocation: normalizePreferenceText(args.preferredLocation),
-      culturalBackground: normalizePreferenceText(args.culturalBackground),
+      ethnicity: normalizedEthnicity as GenerationPreferences["ethnicity"],
     };
 
     const jobId: string =
@@ -97,7 +108,7 @@ export const runSystemProfileGeneration = internalAction({
           preferredOccupation: normalizedPreferences.preferredOccupation,
           preferredInterests: normalizedPreferences.preferredInterests,
           preferredLocation: normalizedPreferences.preferredLocation,
-          culturalBackground: normalizedPreferences.culturalBackground,
+          ethnicity: normalizedEthnicity,
           referenceSubjectDescriptor: args.referenceSubjectDescriptor,
           referenceImageUrl: args.referenceImageUrl,
           appearanceOverrides: args.appearanceOverrides,
@@ -527,7 +538,10 @@ export const analyzeReferencePhoto = action({
     suggestedVibe: v.optional(v.string()),
     suggestedExpression: v.optional(v.string()),
     suggestedLocation: v.optional(v.string()),
-    culturalBackground: v.optional(v.string()),
+    // One of `ETHNICITIES`, or undefined if the vision model couldn't
+    // determine it from the reference photo. Passed as a preference into
+    // the candidate LLM so the generated name + bio stays coherent.
+    ethnicity: v.optional(v.string()),
     referenceImageUrl: v.string(),
   }),
   handler: async (ctx, args) => {
@@ -563,8 +577,8 @@ Also extract these fields from the photo:
 - "occupation": a plausible occupation that matches the person's style (optional)
 - "vibe": overall aesthetic vibe in 1-3 words (e.g. "warm bohemian", "cool minimalist")
 - "expression": the person's expression in 1-2 words
-- "culturalBackground": short adjective describing the person's apparent cultural/ethnic background based ONLY on clearly visible visual cues (e.g. "Japanese", "South Asian", "Afro-Caribbean", "Latina", "Northern European"). If the background is ambiguous or unclear, set this to null. Do NOT stereotype or assume — only infer from obvious cues.
-- "suggestedLocation": a plausible real city in "City, CC" format where someone of this apparent cultural background and style would realistically live (e.g. "Tokyo, JP", "Lagos, NG", "São Paulo, BR", "Berlin, DE"). Pick a real major city. If culturalBackground is null/ambiguous, pick a cosmopolitan city that suits the overall aesthetic. Use ISO 3166-1 alpha-2 country codes.
+- "ethnicity": one of the following exact values based ONLY on clearly visible visual cues: ${ETHNICITIES.join(", ")}. Treat this as the most specific stored value: prefer a specific option (e.g. "Indian" or "Japanese") over the broader "Asian" bucket when clearly discernible. Use "Asian" only when the person appears broadly Asian but no more specific option is justified. If the background is ambiguous or unclear, set this to null. Do NOT stereotype or assume — only infer from obvious cues.
+- "suggestedLocation": a plausible real city in "City, CC" format where someone of this apparent ethnic background and style would realistically live (e.g. "Tokyo, JP", "Lagos, NG", "São Paulo, BR", "Berlin, DE"). Pick a real major city. If ethnicity is null/ambiguous, pick a cosmopolitan city that suits the overall aesthetic. Use ISO 3166-1 alpha-2 country codes.
 
 Return a JSON object with these fields:
 {
@@ -574,7 +588,7 @@ Return a JSON object with these fields:
   "occupation": "string or null",
   "vibe": "string or null",
   "expression": "string or null",
-  "culturalBackground": "string or null",
+  "ethnicity": "one of [${ETHNICITIES.join(", ")}] or null",
   "suggestedLocation": "City, CC or null"
 }
 
@@ -635,6 +649,17 @@ Return ONLY valid JSON, no markdown fences.`;
       return trimmed.length > maxLength ? trimmed.slice(0, maxLength) : trimmed;
     };
 
+    // Vision model is prompted to pick from `ETHNICITIES` verbatim. We
+    // additionally gate on the enum here so any drift (model returns
+    // "Southeast Asian" instead of "Asian", etc.) becomes `undefined`
+    // rather than being written to the job row. The candidate LLM will
+    // then pick its own coherent value from the full enum.
+    const ethnicityRaw = sanitizeShortString(parsed.ethnicity, 40);
+    const ethnicity =
+      ethnicityRaw && (ETHNICITIES as readonly string[]).includes(ethnicityRaw)
+        ? ethnicityRaw
+        : undefined;
+
     return {
       subjectDescriptor: parsed.subjectDescriptor,
       suggestedGender: gender,
@@ -645,7 +670,7 @@ Return ONLY valid JSON, no markdown fences.`;
       suggestedExpression:
         typeof parsed.expression === "string" ? parsed.expression : undefined,
       suggestedLocation: sanitizeShortString(parsed.suggestedLocation, 60),
-      culturalBackground: sanitizeShortString(parsed.culturalBackground, 40),
+      ethnicity,
       referenceImageUrl,
     };
   },

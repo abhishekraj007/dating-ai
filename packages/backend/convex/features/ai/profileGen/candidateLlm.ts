@@ -1,5 +1,9 @@
 import { generateObject } from "ai";
-import { type Gender, BANNED_BIO_PHRASES } from "../profileGenerationData";
+import {
+  type Gender,
+  BANNED_BIO_PHRASES,
+  ETHNICITIES,
+} from "../profileGenerationData";
 import { gatewayProvider, openRouterProvider } from "../aiProviders";
 import {
   FALLBACK_TEMPLATE_MODEL,
@@ -83,11 +87,14 @@ export async function generateCandidateWithLLM(
     preferences?.preferredLocation
       ? `- location MUST be exactly: ${preferences.preferredLocation} (do not change city, country, or format)`
       : null,
-    preferences?.culturalBackground
-      ? `- name must be a believable first + last name for a person of ${preferences.culturalBackground} background${preferences?.preferredLocation ? ` living in ${preferences.preferredLocation}` : ""}; use naming conventions typical for that background (script romanized if non-Latin)`
+    preferences?.ethnicity
+      ? `- ethnicity field MUST be exactly "${preferences.ethnicity}" (do not deviate)`
       : null,
-    preferences?.culturalBackground
-      ? `- bio should feel culturally coherent with a ${preferences.culturalBackground} background — natural references (foods, places, habits) are fine but do not stereotype`
+    preferences?.ethnicity
+      ? `- name must be a believable first + last name for a ${preferences.ethnicity} person${preferences?.preferredLocation ? ` living in ${preferences.preferredLocation}` : ""}; use naming conventions typical for that background (script romanized if non-Latin)`
+      : null,
+    preferences?.ethnicity
+      ? `- bio should feel culturally coherent with a ${preferences.ethnicity} background — natural references (foods, places, habits) are fine but do not stereotype`
       : null,
   ]
     .filter(Boolean)
@@ -96,8 +103,8 @@ export async function generateCandidateWithLLM(
   const livesInLine = preferences?.preferredLocation
     ? `- lives in ${preferences.preferredLocation}`
     : `- lives in a ${appearance.cityArchetype}`;
-  const nameHintLine = preferences?.culturalBackground
-    ? `- name must reflect a ${preferences.culturalBackground} cultural background`
+  const nameHintLine = preferences?.ethnicity
+    ? `- name must reflect a ${preferences.ethnicity} background`
     : `- pick a name and location that feel culturally coherent with the appearance — no strict rules, just natural`;
 
   const prompt = `Generate one unique ${gender} dating profile that reads like a real person's, not AI-written.
@@ -113,7 +120,10 @@ ${nameHintLine}
 Hard requirements:
 - age integer between 20 and 34
 - occupation: specific and believable (prefer non-generic roles)
-- location: a specific real city in "City, ST" or "City, CC" format (e.g. "Austin, TX", "Berlin, DE") - should feel natural for the persona
+- location: a specific real city in "City, ST" or "City, CC" format (e.g. "Austin, TX", "Shanghai, CN", "Berlin, DE") - should feel natural for the persona
+- countryCode: the ISO 3166-1 alpha-2 country code for the location
+- if location is a US city written as "City, ST", countryCode MUST be "US"
+- if location is a non-US city written as "City, CC", countryCode MUST match that country code
 - bio: 2-3 short sentences, 60-240 chars total
 - interests: pick 4-7 items${allowedInterests.length > 0 ? ` STRICTLY from the allowed library below. Use the values verbatim (exact spelling and capitalization). Do NOT invent new interests.` : " (specific, not vague nouns)"}
 - personalityTraits: 3-6 short adjectives
@@ -143,6 +153,15 @@ Uniqueness rules:
 ${preferenceHints ? `User-selected constraints (must honor exactly):\n${preferenceHints}\n` : ""}
 Attempt strategy: ${strategyHint}
 
+Ethnicity rules (strict):
+- Pick exactly one value for the "ethnicity" field from this list, verbatim: ${ETHNICITIES.join(", ")}.
+- Treat the field as the MOST SPECIFIC stored value, not a broad parent category.
+- The chosen ethnicity MUST be coherent with the name you pick (e.g. "Priya Sharma" → "Indian", "Kenji Tanaka" → "Japanese", "Sofia Romano" → "White" or "Hispanic" depending on feel).
+- "Asian" is the broad umbrella bucket. Use it only when the profile should read broadly Asian but none of the more specific options (Indian/Chinese/Japanese/Korean/Vietnamese/Filipino) is clearly intended.
+- If a specific option clearly fits, prefer that specific option over "Asian".
+- Use "Black", "Hispanic", or "Middle Eastern" where appropriate; do not force those profiles into "Asian".
+- Use "Mixed" only when the name + bio honestly imply multiple backgrounds.
+
 Required JSON shape:
 {
   "name": "string",
@@ -151,11 +170,13 @@ Required JSON shape:
   "zodiacSign": "string",
   "occupation": "string",
   "location": "City, ST or City, CC (optional)",
+  "countryCode": "ISO 3166-1 alpha-2 country code matching the location",
   "bio": "string",
   "interests": ["string"],
   "personalityTraits": ["string"],
   "relationshipGoal": "string",
   "mbtiType": "string optional",
+  "ethnicity": "one of: ${ETHNICITIES.join(" | ")}",
   "communicationStyle": {
     "tone": "string optional",
     "responseLength": "string optional",

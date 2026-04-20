@@ -71,7 +71,7 @@ type GenerateCharacterInput = {
   referenceSubjectDescriptor?: string;
   referenceImageUrl?: string;
   preferredLocation?: string;
-  culturalBackground?: string;
+  ethnicity?: string;
 };
 
 type ReferenceAnalysis = {
@@ -82,7 +82,7 @@ type ReferenceAnalysis = {
   suggestedVibe?: string;
   suggestedExpression?: string;
   suggestedLocation?: string;
-  culturalBackground?: string;
+  ethnicity?: string;
   referenceImageUrl: string;
 };
 
@@ -352,8 +352,7 @@ export function AddCharacterDialog({
         referenceSubjectDescriptor: referenceAnalysis.subjectDescriptor,
         referenceImageUrl: referenceAnalysis.referenceImageUrl,
         preferredLocation: resolvedLocation,
-        culturalBackground:
-          referenceAnalysis.culturalBackground?.trim() || undefined,
+        ethnicity: referenceAnalysis.ethnicity?.trim() || undefined,
       });
       if (jobId) {
         setActiveJobId(jobId);
@@ -418,6 +417,7 @@ export function AddCharacterDialog({
   ].filter((v) => v !== PLACEHOLDER).length;
 
   const canGenerateReference = referenceAnalysis !== null && !isAnalyzingPhoto;
+  const shouldBlockEscapeClose = stage !== "form";
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -431,6 +431,11 @@ export function AddCharacterDialog({
         side="right"
         className="w-full sm:max-w-xl overflow-y-auto"
         onPaste={handlePaste}
+        onEscapeKeyDown={(event) => {
+          if (shouldBlockEscapeClose) {
+            event.preventDefault();
+          }
+        }}
       >
         <SheetHeader>
           <SheetTitle>
@@ -806,11 +811,11 @@ export function AddCharacterDialog({
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <p className="text-sm font-medium">Location</p>
-                          {referenceAnalysis.culturalBackground && (
+                          {referenceAnalysis.ethnicity && (
                             <p className="text-[11px] text-muted-foreground">
-                              Cultural background:{" "}
+                              Ethnicity:{" "}
                               <span className="font-medium text-foreground/80">
-                                {referenceAnalysis.culturalBackground}
+                                {referenceAnalysis.ethnicity}
                               </span>
                             </p>
                           )}

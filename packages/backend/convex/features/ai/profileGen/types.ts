@@ -1,4 +1,4 @@
-import type { Gender } from "../profileGenerationData";
+import type { Ethnicity, Gender } from "../profileGenerationData";
 
 export type GenerationFailureCode =
   | "candidate_uniqueness_exhausted"
@@ -25,11 +25,17 @@ export type ProfileCandidate = {
   zodiacSign: string;
   occupation: string;
   location: string;
+  countryCode?: string;
   bio: string;
   interests: string[];
   personalityTraits: string[];
   relationshipGoal: string;
   mbtiType: string;
+  // Canonical ethnicity value, constrained to `ETHNICITIES` in
+  // `profileGenerationData.ts`. Populated on every generation path (LLM
+  // blueprint, template fallback, reference-mode vision analysis) so it can
+  // be persisted on `aiProfiles` and used for filter queries.
+  ethnicity: Ethnicity;
   communicationStyle: {
     tone: string;
     responseLength: string;
@@ -43,7 +49,10 @@ export type GenerationPreferences = {
   preferredOccupation?: string;
   preferredInterests?: string[];
   preferredLocation?: string;
-  culturalBackground?: string;
+  // When set, constrains the generated profile to this ethnicity. Must be
+  // a member of `ETHNICITIES`. Admin/manual flow and cron rotation both use
+  // this; reference-mode passes through the vision model's enum pick.
+  ethnicity?: Ethnicity;
 };
 
 export type JobProgressStep =

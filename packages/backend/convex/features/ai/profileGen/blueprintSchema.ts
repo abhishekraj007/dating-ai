@@ -1,4 +1,9 @@
 import { z } from "zod";
+import { ETHNICITIES } from "../profileGenerationData";
+
+// Enum of canonical ethnicity values. Forces the LLM to pick exactly one
+// from the list so the stored value is always filter-safe.
+const ethnicityEnum = z.enum(ETHNICITIES as unknown as [string, ...string[]]);
 
 // Base (free-form) interests schema used as fallback when no curated library
 // is available. Prefer `buildProfileBlueprintSchema(allowedInterests)` below.
@@ -9,11 +14,16 @@ export const profileBlueprintSchema = z.object({
   zodiacSign: z.string().min(3).max(16),
   occupation: z.string().min(2).max(80),
   location: z.string().min(3).max(60).optional(),
+  countryCode: z.string().trim().regex(/^[A-Z]{2}$/).optional(),
   bio: z.string().min(40).max(420),
   interests: z.array(z.string().min(2).max(40)).min(4).max(7),
   personalityTraits: z.array(z.string().min(2).max(40)).min(3).max(6),
   relationshipGoal: z.string().min(8).max(120),
   mbtiType: z.string().min(4).max(4).optional(),
+  // Required - the LLM must pick one from the canonical list so the stored
+  // profile is always filter-compatible. `toCandidateFromBlueprint` will
+  // still override this with the caller's preference when one was supplied.
+  ethnicity: ethnicityEnum,
   communicationStyle: z
     .object({
       tone: z.string().optional(),
