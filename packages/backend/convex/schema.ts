@@ -194,8 +194,16 @@ export default defineSchema({
     mbtiType: v.optional(v.string()),
     language: v.optional(v.string()), // defaults to "en"
     location: v.optional(v.string()), // e.g. "Brooklyn, NY" or "Melbourne, AU"
+    countryCode: v.optional(v.string()), // e.g. "US", "CN", "DE"
     voiceId: v.optional(v.string()), // ElevenLabs voice ID
     voiceType: v.optional(v.string()), // Voice type description (legacy)
+    // Canonical ethnicity, constrained by `ETHNICITIES` in
+    // `features/ai/profileGenerationData.ts`. Populated on every generation
+    // path (LLM blueprint, template fallback, reference-mode vision). Used
+    // for the filter-by-ethnicity discover-feed query. Optional because
+    // pre-migration rows don't have it and user-created profiles may opt
+    // not to declare one.
+    ethnicity: v.optional(v.string()),
     createdAt: v.optional(v.number()), // Creation timestamp (legacy)
     createdByUserId: v.optional(v.string()), // Better Auth user ID if user-created
     // Communication style for AI responses
@@ -291,6 +299,15 @@ export default defineSchema({
     // Manual/reference-mode inputs preserved on the job row so that
     // retry + avatar regeneration can reuse them without the caller.
     preferredLocation: v.optional(v.string()),
+    // Preferred ethnicity constraint (see `ETHNICITIES` in
+    // `features/ai/profileGenerationData.ts`). Admin sets this explicitly
+    // on manual runs; cron passes a round-robin value; reference mode
+    // passes the vision model's enum pick.
+    ethnicity: v.optional(v.string()),
+    // DEPRECATED: legacy field name for `ethnicity`. Kept so in-flight job
+    // rows from before the rename still validate. Safe to remove in a
+    // follow-up deploy ~24h after this one (the cleanup cron sweeps old
+    // job rows every 24h).
     culturalBackground: v.optional(v.string()),
     referenceSubjectDescriptor: v.optional(v.string()),
     referenceImageUrl: v.optional(v.string()),
@@ -339,11 +356,13 @@ export default defineSchema({
           zodiacSign: v.string(),
           occupation: v.string(),
           location: v.string(),
+          countryCode: v.optional(v.string()),
           bio: v.string(),
           interests: v.array(v.string()),
           personalityTraits: v.array(v.string()),
           relationshipGoal: v.string(),
           mbtiType: v.string(),
+          ethnicity: v.optional(v.string()),
           communicationStyle: v.object({
             tone: v.string(),
             responseLength: v.string(),

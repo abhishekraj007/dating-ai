@@ -35,7 +35,7 @@ type GenerateCharacterInput = {
   referenceSubjectDescriptor?: string;
   referenceImageUrl?: string;
   preferredLocation?: string;
-  culturalBackground?: string;
+  ethnicity?: string;
 };
 
 type InterestOption = {

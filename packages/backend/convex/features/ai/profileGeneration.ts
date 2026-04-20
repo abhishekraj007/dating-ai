@@ -20,33 +20,15 @@ import {
   OUTFIT_STYLES_MALE,
   VIBES,
   EXPRESSIONS,
+  ETHNICITIES,
 } from "./profileGenerationData";
-
-const PROFILE_OCCUPATION_OPTIONS = [
-  "Software Engineer",
-  "Product Designer",
-  "Data Scientist",
-  "Marketing Manager",
-  "Content Creator",
-  "Photographer",
-  "Nurse",
-  "Doctor",
-  "Teacher",
-  "Lawyer",
-  "Financial Analyst",
-  "Chef",
-  "Fitness Coach",
-  "Architect",
-  "Entrepreneur",
-  "Sales Manager",
-  "UX Researcher",
-  "Project Manager",
-  "HR Specialist",
-  "Civil Engineer",
-] as const;
-
-const PROFILE_GENERATION_JOB_RETENTION_DAYS = 5;
-const AWAITING_APPROVAL_TTL_MS = 30 * 60 * 1000; // 30 minutes
+import {
+  AWAITING_APPROVAL_TTL_MS,
+  PROFILE_GENERATION_JOB_RETENTION_DAYS,
+  PROFILE_OCCUPATION_OPTIONS,
+} from "./profileGen/constants";
+import { assertAdmin } from "./profileGen/adminGuards";
+import { resolveCountryCode } from "./profileGen/candidate";
 
 export const listSystemProfilesInternal = internalQuery({
   args: {
@@ -89,7 +71,7 @@ export const createProfileGenerationJobInternal = internalMutation({
     preferredOccupation: v.optional(v.string()),
     preferredInterests: v.optional(v.array(v.string())),
     preferredLocation: v.optional(v.string()),
-    culturalBackground: v.optional(v.string()),
+    ethnicity: v.optional(v.string()),
     referenceSubjectDescriptor: v.optional(v.string()),
     referenceImageUrl: v.optional(v.string()),
     appearanceOverrides: v.optional(
@@ -116,7 +98,7 @@ export const createProfileGenerationJobInternal = internalMutation({
       preferredOccupation: args.preferredOccupation,
       preferredInterests: args.preferredInterests,
       preferredLocation: args.preferredLocation,
-      culturalBackground: args.culturalBackground,
+      ethnicity: args.ethnicity,
       referenceSubjectDescriptor: args.referenceSubjectDescriptor,
       referenceImageUrl: args.referenceImageUrl,
       appearanceOverrides: args.appearanceOverrides,
@@ -188,11 +170,15 @@ const previewCandidateValidator = v.object({
   zodiacSign: v.string(),
   occupation: v.string(),
   location: v.string(),
+  countryCode: v.optional(v.string()),
   bio: v.string(),
   interests: v.array(v.string()),
   personalityTraits: v.array(v.string()),
   relationshipGoal: v.string(),
   mbtiType: v.string(),
+  // Optional so pre-migration in-flight preview rows still validate.
+  // All newly generated candidates populate this from the blueprint enum.
+  ethnicity: v.optional(v.string()),
   communicationStyle: v.object({
     tone: v.string(),
     responseLength: v.string(),
@@ -364,11 +350,19 @@ export const createSystemProfileInternal = internalMutation({
     zodiacSign: v.string(),
     occupation: v.string(),
     location: v.string(),
+    // Optional on the wire for migration safety; if omitted we derive it
+    // from `location` before persisting the profile row.
+    countryCode: v.optional(v.string()),
     bio: v.string(),
     interests: v.array(v.string()),
     personalityTraits: v.array(v.string()),
     relationshipGoal: v.string(),
     mbtiType: v.string(),
+    // Constrained at the Zod blueprint layer (ETHNICITIES enum); kept as
+    // a plain string here because Convex validators don't accept a union
+    // of string literals of dynamic length. Required on the arg so every
+    // system-created profile persists a canonical filter value.
+    ethnicity: v.string(),
     communicationStyle: v.object({
       tone: v.string(),
       responseLength: v.string(),
@@ -381,6 +375,7 @@ export const createSystemProfileInternal = internalMutation({
   },
   returns: v.id("aiProfiles"),
   handler: async (ctx, args) => {
+    const countryCode = resolveCountryCode(args.location, args.countryCode);
     return await ctx.db.insert("aiProfiles", {
       name: args.name,
       username: args.username,
@@ -393,11 +388,13 @@ export const createSystemProfileInternal = internalMutation({
       zodiacSign: args.zodiacSign,
       occupation: args.occupation,
       location: args.location,
+      countryCode,
       bio: args.bio,
       interests: args.interests,
       personalityTraits: args.personalityTraits,
       relationshipGoal: args.relationshipGoal,
       mbtiType: args.mbtiType,
+      ethnicity: args.ethnicity,
       communicationStyle: args.communicationStyle,
       language: "en",
       profileImageKeys: args.profileImageKeys,
@@ -406,14 +403,68 @@ export const createSystemProfileInternal = internalMutation({
   },
 });
 
+/**
+ * Scans every active system profile once and returns the ethnicity from the
+ * `ETHNICITIES` enum that is currently the least-represented. This is the
+ * supply-balance mechanism that keeps every filter bucket populated, so
+ * users who filter the discover feed by e.g. "Korean" or "Middle Eastern"
+ * always see something instead of an empty state.
+ *
+ * We prefer "least-represented" over strict round-robin because:
+ *   - A real round-robin counter would need its own persisted state (another
+ *     table) and would drift from the actual profile distribution after any
+ *     admin-created / user-created / failed run.
+ *   - Counting profiles per ethnicity is a single full-table scan on a
+ *     small table (thousands, not millions); negligible cost when triggered
+ *     once per cron tick.
+ *   - It self-corrects: if the LLM keeps dropping into "White" when left
+ *     ambiguous, this will push the next few crons toward the under-
+ *     represented buckets until they catch up.
+ *
+ * Ties are broken by picking the ethnicity that appears earliest in
+ * `ETHNICITIES`, which gives deterministic test behavior at empty DBs.
+ */
+async function pickUnderRepresentedEthnicity(ctx: {
+  db: { query: any };
+}): Promise<string> {
+  const profiles = await ctx.db
+    .query("aiProfiles")
+    .withIndex("by_system_created_at", (q: any) => q.eq("isUserCreated", false))
+    .collect();
+
+  const counts = new Map<string, number>();
+  for (const ethnicity of ETHNICITIES) counts.set(ethnicity, 0);
+
+  for (const profile of profiles as Array<{ ethnicity?: string }>) {
+    const ethnicity = profile.ethnicity;
+    if (ethnicity && counts.has(ethnicity)) {
+      counts.set(ethnicity, (counts.get(ethnicity) ?? 0) + 1);
+    }
+  }
+
+  let picked: string = ETHNICITIES[0];
+  let minCount = counts.get(picked) ?? 0;
+  for (const ethnicity of ETHNICITIES) {
+    const current = counts.get(ethnicity) ?? 0;
+    if (current < minCount) {
+      minCount = current;
+      picked = ethnicity;
+    }
+  }
+  return picked;
+}
+
 export const enqueueCronProfileGeneration = internalMutation({
   args: {},
   handler: async (ctx) => {
+    const ethnicity = await pickUnderRepresentedEthnicity(ctx);
+
     await ctx.scheduler.runAfter(
       0,
       "features/ai/profileGenerationActions:runSystemProfileGeneration" as any,
       {
         source: "cron",
+        ethnicity,
       },
     );
 
@@ -506,25 +557,15 @@ export const adminGenerateSystemProfile = mutation({
     referenceSubjectDescriptor: v.optional(v.string()),
     referenceImageUrl: v.optional(v.string()),
     preferredLocation: v.optional(v.string()),
-    culturalBackground: v.optional(v.string()),
+    // Preferred ethnicity (member of `ETHNICITIES` in
+    // `features/ai/profileGenerationData.ts`).
+    ethnicity: v.optional(v.string()),
     // Defaults to true for the characters page preview flow. The dashboard
     // quick-generate button opts out by passing false.
     pauseForApproval: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) {
-      throw new ConvexError("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("profile")
-      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
-      .unique();
-
-    if (!userProfile?.isAdmin) {
-      throw new ConvexError("Admin access required");
-    }
+    const user = await assertAdmin(ctx);
 
     // Default: pause for admin approval. The characters page Sheet
     // subscribes to the returned `jobId` via `getProfileGenerationJobForAdmin`
@@ -545,7 +586,7 @@ export const adminGenerateSystemProfile = mutation({
             preferredOccupation: args.preferredOccupation,
             preferredInterests: args.preferredInterests,
             preferredLocation: args.preferredLocation,
-            culturalBackground: args.culturalBackground,
+            ethnicity: args.ethnicity,
             referenceSubjectDescriptor: args.referenceSubjectDescriptor,
             referenceImageUrl: args.referenceImageUrl,
             appearanceOverrides: args.appearanceOverrides,
@@ -566,7 +607,7 @@ export const adminGenerateSystemProfile = mutation({
         referenceSubjectDescriptor: args.referenceSubjectDescriptor,
         referenceImageUrl: args.referenceImageUrl,
         preferredLocation: args.preferredLocation,
-        culturalBackground: args.culturalBackground,
+        ethnicity: args.ethnicity,
         pauseForApproval,
         existingJobId,
       },
@@ -581,19 +622,7 @@ export const adminRetryProfileGeneration = mutation({
     jobId: v.id("profileGenerationJobs"),
   },
   handler: async (ctx, { jobId }) => {
-    const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) {
-      throw new ConvexError("Not authenticated");
-    }
-
-    const userProfile = await ctx.db
-      .query("profile")
-      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
-      .unique();
-
-    if (!userProfile?.isAdmin) {
-      throw new ConvexError("Admin access required");
-    }
+    const user = await assertAdmin(ctx);
 
     const job = await ctx.db.get(jobId);
     if (!job) {
@@ -646,21 +675,6 @@ const editedCandidateSchema = z
       .optional(),
   })
   .strict();
-
-async function assertAdmin(ctx: any) {
-  const user = await authComponent.safeGetAuthUser(ctx);
-  if (!user) throw new ConvexError("Not authenticated");
-
-  const userProfile = await ctx.db
-    .query("profile")
-    .withIndex("by_auth_user_id", (q: any) => q.eq("authUserId", user._id))
-    .unique();
-
-  if (!userProfile?.isAdmin) {
-    throw new ConvexError("Admin access required");
-  }
-  return user;
-}
 
 export const adminRegenerateAvatar = mutation({
   args: {
@@ -731,7 +745,11 @@ export const adminApproveAvatar = mutation({
     if (edited.name !== undefined) patch.name = edited.name;
     if (edited.age !== undefined) patch.age = edited.age;
     if (edited.occupation !== undefined) patch.occupation = edited.occupation;
-    if (edited.location !== undefined) patch.location = edited.location;
+    if (edited.location !== undefined) {
+      patch.location = edited.location;
+      patch.countryCode =
+        resolveCountryCode(edited.location) ?? job.preview.candidate.countryCode;
+    }
     if (edited.bio !== undefined) patch.bio = edited.bio;
     if (edited.interests !== undefined) patch.interests = edited.interests;
 

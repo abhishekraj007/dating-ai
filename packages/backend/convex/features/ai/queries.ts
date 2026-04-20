@@ -80,6 +80,72 @@ export const getProfiles = query({
   },
 });
 
+export const getPublicProfiles = query({
+  args: {
+    gender: v.optional(v.union(v.literal("female"), v.literal("male"))),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("aiProfiles"),
+      _creationTime: v.number(),
+      name: v.string(),
+      gender: v.union(v.literal("female"), v.literal("male")),
+      age: v.union(v.number(), v.null()),
+      avatarUrl: v.union(v.string(), v.null()),
+      tagline: v.string(),
+      interests: v.array(v.string()),
+      occupation: v.union(v.string(), v.null()),
+      zodiacSign: v.union(v.string(), v.null()),
+    }),
+  ),
+  handler: async (ctx, { gender, limit }) => {
+    const profilesQuery = ctx.db
+      .query("aiProfiles")
+      .withIndex("by_status_and_gender", (q) => {
+        if (gender) {
+          return q.eq("status", "active").eq("gender", gender);
+        }
+        return q.eq("status", "active");
+      });
+
+    const profiles = await profilesQuery.order("desc").take(limit ?? 24);
+
+    return profiles
+      .filter((profile) => {
+        if (!profile.visibleOn || profile.visibleOn.length === 0) {
+          return true;
+        }
+
+        return profile.visibleOn.includes("web");
+      })
+      .map((profile) => {
+        const taglineSource =
+          profile.bio ??
+          profile.relationshipGoal ??
+          profile.occupation ??
+          profile.interests?.[0] ??
+          "Start a conversation and see where it goes.";
+
+        return {
+          _id: profile._id,
+          _creationTime: profile._creationTime,
+          name: profile.name,
+          gender: profile.gender,
+          age: profile.age ?? null,
+          avatarUrl: buildAiProfileAvatarUrl(
+            profile._id,
+            profile.avatarImageKey,
+          ),
+          tagline: taglineSource,
+          interests: profile.interests ?? [],
+          occupation: profile.occupation ?? null,
+          zodiacSign: profile.zodiacSign ?? null,
+        };
+      });
+  },
+});
+
 /**
  * Get a single AI profile by ID with all images.
  */
@@ -492,7 +558,11 @@ export const getChatImageUrl = query({
       .withIndex("by_image_key", (q) => q.eq("imageKey", imageKey))
       .first();
 
-    if (!chatImage || chatImage.userId !== user._id || chatImage.status !== "completed") {
+    if (
+      !chatImage ||
+      chatImage.userId !== user._id ||
+      chatImage.status !== "completed"
+    ) {
       return null;
     }
 
