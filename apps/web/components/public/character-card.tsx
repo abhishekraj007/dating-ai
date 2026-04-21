@@ -69,18 +69,18 @@ export function CharacterCard({
 
         <div className="absolute inset-x-0 bottom-0 space-y-3 p-4 text-white">
           <div className="space-y-1">
-            <h3 className="relative z-20 text-2xl font-semibold tracking-tight">
+            <h3 className="relative z-20 text-xl font-semibold tracking-tight">
               {profile.name}
               {profile.age ? (
                 <span className="ml-1 text-white/72">{profile.age}</span>
               ) : null}
             </h3>
-            <p className="relative z-20 line-clamp-3 text-sm leading-5 text-white/78">
+            <p className="relative z-20 line-clamp-2 text-sm leading-5 text-white/78">
               {profile.tagline}
             </p>
           </div>
 
-          <div className="relative z-20 flex items-center justify-between gap-3">
+          {/* <div className="relative z-20 flex items-center justify-between gap-3">
             <div className="flex min-w-0 flex-wrap gap-2">
               {profile.zodiacSign ? (
                 <Badge variant="secondary" className="bg-white/12 text-white">
@@ -101,7 +101,7 @@ export function CharacterCard({
             <OpenAuthModalButton className="rounded-full px-3" size="sm">
               Chat
             </OpenAuthModalButton>
-          </div>
+          </div> */}
         </div>
       </div>
     </Card>

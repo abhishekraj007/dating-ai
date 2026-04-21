@@ -88,9 +88,6 @@ export function PublicSidebar() {
 
         {/* Nav items — flex-1 so footer is pushed to bottom */}
         <div className="flex-1 overflow-y-auto px-3 py-4">
-          <p className="mb-2 px-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            Browse
-          </p>
           <div className="space-y-1">
             {primaryItems.map((item) => {
               const Icon = item.icon;

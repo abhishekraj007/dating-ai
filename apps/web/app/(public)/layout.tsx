@@ -18,9 +18,9 @@ export default function PublicLayout({
         >
           <PublicHeader />
         </Suspense>
-        <div className="mx-auto flex w-full max-w-[1600px] px-4 md:px-6 lg:px-8">
+        <div className="mx-auto flex w-full max-w-[1600px]">
           <PublicSidebar />
-          <main className="flex min-w-0 flex-1 flex-col gap-8 py-6 xl:pl-8">
+          <main className="flex min-w-0 flex-1 flex-col gap-8 py-6 px-4 md:px-6 lg:px-8">
             {children}
           </main>
         </div>
