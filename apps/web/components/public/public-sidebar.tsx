@@ -10,6 +10,7 @@ import {
   WandSparkles,
   X,
 } from "lucide-react";
+import { OpenAuthModalButton } from "@/components/auth/open-auth-modal-button";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -17,10 +18,34 @@ import { useSidebar } from "@/components/public/sidebar-context";
 
 const primaryItems = [
   { label: "Home", href: "/", icon: Home, active: true },
-  { label: "Discover", href: "/explore", icon: Compass },
-  { label: "Chat", href: "/login", icon: MessageCircle },
-  { label: "Create Character", href: "/login", icon: WandSparkles },
-  { label: "Premium", href: "/login", icon: Crown },
+  {
+    label: "Discover",
+    href: "/explore",
+    icon: Compass,
+    requiresAuth: true,
+    returnTo: "/explore",
+  },
+  {
+    label: "Chat",
+    href: "/explore",
+    icon: MessageCircle,
+    requiresAuth: true,
+    returnTo: "/explore",
+  },
+  {
+    label: "Create Character",
+    href: "/explore",
+    icon: WandSparkles,
+    requiresAuth: true,
+    returnTo: "/explore",
+  },
+  {
+    label: "Premium",
+    href: "/explore",
+    icon: Crown,
+    requiresAuth: true,
+    returnTo: "/explore",
+  },
 ];
 
 export function PublicSidebar() {
@@ -69,6 +94,21 @@ export function PublicSidebar() {
           <div className="space-y-1">
             {primaryItems.map((item) => {
               const Icon = item.icon;
+              if (item.requiresAuth) {
+                return (
+                  <OpenAuthModalButton
+                    key={item.label}
+                    className="w-full justify-start gap-2"
+                    onClick={close}
+                    returnTo={item.returnTo}
+                    variant="ghost"
+                  >
+                    <Icon className="size-4" />
+                    {item.label}
+                  </OpenAuthModalButton>
+                );
+              }
+
               return (
                 <Button
                   key={item.label}

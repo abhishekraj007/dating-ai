@@ -90,6 +90,7 @@ export const getPublicProfiles = query({
       _id: v.id("aiProfiles"),
       _creationTime: v.number(),
       name: v.string(),
+      username: v.union(v.string(), v.null()),
       gender: v.union(v.literal("female"), v.literal("male")),
       age: v.union(v.number(), v.null()),
       avatarUrl: v.union(v.string(), v.null()),
@@ -131,6 +132,7 @@ export const getPublicProfiles = query({
           _id: profile._id,
           _creationTime: profile._creationTime,
           name: profile.name,
+          username: profile.username ?? null,
           gender: profile.gender,
           age: profile.age ?? null,
           avatarUrl: buildAiProfileAvatarUrl(
@@ -143,6 +145,50 @@ export const getPublicProfiles = query({
           zodiacSign: profile.zodiacSign ?? null,
         };
       });
+  },
+});
+
+export const getPublicProfileByUsername = query({
+  args: {
+    username: v.string(),
+  },
+  handler: async (ctx, { username }) => {
+    const normalizedUsername = username.trim().toLowerCase();
+    if (!normalizedUsername) {
+      return null;
+    }
+
+    const profile = await ctx.db
+      .query("aiProfiles")
+      .withIndex("by_username", (q) => q.eq("username", normalizedUsername))
+      .first();
+
+    if (!profile || profile.status !== "active") {
+      return null;
+    }
+
+    if (
+      profile.visibleOn &&
+      profile.visibleOn.length > 0 &&
+      !profile.visibleOn.includes("web")
+    ) {
+      return null;
+    }
+
+    const avatarUrl = buildAiProfileAvatarUrl(
+      profile._id,
+      profile.avatarImageKey,
+    );
+
+    const profileImageUrls = profile.profileImageKeys
+      ? await Promise.all(profile.profileImageKeys.map((key) => r2.getUrl(key)))
+      : [];
+
+    return {
+      ...profile,
+      avatarUrl,
+      profileImageUrls,
+    };
   },
 });
 

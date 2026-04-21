@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { Menu, Search, Sparkles } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { PublicHeaderAccountMenu } from "@/components/public/public-header-account-menu";
 import {
   InputGroup,
   InputGroupAddon,
@@ -12,17 +13,12 @@ import {
 } from "@/components/ui/input-group";
 import { ThemeToggle } from "@/components/public/theme-toggle";
 import { useSidebar } from "@/components/public/sidebar-context";
+import { PUBLIC_SEGMENTS, segmentFromPathname } from "@/lib/public-segments";
 import { cn } from "@/lib/utils";
 
-const tabs = [
-  { label: "Girls", value: "girls" },
-  { label: "Anime", value: "anime" },
-  { label: "Guys", value: "guys" },
-] as const;
-
 export function PublicHeader() {
-  const searchParams = useSearchParams();
-  const activeSegment = searchParams.get("segment") ?? "girls";
+  const pathname = usePathname();
+  const activeSegment = segmentFromPathname(pathname);
   const { open } = useSidebar();
 
   return (
@@ -50,11 +46,11 @@ export function PublicHeader() {
 
         {/* Gender tabs — start right where sidebar ends on desktop */}
         <nav className="hidden items-center gap-1 rounded-full border border-border/70 bg-card/70 p-1 md:flex">
-          {tabs.map((tab) => {
-            const isActive = tab.value === activeSegment;
+          {Object.entries(PUBLIC_SEGMENTS).map(([segment, tab]) => {
+            const isActive = segment === activeSegment;
             return (
               <Button
-                key={tab.value}
+                key={segment}
                 asChild
                 variant={isActive ? "default" : "ghost"}
                 size="sm"
@@ -63,7 +59,7 @@ export function PublicHeader() {
                   !isActive && "text-muted-foreground",
                 )}
               >
-                <Link href={`/?segment=${tab.value}`}>{tab.label}</Link>
+                <Link href={tab.href}>{tab.label}</Link>
               </Button>
             );
           })}
@@ -85,12 +81,7 @@ export function PublicHeader() {
             </InputGroup>
           </div>
           <ThemeToggle />
-          <Button asChild className="hidden sm:inline-flex">
-            <Link href="/login">Create Free Account</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/login">Login</Link>
-          </Button>
+          <PublicHeaderAccountMenu />
         </div>
       </div>
     </header>

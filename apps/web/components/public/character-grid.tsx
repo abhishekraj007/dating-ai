@@ -4,8 +4,7 @@ import {
   type PublicProfileCard,
 } from "@/components/public/character-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-export type PublicSegment = "girls" | "anime" | "guys";
+import type { PublicSegment } from "@/lib/public-segments";
 
 type CharacterGridProps = {
   segment: PublicSegment;
@@ -27,10 +26,13 @@ export async function CharacterGrid({ segment }: CharacterGridProps) {
   }
 
   const gender = segment === "guys" ? "male" : "female";
-  const profiles = (await fetchQuery(api.features.ai.queries.getPublicProfiles, {
-    gender,
-    limit: 24,
-  })) as PublicProfileCard[];
+  const profiles = (await fetchQuery(
+    api.features.ai.queries.getPublicProfiles,
+    {
+      gender,
+      limit: 24,
+    },
+  )) as PublicProfileCard[];
 
   if (profiles.length === 0) {
     return (
@@ -53,6 +55,7 @@ export async function CharacterGrid({ segment }: CharacterGridProps) {
           key={profile._id}
           isNew={index < 2}
           priority={index < 5}
+          segment={segment}
           profile={profile}
         />
       ))}
