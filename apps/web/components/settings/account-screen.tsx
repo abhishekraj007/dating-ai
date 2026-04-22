@@ -103,7 +103,14 @@ function ActionRow({
       )}
     >
       <div className="flex items-center gap-4">
-        <Icon className={cn("size-5", tone === "destructive" ? "text-destructive" : "text-muted-foreground")} />
+        <Icon
+          className={cn(
+            "size-5",
+            tone === "destructive"
+              ? "text-destructive"
+              : "text-muted-foreground",
+          )}
+        />
         <div>
           <div className="text-xl font-medium tracking-tight">{label}</div>
           {value ? (
@@ -111,7 +118,14 @@ function ActionRow({
           ) : null}
         </div>
       </div>
-      <ChevronRight className={cn("size-5", tone === "destructive" ? "text-destructive/70" : "text-muted-foreground")} />
+      <ChevronRight
+        className={cn(
+          "size-5",
+          tone === "destructive"
+            ? "text-destructive/70"
+            : "text-muted-foreground",
+        )}
+      />
     </button>
   );
 }
@@ -266,10 +280,14 @@ export function AccountScreen() {
                 </span>
                 <div>
                   <p className="text-sm font-medium">Current credits</p>
-                  <p className="text-xs text-muted-foreground/80">Available for chats and selfies</p>
+                  <p className="text-xs text-muted-foreground/80">
+                    Available for chats and selfies
+                  </p>
                 </div>
               </div>
-              <span className="text-2xl font-semibold tabular-nums">{credits}</span>
+              <span className="text-2xl font-semibold tabular-nums">
+                {credits}
+              </span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -427,23 +445,31 @@ export function AccountScreen() {
           <DialogHeader>
             <DialogTitle>Notifications</DialogTitle>
             <DialogDescription>
-              Control browser notification access for future chat and account updates.
+              Control browser notification access for future chat and account
+              updates.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="rounded-[1.5rem] bg-muted/55 p-4">
-              <div className="text-sm text-muted-foreground">Current status</div>
-              <div className="mt-1 text-lg font-semibold">{notificationLabel}</div>
+              <div className="text-sm text-muted-foreground">
+                Current status
+              </div>
+              <div className="mt-1 text-lg font-semibold">
+                {notificationLabel}
+              </div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button onClick={requestNotifications}>Enable notifications</Button>
+              <Button onClick={requestNotifications}>
+                Enable notifications
+              </Button>
               <Button variant="outline" onClick={sendTestNotification}>
                 Send test notification
               </Button>
             </div>
             {notificationStatus === "denied" ? (
               <p className="text-sm text-muted-foreground">
-                Notifications are blocked in your browser settings. Re-enable them there and come back to test again.
+                Notifications are blocked in your browser settings. Re-enable
+                them there and come back to test again.
               </p>
             ) : null}
           </div>
@@ -456,11 +482,17 @@ export function AccountScreen() {
           <DialogHeader>
             <DialogTitle>Language</DialogTitle>
             <DialogDescription>
-              Pick how FeelAI should set your browser language preference on web.
+              Pick how FeelAI should set your browser language preference on
+              web.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <Select value={languagePreference} onValueChange={(value) => handleLanguageChange(value as "auto" | "en") }>
+            <Select
+              value={languagePreference}
+              onValueChange={(value) =>
+                handleLanguageChange(value as "auto" | "en")
+              }
+            >
               <SelectTrigger className="w-full rounded-[1.25rem]">
                 <SelectValue placeholder="Choose language" />
               </SelectTrigger>
@@ -470,14 +502,18 @@ export function AccountScreen() {
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
-              More languages can be layered on top of this preference without changing your saved setting later.
+              More languages can be layered on top of this preference without
+              changing your saved setting later.
             </p>
           </div>
           <DialogFooter showCloseButton />
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isAccountDetailsOpen} onOpenChange={setIsAccountDetailsOpen}>
+      <Dialog
+        open={isAccountDetailsOpen}
+        onOpenChange={setIsAccountDetailsOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Account details</DialogTitle>
@@ -503,7 +539,9 @@ export function AccountScreen() {
               </div>
               <div className="rounded-[1.5rem] bg-muted/55 p-4">
                 <div className="text-sm text-muted-foreground">Credits</div>
-                <div className="mt-1 text-lg font-semibold tabular-nums">{credits}</div>
+                <div className="mt-1 text-lg font-semibold tabular-nums">
+                  {credits}
+                </div>
               </div>
             </div>
           </div>
@@ -512,7 +550,9 @@ export function AccountScreen() {
               Buy credits
             </Button>
             {!isPremium ? (
-              <Button onClick={() => setIsPremiumOpen(true)}>Get premium</Button>
+              <Button onClick={() => setIsPremiumOpen(true)}>
+                Get premium
+              </Button>
             ) : null}
           </DialogFooter>
         </DialogContent>

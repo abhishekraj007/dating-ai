@@ -15,7 +15,8 @@ export default function PrivacyPage() {
       sections={[
         {
           title: "What FeelAI uses",
-          description: "The essential account and product data used in the web experience.",
+          description:
+            "The essential account and product data used in the web experience.",
           items: [
             "Authentication data is used to identify your account and restore protected features like chats, credits, and premium access.",
             "Chat history and related profile context are used to render conversations and media requests in the app.",

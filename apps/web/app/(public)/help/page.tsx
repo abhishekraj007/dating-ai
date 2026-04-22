@@ -3,7 +3,8 @@ import { PublicInfoPage } from "@/components/public/public-info-page";
 
 export const metadata: Metadata = {
   title: "Help Center",
-  description: "Answers to common FeelAI questions and quick troubleshooting tips.",
+  description:
+    "Answers to common FeelAI questions and quick troubleshooting tips.",
 };
 
 export default function HelpCenterPage() {
@@ -15,7 +16,8 @@ export default function HelpCenterPage() {
       sections={[
         {
           title: "About FeelAI",
-          description: "The basics behind the web experience and companion discovery flow.",
+          description:
+            "The basics behind the web experience and companion discovery flow.",
           items: [
             "FeelAI is an AI dating platform built for immersive companions, AI friends, and always-on conversations.",
             "The public homepage is server-rendered so search engines can index companion cards, supporting copy, and structured data from the first request.",

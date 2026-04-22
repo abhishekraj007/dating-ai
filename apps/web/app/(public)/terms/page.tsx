@@ -24,7 +24,8 @@ export default function TermsPage() {
         },
         {
           title: "Purchases and content",
-          description: "How paid features and generated content should be treated.",
+          description:
+            "How paid features and generated content should be treated.",
           items: [
             "Credits and premium unlock product features, but they do not transfer ownership of the platform or its models.",
             "AI-generated outputs can be imperfect, so you should review important content before relying on it.",
