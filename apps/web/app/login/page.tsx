@@ -12,7 +12,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const redirectTo =
     typeof redirectValue === "string" && redirectValue.startsWith("/")
       ? redirectValue
-      : "/explore";
+      : "/";
 
   return <LoginClient redirectTo={redirectTo} />;
 }

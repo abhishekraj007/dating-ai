@@ -1,54 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Compass,
-  Crown,
-  Home,
-  MessageCircle,
-  Sparkles,
-  WandSparkles,
-  X,
-} from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Home, MessageCircle, Sparkles, SunMoon, X } from "lucide-react";
 import { OpenAuthModalButton } from "@/components/auth/open-auth-modal-button";
+import { PublicBillingActions } from "@/components/public/public-billing-actions";
+import { PublicHeaderAccountMenu } from "@/components/public/public-header-account-menu";
+import { ThemeToggle } from "@/components/public/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { PUBLIC_SEGMENTS, segmentFromPathname } from "@/lib/public-segments";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/public/sidebar-context";
 
 const primaryItems = [
-  { label: "Home", href: "/", icon: Home, active: true },
-  {
-    label: "Discover",
-    href: "/explore",
-    icon: Compass,
-    requiresAuth: true,
-    returnTo: "/explore",
-  },
+  { label: "Home", href: "/", icon: Home },
+  // {
+  //   label: "Discover",
+  //   href: "/explore",
+  //   icon: Compass,
+  //   requiresAuth: true,
+  //   returnTo: "/explore",
+  // },
   {
     label: "Chat",
-    href: "/explore",
+    href: "/chat",
     icon: MessageCircle,
     requiresAuth: true,
-    returnTo: "/explore",
+    returnTo: "/chat",
   },
-  {
-    label: "Create Character",
-    href: "/explore",
-    icon: WandSparkles,
-    requiresAuth: true,
-    returnTo: "/explore",
-  },
-  {
-    label: "Premium",
-    href: "/explore",
-    icon: Crown,
-    requiresAuth: true,
-    returnTo: "/explore",
-  },
+  // {
+  //   label: "Create Character",
+  //   href: "/explore",
+  //   icon: WandSparkles,
+  //   requiresAuth: true,
+  //   returnTo: "/explore",
+  // },
+  // {
+  //   label: "Premium",
+  //   href: "/explore",
+  //   icon: Crown,
+  //   requiresAuth: true,
+  //   returnTo: "/explore",
+  // },
 ];
 
 export function PublicSidebar() {
+  const pathname = usePathname();
+  const activeSegment = segmentFromPathname(pathname);
   const { isOpen, close } = useSidebar();
 
   return (
@@ -56,49 +54,66 @@ export function PublicSidebar() {
       {/* Mobile overlay backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 xl:hidden"
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
           onClick={close}
         />
       )}
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-[260px] flex-col border-r border-border/70 bg-sidebar",
-          "xl:sticky xl:top-[60px] xl:z-auto xl:flex xl:h-[calc(100vh-60px)] xl:w-72 xl:flex-shrink-0",
-          isOpen ? "flex" : "hidden xl:flex",
+          "fixed inset-y-0 left-0 z-50 w-[280px] flex-col border-r border-border/70 bg-sidebar/95 backdrop-blur",
+          "md:sticky md:top-0 md:z-auto md:flex md:h-screen md:w-72 md:flex-shrink-0",
+          isOpen ? "flex" : "hidden md:flex",
         )}
       >
-        {/* Mobile header with close button */}
-        <div className="flex items-center justify-between border-b border-border/70 px-4 py-3 xl:hidden">
-          <Link href="/" className="flex items-center gap-2" onClick={close}>
-            <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <Sparkles className="size-4" />
-            </span>
-            <span className="text-lg font-semibold tracking-tight">FeelAI</span>
-          </Link>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={close}
-            aria-label="Close menu"
-          >
-            <X className="size-4" />
-          </Button>
+        <div className="border-b border-border/70 px-5 py-5">
+          <div className="flex items-center justify-between gap-3">
+            <Link href="/" className="flex items-center gap-3" onClick={close}>
+              <span className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_14px_24px_-20px_rgba(0,0,0,0.65)]">
+                <Sparkles className="size-4" />
+              </span>
+              <div>
+                <span className="block text-lg font-semibold tracking-tight">
+                  FeelAI
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  AI companions
+                </span>
+              </div>
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={close}
+              aria-label="Close menu"
+              className="md:hidden"
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
         </div>
 
-        {/* Nav items — flex-1 so footer is pushed to bottom */}
-        <div className="flex-1 overflow-y-auto px-3 py-4">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-4">
           <div className="space-y-1">
             {primaryItems.map((item) => {
               const Icon = item.icon;
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname?.startsWith(item.href);
+
               if (item.requiresAuth) {
                 return (
                   <OpenAuthModalButton
                     key={item.label}
-                    className="w-full justify-start gap-2"
+                    className={cn(
+                      "w-full justify-start gap-2.5 rounded-3xl px-4 py-6 text-base cursor-pointer",
+                      isActive &&
+                        "bg-primary text-primary-foreground hover:bg-primary/85",
+                    )}
                     onClick={close}
                     returnTo={item.returnTo}
-                    variant="ghost"
+                    variant={isActive ? "default" : "ghost"}
                   >
                     <Icon className="size-4" />
                     {item.label}
@@ -110,8 +125,8 @@ export function PublicSidebar() {
                 <Button
                   key={item.label}
                   asChild
-                  variant={item.active ? "default" : "ghost"}
-                  className="w-full justify-start gap-2"
+                  variant={isActive ? "default" : "ghost"}
+                  className="w-full justify-start gap-2.5 rounded-3xl px-4 py-6 text-base cursor-pointer"
                   onClick={close}
                 >
                   <Link href={item.href}>
@@ -122,29 +137,47 @@ export function PublicSidebar() {
               );
             })}
           </div>
-        </div>
 
-        {/* Footer — dark mode info + links pinned to bottom */}
-        <div className="space-y-3 border-t border-border/70 px-4 py-4">
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <Link
-              href="/privacy"
-              className="transition-colors hover:text-foreground"
-            >
-              Privacy
-            </Link>
-            <Link
-              href="/terms"
-              className="transition-colors hover:text-foreground"
-            >
-              Terms
-            </Link>
-            <Link
-              href="/contact"
-              className="transition-colors hover:text-foreground"
-            >
-              Contact
-            </Link>
+          <div className="mt-5">
+            <PublicBillingActions variant="sidebar" />
+          </div>
+
+          <div className="mt-auto space-y-4 pt-6">
+            <div className="flex items-center justify-between rounded-3xl border border-border/70 bg-card/60 px-4 py-3 shadow-[0_14px_24px_-24px_rgba(0,0,0,0.55)]">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <SunMoon className="h-4 w-4" />
+                <span>Theme</span>
+              </div>
+              <ThemeToggle />
+            </div>
+
+            <div className="rounded-3xl border border-border/70 bg-card/50 p-1 shadow-[0_18px_32px_-26px_rgba(0,0,0,0.55)]">
+              <div className="grid grid-cols-3 gap-1">
+                {Object.entries(PUBLIC_SEGMENTS).map(([segment, tab]) => {
+                  const isActive = segment === activeSegment;
+                  return (
+                    <Button
+                      key={segment}
+                      asChild
+                      variant={isActive ? "default" : "ghost"}
+                      size="sm"
+                      className={cn(
+                        "h-11 rounded-[1.1rem] px-3",
+                        !isActive && "text-muted-foreground",
+                      )}
+                    >
+                      <Link href={tab.href} onClick={close}>
+                        {tab.label}
+                      </Link>
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="border-t border-border/70 pt-4">
+              <PublicHeaderAccountMenu placement="sidebar" />
+            </div>
           </div>
         </div>
       </aside>

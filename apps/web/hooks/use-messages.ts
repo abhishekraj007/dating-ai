@@ -129,12 +129,15 @@ export function useMessages(threadId: string | undefined) {
     }
   }, [status, loadMore]);
 
+  const isAITyping = messages.some((m) => m.isStreaming);
+
   return {
     messages,
     isLoading: status === "LoadingFirstPage",
     isLoadingMore: status === "LoadingMore",
     hasMore: status === "CanLoadMore",
     loadMore: handleLoadMore,
+    isAITyping,
   };
 }
 

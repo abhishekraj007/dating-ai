@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useConvexAuth } from "convex/react";
-import { ChevronDown, LogOut, Settings } from "lucide-react";
+import { useConvexAuth, useQuery } from "convex/react";
+import { ChevronDown, FileText, LogOut, Settings } from "lucide-react";
+import { api } from "@dating-ai/backend/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { OpenAuthModalButton } from "@/components/auth/open-auth-modal-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,8 +15,23 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+
+const policyLinks = [
+  {
+    label: "Privacy Policy",
+    href: "/privacy",
+  },
+  {
+    label: "Terms of Service",
+    href: "/terms",
+  },
+];
 
 function getUserLabel(
   session: ReturnType<typeof authClient.useSession>["data"],
@@ -42,44 +58,88 @@ function getUserLabel(
   return { title, subtitle, initials };
 }
 
-export function PublicHeaderAccountMenu() {
+export function PublicHeaderAccountMenu({
+  placement = "header",
+}: {
+  placement?: "header" | "sidebar";
+}) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { data: session, isPending } = authClient.useSession();
+  const userData = useQuery(api.user.fetchUserAndProfile);
   const [isSigningOut, startSignOut] = useTransition();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const isSidebar = placement === "sidebar";
+
   if (!mounted || isLoading || isPending) {
     return (
-      <Button disabled variant="outline">
+      <Button
+        disabled
+        variant="outline"
+        className={cn(isSidebar && "h-12 w-full justify-start rounded-3xl")}
+      >
         Account
       </Button>
     );
   }
 
   if (!isAuthenticated) {
-    return <OpenAuthModalButton variant="outline">Login</OpenAuthModalButton>;
+    return (
+      <OpenAuthModalButton
+        variant="outline"
+        className={cn(
+          isSidebar &&
+            "h-12 w-full justify-center rounded-3xl bg-primary text-primary-foreground hover:bg-primary/85",
+        )}
+      >
+        Login
+      </OpenAuthModalButton>
+    );
   }
 
   const user = getUserLabel(session);
+  const sidebarSubtitle = userData?.profile?.isPremium
+    ? "Premium Member"
+    : "Free Plan";
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className="gap-2 rounded-full pl-1.5 pr-2" variant="outline">
-          <Avatar size="sm">
-            {session?.user.image ? (
-              <AvatarImage alt={user.title} src={session.user.image} />
-            ) : null}
-            <AvatarFallback>{user.initials}</AvatarFallback>
-          </Avatar>
-          <span className="hidden max-w-28 truncate sm:inline-block">
-            {user.title}
-          </span>
+        <Button
+          className={cn(
+            "gap-2 rounded-full pl-1.5 pr-2",
+            isSidebar && "h-auto w-full justify-between rounded-3xl px-3 py-3",
+          )}
+          variant="outline"
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar size="sm">
+              {session?.user.image ? (
+                <AvatarImage alt={user.title} src={session.user.image} />
+              ) : null}
+              <AvatarFallback>{user.initials}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 text-left">
+              <span
+                className={cn(
+                  "hidden max-w-28 truncate sm:inline-block",
+                  isSidebar && "block max-w-full text-sm font-medium",
+                )}
+              >
+                {user.title}
+              </span>
+              {isSidebar ? (
+                <div className="text-xs text-muted-foreground">
+                  {sidebarSubtitle}
+                </div>
+              ) : null}
+            </div>
+          </div>
           <ChevronDown className="size-4 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
@@ -97,6 +157,22 @@ export function PublicHeaderAccountMenu() {
           <Settings className="size-4" />
           Settings
         </DropdownMenuItem>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <FileText className="size-4" />
+            Policies
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            {policyLinks.map((link) => (
+              <DropdownMenuItem
+                key={link.href}
+                onSelect={() => router.push(link.href)}
+              >
+                {link.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuItem
           disabled={isSigningOut}
           onSelect={() => {
