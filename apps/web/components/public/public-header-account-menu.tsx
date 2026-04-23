@@ -113,7 +113,7 @@ export function PublicHeaderAccountMenu({
         <Button
           className={cn(
             "gap-2 rounded-full pl-1.5 pr-2",
-            isSidebar && "h-auto w-full justify-between rounded-3xl px-3 py-3",
+            isSidebar && "h-auto w-full justify-between rounded-full px-3 py-3",
           )}
           variant="outline"
         >

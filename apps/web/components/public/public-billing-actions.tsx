@@ -37,12 +37,12 @@ export function PublicBillingActions({
     : "flex items-center gap-1.5";
 
   const creditsButtonClassName = isSidebar
-    ? "h-11 w-full justify-between rounded-3xl"
-    : "h-9 rounded-full px-2.5 text-xs font-medium shadow-[0_12px_24px_-24px_rgba(0,0,0,0.55)]";
+    ? "h-11 w-full justify-between rounded-3xl cursor-pointer"
+    : "h-9 rounded-full px-2.5 text-xs font-medium shadow-[0_12px_24px_-24px_rgba(0,0,0,0.55)] cursor-pointer";
 
   const premiumButtonClassName = isSidebar
-    ? "h-11 w-full justify-between rounded-3xl"
-    : "h-9 rounded-full px-2.5 text-xs font-medium shadow-[0_12px_24px_-24px_rgba(0,0,0,0.55)]";
+    ? "h-11 w-full justify-between rounded-3xl cursor-pointer"
+    : "h-9 rounded-full px-2.5 text-xs font-medium shadow-[0_12px_24px_-24px_rgba(0,0,0,0.55)] cursor-pointer";
 
   return (
     <>
