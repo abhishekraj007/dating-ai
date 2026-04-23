@@ -1,4 +1,4 @@
-import { PUBLIC_SEGMENTS, type PublicSegment } from "@/lib/public-segments";
+import { getSegmentConfig, type PublicSegment } from "@/lib/public-segments";
 
 type PublicProfileStructuredData = {
   name: string;
@@ -89,7 +89,7 @@ export function buildCategoryStructuredData(
   siteUrl: string,
   segment: PublicSegment,
 ) {
-  const config = PUBLIC_SEGMENTS[segment];
+  const config = getSegmentConfig(segment);
   const categoryUrl = `${siteUrl}${config.href}`;
 
   return [
@@ -128,7 +128,7 @@ export function buildPublicProfileStructuredData(
   profileUrl: string,
   profile: PublicProfileStructuredData,
 ) {
-  const config = PUBLIC_SEGMENTS[segment];
+  const config = getSegmentConfig(segment);
 
   return [
     {

@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OpenAuthModalButton } from "@/components/auth/open-auth-modal-button";
-import { PUBLIC_SEGMENTS, type PublicSegment } from "@/lib/public-segments";
+import { PremiumProfileImage } from "@/components/public/premium-profile-image";
+import { getSegmentConfig, type PublicSegment } from "@/lib/public-segments";
 
 type PublicProfileDetails = {
   _id: string;
@@ -31,7 +32,7 @@ export function PublicProfilePage({
   segment,
   profile,
 }: PublicProfilePageProps) {
-  const config = PUBLIC_SEGMENTS[segment];
+  const config = getSegmentConfig(segment);
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-8">
@@ -62,7 +63,7 @@ export function PublicProfilePage({
                   priority
                   sizes="(max-width: 1024px) 100vw, 360px"
                   src={profile.avatarUrl}
-                  unoptimized
+                  //   unoptimized
                 />
               ) : (
                 <div className="flex h-full items-center justify-center bg-muted text-6xl font-semibold text-muted-foreground">
@@ -74,12 +75,8 @@ export function PublicProfilePage({
 
           <div className="flex flex-col gap-5">
             <div className="space-y-3">
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">AI Companion</Badge>
-                <Badge variant="secondary">{config.label}</Badge>
-              </div>
               <div>
-                <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+                <h1 className="text-4xl text-pretty font-semibold tracking-tight md:text-5xl">
                   {profile.name}
                   {profile.age ? (
                     <span className="ml-2 text-muted-foreground">
@@ -107,14 +104,14 @@ export function PublicProfilePage({
             </div>
 
             {profile.bio ? (
-              <p className="max-w-3xl text-base leading-7 text-muted-foreground md:text-lg">
+              <p className="max-w-3xl text-base text-pretty  text-muted-foreground">
                 {profile.bio}
               </p>
             ) : null}
 
             <div className="flex flex-wrap gap-3">
               <OpenAuthModalButton className="min-w-40" size="lg">
-                Continue with Google to Chat
+                Chat
               </OpenAuthModalButton>
               <OpenAuthModalButton size="lg" variant="outline">
                 Save this companion
@@ -168,20 +165,19 @@ export function PublicProfilePage({
 
       {profile.profileImageUrls && profile.profileImageUrls.length > 0 ? (
         <section className="space-y-4 pb-4">
-          <h2 className="text-2xl font-semibold tracking-tight">More photos</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">Gallery</h2>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {profile.profileImageUrls.map((url, index) => (
               <div
                 key={url}
                 className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-border/70 bg-card"
               >
-                <Image
+                <PremiumProfileImage
                   alt={`${profile.name} photo ${index + 1}`}
-                  className="object-cover"
-                  fill
+                  fallbackText={profile.name[0]}
+                  imageUrl={url}
+                  profileName={profile.name}
                   sizes="(max-width: 768px) 100vw, 33vw"
-                  src={url}
-                  unoptimized
                 />
               </div>
             ))}

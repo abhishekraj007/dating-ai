@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PublicPageContent } from "@/components/public/public-page-content";
 import { getSiteUrl } from "@/lib/site";
-import { PUBLIC_SEGMENTS } from "@/lib/public-segments";
+import { getSegmentConfig } from "@/lib/public-segments";
 import { buildCategoryStructuredData } from "@/lib/public-structured-data";
 
 export const revalidate = 60;
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = getSiteUrl();
-  const config = PUBLIC_SEGMENTS.guys;
+  const config = getSegmentConfig("guys");
 
   return {
     title: config.metaTitle,

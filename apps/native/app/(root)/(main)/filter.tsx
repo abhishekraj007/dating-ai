@@ -14,7 +14,8 @@ import { X } from "lucide-react-native";
 import { useState, useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  useUserPreferences,
+  DEFAULT_USER_PREFERENCES,
+  useEffectiveUserPreferences,
   useSavePreferences,
   useFilterOptions,
   type GenderPreference,
@@ -29,14 +30,19 @@ export default function FilterScreen() {
   const foregroundColor = useThemeColor("foreground");
   const borderColor = useThemeColor("border");
 
-  const { preferences, isLoading: isLoadingPreferences } = useUserPreferences();
+  const { preferences, isLoading: isLoadingPreferences } =
+    useEffectiveUserPreferences();
   const { options, isLoading: isLoadingOptions } = useFilterOptions();
   const { savePreferences } = useSavePreferences();
 
   // Local state for filter values
-  const [ageRange, setAgeRange] = useState<[number, number]>([18, 35]);
-  const [genderPreference, setGenderPreference] =
-    useState<GenderPreference>("female");
+  const [ageRange, setAgeRange] = useState<[number, number]>([
+    DEFAULT_USER_PREFERENCES.ageMin,
+    DEFAULT_USER_PREFERENCES.ageMax,
+  ]);
+  const [genderPreference, setGenderPreference] = useState<GenderPreference>(
+    DEFAULT_USER_PREFERENCES.genderPreference,
+  );
   const [selectedZodiacs, setSelectedZodiacs] = useState<string[]>([]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -68,8 +74,11 @@ export default function FilterScreen() {
   };
 
   const handleReset = () => {
-    setAgeRange([18, 35]);
-    setGenderPreference("female");
+    setAgeRange([
+      DEFAULT_USER_PREFERENCES.ageMin,
+      DEFAULT_USER_PREFERENCES.ageMax,
+    ]);
+    setGenderPreference(DEFAULT_USER_PREFERENCES.genderPreference);
     setSelectedZodiacs([]);
     setSelectedInterests([]);
   };

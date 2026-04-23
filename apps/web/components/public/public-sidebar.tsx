@@ -8,9 +8,16 @@ import { PublicBillingActions } from "@/components/public/public-billing-actions
 import { PublicHeaderAccountMenu } from "@/components/public/public-header-account-menu";
 import { ThemeToggle } from "@/components/public/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { PUBLIC_SEGMENTS, segmentFromPathname } from "@/lib/public-segments";
+import {
+  PUBLIC_SEGMENTS,
+  genderPreferenceFromSegment,
+  segmentFromPathname,
+} from "@/lib/public-segments";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/public/sidebar-context";
+import { useDiscoverPreferences } from "@/hooks/use-discover-preferences";
+import { useConvexAuth } from "convex/react";
+import Image from "next/image";
 
 const primaryItems = [
   { label: "Home", href: "/", icon: Home },
@@ -46,8 +53,20 @@ const primaryItems = [
 
 export function PublicSidebar() {
   const pathname = usePathname();
-  const activeSegment = segmentFromPathname(pathname);
+  const { preferredSegment, setGenderPreference } = useDiscoverPreferences();
+  const activeSegment =
+    pathname === "/" ? preferredSegment : segmentFromPathname(pathname);
   const { isOpen, close } = useSidebar();
+
+  const { isAuthenticated, isLoading } = useConvexAuth();
+
+  const handleSegmentClick = (segment: string) => {
+    const nextGenderPreference = genderPreferenceFromSegment(segment as any);
+
+    if (nextGenderPreference) {
+      void setGenderPreference(nextGenderPreference);
+    }
+  };
 
   return (
     <>
@@ -66,20 +85,17 @@ export function PublicSidebar() {
           isOpen ? "flex" : "hidden md:flex",
         )}
       >
-        <div className="border-b border-border/70 px-5 py-5">
+        <div className="border-b border-border/70 px-5 py-2">
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="flex items-center gap-3" onClick={close}>
-              <span className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_14px_24px_-20px_rgba(0,0,0,0.65)]">
-                <Sparkles className="size-4" />
-              </span>
-              <div>
-                <span className="block text-lg font-semibold tracking-tight">
-                  FeelAI
-                </span>
-                <span className="block text-xs text-muted-foreground">
-                  AI companions
-                </span>
-              </div>
+              <Image
+                src="/logo-2.png"
+                alt="FeelAI logo"
+                width={64}
+                height={64}
+                objectFit="contain"
+              />
+              <span className="text-lg font-bold italic">FEELAI</span>
             </Link>
             <Button
               variant="ghost"
@@ -138,12 +154,14 @@ export function PublicSidebar() {
             })}
           </div>
 
-          <div className="mt-5">
-            <PublicBillingActions variant="sidebar" />
-          </div>
+          {!isLoading && isAuthenticated ? (
+            <div className="mt-5">
+              <PublicBillingActions variant="sidebar" />
+            </div>
+          ) : null}
 
           <div className="mt-auto space-y-4 pt-6">
-            <div className="flex items-center justify-between rounded-3xl border border-border/70 bg-card/60 px-4 py-3 shadow-[0_14px_24px_-24px_rgba(0,0,0,0.55)]">
+            <div className="flex items-center justify-between rounded-4xl border border-border/70 bg-card/60 px-4 py-2.5 shadow-[0_14px_24px_-24px_rgba(0,0,0,0.55)]">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <SunMoon className="h-4 w-4" />
                 <span>Theme</span>
@@ -151,8 +169,15 @@ export function PublicSidebar() {
               <ThemeToggle />
             </div>
 
-            <div className="rounded-3xl border border-border/70 bg-card/50 p-1 shadow-[0_18px_32px_-26px_rgba(0,0,0,0.55)]">
-              <div className="grid grid-cols-3 gap-1">
+            <div className="rounded-4xl border border-border/70 bg-card/50 p-1 shadow-[0_18px_32px_-26px_rgba(0,0,0,0.55)]">
+              <div
+                className={cn(
+                  "grid gap-1",
+                  Object.keys(PUBLIC_SEGMENTS).length === 2
+                    ? "grid-cols-2"
+                    : "grid-cols-3",
+                )}
+              >
                 {Object.entries(PUBLIC_SEGMENTS).map(([segment, tab]) => {
                   const isActive = segment === activeSegment;
                   return (
@@ -166,7 +191,13 @@ export function PublicSidebar() {
                         !isActive && "text-muted-foreground",
                       )}
                     >
-                      <Link href={tab.href} onClick={close}>
+                      <Link
+                        href={tab.href}
+                        onClick={() => {
+                          handleSegmentClick(segment);
+                          close();
+                        }}
+                      >
                         {tab.label}
                       </Link>
                     </Button>

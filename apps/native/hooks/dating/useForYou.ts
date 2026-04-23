@@ -38,6 +38,20 @@ export interface ForYouProfile {
   avatarUrl: string | null;
 }
 
+export function resolveUserPreferences(
+  preferences: UserPreferences | null | undefined,
+): UserPreferences {
+  return {
+    genderPreference:
+      preferences?.genderPreference ??
+      DEFAULT_USER_PREFERENCES.genderPreference,
+    ageMin: preferences?.ageMin ?? DEFAULT_USER_PREFERENCES.ageMin,
+    ageMax: preferences?.ageMax ?? DEFAULT_USER_PREFERENCES.ageMax,
+    zodiacPreferences: [...(preferences?.zodiacPreferences ?? [])],
+    interestPreferences: [...(preferences?.interestPreferences ?? [])],
+  };
+}
+
 type AppPlatform = "web" | "ios" | "android";
 
 function getCurrentPlatform(): AppPlatform {
@@ -54,15 +68,12 @@ function getCurrentPlatform(): AppPlatform {
  */
 export function useForYouProfiles(initialNumItems: number = 20) {
   const platform = getCurrentPlatform();
-  const { preferences } = useUserPreferences();
-  const genderPreference =
-    preferences?.genderPreference ?? DEFAULT_USER_PREFERENCES.genderPreference;
-  const ageMin = preferences?.ageMin ?? DEFAULT_USER_PREFERENCES.ageMin;
-  const ageMax = preferences?.ageMax ?? DEFAULT_USER_PREFERENCES.ageMax;
-  const zodiacPreferences = [...(preferences?.zodiacPreferences ?? [])].sort();
-  const interestPreferences = [
-    ...(preferences?.interestPreferences ?? []),
-  ].sort();
+  const { preferences } = useEffectiveUserPreferences();
+  const genderPreference = preferences.genderPreference;
+  const ageMin = preferences.ageMin;
+  const ageMax = preferences.ageMax;
+  const zodiacPreferences = [...preferences.zodiacPreferences].sort();
+  const interestPreferences = [...preferences.interestPreferences].sort();
   const filterSignature = JSON.stringify({
     genderPreference,
     ageMin,
@@ -203,6 +214,17 @@ export function useUserPreferences() {
     isLoading: isAuthenticated
       ? convexPreferences === undefined
       : isLoadingLocal,
+  };
+}
+
+export function useEffectiveUserPreferences() {
+  const { preferences, isLoading } = useUserPreferences();
+
+  return {
+    preferences: resolveUserPreferences(preferences),
+    actualPreferences: preferences,
+    hasStoredPreferences: preferences !== null,
+    isLoading,
   };
 }
 

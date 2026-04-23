@@ -1,4 +1,4 @@
-import { PUBLIC_SEGMENTS, type PublicSegment } from "@/lib/public-segments";
+import { getSegmentConfig, type PublicSegment } from "@/lib/public-segments";
 
 export function normalizePublicUsername(value: string) {
   return (
@@ -18,5 +18,7 @@ export function buildPublicProfileHref(
   username: string | null | undefined,
 ) {
   const profileSlug = buildPublicProfileSlug(username);
-  return profileSlug ? `${PUBLIC_SEGMENTS[segment].href}/${profileSlug}` : null;
+  return profileSlug
+    ? `${getSegmentConfig(segment).href}/${profileSlug}`
+    : null;
 }

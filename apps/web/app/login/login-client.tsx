@@ -48,6 +48,7 @@ export function LoginClient({ redirectTo }: LoginClientProps) {
         <CardContent className="space-y-4">
           <GoogleSignInButton
             className="h-12 w-full"
+            colorMode="inverted"
             returnTo={redirectTo}
             variant="outline"
           />

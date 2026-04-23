@@ -2,11 +2,13 @@
 
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
 
 type GoogleSignInButtonProps = React.ComponentProps<typeof Button> & {
   returnTo: string;
   label?: string;
+  colorMode?: "default" | "inverted";
 };
 
 function normalizeReturnTo(returnTo: string) {
@@ -20,7 +22,9 @@ function normalizeReturnTo(returnTo: string) {
 export function GoogleSignInButton({
   returnTo,
   label = "Continue with Google",
+  colorMode = "default",
   children,
+  className,
   ...props
 }: GoogleSignInButtonProps) {
   const handleGoogleSignIn = async () => {
@@ -41,8 +45,16 @@ export function GoogleSignInButton({
   };
 
   return (
-    <Button {...props} onClick={handleGoogleSignIn}>
-      <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
+    <Button
+      {...props}
+      className={cn(
+        colorMode === "inverted" &&
+          "border-neutral-900 bg-neutral-950 text-white shadow-[0_18px_40px_-32px_rgba(0,0,0,0.38)] hover:bg-neutral-900 hover:text-white dark:border-white/12 dark:bg-white dark:text-neutral-950 dark:hover:bg-white/92 dark:hover:text-neutral-950",
+        className,
+      )}
+      onClick={handleGoogleSignIn}
+    >
+      <svg className="mr-2 h-5 w-5 shrink-0" viewBox="0 0 24 24">
         <path
           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
           fill="#4285F4"

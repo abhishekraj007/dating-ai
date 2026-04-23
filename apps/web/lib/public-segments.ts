@@ -1,4 +1,11 @@
-export type PublicSegment = "girls" | "anime" | "guys";
+export type PublicSegment = "girls" | "guys" | "anime";
+export type DiscoverGenderPreference = "female" | "male" | "both";
+
+/**
+ * Feature flag — set to true to enable the Anime section across
+ * tabs, sidebar, header, the /ai-anime route, and the sitemap.
+ */
+export const ANIME_ENABLED = false;
 
 type SegmentConfig = {
   label: string;
@@ -10,11 +17,11 @@ type SegmentConfig = {
   metaDescription: string;
 };
 
-export const PUBLIC_SEGMENTS: Record<PublicSegment, SegmentConfig> = {
+const ALL_SEGMENTS: Record<PublicSegment, SegmentConfig> = {
   girls: {
     label: "Girls",
     href: "/ai-girlfriend",
-    heroTitle: "Meet AI girlfriends built for immersive dating and chat.",
+    heroTitle: "Meet AI Women built for immersive dating and chat.",
     heroDescription:
       "Explore AI girlfriends designed for flirting, companionship, roleplay, and always-on conversation.",
     sectionTitle: "Featured AI girlfriends",
@@ -25,8 +32,7 @@ export const PUBLIC_SEGMENTS: Record<PublicSegment, SegmentConfig> = {
   guys: {
     label: "Guys",
     href: "/ai-boyfriends",
-    heroTitle:
-      "Discover AI boyfriends for companionship, dating, and roleplay.",
+    heroTitle: "Discover AI Men built for companionship and dating.",
     heroDescription:
       "Browse AI boyfriend profiles created for emotional connection, flirty chat, and always-available companionship.",
     sectionTitle: "Featured AI boyfriends",
@@ -47,14 +53,45 @@ export const PUBLIC_SEGMENTS: Record<PublicSegment, SegmentConfig> = {
   },
 };
 
+/** Active segments — derived from ANIME_ENABLED. Header, sidebar, and sitemap iterate this. */
+export const PUBLIC_SEGMENTS: Partial<Record<PublicSegment, SegmentConfig>> =
+  ANIME_ENABLED
+    ? ALL_SEGMENTS
+    : { girls: ALL_SEGMENTS.girls, guys: ALL_SEGMENTS.guys };
+
+/** Convenience accessor that always returns a config (fallback to girls). */
+export function getSegmentConfig(segment: PublicSegment): SegmentConfig {
+  return ALL_SEGMENTS[segment];
+}
+
 export function segmentFromPathname(pathname: string): PublicSegment {
   if (pathname.startsWith("/ai-boyfriends")) {
     return "guys";
   }
 
-  if (pathname.startsWith("/ai-anime")) {
+  if (ANIME_ENABLED && pathname.startsWith("/ai-anime")) {
     return "anime";
   }
 
   return "girls";
+}
+
+export function segmentFromGenderPreference(
+  genderPreference: DiscoverGenderPreference | null | undefined,
+): PublicSegment {
+  return genderPreference === "male" ? "guys" : "girls";
+}
+
+export function genderPreferenceFromSegment(
+  segment: PublicSegment,
+): DiscoverGenderPreference | null {
+  if (segment === "girls") {
+    return "female";
+  }
+
+  if (segment === "guys") {
+    return "male";
+  }
+
+  return null;
 }

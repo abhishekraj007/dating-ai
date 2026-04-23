@@ -1,7 +1,7 @@
 import { useQuery, usePaginatedQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend";
 import { useConvexAuth } from "convex/react";
-import { DEFAULT_USER_PREFERENCES, useUserPreferences } from "./useForYou";
+import { useEffectiveUserPreferences } from "./useForYou";
 
 type Gender = "female" | "male";
 
@@ -51,16 +51,13 @@ export function useAIProfiles(
  */
 export function useExploreProfiles(initialNumItems: number = 20) {
   const { isAuthenticated } = useConvexAuth();
-  const { preferences } = useUserPreferences();
+  const { preferences } = useEffectiveUserPreferences();
   const platform = getCurrentPlatform();
-  const genderPreference =
-    preferences?.genderPreference ?? DEFAULT_USER_PREFERENCES.genderPreference;
-  const ageMin = preferences?.ageMin ?? DEFAULT_USER_PREFERENCES.ageMin;
-  const ageMax = preferences?.ageMax ?? DEFAULT_USER_PREFERENCES.ageMax;
-  const zodiacPreferences = [...(preferences?.zodiacPreferences ?? [])].sort();
-  const interestPreferences = [
-    ...(preferences?.interestPreferences ?? []),
-  ].sort();
+  const genderPreference = preferences.genderPreference;
+  const ageMin = preferences.ageMin;
+  const ageMax = preferences.ageMax;
+  const zodiacPreferences = [...preferences.zodiacPreferences].sort();
+  const interestPreferences = [...preferences.interestPreferences].sort();
 
   const viewerKind = isAuthenticated ? "authenticated" : "anonymous";
 
