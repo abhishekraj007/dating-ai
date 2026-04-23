@@ -77,6 +77,8 @@ export function CharacterGrid({
     api.features.ai.queries.getPublicProfilesPaginated,
     {
       genderPreference,
+      interestPreferences: effectivePreferences.interestPreferences,
+      ethnicityPreferences: effectivePreferences.ethnicityPreferences,
     },
     { initialNumItems: PAGE_SIZE },
   );

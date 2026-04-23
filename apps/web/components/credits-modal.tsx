@@ -139,7 +139,7 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto w-[80vw]">
         <DialogHeader>
           <DialogTitle className="text-2xl">Buy credits</DialogTitle>
           <DialogDescription>
@@ -201,7 +201,7 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
                       <Button
                         onClick={() => handleCheckout(item.product.id)}
                         disabled={loadingProductId === item.product.id}
-                        className="min-w-24"
+                        className="min-w-24 cursor-pointer"
                       >
                         {loadingProductId === item.product.id ? (
                           <Spinner className="h-4 w-4" />

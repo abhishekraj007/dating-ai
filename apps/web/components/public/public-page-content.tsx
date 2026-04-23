@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { CharacterGrid } from "@/components/public/character-grid";
 import { DiscoverPreferenceDialog } from "@/components/public/discover-preference-dialog";
+import { PublicFilterBar } from "@/components/public/public-filter-bar";
 import { getSegmentConfig, type PublicSegment } from "@/lib/public-segments";
 
 const heroBackgrounds: Record<PublicSegment, string> = {
@@ -59,11 +60,7 @@ export function PublicPageContent({
       </section>
 
       <section className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground md:text-base">
-            Add seach and filter here
-          </p>
-        </div>
+        <PublicFilterBar />
         <CharacterGrid segment={segment} variant={variant} />
       </section>
     </main>

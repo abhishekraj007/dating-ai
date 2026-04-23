@@ -1,6 +1,7 @@
 import { query, mutation, internalMutation } from "../../_generated/server";
 import { v } from "convex/values";
 import { ZODIAC_SIGNS, INTERESTS, INTEREST_EMOJIS } from "../../lib/constants";
+import { ETHNICITIES } from "../ai/profileGenerationData";
 
 // Age range presets
 const AGE_RANGES = [
@@ -68,6 +69,10 @@ export const getFilterOptions = query({
         value: i.value,
         label: i.label,
         emoji: i.emoji || "",
+      })),
+      ethnicities: ETHNICITIES.map((ethnicity) => ({
+        value: ethnicity,
+        label: ethnicity,
       })),
     };
   },

@@ -6,6 +6,11 @@ import { listUIMessages, syncStreams, vStreamArgs } from "@convex-dev/agent";
 import { r2 } from "../../uploads";
 import { authComponent } from "../../lib/betterAuth";
 import { buildAiProfileAvatarUrl } from "../../lib/aiProfileAvatar";
+import {
+  ETHNICITIES,
+  ethnicityMatchesFilters,
+  type Ethnicity,
+} from "./profileGenerationData";
 
 /**
  * Get all active AI profiles with optional gender filter.
@@ -157,6 +162,7 @@ export const getPublicProfilesPaginated = query({
     ageMax: v.optional(v.number()),
     zodiacPreferences: v.optional(v.array(v.string())),
     interestPreferences: v.optional(v.array(v.string())),
+    ethnicityPreferences: v.optional(v.array(v.string())),
     paginationOpts: paginationOptsValidator,
   },
   handler: async (
@@ -167,9 +173,15 @@ export const getPublicProfilesPaginated = query({
       ageMax,
       zodiacPreferences,
       interestPreferences,
+      ethnicityPreferences,
       paginationOpts,
     },
   ) => {
+    const normalizedEthnicityPreferences = (ethnicityPreferences ?? []).filter(
+      (ethnicity): ethnicity is Ethnicity =>
+        (ETHNICITIES as readonly string[]).includes(ethnicity),
+    );
+
     const profilesQuery = ctx.db
       .query("aiProfiles")
       .withIndex("by_status_and_gender", (q) => {
@@ -212,6 +224,16 @@ export const getPublicProfilesPaginated = query({
             profile.interests &&
             !profile.interests.some((interest) =>
               interestPreferences.includes(interest),
+            )
+          ) {
+            return false;
+          }
+
+          if (
+            normalizedEthnicityPreferences.length > 0 &&
+            !ethnicityMatchesFilters(
+              profile.ethnicity as Ethnicity | undefined,
+              normalizedEthnicityPreferences,
             )
           ) {
             return false;
