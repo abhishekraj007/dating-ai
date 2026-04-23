@@ -33,18 +33,7 @@ export const getUserPreferences = query({
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .unique();
 
-    // Return default preferences if none exist
-    if (!preferences) {
-      return {
-        genderPreference: "female" as const,
-        ageMin: 18,
-        ageMax: 35,
-        zodiacPreferences: [],
-        interestPreferences: [],
-      };
-    }
-
-    return preferences;
+    return preferences ?? null;
   },
 });
 
@@ -581,9 +570,9 @@ export const getExploreProfilesPaginated = query({
   ) => {
     const user = await authComponent.safeGetAuthUser(ctx);
 
-    let genderPreference: "female" | "male" | "both" = "female";
-    let ageMin = 18;
-    let ageMax = 99;
+    let genderPreference: "female" | "male" | "both" | undefined;
+    let ageMin: number | undefined;
+    let ageMax: number | undefined;
     let zodiacPreferences: string[] = [];
     let interestPreferences: string[] = [];
     let userId: string | null = null;
@@ -611,7 +600,7 @@ export const getExploreProfilesPaginated = query({
     if (overrideInterests) interestPreferences = overrideInterests;
 
     const dbQuery =
-      genderPreference !== "both"
+      genderPreference && genderPreference !== "both"
         ? ctx.db
             .query("aiProfiles")
             .withIndex("by_status_and_gender", (q) =>
@@ -627,8 +616,10 @@ export const getExploreProfilesPaginated = query({
 
     const filteredPage = result.page.filter((profile) => {
       if (user && profile.createdByUserId === userId) return false;
-      if (profile.age && (profile.age < ageMin || profile.age > ageMax))
-        return false;
+      if (profile.age !== undefined && profile.age !== null) {
+        if (ageMin !== undefined && profile.age < ageMin) return false;
+        if (ageMax !== undefined && profile.age > ageMax) return false;
+      }
       if (
         platform &&
         profile.visibleOn &&

@@ -3,7 +3,7 @@ import { useConvexAuth, useMutation } from "convex/react";
 import { useSegments } from "expo-router";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { useOnboardingStore } from "@/stores/onboarding-store";
-import { useSavePreferences } from "@/hooks/dating";
+import { DEFAULT_USER_PREFERENCES, useSavePreferences } from "@/hooks/dating";
 
 /**
  * Hook to sync onboarding preferences to backend after user logs in.
@@ -42,8 +42,8 @@ export function useSyncOnboardingPreferences() {
         // Save preferences to backend
         await savePreferences({
           genderPreference,
-          ageMin: 18,
-          ageMax: 35,
+          ageMin: DEFAULT_USER_PREFERENCES.ageMin,
+          ageMax: DEFAULT_USER_PREFERENCES.ageMax,
           zodiacPreferences: [],
           interestPreferences: [],
         });

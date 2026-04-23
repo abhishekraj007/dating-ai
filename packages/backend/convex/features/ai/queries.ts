@@ -90,6 +90,7 @@ export const getPublicProfiles = query({
       _id: v.id("aiProfiles"),
       _creationTime: v.number(),
       name: v.string(),
+      username: v.union(v.string(), v.null()),
       gender: v.union(v.literal("female"), v.literal("male")),
       age: v.union(v.number(), v.null()),
       avatarUrl: v.union(v.string(), v.null()),
@@ -131,6 +132,7 @@ export const getPublicProfiles = query({
           _id: profile._id,
           _creationTime: profile._creationTime,
           name: profile.name,
+          username: profile.username ?? null,
           gender: profile.gender,
           age: profile.age ?? null,
           avatarUrl: buildAiProfileAvatarUrl(
@@ -143,6 +145,150 @@ export const getPublicProfiles = query({
           zodiacSign: profile.zodiacSign ?? null,
         };
       });
+  },
+});
+
+export const getPublicProfilesPaginated = query({
+  args: {
+    genderPreference: v.optional(
+      v.union(v.literal("female"), v.literal("male"), v.literal("both")),
+    ),
+    ageMin: v.optional(v.number()),
+    ageMax: v.optional(v.number()),
+    zodiacPreferences: v.optional(v.array(v.string())),
+    interestPreferences: v.optional(v.array(v.string())),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (
+    ctx,
+    {
+      genderPreference,
+      ageMin,
+      ageMax,
+      zodiacPreferences,
+      interestPreferences,
+      paginationOpts,
+    },
+  ) => {
+    const profilesQuery = ctx.db
+      .query("aiProfiles")
+      .withIndex("by_status_and_gender", (q) => {
+        if (genderPreference && genderPreference !== "both") {
+          return q.eq("status", "active").eq("gender", genderPreference);
+        }
+        return q.eq("status", "active");
+      })
+      .order("desc");
+
+    const result = await profilesQuery.paginate(paginationOpts);
+
+    return {
+      ...result,
+      page: result.page
+        .filter((profile) => {
+          if (!profile.visibleOn || profile.visibleOn.length === 0) {
+            // Backward compatibility: if unset, assume visible on web.
+          } else if (!profile.visibleOn.includes("web")) {
+            return false;
+          }
+
+          if (profile.age !== undefined && profile.age !== null) {
+            if (ageMin !== undefined && profile.age < ageMin) return false;
+            if (ageMax !== undefined && profile.age > ageMax) return false;
+          }
+
+          if (
+            zodiacPreferences &&
+            zodiacPreferences.length > 0 &&
+            profile.zodiacSign &&
+            !zodiacPreferences.includes(profile.zodiacSign)
+          ) {
+            return false;
+          }
+
+          if (
+            interestPreferences &&
+            interestPreferences.length > 0 &&
+            profile.interests &&
+            !profile.interests.some((interest) =>
+              interestPreferences.includes(interest),
+            )
+          ) {
+            return false;
+          }
+
+          return true;
+        })
+        .map((profile) => {
+          const taglineSource =
+            profile.bio ??
+            profile.relationshipGoal ??
+            profile.occupation ??
+            profile.interests?.[0] ??
+            "Start a conversation and see where it goes.";
+
+          return {
+            _id: profile._id,
+            _creationTime: profile._creationTime,
+            name: profile.name,
+            username: profile.username ?? null,
+            gender: profile.gender,
+            age: profile.age ?? null,
+            avatarUrl: buildAiProfileAvatarUrl(
+              profile._id,
+              profile.avatarImageKey,
+            ),
+            tagline: taglineSource,
+            interests: profile.interests ?? [],
+            occupation: profile.occupation ?? null,
+            zodiacSign: profile.zodiacSign ?? null,
+          };
+        }),
+    };
+  },
+});
+
+export const getPublicProfileByUsername = query({
+  args: {
+    username: v.string(),
+  },
+  handler: async (ctx, { username }) => {
+    const normalizedUsername = username.trim().toLowerCase();
+    if (!normalizedUsername) {
+      return null;
+    }
+
+    const profile = await ctx.db
+      .query("aiProfiles")
+      .withIndex("by_username", (q) => q.eq("username", normalizedUsername))
+      .first();
+
+    if (!profile || profile.status !== "active") {
+      return null;
+    }
+
+    if (
+      profile.visibleOn &&
+      profile.visibleOn.length > 0 &&
+      !profile.visibleOn.includes("web")
+    ) {
+      return null;
+    }
+
+    const avatarUrl = buildAiProfileAvatarUrl(
+      profile._id,
+      profile.avatarImageKey,
+    );
+
+    const profileImageUrls = profile.profileImageKeys
+      ? await Promise.all(profile.profileImageKeys.map((key) => r2.getUrl(key)))
+      : [];
+
+    return {
+      ...profile,
+      avatarUrl,
+      profileImageUrls,
+    };
   },
 });
 

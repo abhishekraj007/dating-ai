@@ -429,7 +429,7 @@ export function AddCharacterDialog({
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-xl overflow-y-auto"
+        className="w-full md:w-[500px] md:max-w-[500px] overflow-y-auto"
         onPaste={handlePaste}
         onEscapeKeyDown={(event) => {
           if (shouldBlockEscapeClose) {

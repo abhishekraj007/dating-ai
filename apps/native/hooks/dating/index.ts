@@ -30,8 +30,10 @@ export type { ImageRequestOptions } from "./useImageRequest";
 export { useCredits, CREDIT_COSTS } from "./useCredits";
 export type { CreditAction } from "./useCredits";
 export {
+  DEFAULT_USER_PREFERENCES,
   useForYouProfiles,
   useUserPreferences,
+  useEffectiveUserPreferences,
   useSavePreferences,
   useProfileInteraction,
   useLikedProfiles,

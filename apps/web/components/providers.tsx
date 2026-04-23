@@ -3,6 +3,7 @@
 import { ConvexReactClient } from "convex/react";
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { authClient } from "@/lib/auth-client";
+import { AuthModalProvider } from "@/components/auth/auth-modal-provider";
 import { ThemeProvider } from "./theme-provider";
 import { Toaster } from "./ui/sonner";
 
@@ -17,7 +18,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
     >
       <ConvexBetterAuthProvider client={convex} authClient={authClient}>
-        {children}
+        <AuthModalProvider>{children}</AuthModalProvider>
       </ConvexBetterAuthProvider>
       <Toaster richColors />
     </ThemeProvider>

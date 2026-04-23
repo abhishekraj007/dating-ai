@@ -1,12 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
+import { OpenAuthModalButton } from "@/components/auth/open-auth-modal-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { buildPublicProfileHref } from "@/lib/public-profile-routes";
+import type { PublicSegment } from "@/lib/public-segments";
 
 export type PublicProfileCard = {
   _id: string;
   name: string;
+  username: string | null;
   age: number | null;
   avatarUrl: string | null;
   tagline: string;
@@ -16,19 +19,30 @@ export type PublicProfileCard = {
 };
 
 type CharacterCardProps = {
+  segment: PublicSegment;
   profile: PublicProfileCard;
   priority?: boolean;
   isNew?: boolean;
 };
 
 export function CharacterCard({
+  segment,
   profile,
   priority = false,
   isNew = false,
 }: CharacterCardProps) {
+  const profileHref = buildPublicProfileHref(segment, profile.username);
+
   return (
     <Card className="group border-border/70 bg-card/90 py-0 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-primary/35">
       <div className="relative aspect-[3/4] overflow-hidden">
+        {profileHref ? (
+          <Link
+            aria-label={`View ${profile.name} profile`}
+            className="absolute inset-0 z-10"
+            href={profileHref}
+          />
+        ) : null}
         {profile.avatarUrl ? (
           <Image
             alt={profile.name}
@@ -55,18 +69,18 @@ export function CharacterCard({
 
         <div className="absolute inset-x-0 bottom-0 space-y-3 p-4 text-white">
           <div className="space-y-1">
-            <h3 className="text-2xl font-semibold tracking-tight">
+            <h3 className="relative z-20 text-xl font-semibold tracking-tight">
               {profile.name}
               {profile.age ? (
                 <span className="ml-1 text-white/72">{profile.age}</span>
               ) : null}
             </h3>
-            <p className="line-clamp-2 text-sm leading-5 text-white/78">
+            <p className="relative z-20 line-clamp-2 text-sm leading-5 text-white/78">
               {profile.tagline}
             </p>
           </div>
 
-          <div className="flex items-center justify-between gap-3">
+          {/* <div className="relative z-20 flex items-center justify-between gap-3">
             <div className="flex min-w-0 flex-wrap gap-2">
               {profile.zodiacSign ? (
                 <Badge variant="secondary" className="bg-white/12 text-white">
@@ -84,10 +98,10 @@ export function CharacterCard({
               ))}
             </div>
 
-            <Button asChild size="sm" className="rounded-full px-3">
-              <Link href="/login">Chat</Link>
-            </Button>
-          </div>
+            <OpenAuthModalButton className="rounded-full px-3" size="sm">
+              Chat
+            </OpenAuthModalButton>
+          </div> */}
         </div>
       </div>
     </Card>
