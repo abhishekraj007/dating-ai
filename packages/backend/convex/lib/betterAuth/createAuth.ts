@@ -7,6 +7,25 @@ import { authComponent } from "./component";
 
 const siteUrl = process.env.SITE_URL!;
 const nativeAppUrl = process.env.NATIVE_APP_URL || "datingai://";
+const extraTrustedOrigins = (process.env.TRUSTED_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const trustedOrigins = Array.from(
+  new Set([
+    siteUrl,
+    nativeAppUrl,
+    // Local development
+    "http://localhost:3004", // admin local
+    "http://localhost:3005", // web local
+    // Production (Railway)
+    "https://dating-ai.up.railway.app",
+    "https://admin-dating.up.railway.app",
+    "https://web-dating.up.railway.app",
+    "https://admin-dating-dev.up.railway.app",
+    ...extraTrustedOrigins,
+  ]),
+);
 
 export function createAuth(
   ctx: GenericCtx<DataModel>,
@@ -17,17 +36,7 @@ export function createAuth(
       disabled: optionsOnly,
     },
     baseURL: siteUrl,
-    trustedOrigins: [
-      siteUrl,
-      nativeAppUrl,
-      // Local development
-      "http://localhost:3004", // admin local
-      "http://localhost:3005", // web local
-      // Production (Railway)
-      "https://admin-dating.up.railway.app",
-      "https://web-dating.up.railway.app",
-      "https://admin-dating-dev.up.railway.app",
-    ],
+    trustedOrigins,
     database: authComponent.adapter(ctx),
     user: {
       deleteUser: {
