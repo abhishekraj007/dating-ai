@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 type EmbedCheckoutOptions = {
@@ -26,10 +26,38 @@ type PolarCheckoutInstance = {
   ) => void;
 };
 
+let polarEmbedCheckoutModulePromise: Promise<
+  typeof import("@polar-sh/checkout/embed")
+> | null = null;
+
+function loadPolarEmbedCheckoutModule() {
+  if (!polarEmbedCheckoutModulePromise) {
+    polarEmbedCheckoutModulePromise = import("@polar-sh/checkout/embed");
+  }
+
+  return polarEmbedCheckoutModulePromise;
+}
+
+function shouldUseRedirectCheckout() {
+  const { hostname, protocol } = window.location;
+
+  if (protocol !== "https:") {
+    return true;
+  }
+
+  return (
+    hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]"
+  );
+}
+
 export function usePolarEmbedCheckout() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const checkoutRef = useRef<PolarCheckoutInstance | null>(null);
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
+
+  const currentPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
   useEffect(() => {
     return () => {
@@ -37,6 +65,14 @@ export function usePolarEmbedCheckout() {
       checkoutRef.current = null;
     };
   }, []);
+
+  const preloadCheckout = () => {
+    if (shouldUseRedirectCheckout()) {
+      return;
+    }
+
+    void loadPolarEmbedCheckoutModule();
+  };
 
   const openCheckout = async ({
     productId,
@@ -47,8 +83,6 @@ export function usePolarEmbedCheckout() {
     setLoadingProductId(productId);
 
     try {
-      const { PolarEmbedCheckout } = await import("@polar-sh/checkout/embed");
-
       checkoutRef.current?.close();
 
       const params = new URLSearchParams({
@@ -64,7 +98,17 @@ export function usePolarEmbedCheckout() {
         params.set("customerName", customerName);
       }
 
+      params.set("returnPath", currentPath);
+
       const checkoutUrl = `${window.location.origin}/checkout?${params.toString()}`;
+
+      if (shouldUseRedirectCheckout()) {
+        window.location.assign(checkoutUrl);
+        return;
+      }
+
+      const { PolarEmbedCheckout } = await loadPolarEmbedCheckoutModule();
+
       const theme = document.documentElement.classList.contains("dark")
         ? "dark"
         : "light";
@@ -101,6 +145,7 @@ export function usePolarEmbedCheckout() {
 
   return {
     openCheckout,
+    preloadCheckout,
     loadingProductId,
   };
 }

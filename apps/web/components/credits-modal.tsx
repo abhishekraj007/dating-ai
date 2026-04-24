@@ -40,12 +40,15 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
   const [products, setProducts] = useState<PolarProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { openCheckout, loadingProductId } = usePolarEmbedCheckout();
+  const { openCheckout, preloadCheckout, loadingProductId } =
+    usePolarEmbedCheckout();
 
   useEffect(() => {
     if (!open) {
       return;
     }
+
+    preloadCheckout();
 
     let isCancelled = false;
 

@@ -46,12 +46,15 @@ export function PremiumLockedImage({
   const [products, setProducts] = useState<PolarSubscriptionProduct[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
-  const { openCheckout, loadingProductId } = usePolarEmbedCheckout();
+  const { openCheckout, preloadCheckout, loadingProductId } =
+    usePolarEmbedCheckout();
 
   useEffect(() => {
     if (!open) {
       return;
     }
+
+    preloadCheckout();
 
     let isCancelled = false;
 

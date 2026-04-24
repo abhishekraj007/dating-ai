@@ -1,6 +1,6 @@
 export function getSiteUrl() {
   const explicitUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? process.env.SITE_URL ?? "";
+    process.env.SITE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "";
 
   if (explicitUrl) {
     return explicitUrl.replace(/\/$/, "");
