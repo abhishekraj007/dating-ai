@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useMutation } from "convex/react";
+import { useAction, useMutation } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import type { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { toast } from "sonner";
@@ -89,6 +89,9 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
   const deleteProfileImage = useMutation(
     api.features.ai.mutations.adminDeleteProfileImage,
   );
+  const generateShowcaseImage = useAction(
+    api.features.ai.profileGenerationActions.adminGenerateMoreShowcaseImage,
+  );
   const syncMetadata = useMutation(api.uploads.syncMetadata);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -103,9 +106,12 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const [isGeneratingShowcaseImage, setIsGeneratingShowcaseImage] =
+    useState(false);
   const [deletingImageKey, setDeletingImageKey] = useState<string | null>(null);
   const [formData, setFormData] = useState<CharacterFormData>(initialFormData);
   const [newInterest, setNewInterest] = useState("");
+  const [showcasePromptSuggestion, setShowcasePromptSuggestion] = useState("");
   const [mode, setMode] = useState<"view" | "edit">("view");
 
   const openProfile = (profile: AIProfile, nextMode: "view" | "edit") => {
@@ -136,6 +142,7 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
       },
     });
     setIsSheetOpen(true);
+    setShowcasePromptSuggestion("");
   };
 
   const handleView = (profile: AIProfile) => openProfile(profile, "view");
@@ -145,6 +152,7 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     setIsSheetOpen(false);
     setSelectedProfileId(null);
     setNewInterest("");
+    setShowcasePromptSuggestion("");
     setMode("view");
   };
 
@@ -263,6 +271,35 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     }
   };
 
+  const handleGenerateShowcaseImage = async () => {
+    if (!selectedProfile) return;
+
+    if (!selectedProfile.avatarImageKey) {
+      toast.error("Add an avatar before generating showcase images");
+      return;
+    }
+
+    if (selectedProfile.profileImageUrls.length >= 10) {
+      toast.error("Gallery image limit reached");
+      return;
+    }
+
+    setIsGeneratingShowcaseImage(true);
+    try {
+      await generateShowcaseImage({
+        profileId: selectedProfile._id,
+        promptSuggestion: showcasePromptSuggestion.trim() || undefined,
+      });
+      toast.success("Showcase image generated");
+      setShowcasePromptSuggestion("");
+    } catch (error) {
+      toast.error("Failed to generate showcase image");
+      console.error(error);
+    } finally {
+      setIsGeneratingShowcaseImage(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!selectedProfile) return;
 
@@ -310,9 +347,11 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     isSaving,
     isUploadingAvatar,
     isUploadingGallery,
+    isGeneratingShowcaseImage,
     deletingImageKey,
     formData,
     newInterest,
+    showcasePromptSuggestion,
     mode,
     // Refs
     avatarInputRef,
@@ -320,6 +359,7 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     // Setters
     setFormData,
     setNewInterest,
+    setShowcasePromptSuggestion,
     setIsSheetOpen,
     setMode,
     // Handlers
@@ -331,6 +371,7 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     handleAvatarUpload,
     handleGalleryUpload,
     handleDeleteImage,
+    handleGenerateShowcaseImage,
     handleSave,
   };
 }

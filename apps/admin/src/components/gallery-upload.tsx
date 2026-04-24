@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ImagePlus, Loader2, X, ZoomIn } from "lucide-react";
@@ -19,6 +20,7 @@ interface GalleryUploadProps {
   deletingKey?: string | null;
   onUpload?: () => void;
   onDelete?: (key: string) => void;
+  headerAction?: ReactNode;
   className?: string;
 }
 
@@ -29,16 +31,18 @@ export function GalleryUpload({
   deletingKey = null,
   onUpload,
   onDelete,
+  headerAction,
   className,
 }: GalleryUploadProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   return (
     <div className={cn("space-y-3", className)}>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Label>
           Photos ({images.length}/{maxFiles})
         </Label>
+        {headerAction}
       </div>
 
       {/* Upload Area - show when no images or can add more */}
@@ -97,6 +101,7 @@ export function GalleryUpload({
                   variant="secondary"
                   size="icon"
                   className="h-7 w-7"
+                  aria-label={`View photo ${i + 1}`}
                 >
                   <ZoomIn className="h-4 w-4" />
                 </Button>
@@ -112,6 +117,7 @@ export function GalleryUpload({
                     size="icon"
                     className="h-7 w-7"
                     disabled={deletingKey === image.key}
+                    aria-label={`Delete photo ${i + 1}`}
                   >
                     {deletingKey === image.key ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

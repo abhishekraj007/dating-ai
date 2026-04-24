@@ -69,14 +69,17 @@ export default function CharactersPage() {
     isSaving,
     isUploadingAvatar,
     isUploadingGallery,
+    isGeneratingShowcaseImage,
     deletingImageKey,
     formData,
     newInterest,
+    showcasePromptSuggestion,
     mode,
     avatarInputRef,
     galleryInputRef,
     setFormData,
     setNewInterest,
+    setShowcasePromptSuggestion,
     setIsSheetOpen,
     setMode,
     handleView,
@@ -87,6 +90,7 @@ export default function CharactersPage() {
     handleAvatarUpload,
     handleGalleryUpload,
     handleDeleteImage,
+    handleGenerateShowcaseImage,
     handleSave,
   } = useCharacterEdit(profiles);
 
@@ -275,17 +279,21 @@ export default function CharactersPage() {
             onFormChange={setFormData}
             newInterest={newInterest}
             onNewInterestChange={setNewInterest}
+            showcasePromptSuggestion={showcasePromptSuggestion}
+            onShowcasePromptSuggestionChange={setShowcasePromptSuggestion}
             onAddInterest={handleAddInterest}
             onRemoveInterest={handleRemoveInterest}
             isSaving={isSaving}
             isUploadingAvatar={isUploadingAvatar}
             isUploadingGallery={isUploadingGallery}
+            isGeneratingShowcaseImage={isGeneratingShowcaseImage}
             deletingImageKey={deletingImageKey}
             avatarInputRef={avatarInputRef}
             galleryInputRef={galleryInputRef}
             onAvatarUpload={handleAvatarUpload}
             onGalleryUpload={handleGalleryUpload}
             onDeleteImage={handleDeleteImage}
+            onGenerateShowcaseImage={handleGenerateShowcaseImage}
             onSave={handleSave}
             onClose={handleClose}
           />
