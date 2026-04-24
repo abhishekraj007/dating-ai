@@ -14,7 +14,13 @@ export interface DiscoverUserPreferences {
   ageMax: number;
   zodiacPreferences: string[];
   interestPreferences: string[];
+  ethnicityPreferences: string[];
 }
+
+type PersistedDiscoverPreferences = Omit<
+  DiscoverUserPreferences,
+  "ethnicityPreferences"
+>;
 
 export const DEFAULT_DISCOVER_PREFERENCES: DiscoverUserPreferences = {
   genderPreference: "female",
@@ -22,9 +28,11 @@ export const DEFAULT_DISCOVER_PREFERENCES: DiscoverUserPreferences = {
   ageMax: 99,
   zodiacPreferences: [],
   interestPreferences: [],
+  ethnicityPreferences: [],
 };
 
 const USER_PREFERENCES_STORAGE_KEY = "user_preferences";
+const DISCOVER_PREFERENCES_UPDATED_EVENT = "discover-preferences-updated";
 
 function normalizePreferences(
   preferences: Partial<DiscoverUserPreferences> | null | undefined,
@@ -41,7 +49,23 @@ function normalizePreferences(
     ageMax: preferences.ageMax ?? DEFAULT_DISCOVER_PREFERENCES.ageMax,
     zodiacPreferences: [...(preferences.zodiacPreferences ?? [])],
     interestPreferences: [...(preferences.interestPreferences ?? [])],
+    ethnicityPreferences: [...(preferences.ethnicityPreferences ?? [])],
   };
+}
+
+function toPersistedPreferences(
+  preferences: DiscoverUserPreferences,
+): PersistedDiscoverPreferences {
+  const { ethnicityPreferences: _ethnicityPreferences, ...persisted } =
+    preferences;
+
+  return persisted;
+}
+
+function readStoredPreferences(): DiscoverUserPreferences | null {
+  const storedValue = window.localStorage.getItem(USER_PREFERENCES_STORAGE_KEY);
+
+  return storedValue ? normalizePreferences(JSON.parse(storedValue)) : null;
 }
 
 export function useDiscoverPreferences() {
@@ -60,14 +84,9 @@ export function useDiscoverPreferences() {
   useEffect(() => {
     let isCancelled = false;
 
-    const loadLocalPreferences = () => {
+    const syncLocalPreferences = () => {
       try {
-        const storedValue = window.localStorage.getItem(
-          USER_PREFERENCES_STORAGE_KEY,
-        );
-        const parsedValue = storedValue
-          ? normalizePreferences(JSON.parse(storedValue))
-          : null;
+        const parsedValue = readStoredPreferences();
 
         if (!isCancelled) {
           setLocalPreferences(parsedValue);
@@ -84,10 +103,32 @@ export function useDiscoverPreferences() {
       }
     };
 
-    loadLocalPreferences();
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key && event.key !== USER_PREFERENCES_STORAGE_KEY) {
+        return;
+      }
+
+      syncLocalPreferences();
+    };
+
+    const handlePreferencesUpdated = () => {
+      syncLocalPreferences();
+    };
+
+    syncLocalPreferences();
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener(
+      DISCOVER_PREFERENCES_UPDATED_EVENT,
+      handlePreferencesUpdated,
+    );
 
     return () => {
       isCancelled = true;
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener(
+        DISCOVER_PREFERENCES_UPDATED_EVENT,
+        handlePreferencesUpdated,
+      );
     };
   }, []);
 
@@ -104,7 +145,9 @@ export function useDiscoverPreferences() {
 
     hasSyncedLocalPreferences.current = true;
 
-    void savePreferencesMutation(localPreferences).catch((error) => {
+    void savePreferencesMutation(
+      toPersistedPreferences(localPreferences),
+    ).catch((error) => {
       console.error("Failed to sync local discover preferences", error);
       hasSyncedLocalPreferences.current = false;
     });
@@ -115,10 +158,16 @@ export function useDiscoverPreferences() {
     savePreferencesMutation,
   ]);
 
+  const authenticatedPreferencesSource =
+    isAuthenticated && convexPreferences
+      ? {
+          ...convexPreferences,
+          ethnicityPreferences: localPreferences?.ethnicityPreferences ?? [],
+        }
+      : (convexPreferences ?? localPreferences);
+
   const preferences = normalizePreferences(
-    isAuthenticated
-      ? (convexPreferences ?? localPreferences)
-      : localPreferences,
+    isAuthenticated ? authenticatedPreferencesSource : localPreferences,
   );
   const effectivePreferences = preferences ?? DEFAULT_DISCOVER_PREFERENCES;
 
@@ -135,10 +184,13 @@ export function useDiscoverPreferences() {
       USER_PREFERENCES_STORAGE_KEY,
       JSON.stringify(normalizedPreferences),
     );
+    window.dispatchEvent(new Event(DISCOVER_PREFERENCES_UPDATED_EVENT));
     setLocalPreferences(normalizedPreferences);
 
     if (isAuthenticated) {
-      await savePreferencesMutation(normalizedPreferences);
+      await savePreferencesMutation(
+        toPersistedPreferences(normalizedPreferences),
+      );
     }
   };
 

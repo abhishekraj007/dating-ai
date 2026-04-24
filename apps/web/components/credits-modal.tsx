@@ -6,6 +6,7 @@ import { api as convexApi } from "@dating-ai/backend/convex/_generated/api";
 import { Coins, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -138,7 +139,7 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto w-[80vw]">
         <DialogHeader>
           <DialogTitle className="text-2xl">Buy credits</DialogTitle>
           <DialogDescription>
@@ -194,22 +195,19 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
                           <span className="text-xl font-bold tabular-nums">
                             ${price}
                           </span>
-                          {item.credits > 0 ? (
-                            <span className="text-sm text-muted-foreground">
-                              {item.credits} credits
-                            </span>
-                          ) : null}
                         </div>
                       </div>
 
                       <Button
                         onClick={() => handleCheckout(item.product.id)}
                         disabled={loadingProductId === item.product.id}
-                        className="min-w-24"
+                        className="min-w-24 cursor-pointer"
                       >
-                        {loadingProductId === item.product.id
-                          ? "Opening..."
-                          : "Buy now"}
+                        {loadingProductId === item.product.id ? (
+                          <Spinner className="h-4 w-4" />
+                        ) : (
+                          "Buy now"
+                        )}
                       </Button>
                     </div>
                   </CardHeader>
