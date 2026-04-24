@@ -19,7 +19,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Plus, X, ImagePlus, Loader2, Pencil } from "lucide-react";
+import {
+  Plus,
+  X,
+  ImagePlus,
+  Loader2,
+  Pencil,
+  WandSparkles,
+} from "lucide-react";
 import { GalleryUpload } from "@/components/gallery-upload";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -75,17 +82,21 @@ interface EditCharacterSheetProps {
   onFormChange: (data: CharacterFormData) => void;
   newInterest: string;
   onNewInterestChange: (value: string) => void;
+  showcasePromptSuggestion: string;
+  onShowcasePromptSuggestionChange: (value: string) => void;
   onAddInterest: () => void;
   onRemoveInterest: (interest: string) => void;
   isSaving: boolean;
   isUploadingAvatar: boolean;
   isUploadingGallery: boolean;
+  isGeneratingShowcaseImage: boolean;
   deletingImageKey: string | null;
   avatarInputRef: React.RefObject<HTMLInputElement | null>;
   galleryInputRef: React.RefObject<HTMLInputElement | null>;
   onAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onGalleryUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDeleteImage: (key: string, type: "avatar" | "gallery") => void;
+  onGenerateShowcaseImage: () => void;
   onSave: () => void;
   onClose: () => void;
 }
@@ -100,21 +111,27 @@ export function EditCharacterSheet({
   onFormChange,
   newInterest,
   onNewInterestChange,
+  showcasePromptSuggestion,
+  onShowcasePromptSuggestionChange,
   onAddInterest,
   onRemoveInterest,
   isSaving,
   isUploadingAvatar,
   isUploadingGallery,
+  isGeneratingShowcaseImage,
   deletingImageKey,
   avatarInputRef,
   galleryInputRef,
   onAvatarUpload,
   onGalleryUpload,
   onDeleteImage,
+  onGenerateShowcaseImage,
   onSave,
   onClose,
 }: EditCharacterSheetProps) {
   const isReadOnly = mode === "view";
+  const canAddShowcaseImage =
+    !!profile?.avatarImageKey && (profile?.profileImageUrls.length ?? 0) < 10;
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent
@@ -122,7 +139,7 @@ export function EditCharacterSheet({
         className="w-full sm:max-w-lg flex flex-col p-0 h-full"
       >
         <SheetHeader className="px-6 py-4 border-b shrink-0">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2 mr-8">
             <SheetTitle>
               {isReadOnly ? "View Character" : "Edit Character"}
             </SheetTitle>
@@ -600,6 +617,42 @@ export function EditCharacterSheet({
                   maxFiles={10}
                   isUploading={isUploadingGallery}
                   deletingKey={deletingImageKey}
+                  headerAction={
+                    isReadOnly ? undefined : (
+                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                        <Input
+                          value={showcasePromptSuggestion}
+                          onChange={(event) =>
+                            onShowcasePromptSuggestionChange(event.target.value)
+                          }
+                          maxLength={140}
+                          placeholder="Optional prompt hint"
+                          disabled={
+                            isGeneratingShowcaseImage || isUploadingGallery
+                          }
+                          className="h-8 min-w-0 sm:w-56"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={onGenerateShowcaseImage}
+                          disabled={
+                            isGeneratingShowcaseImage ||
+                            isUploadingGallery ||
+                            !canAddShowcaseImage
+                          }
+                        >
+                          {isGeneratingShowcaseImage ? (
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <WandSparkles className="mr-1.5 h-3.5 w-3.5" />
+                          )}
+                          Generate
+                        </Button>
+                      </div>
+                    )
+                  }
                   onUpload={
                     isReadOnly
                       ? undefined
