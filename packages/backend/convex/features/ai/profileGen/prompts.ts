@@ -125,6 +125,7 @@ export function buildShowcasePromptFromPlan(
   appearance: AppearanceProfile,
   subjectDescriptor: string,
   vignette: SceneVignette | null = null,
+  promptSuggestion?: string,
 ): string {
   const action = vignette?.action?.trim() || plan.action;
   const settingDetail = vignette?.settingDetail?.trim();
@@ -135,6 +136,7 @@ export function buildShowcasePromptFromPlan(
   const prop = vignette?.prop?.trim() || plan.accentProp;
   const wardrobeAccent = vignette?.wardrobeAccent?.trim();
   const emotionalBeat = vignette?.emotionalBeat?.trim();
+  const suggestion = promptSuggestion?.trim();
 
   return buildImagePromptCore({
     subjectDescriptor,
@@ -154,6 +156,7 @@ export function buildShowcasePromptFromPlan(
       prop ? `holding or carrying ${prop}` : null,
       wardrobeAccent ? `wardrobe detail: ${wardrobeAccent}` : null,
       emotionalBeat ? `emotional beat: ${emotionalBeat}` : null,
+      suggestion ? `Include: ${suggestion}` : null,
     ],
     withReferenceClause: true,
   });

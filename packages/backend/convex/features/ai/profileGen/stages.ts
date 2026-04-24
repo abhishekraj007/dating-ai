@@ -15,13 +15,11 @@ import {
 } from "./images";
 import {
   buildShowcasePrompts,
-  materializeSlotPrompts,
-  planShowcaseSlots,
+  generateShowcasePrompts,
   randomShowcaseCount,
 } from "./showcase";
 import { buildAvatarPrompt } from "./prompts";
 import { updateJobProgress, upsertStepModel } from "./progress";
-import { generateShowcaseVignettes } from "./vignettes";
 
 /**
  * Runs the showcase-image generation pass + profile persistence.
@@ -58,34 +56,19 @@ export async function runShowcaseAndPersistStage(
 
   const avatarReferenceUrl = await r2.getUrl(avatarImageKey);
   const showcaseCount = randomShowcaseCount();
-
-  // Plan slots first (scene selection + per-slot variation sampling).
-  const slotPlans = planShowcaseSlots(candidate, appearance, showcaseCount);
-
-  // Then try to enrich each slot with a bespoke LLM vignette. This is a
-  // single batched call (one per profile, not per slot) targeting a cheap
-  // model. Failures degrade gracefully to the sampled baselines.
-  let vignettes: Awaited<ReturnType<typeof generateShowcaseVignettes>> = [];
-  try {
-    vignettes = await generateShowcaseVignettes(
-      candidate,
-      appearance,
-      slotPlans,
-    );
-  } catch (error) {
-    console.warn(
-      "[profileGen.stages] Vignette generation threw; continuing with baseline plans.",
-      error,
-    );
-    vignettes = slotPlans.map(() => null);
-  }
-
-  const initialPrompts = materializeSlotPrompts(
-    slotPlans,
+  const initialPrompts = await generateShowcasePrompts(
     candidate,
     appearance,
     subjectDescriptor,
-    vignettes,
+    showcaseCount,
+    {
+      onVignetteError: (error) => {
+        console.warn(
+          "[profileGen.stages] Vignette generation threw; continuing with baseline plans.",
+          error,
+        );
+      },
+    },
   );
 
   stepModels = upsertStepModel(
