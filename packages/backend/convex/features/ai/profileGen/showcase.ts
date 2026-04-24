@@ -16,6 +16,16 @@ import type {
 } from "./types";
 import { buildShowcasePromptFromPlan } from "./prompts";
 import { randomItem, shuffle } from "./textUtils";
+import { generateShowcaseVignettes } from "./vignettes";
+
+type ShowcasePromptOptions = {
+  promptSuggestion?: string;
+};
+
+type GenerateShowcasePromptOptions = ShowcasePromptOptions & {
+  excludeIds?: Set<string>;
+  onVignetteError?: (error: unknown) => void;
+};
 
 /**
  * Soft per-category cap: a single profile's grid should never feel clustered.
@@ -231,6 +241,7 @@ export function materializeSlotPrompts(
   appearance: AppearanceProfile,
   subjectDescriptor: string,
   vignettes: Array<SceneVignette | null | undefined> = [],
+  options: ShowcasePromptOptions = {},
 ): ShowcaseSlotPrompt[] {
   return plans.map((plan, index) => ({
     sceneId: plan.sceneId,
@@ -240,8 +251,41 @@ export function materializeSlotPrompts(
       appearance,
       subjectDescriptor,
       vignettes[index] ?? null,
+      options.promptSuggestion,
     ),
   }));
+}
+
+export async function generateShowcasePrompts(
+  candidate: ProfileCandidate,
+  appearance: AppearanceProfile,
+  subjectDescriptor: string,
+  count: number,
+  options: GenerateShowcasePromptOptions = {},
+): Promise<ShowcaseSlotPrompt[]> {
+  const plans = planShowcaseSlots(
+    candidate,
+    appearance,
+    count,
+    options.excludeIds ?? new Set(),
+  );
+
+  let vignettes: Array<SceneVignette | null> = [];
+  try {
+    vignettes = await generateShowcaseVignettes(candidate, appearance, plans);
+  } catch (error) {
+    options.onVignetteError?.(error);
+    vignettes = plans.map(() => null);
+  }
+
+  return materializeSlotPrompts(
+    plans,
+    candidate,
+    appearance,
+    subjectDescriptor,
+    vignettes,
+    { promptSuggestion: options.promptSuggestion },
+  );
 }
 
 /**
@@ -255,6 +299,7 @@ export function buildShowcasePrompts(
   subjectDescriptor: string,
   count: number,
   excludeIds: Set<string> = new Set(),
+  options: ShowcasePromptOptions = {},
 ): ShowcaseSlotPrompt[] {
   const plans = planShowcaseSlots(candidate, appearance, count, excludeIds);
   return materializeSlotPrompts(
@@ -262,5 +307,7 @@ export function buildShowcasePrompts(
     candidate,
     appearance,
     subjectDescriptor,
+    [],
+    options,
   );
 }

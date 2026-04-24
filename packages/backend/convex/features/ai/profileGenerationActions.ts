@@ -3,7 +3,7 @@
 import { v } from "convex/values";
 import { generateText } from "ai";
 import { action, internalAction } from "../../_generated/server";
-import { api } from "../../_generated/api";
+import { api, internal } from "../../_generated/api";
 import { r2 } from "../../uploads";
 import { openRouterProvider } from "./aiProviders";
 import {
@@ -19,6 +19,7 @@ import {
   FALLBACK_TEMPLATE_MODEL,
 } from "./profileGen/constants";
 import type {
+  AppearanceProfile,
   GenerationPreferences,
   JobProgressStep,
   ProfileCandidate,
@@ -38,7 +39,10 @@ import {
   generateAvatarForJob,
   runShowcaseAndPersistStage,
 } from "./profileGen/stages";
-import { imageGenerationModelName } from "./profileGen/images";
+import {
+  createAndStoreGeneratedImage,
+  imageGenerationModelName,
+} from "./profileGen/images";
 import { updateJobProgress, upsertStepModel } from "./profileGen/progress";
 import {
   normalize,
@@ -47,6 +51,7 @@ import {
   thresholdForAttempt,
   weightedGender,
 } from "./profileGen/textUtils";
+import { generateShowcasePrompts } from "./profileGen/showcase";
 
 export const runSystemProfileGeneration = internalAction({
   args: {
@@ -511,6 +516,182 @@ export const cleanupPreviewR2Action = internalAction({
       }
     }
     return null;
+  },
+});
+
+type AdminShowcaseProfile = {
+  _id: string;
+  name: string;
+  username?: string;
+  gender: "female" | "male";
+  age?: number;
+  zodiacSign?: string;
+  occupation?: string;
+  location?: string;
+  countryCode?: string;
+  bio?: string;
+  interests?: string[];
+  personalityTraits?: string[];
+  relationshipGoal?: string;
+  mbtiType?: string;
+  ethnicity?: string;
+  communicationStyle?: {
+    tone?: string;
+    responseLength?: string;
+    usesEmojis?: boolean;
+    usesSlang?: boolean;
+    flirtLevel?: number;
+  };
+  avatarImageKey?: string;
+  profileImageKeys?: string[];
+};
+
+function compactProfileText(value: unknown, maxLength: number): string {
+  if (typeof value !== "string") return "";
+  return value.trim().slice(0, maxLength);
+}
+
+function buildAdminShowcaseInputs(profile: AdminShowcaseProfile): {
+  candidate: ProfileCandidate;
+  appearance: AppearanceProfile;
+  subjectDescriptor: string;
+} {
+  const age =
+    typeof profile.age === "number" && profile.age >= 18 ? profile.age : 25;
+  const occupation =
+    compactProfileText(profile.occupation, 80) || "Creative Professional";
+  const location = compactProfileText(profile.location, 80) || "New York, US";
+  const interests =
+    profile.interests && profile.interests.length > 0
+      ? profile.interests.slice(0, 8)
+      : ["coffee", "music", "travel"];
+  const personalityTraits =
+    profile.personalityTraits && profile.personalityTraits.length > 0
+      ? profile.personalityTraits.slice(0, 8)
+      : ["warm", "confident", "curious"];
+  const ethnicity =
+    profile.ethnicity &&
+    (ETHNICITIES as readonly string[]).includes(profile.ethnicity)
+      ? profile.ethnicity
+      : ETHNICITIES[0];
+
+  const candidate: ProfileCandidate = {
+    name: compactProfileText(profile.name, 80) || "Profile",
+    username: compactProfileText(profile.username, 80) || String(profile._id),
+    gender: profile.gender,
+    age,
+    zodiacSign: compactProfileText(profile.zodiacSign, 40) || "Gemini",
+    occupation,
+    location,
+    countryCode: compactProfileText(profile.countryCode, 4) || undefined,
+    bio:
+      compactProfileText(profile.bio, 360) ||
+      `${profile.name} is ${occupation.toLowerCase()} with an easy, magnetic dating-app presence.`,
+    interests,
+    personalityTraits,
+    relationshipGoal:
+      compactProfileText(profile.relationshipGoal, 120) ||
+      "meaningful connection",
+    mbtiType: compactProfileText(profile.mbtiType, 12) || "ENFP",
+    ethnicity: ethnicity as ProfileCandidate["ethnicity"],
+    communicationStyle: {
+      tone: profile.communicationStyle?.tone ?? "casual",
+      responseLength: profile.communicationStyle?.responseLength ?? "medium",
+      usesEmojis: profile.communicationStyle?.usesEmojis ?? false,
+      usesSlang: profile.communicationStyle?.usesSlang ?? false,
+      flirtLevel: profile.communicationStyle?.flirtLevel ?? 3,
+    },
+  };
+
+  const appearance: AppearanceProfile = {
+    ageHint: age,
+    hair: "same hair as the reference image",
+    eyes: "same eyes as the reference image",
+    skinTone: "same skin tone as the reference image",
+    skinCue: "natural realistic skin",
+    build: "same body type as the reference image",
+    outfit: "stylish contemporary outfit",
+    signatureStyle: "premium dating profile style",
+    vibe: "confident",
+    cityArchetype: location,
+    quirk: "natural candid energy",
+    expression: "relaxed smile",
+  };
+
+  const subjectDescriptor =
+    `the same adult ${profile.gender} from the reference image, ` +
+    `around ${age}, ${occupation.toLowerCase()}`;
+
+  return { candidate, appearance, subjectDescriptor };
+}
+
+async function generateAdminShowcasePrompt(
+  profile: AdminShowcaseProfile,
+  promptSuggestion?: string,
+): Promise<string> {
+  const { candidate, appearance, subjectDescriptor } =
+    buildAdminShowcaseInputs(profile);
+  const slotPrompt = (
+    await generateShowcasePrompts(candidate, appearance, subjectDescriptor, 1, {
+      promptSuggestion,
+      onVignetteError: (error) => {
+        console.warn(
+          "[admin-showcase-generation] Vignette generation threw; falling back to baseline showcase prompt.",
+          error,
+        );
+      },
+    })
+  )[0];
+
+  if (!slotPrompt) {
+    throw new Error("Failed to build showcase prompt");
+  }
+  return slotPrompt.prompt;
+}
+
+export const adminGenerateMoreShowcaseImage = action({
+  args: {
+    profileId: v.id("aiProfiles"),
+    promptSuggestion: v.optional(v.string()),
+  },
+  returns: v.object({
+    imageKey: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    const profile = (await ctx.runQuery(
+      internal.features.ai.profileGeneration
+        .getAdminShowcaseGenerationProfileInternal,
+      { profileId: args.profileId },
+    )) as AdminShowcaseProfile;
+    const promptSuggestion =
+      compactProfileText(args.promptSuggestion, 140) || undefined;
+
+    if (!profile.avatarImageKey) {
+      throw new Error("Profile needs an avatar reference first");
+    }
+    if ((profile.profileImageKeys?.length ?? 0) >= 10) {
+      throw new Error("Gallery image limit reached");
+    }
+
+    const referenceImageUrl = await r2.getUrl(profile.avatarImageKey);
+    const prompt = await generateAdminShowcasePrompt(profile, promptSuggestion);
+    const imageKey = await createAndStoreGeneratedImage(
+      ctx,
+      prompt,
+      referenceImageUrl,
+      `aiProfiles/${profile._id}/generated-showcase`,
+    );
+
+    await ctx.runMutation(
+      internal.features.ai.profileGeneration
+        .appendGeneratedShowcaseImageInternal,
+      {
+        profileId: args.profileId,
+        imageKey,
+      },
+    );
+
+    return { imageKey };
   },
 });
 

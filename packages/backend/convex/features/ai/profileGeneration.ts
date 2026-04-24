@@ -319,6 +319,60 @@ export const getProfileGenerationJobInternal = internalQuery({
   },
 });
 
+export const getAdminShowcaseGenerationProfileInternal = internalQuery({
+  args: {
+    profileId: v.id("aiProfiles"),
+  },
+  handler: async (ctx, { profileId }) => {
+    await assertAdmin(ctx);
+
+    const profile = await ctx.db.get(profileId);
+    if (!profile) {
+      throw new ConvexError("Profile not found");
+    }
+    if (profile.isUserCreated) {
+      throw new ConvexError("Cannot admin-edit user-created profiles");
+    }
+    if (!profile.avatarImageKey) {
+      throw new ConvexError("Profile needs an avatar reference first");
+    }
+
+    return profile;
+  },
+});
+
+export const appendGeneratedShowcaseImageInternal = internalMutation({
+  args: {
+    profileId: v.id("aiProfiles"),
+    imageKey: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { profileId, imageKey }) => {
+    await assertAdmin(ctx);
+
+    const profile = await ctx.db.get(profileId);
+    if (!profile) {
+      throw new ConvexError("Profile not found");
+    }
+    if (profile.isUserCreated) {
+      throw new ConvexError("Cannot admin-edit user-created profiles");
+    }
+    if (!imageKey.startsWith(`aiProfiles/${profileId}/generated-showcase/`)) {
+      throw new ConvexError("Invalid generated showcase image key");
+    }
+
+    const currentKeys = profile.profileImageKeys ?? [];
+    if (currentKeys.length >= 10) {
+      throw new ConvexError("Gallery image limit reached");
+    }
+
+    await ctx.db.patch(profileId, {
+      profileImageKeys: [...currentKeys, imageKey],
+    });
+    return null;
+  },
+});
+
 // Returns the canonical list of active interest values used by end-user
 // filters. Profile generation uses this to constrain LLM output so that
 // generated interests always match something a user can filter on.
