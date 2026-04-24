@@ -74,7 +74,7 @@ const IMAGE_MODEL_CHAIN: ImageModelConfig[] = [
 // images to render noticeably heavier freckling than the reference photo.
 // "Skin tone" alone is sufficient to keep the ethnicity / complexion stable.
 const REFERENCE_IMAGE_CONSISTENCY_PREFIX =
-  "The person in the reference image is the same person in this image. Preserve their face shape, skin tone, eye color, eyebrow shape, hair color, length and texture, and overall body type exactly. Only change outfit, pose, setting, and lighting as described below.";
+  "The person in the reference image is the same person in this image. Preserve their face shape, skin tone, eye color, eyebrow shape, hair color, and overall body type exactly. Only change outfit, pose, setting, and lighting as described below.";
 
 function extractImageUrl(output: unknown): string | null {
   if (typeof output === "string") {

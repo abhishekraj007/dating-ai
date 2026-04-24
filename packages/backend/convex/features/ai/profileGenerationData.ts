@@ -37,29 +37,31 @@ export type Ethnicity = (typeof ETHNICITIES)[number];
 // `aiProfiles.ethnicity` always stores exactly one canonical value from
 // `ETHNICITIES`; callers can use these helpers to support wider searches such
 // as "Asian" matching "Indian" and "Japanese" without duplicating fields.
-export const ETHNICITY_FILTER_EXPANSIONS: Record<Ethnicity, readonly Ethnicity[]> =
-  {
-    Indian: ["Indian"],
-    Chinese: ["Chinese"],
-    Japanese: ["Japanese"],
-    Korean: ["Korean"],
-    Vietnamese: ["Vietnamese"],
-    Filipino: ["Filipino"],
-    Asian: [
-      "Asian",
-      "Indian",
-      "Chinese",
-      "Japanese",
-      "Korean",
-      "Vietnamese",
-      "Filipino",
-    ],
-    "Middle Eastern": ["Middle Eastern"],
-    Black: ["Black"],
-    Hispanic: ["Hispanic"],
-    White: ["White"],
-    Mixed: ["Mixed"],
-  };
+export const ETHNICITY_FILTER_EXPANSIONS: Record<
+  Ethnicity,
+  readonly Ethnicity[]
+> = {
+  Indian: ["Indian"],
+  Chinese: ["Chinese"],
+  Japanese: ["Japanese"],
+  Korean: ["Korean"],
+  Vietnamese: ["Vietnamese"],
+  Filipino: ["Filipino"],
+  Asian: [
+    "Asian",
+    "Indian",
+    "Chinese",
+    "Japanese",
+    "Korean",
+    "Vietnamese",
+    "Filipino",
+  ],
+  "Middle Eastern": ["Middle Eastern"],
+  Black: ["Black"],
+  Hispanic: ["Hispanic"],
+  White: ["White"],
+  Mixed: ["Mixed"],
+};
 
 export function expandEthnicityFilters(
   ethnicities: readonly Ethnicity[],
@@ -1676,4 +1678,4 @@ export const STOPWORDS = new Set([
 // produce the opposite effect (over-smoothed plastic skin, or amplified
 // freckles/marks). The rest of the list targets pure image-quality issues.
 export const INLINE_NEGATIVES =
-  "Avoid extra fingers or distorted hands, avoid text or watermarks, avoid cartoon or render look, avoid over-smoothed plastic skin, avoid uncanny valley AI artifacts.";
+  "Avoid extra fingers or distorted hands, avoid text or watermarks, avoid cartoon or render look, avoid over-smoothed plastic skin, lot of freckles/marks, avoid uncanny valley AI artifacts.";
