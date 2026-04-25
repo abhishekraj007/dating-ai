@@ -128,10 +128,10 @@ export function PremiumProfileImage({
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-background/92 text-foreground shadow-lg">
               <Lock className="h-5 w-5" />
             </div>
-            <div className="rounded-full bg-background/95 px-4 py-2 text-sm font-medium text-foreground shadow-lg">
+            <div className="rounded-full bg-background/95 px-4 py-2 text-xs font-medium text-foreground shadow-lg">
               {!isAuthenticated
-                ? "Sign in to unlock photos"
-                : "Go premium to unlock photos"}
+                ? "Sign in to unlock Gallery"
+                : "Go premium to unlock Gallery"}
             </div>
           </div>
         </button>

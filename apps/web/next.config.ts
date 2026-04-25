@@ -6,7 +6,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "cheery-akita-850.convex.site",
+        hostname: "**.convex.site",
+        pathname: "/ai-profiles/**",
       },
       {
         protocol: "https",
