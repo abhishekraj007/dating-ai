@@ -25,7 +25,7 @@ export function OpenAuthModalButton({
     ? `${pathname}?${searchParams.toString()}`
     : pathname;
 
-  const destination = returnTo || currentPath || "/explore";
+  const destination = returnTo || currentPath || "/";
 
   return (
     <Button

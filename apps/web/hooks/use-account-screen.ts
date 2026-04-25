@@ -46,9 +46,12 @@ function getUserIdentity(
 export function useAccountScreen() {
   const router = useRouter();
   const { isLoading: isAuthLoading } = useConvexAuth();
-  const { data: session, isPending: isSessionPending } = authClient.useSession();
+  const { data: session, isPending: isSessionPending } =
+    authClient.useSession();
   const userData = useQuery(api.user.fetchUserAndProfile);
-  const publicConfig = useQuery(api.features.appConfig.queries.getPublicAppConfig);
+  const publicConfig = useQuery(
+    api.features.appConfig.queries.getPublicAppConfig,
+  );
   const { resolvedTheme, setTheme, theme } = useTheme();
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
   const [isPremiumOpen, setIsPremiumOpen] = useState(false);
@@ -57,8 +60,10 @@ export function useAccountScreen() {
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isAccountDetailsOpen, setIsAccountDetailsOpen] = useState(false);
   const [isRateDialogOpen, setIsRateDialogOpen] = useState(false);
-  const [languagePreference, setLanguagePreference] = useState<LanguagePreference>("auto");
-  const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>("unsupported");
+  const [languagePreference, setLanguagePreference] =
+    useState<LanguagePreference>("auto");
+  const [notificationStatus, setNotificationStatus] =
+    useState<NotificationStatus>("unsupported");
   const [selectedRating, setSelectedRating] = useState(0);
   const [isSigningOut, startSignOut] = useTransition();
 
@@ -70,7 +75,8 @@ export function useAccountScreen() {
     publicConfig === undefined;
   const credits = userData?.profile?.credits ?? 0;
   const isPremium = Boolean(userData?.profile?.isPremium);
-  const themePreference = theme === "light" || theme === "dark" ? theme : "system";
+  const themePreference =
+    theme === "light" || theme === "dark" ? theme : "system";
   const themeLabel =
     themePreference === "system"
       ? `System (${resolvedTheme === "light" ? "Light" : "Dark"})`
@@ -87,10 +93,10 @@ export function useAccountScreen() {
           ? "Ask every time"
           : "Unavailable";
   const ratingLabel = selectedRating > 0 ? `${selectedRating}/5` : "Not rated";
-  const helpCenterUrl = publicConfig?.helpCenterUrl ?? "/help";
-  const supportUrl = publicConfig?.supportUrl ?? "/support";
-  const privacyUrl = publicConfig?.privacyUrl ?? "/privacy";
-  const termsUrl = publicConfig?.termsUrl ?? "/terms";
+  const helpCenterUrl = "/help";
+  const supportUrl = "/support";
+  const privacyUrl = "/privacy";
+  const termsUrl = "/terms";
   const shareUrl = publicConfig?.shareUrl ?? getSiteUrl();
 
   useEffect(() => {
@@ -124,7 +130,9 @@ export function useAccountScreen() {
     const destination = new URL(url, window.location.origin);
 
     if (destination.origin === window.location.origin) {
-      router.push(`${destination.pathname}${destination.search}${destination.hash}`);
+      router.push(
+        `${destination.pathname}${destination.search}${destination.hash}`,
+      );
       return;
     }
 
@@ -227,12 +235,16 @@ export function useAccountScreen() {
     setIsRateDialogOpen(false);
 
     if (selectedRating >= 4) {
-      toast.success("Thanks for the rating. Sharing helps more people discover FeelAI.");
+      toast.success(
+        "Thanks for the rating. Sharing helps more people discover FeelAI.",
+      );
       await handleShare();
       return;
     }
 
-    toast.info("Thanks for the feedback. You can contact support with any issue.");
+    toast.info(
+      "Thanks for the feedback. You can contact support with any issue.",
+    );
     openResolvedUrl(supportUrl);
   };
 

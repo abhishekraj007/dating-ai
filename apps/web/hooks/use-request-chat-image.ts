@@ -28,7 +28,7 @@ export function useRequestChatImage() {
         }
       : undefined;
 
-    const promptParts: string[] = ["Generate a selfie"];
+    const promptParts: string[] = ["Send me a selfie"];
 
     if (normalizedStyleOptions?.hairstyle) {
       promptParts.push(`with ${normalizedStyleOptions.hairstyle} hairstyle`);

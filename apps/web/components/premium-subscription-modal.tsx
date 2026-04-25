@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useQuery as useConvexQuery } from "convex/react";
 import { api as convexApi } from "@dating-ai/backend/convex/_generated/api";
 import { Crown, Loader2, Sparkles } from "lucide-react";
@@ -11,20 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { usePolarSubscriptionsQuery } from "@/hooks/use-polar-catalog";
 import { usePolarEmbedCheckout } from "@/hooks/use-polar-embed-checkout";
 import { cn } from "@/lib/utils";
-
-interface PolarSubscriptionProduct {
-  id: string;
-  name: string;
-  description?: string;
-  prices?: Array<{
-    type: string;
-    priceAmount: number;
-    priceCurrency: string;
-    recurringInterval?: string;
-  }>;
-}
 
 interface PremiumSubscriptionModalProps {
   open: boolean;
@@ -40,61 +29,26 @@ export function PremiumSubscriptionModal({
   description = "Get unlimited premium access and unlock the full experience across private photos and subscription perks.",
 }: PremiumSubscriptionModalProps) {
   const userData = useConvexQuery(convexApi.user.fetchUserAndProfile);
-  const [products, setProducts] = useState<PolarSubscriptionProduct[]>([]);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
-  const [productsError, setProductsError] = useState<string | null>(null);
   const { openCheckout, preloadCheckout, loadingProductId } =
     usePolarEmbedCheckout();
+  const {
+    data: products = [],
+    isLoading: isLoadingProducts,
+    error,
+  } = usePolarSubscriptionsQuery(open);
 
   useEffect(() => {
-    if (!open) {
-      return;
+    if (open) {
+      preloadCheckout();
     }
+  }, [open, preloadCheckout]);
 
-    preloadCheckout();
-
-    let isCancelled = false;
-
-    const loadProducts = async () => {
-      setIsLoadingProducts(true);
-      setProductsError(null);
-
-      try {
-        const response = await fetch("/api/polar/subscriptions", {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch subscription plans");
-        }
-
-        const nextProducts =
-          (await response.json()) as PolarSubscriptionProduct[];
-
-        if (!isCancelled) {
-          setProducts(nextProducts);
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          setProductsError(
-            error instanceof Error
-              ? error.message
-              : "Failed to load subscription plans",
-          );
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoadingProducts(false);
-        }
-      }
-    };
-
-    void loadProducts();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [open]);
+  const productsError =
+    error instanceof Error
+      ? error.message
+      : error
+        ? "Failed to load subscription plans"
+        : null;
 
   const subscriptionPlans = products
     .map((product) => {
@@ -225,6 +179,7 @@ export function PremiumSubscriptionModal({
                 subscriptionPlans.map((plan) => {
                   const isBusy = loadingProductId === plan.productId;
                   const isDisabled = !userData?.profile?.authUserId || isBusy;
+                  const planKind = (plan.kind || "").toLocaleUpperCase();
 
                   return (
                     <div
@@ -307,10 +262,9 @@ export function PremiumSubscriptionModal({
                           {isBusy ? (
                             <>
                               <Loader2 className="h-4 w-4 animate-spin" />
-                              Opening checkout…
                             </>
                           ) : (
-                            `Unlock ${plan.kind}`
+                            `Unlock ${planKind}`
                           )}
                         </button>
                       </div>

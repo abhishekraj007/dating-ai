@@ -13,7 +13,7 @@ type GoogleSignInButtonProps = React.ComponentProps<typeof Button> & {
 
 function normalizeReturnTo(returnTo: string) {
   if (!returnTo) {
-    return "/explore";
+    return "/";
   }
 
   return returnTo.startsWith("/") ? returnTo : `/${returnTo}`;

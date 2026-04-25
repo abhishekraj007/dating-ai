@@ -122,7 +122,7 @@ export function ChatInput({
         aria-hidden
         className="pointer-events-none absolute inset-x-0 -top-10 h-10 bg-gradient-to-b from-transparent to-background/95"
       />
-      <div className="flex items-start gap-2">
+      <div className="flex items-end gap-2">
         <div className="relative flex-1">
           {showAttachMenu && (
             <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
@@ -190,7 +190,7 @@ export function ChatInput({
           size="icon"
           onClick={handleSend}
           disabled={disabled || isSending}
-          className="h-11 w-11 shrink-0 rounded-3xl shadow-[0_10px_24px_-16px_rgba(0,0,0,0.7)] transition-transform active:scale-[0.96]"
+          className="h-14 w-14 shrink-0 rounded-full shadow-[0_10px_24px_-16px_rgba(0,0,0,0.7)] transition-transform active:scale-[0.96]"
         >
           <Send className="h-4 w-4" />
         </Button>

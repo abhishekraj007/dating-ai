@@ -15,6 +15,7 @@ import {
   segmentFromGenderPreference,
 } from "@/lib/public-segments";
 import { useDiscoverPreferences } from "@/hooks/use-discover-preferences";
+import { Sparkles, Users } from "lucide-react";
 
 type CharacterGridProps = {
   segment: PublicSegment;
@@ -31,11 +32,13 @@ function CharacterGridSkeleton({ count = 8 }: { count?: number }) {
           key={index}
           className="overflow-hidden rounded-[calc(var(--radius)*1.5)] border border-border/70 bg-card/90 shadow-sm"
         >
-          <Skeleton className="aspect-[3/4] w-full rounded-none" />
-          <div className="space-y-3 p-4">
-            <Skeleton className="h-5 w-3/4" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-2/3" />
+          <div className="relative aspect-[3/4] overflow-hidden">
+            <Skeleton className="h-full w-full rounded-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 space-y-3 p-4">
+              <Skeleton className="h-5 w-2/3 bg-white/20" />
+              <Skeleton className="h-4 w-4/5 bg-white/15" />
+            </div>
           </div>
         </div>
       ))}
@@ -57,15 +60,19 @@ export function CharacterGrid({
 
   if (resolvedSegment === "anime") {
     return (
-      <Card className="border-border/70 bg-card/90">
-        <CardHeader>
-          <CardTitle>Anime companions are coming next</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          We are keeping the anime tab reserved until we seed dedicated anime
-          profiles and public detail pages.
-        </CardContent>
-      </Card>
+      <div className="flex min-h-[50vh] flex-col items-center justify-center py-12">
+        <div className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
+          <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5"></div>
+          <Sparkles className="h-10 w-10 text-primary" strokeWidth={1.5} />
+        </div>
+        <h3 className="mb-2 text-xl font-semibold tracking-tight text-foreground">
+          Your anime adventure awaits
+        </h3>
+        <p className="max-w-md text-center text-sm text-muted-foreground">
+          Find unique anime personalities for you to connect with. They'll be
+          ready to chat and go on adventures with you soon!
+        </p>
+      </div>
     );
   }
 
@@ -116,15 +123,18 @@ export function CharacterGrid({
 
   if (profiles.length === 0) {
     return (
-      <Card className="border-border/70 bg-card/90">
-        <CardHeader>
-          <CardTitle>No public companions available yet</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          The public catalog is still being seeded. Check back shortly for more
-          profiles.
-        </CardContent>
-      </Card>
+      <div className="flex min-h-[50vh] flex-col items-center justify-center py-10 px-8">
+        <div className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
+          <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5"></div>
+          <Users className="h-10 w-10 text-primary" strokeWidth={1.5} />
+        </div>
+        <h3 className="mb-2 text-md font-semibold tracking-tight text-foreground">
+          Could not find any profiles
+        </h3>
+        <p className="max-w-md text-center text-sm md:text-sm text-muted-foreground">
+          Check back shortly to start discovering new connections.
+        </p>
+      </div>
     );
   }
 
@@ -145,11 +155,7 @@ export function CharacterGrid({
       {status === "LoadingMore" ? <CharacterGridSkeleton count={4} /> : null}
 
       {status === "CanLoadMore" ? (
-        <div ref={loadMoreRef} className="flex justify-center py-4">
-          <div className="rounded-full border border-border/70 bg-card/70 px-4 py-2 text-sm text-muted-foreground shadow-sm">
-            Loading more profiles...
-          </div>
-        </div>
+        <div ref={loadMoreRef} className="h-px w-full" aria-hidden="true" />
       ) : null}
     </div>
   );

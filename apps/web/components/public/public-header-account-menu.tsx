@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "../ui/skeleton";
 
 const policyLinks = [
   {
@@ -83,7 +84,7 @@ export function PublicHeaderAccountMenu({
         variant="outline"
         className={cn(isSidebar && "h-12 w-full justify-start rounded-3xl")}
       >
-        Account
+        <Skeleton className="h-8 w-8 rounded-full" />
       </Button>
     );
   }
@@ -93,13 +94,17 @@ export function PublicHeaderAccountMenu({
       <OpenAuthModalButton
         variant="outline"
         className={cn(
-          isSidebar &&
-            "h-12 w-full justify-center rounded-3xl bg-primary text-primary-foreground hover:bg-primary/85",
+          isSidebar ? "h-12 w-full justify-center" : "text-xs",
+          "bg-primary hover:bg-primary/85 rounded-3xl  text-primary-foreground hover:text-primary-foreground/85",
         )}
       >
         Login
       </OpenAuthModalButton>
     );
+  }
+
+  if (isAuthenticated && !isSidebar) {
+    return null;
   }
 
   const user = getUserLabel(session);
