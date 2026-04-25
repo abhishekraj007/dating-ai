@@ -225,6 +225,7 @@ export function PremiumSubscriptionModal({
                 subscriptionPlans.map((plan) => {
                   const isBusy = loadingProductId === plan.productId;
                   const isDisabled = !userData?.profile?.authUserId || isBusy;
+                  const planKind = (plan.kind || "").toLocaleUpperCase();
 
                   return (
                     <div
@@ -307,10 +308,9 @@ export function PremiumSubscriptionModal({
                           {isBusy ? (
                             <>
                               <Loader2 className="h-4 w-4 animate-spin" />
-                              Opening checkout…
                             </>
                           ) : (
-                            `Unlock ${plan.kind}`
+                            `Unlock ${planKind}`
                           )}
                         </button>
                       </div>
