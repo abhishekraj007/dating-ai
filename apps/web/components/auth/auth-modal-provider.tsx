@@ -21,21 +21,21 @@ type AuthModalContextValue = {
 
 const AuthModalContext = createContext<AuthModalContextValue>({
   isOpen: false,
-  returnTo: "/explore",
+  returnTo: "/",
   open: () => {},
   close: () => {},
 });
 
 export function AuthModalProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [returnTo, setReturnTo] = useState("/explore");
+  const [returnTo, setReturnTo] = useState("/");
   const [dialogKey, setDialogKey] = useState(0);
 
   const value = {
     isOpen,
     returnTo,
     open: (nextReturnTo?: string) => {
-      setReturnTo(nextReturnTo || "/explore");
+      setReturnTo(nextReturnTo || "/");
       setDialogKey((currentKey) => currentKey + 1);
       setIsOpen(true);
     },

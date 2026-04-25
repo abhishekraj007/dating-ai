@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { RotateCcw, SlidersHorizontal, X } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +21,11 @@ import {
   useDiscoverPreferences,
   type DiscoverUserPreferences,
 } from "@/hooks/use-discover-preferences";
+import {
+  PUBLIC_SEGMENTS,
+  genderPreferenceFromSegment,
+  segmentFromPathname,
+} from "@/lib/public-segments";
 import { cn } from "@/lib/utils";
 
 type FilterOptions = {
@@ -59,10 +66,27 @@ export function PublicFilterBar() {
   const filterOptions = useQuery(
     api.features.filters.queries.getFilterOptions,
   ) as FilterOptions | undefined;
-  const { effectivePreferences, savePreferences } = useDiscoverPreferences();
+  const pathname = usePathname();
+  const {
+    effectivePreferences,
+    savePreferences,
+    preferredSegment,
+    setGenderPreference,
+  } = useDiscoverPreferences();
   const [pendingKey, setPendingKey] = useState<PreferenceKey | "reset" | null>(
     null,
   );
+
+  const activeSegment =
+    pathname === "/" ? preferredSegment : segmentFromPathname(pathname);
+
+  const handleSegmentClick = (segment: string) => {
+    const nextGenderPreference = genderPreferenceFromSegment(segment as any);
+
+    if (nextGenderPreference) {
+      void setGenderPreference(nextGenderPreference);
+    }
+  };
 
   const selectedEthnicities = effectivePreferences.ethnicityPreferences;
   const selectedInterests = effectivePreferences.interestPreferences;
@@ -113,9 +137,9 @@ export function PublicFilterBar() {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="inline-flex h-9 items-center rounded-full border border-border/70 bg-card/70 px-3 text-sm text-muted-foreground shadow-sm">
-          <SlidersHorizontal className="mr-2 size-4" />
-          Refine matches
+        <div className="inline-flex h-9 items-center rounded-full border border-border/70 bg-card/70 px-3 text-sm text-muted-foreground shadow-sm gap-2">
+          <SlidersHorizontal className="size-4" />
+          <span className="hidden sm:inline-block">Refine matches</span>
         </div>
 
         <DropdownMenu>
@@ -137,7 +161,7 @@ export function PublicFilterBar() {
               ) : null}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-72">
+          <DropdownMenuContent className="w-72 max-h-[400px] overflow-y-auto">
             <DropdownMenuLabel>Match any selected ethnicity</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {isLoadingOptions
@@ -184,7 +208,7 @@ export function PublicFilterBar() {
               ) : null}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-80">
+          <DropdownMenuContent className="w-80 max-h-[400px] overflow-y-auto">
             <DropdownMenuLabel>Match any selected interest</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {isLoadingOptions
@@ -229,6 +253,42 @@ export function PublicFilterBar() {
             Reset
           </Button>
         ) : null}
+
+        <div className="ml-auto hidden rounded-full border border-border/70 bg-card/50 p-1 shadow-sm md:block">
+          <div
+            className={cn(
+              "grid gap-1",
+              Object.keys(PUBLIC_SEGMENTS).length === 2
+                ? "grid-cols-2"
+                : "grid-cols-3",
+            )}
+          >
+            {Object.entries(PUBLIC_SEGMENTS).map(([segment, tab]) => {
+              const isActive = segment === activeSegment;
+              return (
+                <Button
+                  key={segment}
+                  asChild
+                  variant={isActive ? "default" : "ghost"}
+                  size="sm"
+                  className={cn(
+                    "h-7 rounded-full px-4 text-xs font-medium",
+                    !isActive && "text-muted-foreground",
+                  )}
+                >
+                  <Link
+                    href={tab.href}
+                    onClick={() => {
+                      handleSegmentClick(segment);
+                    }}
+                  >
+                    {tab.label}
+                  </Link>
+                </Button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {hasActiveFilters ? (

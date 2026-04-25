@@ -68,7 +68,7 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="rounded-[2rem] bg-card/90 py-5 shadow-[0_24px_48px_-34px_rgba(0,0,0,0.85)] ring-1 ring-white/5">
+    <Card className="rounded-[2rem] bg-card/90 py-5 shadow-[0_10px_54px_-34px_rgba(0,0,0,0.85)] ring-1 ring-white/5">
       <CardHeader className="gap-1 px-5">
         <CardTitle className="text-balance text-2xl font-semibold tracking-tight">
           {title}
@@ -242,16 +242,7 @@ export function AccountScreen() {
   return (
     <>
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 pb-28 md:px-8 md:py-10 md:pb-10">
-        <div className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.24em] text-muted-foreground">
-            Account
-          </p>
-          <h1 className="text-balance text-3xl font-semibold tracking-tight md:text-4xl">
-            Manage your FeelAI profile and mobile shortcuts.
-          </h1>
-        </div>
-
-        <Card className="rounded-[2rem] bg-card/95 py-5 shadow-[0_28px_54px_-34px_rgba(0,0,0,0.9)] ring-1 ring-white/5">
+        <Card className="rounded-[2rem] bg-card/95 py-5 shadow-[0_10px_54px_-34px_rgba(0,0,0,0.9)] ring-1 ring-white/5">
           <CardContent className="space-y-6 px-5">
             <div className="flex items-center gap-4">
               <Avatar className="size-16 ring-1 ring-white/10">
@@ -279,10 +270,7 @@ export function AccountScreen() {
                   <Coins className="size-5" />
                 </span>
                 <div>
-                  <p className="text-sm font-medium">Current credits</p>
-                  <p className="text-xs text-muted-foreground/80">
-                    Available for chats and selfies
-                  </p>
+                  <p className="text-sm font-medium">Credits</p>
                 </div>
               </div>
               <span className="text-2xl font-semibold tabular-nums">

@@ -39,22 +39,13 @@ export function PublicPageContent({
           />
 
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,5,0.14)_0%,rgba(5,5,5,0.28)_38%,rgba(5,5,5,0.72)_100%)] dark:bg-[linear-gradient(180deg,rgba(5,5,5,0.18)_0%,rgba(5,5,5,0.36)_38%,rgba(5,5,5,0.82)_100%)]" />
-          {/* <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.2),transparent_40%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.1),transparent_40%)]" /> */}
 
           <div className="relative flex min-h-[150px] items-end p-5 md:min-h-[220px] md:p-8 max-w-md">
-            <h1 className="text-xl text-pretty text-balance font-semibold tracking-tight md:text-3xl text-white/82 pr-8">
+            <h1 className="text-xl text-pretty text-balance font-semibold tracking-tight md:text-3xl text-white/82 pr-8 md:pr-0">
               {isHome
                 ? "Discover AI companions built for dating, friendship, and immersive chat."
                 : config.heroTitle}
             </h1>
-
-            {/* <div className="max-w-3xl space-y-4 rounded-[calc(var(--radius)*1.25)] border border-white/12 bg-black/18 p-5 text-white shadow-[0_26px_60px_-42px_rgba(0,0,0,0.8)] backdrop-blur-md md:p-7">
-              <h1 className="text-4xl text-balance font-semibold tracking-tight md:text-5xl">
-                {isHome
-                  ? "Discover AI companions built for dating, friendship, and immersive chat."
-                  : config.heroTitle}
-              </h1>
-            </div> */}
           </div>
         </div>
       </section>

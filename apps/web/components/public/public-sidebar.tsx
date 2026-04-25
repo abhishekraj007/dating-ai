@@ -169,44 +169,7 @@ export function PublicSidebar() {
               <ThemeToggle />
             </div>
 
-            <div className="rounded-4xl border border-border/70 bg-card/50 p-1 shadow-[0_18px_32px_-26px_rgba(0,0,0,0.55)]">
-              <div
-                className={cn(
-                  "grid gap-1",
-                  Object.keys(PUBLIC_SEGMENTS).length === 2
-                    ? "grid-cols-2"
-                    : "grid-cols-3",
-                )}
-              >
-                {Object.entries(PUBLIC_SEGMENTS).map(([segment, tab]) => {
-                  const isActive = segment === activeSegment;
-                  return (
-                    <Button
-                      key={segment}
-                      asChild
-                      variant={isActive ? "default" : "ghost"}
-                      size="sm"
-                      className={cn(
-                        "h-11 rounded-[1.1rem] px-3",
-                        !isActive && "text-muted-foreground",
-                      )}
-                    >
-                      <Link
-                        href={tab.href}
-                        onClick={() => {
-                          handleSegmentClick(segment);
-                          close();
-                        }}
-                      >
-                        {tab.label}
-                      </Link>
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="border-t border-border/70 pt-4">
+            <div className="hidden border-t border-border/70 pt-4 md:block">
               <PublicHeaderAccountMenu placement="sidebar" />
             </div>
           </div>

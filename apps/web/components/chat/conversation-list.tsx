@@ -65,11 +65,6 @@ export function ConversationList() {
         <div className="flex items-center gap-2">
           <h2 className="text-balance font-semibold">Chats</h2>
         </div>
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {!isLoading && validConversations.length > 0
-            ? `${validConversations.length} conversation${validConversations.length !== 1 ? "s" : ""}`
-            : ""}
-        </span>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">

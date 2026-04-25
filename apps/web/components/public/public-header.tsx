@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useConvexAuth } from "convex/react";
 import { Menu, Sparkles } from "lucide-react";
 import { PublicBillingActions } from "@/components/public/public-billing-actions";
+import { PublicHeaderAccountMenu } from "@/components/public/public-header-account-menu";
 import { Button } from "@/components/ui/button";
 import {
   PUBLIC_SEGMENTS,
@@ -40,15 +41,6 @@ export function PublicHeader() {
       <div className="mx-auto max-w-[1600px] px-3 sm:px-4">
         <div className="flex h-[60px] items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Open navigation"
-              onClick={open}
-            >
-              <Menu className="size-4" />
-            </Button>
-
             <Link href="/" className="flex min-w-0 items-center gap-2">
               <Image src="/logo.png" alt="FeelAI logo" width={32} height={32} />
               {/* <span className="text-lg font-bold italic">FEELAI</span> */}
@@ -92,13 +84,12 @@ export function PublicHeader() {
             </div>
           ) : null}
 
-          {!isLoading && isAuthenticated ? (
-            <div className="flex shrink-0 items-center">
+          <div className="flex shrink-0 items-center gap-2">
+            {!isLoading && isAuthenticated ? (
               <PublicBillingActions variant="header" />
-            </div>
-          ) : (
-            <div></div>
-          )}
+            ) : null}
+            <PublicHeaderAccountMenu placement="header" />
+          </div>
         </div>
       </div>
     </header>
