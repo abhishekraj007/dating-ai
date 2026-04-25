@@ -42,7 +42,7 @@ export function PublicPageContent({
           {/* <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.2),transparent_40%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.1),transparent_40%)]" /> */}
 
           <div className="relative flex min-h-[150px] items-end p-5 md:min-h-[220px] md:p-8 max-w-md">
-            <h1 className="text-md text-pretty text-balance font-semibold tracking-tight md:text-3xl text-white/82">
+            <h1 className="text-xl text-pretty text-balance font-semibold tracking-tight md:text-3xl text-white/82 pr-8">
               {isHome
                 ? "Discover AI companions built for dating, friendship, and immersive chat."
                 : config.heroTitle}

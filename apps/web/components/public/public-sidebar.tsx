@@ -89,7 +89,7 @@ export function PublicSidebar() {
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="flex items-center gap-3" onClick={close}>
               <Image
-                src="/logo-2.png"
+                src="/logo.png"
                 alt="FeelAI logo"
                 width={64}
                 height={64}

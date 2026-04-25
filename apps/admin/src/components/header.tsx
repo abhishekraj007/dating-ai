@@ -82,38 +82,7 @@ export default function Header() {
         {/* Right Side Actions */}
         <div className="flex items-center gap-2">
           <ModeToggle />
-          {userData && (
-            <>
-              {!premiumStatus?.isPremium && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => router.push("/pricing")}
-                  className="hidden sm:flex"
-                >
-                  Upgrade
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCreditsModalOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Coins className="h-4 w-4" />
-                <span className="hidden sm:inline">
-                  {userCredits?.credits !== undefined
-                    ? userCredits.credits.toLocaleString()
-                    : "..."}
-                </span>
-                <span className="sm:hidden">
-                  {userCredits?.credits !== undefined
-                    ? userCredits.credits
-                    : "..."}
-                </span>
-              </Button>
-            </>
-          )}
+
           {userData ? (
             <UserMenu isPremium={premiumStatus?.isPremium ?? false} />
           ) : (
@@ -123,10 +92,6 @@ export default function Header() {
           )}
         </div>
       </div>
-      <CreditsModal
-        open={creditsModalOpen}
-        onOpenChange={setCreditsModalOpen}
-      />
     </div>
   );
 }

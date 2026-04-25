@@ -41,8 +41,8 @@ export function PublicBillingActions({
     : "h-9 rounded-full px-2.5 text-xs font-medium shadow-[0_12px_24px_-24px_rgba(0,0,0,0.55)] cursor-pointer";
 
   const premiumButtonClassName = isSidebar
-    ? "h-11 w-full justify-between rounded-3xl cursor-pointer"
-    : "h-9 rounded-full px-2.5 text-xs font-medium shadow-[0_12px_24px_-24px_rgba(0,0,0,0.55)] cursor-pointer";
+    ? "h-11 w-full justify-between rounded-3xl border border-[#d6b061] bg-[linear-gradient(135deg,#f7e29b_0%,#d8a53b_55%,#b97a16_100%)] text-[#2c1800] shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_16px_30px_-20px_rgba(216,165,59,0.95)] hover:brightness-[1.04] cursor-pointer"
+    : "h-9 rounded-full border border-[#d6b061] bg-[linear-gradient(135deg,#f7e29b_0%,#d8a53b_55%,#b97a16_100%)] px-2.5 text-xs font-semibold text-[#2c1800] shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_16px_30px_-20px_rgba(216,165,59,0.95)] hover:brightness-[1.04] cursor-pointer";
 
   return (
     <>

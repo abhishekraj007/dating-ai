@@ -97,7 +97,7 @@ export function ConversationList() {
                       disabled={startingConvFor === profile._id}
                       className="flex shrink-0 flex-col items-center gap-1.5 rounded-[1.25rem] p-1 transition-[transform,opacity] hover:opacity-90 active:scale-[0.96] disabled:opacity-50"
                     >
-                      <div className="relative h-16 w-16 overflow-hidden rounded-3xl bg-muted shadow-[0_14px_26px_-20px_rgba(0,0,0,0.6)] ring-1 ring-black/10 dark:ring-white/10">
+                      <div className="relative h-16 w-16 overflow-hidden rounded-full bg-muted shadow-[0_14px_26px_-20px_rgba(0,0,0,0.6)] ring-1 ring-black/10 dark:ring-white/10">
                         {profile.avatarUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img

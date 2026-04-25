@@ -175,9 +175,22 @@ export function ChatView({ conversationId }: ChatViewProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-background">
+      {/* Full-screen avatar background */}
+      {profile?.avatarUrl && (
+        <div className="pointer-events-none absolute inset-0 z-0">
+          <img
+            src={profile.avatarUrl}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
+        </div>
+      )}
+
       {/* Header */}
-      <div className="flex shrink-0 items-center gap-3 border-b border-border/70 bg-background/95 px-3 py-3 shadow-[0_8px_24px_-24px_rgba(0,0,0,0.6)] backdrop-blur md:px-4">
+      <div className="relative z-10 flex shrink-0 items-center gap-3 border-b border-white/[0.06] bg-background/40 px-3 py-3 backdrop-blur-xl md:px-4 dark:border-white/[0.08]">
         <Button
           variant="ghost"
           size="icon"
@@ -229,20 +242,22 @@ export function ChatView({ conversationId }: ChatViewProps) {
 
       {/* Messages */}
       <div
-        className="relative min-h-0 flex-1 overflow-y-auto bg-background"
+        className="relative z-10 min-h-0 flex-1 overflow-y-auto"
         onScroll={handleScroll}
       >
         {/* Load more indicator */}
         {isLoadingMore && (
-          <div className="flex justify-center py-3">
+          <div className="relative z-[1] flex justify-center py-3">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           </div>
         )}
 
         {isLoading ? (
-          <MessagesSkeleton />
+          <div className="relative z-[1]">
+            <MessagesSkeleton />
+          </div>
         ) : messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-2 px-4 py-12 text-center">
+          <div className="relative z-[1] flex h-full flex-col items-center justify-center gap-2 px-4 py-12 text-center">
             <Avatar className="h-16 w-16 ring-1 ring-black/10 dark:ring-white/10">
               <AvatarImage src={profile?.avatarUrl} alt={profile?.name} />
               <AvatarFallback className="text-2xl">
@@ -257,7 +272,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col pb-2 pt-2">
+          <div className="relative z-[1] flex flex-col pb-2 pt-2">
             {messages.map((msg) => (
               <MessageBubble
                 key={msg._id}
@@ -281,7 +296,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
           </div>
         )}
 
-        <div ref={messagesEndRef} className="h-1" />
+        <div ref={messagesEndRef} className="relative z-[1] h-1" />
       </div>
 
       {/* Scroll to bottom */}
@@ -292,7 +307,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
           }
           aria-label="Scroll to latest message"
           className={cn(
-            "absolute bottom-24 right-4 z-10 flex h-10 w-10 items-center justify-center",
+            "absolute bottom-24 right-4 z-20 flex h-10 w-10 items-center justify-center",
             "rounded-full border border-border/70 bg-background/95 shadow-[0_16px_32px_-18px_rgba(0,0,0,0.65)] backdrop-blur",
             "transition-[transform,background-color,box-shadow] hover:bg-accent active:scale-[0.96]",
           )}
@@ -302,14 +317,16 @@ export function ChatView({ conversationId }: ChatViewProps) {
       )}
 
       {/* Input */}
-      <ChatInput
-        onSend={handleSend}
-        isSending={isSending || isAITyping}
-        disabled={isClearing}
-        onOpenImageRequest={() => setIsImageRequestOpen(true)}
-        isRequestingImage={isRequestingImage}
-        creditsBalance={viewerProfile?.credits ?? null}
-      />
+      <div className="relative z-10">
+        <ChatInput
+          onSend={handleSend}
+          isSending={isSending || isAITyping}
+          disabled={isClearing}
+          characterName={profile?.name}
+          onRequestImage={() => setIsImageRequestOpen(true)}
+          isRequestingImage={isRequestingImage}
+        />
+      </div>
 
       <ChatImageRequestDialog
         open={isImageRequestOpen}

@@ -142,9 +142,9 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto w-[80vw]">
+      <DialogContent className="max-h-[90vh] w-[92vw] max-w-md overflow-y-auto sm:w-[80vw]">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Buy credits</DialogTitle>
+          <DialogTitle className="text-xl sm:text-2xl">Buy credits</DialogTitle>
           <DialogDescription>
             Top up your balance to keep sending selfie requests and other paid
             chat actions.
@@ -165,7 +165,7 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
             {error}
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             {creditProducts.map((item, index) => {
               const priceAmount = item.product.prices?.[0]?.priceAmount;
               const price = priceAmount
@@ -177,25 +177,29 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
                   key={item.product.id}
                   className={
                     item.badge === "Popular"
-                      ? "relative border-primary shadow-lg"
-                      : "relative"
+                      ? "relative border-primary shadow-lg py-1"
+                      : "relative py-1"
                   }
                 >
                   {item.badge ? (
-                    <div className="absolute -top-4 left-3">
-                      <span className="rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">
+                    <div className="absolute -top-3.5 left-3">
+                      <span className="rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
                         {item.badge}
                       </span>
                     </div>
                   ) : null}
 
-                  <CardHeader>
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="shrink-0">{getIcon(index)}</div>
+                  <CardHeader className="px-4 py-4 sm:px-6">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="shrink-0 [&>svg]:h-6 [&>svg]:w-6 sm:[&>svg]:h-8 sm:[&>svg]:w-8">
+                          {getIcon(index)}
+                        </div>
                         <div className="flex flex-col">
-                          <span className="text-lg">{item.product.name}</span>
-                          <span className="text-xl font-bold tabular-nums">
+                          <span className="text-sm font-medium sm:text-base">
+                            {item.product.name}
+                          </span>
+                          <span className="text-lg font-bold tabular-nums sm:text-xl">
                             ${price}
                           </span>
                         </div>
@@ -204,7 +208,7 @@ export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
                       <Button
                         onClick={() => handleCheckout(item.product.id)}
                         disabled={loadingProductId === item.product.id}
-                        className="min-w-24 cursor-pointer"
+                        className="shrink-0 cursor-pointer px-4 text-sm md:text-lg md:py-6 md:px-8 sm:min-w-24"
                       >
                         {loadingProductId === item.product.id ? (
                           <Spinner className="h-4 w-4" />

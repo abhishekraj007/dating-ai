@@ -1,12 +1,13 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useConvexAuth } from "convex/react";
 import { MobileBottomNav } from "@/components/navigation/mobile-bottom-nav";
 import { PublicSidebar } from "@/components/public/public-sidebar";
 import { PublicHeader } from "@/components/public/public-header";
 import { SidebarProvider } from "@/components/public/sidebar-context";
+import { cn } from "@/lib/utils";
 
 export default function MainLayout({
   children,
@@ -14,7 +15,12 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated, isLoading } = useConvexAuth();
+
+  // Hide bottom nav padding when inside a chat conversation on mobile
+  const isChatConversation =
+    pathname.startsWith("/chat/") && pathname !== "/chat";
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -39,16 +45,30 @@ export default function MainLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen flex-col bg-background md:h-screen md:overflow-hidden">
-        <Suspense
-          fallback={
-            <div className="h-[60px] border-b border-border/70 bg-background/90 md:hidden" />
-          }
-        >
-          <PublicHeader />
-        </Suspense>
+      <div
+        className={cn(
+          "flex flex-col bg-background md:h-screen md:overflow-hidden",
+          isChatConversation
+            ? "h-dvh overflow-hidden"
+            : "min-h-screen",
+        )}
+      >
+        {!isChatConversation && (
+          <Suspense
+            fallback={
+              <div className="h-[60px] border-b border-border/70 bg-background/90 md:hidden" />
+            }
+          >
+            <PublicHeader />
+          </Suspense>
+        )}
 
-        <div className="mx-auto flex w-full max-w-[1600px] flex-1 pb-24 md:h-screen md:min-h-0 md:pb-0">
+        <div
+          className={cn(
+            "mx-auto flex w-full max-w-[1600px] flex-1 min-h-0 md:h-screen md:pb-0",
+            isChatConversation ? "pb-0" : "pb-24",
+          )}
+        >
           {/* Sidebar — hidden on mobile, visible md+ */}
 
           <PublicSidebar />

@@ -39,7 +39,7 @@ export function AuthenticatedLayout({
           ? "Uploads"
           : pathname === "/app-config"
             ? "App Config"
-          : "Admin";
+            : "Admin";
 
   // Show loading skeleton while checking auth - keeps layout stable
   const isLoading = userData === undefined;
@@ -60,30 +60,6 @@ export function AuthenticatedLayout({
               </div>
               <div className="flex items-center gap-2">
                 <ModeToggle />
-                {isLoading ? (
-                  <Skeleton className="h-9 w-24" />
-                ) : (
-                  <>
-                    {!premiumStatus?.isPremium && (
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => router.push("/pricing")}
-                        className="hidden sm:flex"
-                      >
-                        Upgrade
-                      </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCreditsModalOpen(true)}
-                    >
-                      <Coins className="h-4 w-4 mr-2" />
-                      {userCredits?.credits ?? 0}
-                    </Button>
-                  </>
-                )}
               </div>
             </div>
           </header>
