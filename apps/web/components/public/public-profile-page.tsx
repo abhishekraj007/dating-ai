@@ -1,10 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { OpenAuthModalButton } from "@/components/auth/open-auth-modal-button";
-import { StartChatButton } from "@/components/public/start-chat-button";
 import { PremiumProfileImage } from "@/components/public/premium-profile-image";
+import { ProfileAvatarSection } from "@/components/public/profile-avatar-section";
 import { getSegmentConfig, type PublicSegment } from "@/lib/public-segments";
 
 type PublicProfileDetails = {
@@ -54,25 +52,11 @@ export function PublicProfilePage({
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,360px)_1fr]">
-          <div className="overflow-hidden rounded-2xl border border-border/70 bg-card">
-            <div className="relative aspect-[4/5]">
-              {profile.avatarUrl ? (
-                <Image
-                  alt={profile.name}
-                  className="object-cover"
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 360px"
-                  src={profile.avatarUrl}
-                  //   unoptimized
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center bg-muted text-6xl font-semibold text-muted-foreground">
-                  {profile.name[0]}
-                </div>
-              )}
-            </div>
-          </div>
+          <ProfileAvatarSection
+            avatarUrl={profile.avatarUrl}
+            name={profile.name}
+            aiProfileId={profile._id}
+          />
 
           <div className="flex flex-col gap-5">
             <div className="space-y-3">
@@ -110,68 +94,48 @@ export function PublicProfilePage({
               </p>
             ) : null}
 
-            <div className="flex flex-wrap gap-3">
-              <StartChatButton
-                aiProfileId={profile._id}
-                className="min-w-40"
-                size="lg"
-              >
-                Chat
-              </StartChatButton>
-              <OpenAuthModalButton size="lg" variant="outline">
-                Save this companion
-              </OpenAuthModalButton>
-            </div>
+            {profile.relationshipGoal ? (
+              <div className="">
+                <span>Looking for</span>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  {profile.relationshipGoal}
+                </p>
+              </div>
+            ) : null}
+            {profile.personalityTraits &&
+            profile.personalityTraits.length > 0 ? (
+              <div>
+                <span>Personality</span>
+                <p className="flex flex-wrap gap-2 mt-2 ">
+                  {profile.personalityTraits.map((trait) => (
+                    <Badge key={trait} variant="outline">
+                      {trait}
+                    </Badge>
+                  ))}
+                </p>
+              </div>
+            ) : null}
+
+            {profile.interests && profile.interests.length > 0 ? (
+              <div className="border-border/70 bg-card/90">
+                <span>Interests</span>
+                <p className="flex flex-wrap gap-2 mt-2">
+                  {profile.interests.map((interest) => (
+                    <Badge key={interest} variant="outline">
+                      {interest}
+                    </Badge>
+                  ))}
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        {profile.relationshipGoal ? (
-          <Card className="border-border/70 bg-card/90">
-            <CardHeader>
-              <CardTitle>Looking for</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm leading-6 text-muted-foreground">
-              {profile.relationshipGoal}
-            </CardContent>
-          </Card>
-        ) : null}
-        {profile.personalityTraits && profile.personalityTraits.length > 0 ? (
-          <Card className="border-border/70 bg-card/90 lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Personality</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-              {profile.personalityTraits.map((trait) => (
-                <Badge key={trait} variant="outline">
-                  {trait}
-                </Badge>
-              ))}
-            </CardContent>
-          </Card>
-        ) : null}
-      </section>
-
-      {profile.interests && profile.interests.length > 0 ? (
-        <Card className="border-border/70 bg-card/90">
-          <CardHeader>
-            <CardTitle>Interests</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            {profile.interests.map((interest) => (
-              <Badge key={interest} variant="outline">
-                {interest}
-              </Badge>
-            ))}
-          </CardContent>
-        </Card>
-      ) : null}
-
       {profile.profileImageUrls && profile.profileImageUrls.length > 0 ? (
         <section className="space-y-4 pb-4">
           <h2 className="text-2xl font-semibold tracking-tight">Gallery</h2>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
             {profile.profileImageUrls.map((url, index) => (
               <div
                 key={url}
@@ -182,7 +146,7 @@ export function PublicProfilePage({
                   fallbackText={profile.name[0]}
                   imageUrl={url}
                   profileName={profile.name}
-                  sizes="(max-width: 768px) 100vw, 33vw"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1280px) 50vw, 33vw"
                 />
               </div>
             ))}
