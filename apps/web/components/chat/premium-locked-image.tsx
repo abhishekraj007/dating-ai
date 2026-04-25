@@ -11,20 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { usePolarSubscriptionsQuery } from "@/hooks/use-polar-catalog";
 import { usePolarEmbedCheckout } from "@/hooks/use-polar-embed-checkout";
 import { cn } from "@/lib/utils";
-
-interface PolarSubscriptionProduct {
-  id: string;
-  name: string;
-  description?: string;
-  prices?: Array<{
-    type: string;
-    priceAmount: number;
-    priceCurrency: string;
-    recurringInterval?: string;
-  }>;
-}
 
 interface PremiumLockedImageProps {
   imageUrl: string;
@@ -44,61 +33,26 @@ export function PremiumLockedImage({
   viewerAuthUserId,
 }: PremiumLockedImageProps) {
   const [open, setOpen] = useState(false);
-  const [products, setProducts] = useState<PolarSubscriptionProduct[]>([]);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
-  const [productsError, setProductsError] = useState<string | null>(null);
   const { openCheckout, preloadCheckout, loadingProductId } =
     usePolarEmbedCheckout();
+  const {
+    data: products = [],
+    isLoading: isLoadingProducts,
+    error,
+  } = usePolarSubscriptionsQuery(open);
 
   useEffect(() => {
-    if (!open) {
-      return;
+    if (open) {
+      preloadCheckout();
     }
+  }, [open, preloadCheckout]);
 
-    preloadCheckout();
-
-    let isCancelled = false;
-
-    const loadProducts = async () => {
-      setIsLoadingProducts(true);
-      setProductsError(null);
-
-      try {
-        const response = await fetch("/api/polar/subscriptions", {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch subscription plans");
-        }
-
-        const nextProducts =
-          (await response.json()) as PolarSubscriptionProduct[];
-
-        if (!isCancelled) {
-          setProducts(nextProducts);
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          setProductsError(
-            error instanceof Error
-              ? error.message
-              : "Failed to load subscription plans",
-          );
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoadingProducts(false);
-        }
-      }
-    };
-
-    void loadProducts();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [open]);
+  const productsError =
+    error instanceof Error
+      ? error.message
+      : error
+        ? "Failed to load subscription plans"
+        : null;
 
   const subscriptionPlans = products
     .map((product) => {
@@ -229,6 +183,7 @@ export function PremiumLockedImage({
               ) : (
                 subscriptionPlans.map((plan) => (
                   <div
+                    key={plan.productId}
                     className={cn(
                       "rounded-full border px-4 pr-6 py-4 text-left shadow-lg transition-transform active:scale-[0.96]",
                       plan.featured
@@ -238,7 +193,6 @@ export function PremiumLockedImage({
                   >
                     <div className="flex items-start justify-between gap-3">
                       <Button
-                        key={plan.productId}
                         // type="button"
                         variant={"default"}
                         onClick={() => handlePlanCheckout(plan.productId)}

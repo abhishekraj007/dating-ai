@@ -129,11 +129,10 @@ export function CharacterGrid({
           <Users className="h-10 w-10 text-primary" strokeWidth={1.5} />
         </div>
         <h3 className="mb-2 text-md font-semibold tracking-tight text-foreground">
-          Looking for your perfect match?
+          Could not find any profiles
         </h3>
         <p className="max-w-md text-center text-sm md:text-sm text-muted-foreground">
-          Could not find any profiles. Check back shortly to start discovering
-          new connections.
+          Check back shortly to start discovering new connections.
         </p>
       </div>
     );

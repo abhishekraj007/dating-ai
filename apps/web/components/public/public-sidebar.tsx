@@ -85,8 +85,13 @@ export function PublicSidebar() {
           isOpen ? "flex" : "hidden md:flex",
         )}
       >
-        <div className="border-b border-border/70 px-5 py-2">
-          <div className="flex items-center justify-between gap-3">
+        <div className="relative overflow-hidden border-b border-border/70 bg-gradient-to-b from-primary/[0.10] to-transparent px-5 py-2">
+          <div
+            className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-primary/15 blur-3xl dark:bg-primary/20"
+            aria-hidden
+          />
+
+          <div className="relative flex items-center justify-between gap-3">
             <Link href="/" className="flex items-center gap-3" onClick={close}>
               <Image
                 src="/logo.png"
@@ -109,7 +114,12 @@ export function PublicSidebar() {
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-4">
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-4">
+          <div
+            className="pointer-events-none absolute -right-10 -top-10 h-100 w-28 rounded-full bg-primary/15 blur-3xl dark:bg-primary/20"
+            aria-hidden
+          />
+
           <div className="space-y-1">
             {primaryItems.map((item) => {
               const Icon = item.icon;
