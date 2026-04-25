@@ -69,13 +69,13 @@ export function CharacterCard({
 
         <div className="absolute inset-x-0 bottom-0 space-y-3 p-4 text-white">
           <div className="space-y-1">
-            <h3 className="relative z-20 text-xl font-semibold tracking-tight">
+            <h3 className="relative z-20 text-[1.05rem] md:text-xl font-semibold tracking-tight">
               {profile.name}
               {profile.age ? (
                 <span className="ml-1 text-white/72">{profile.age}</span>
               ) : null}
             </h3>
-            <p className="relative z-20 line-clamp-2 text-sm leading-5 text-white/78">
+            <p className="relative z-20 line-clamp-1 md:line-clamp-2 text-sm leading-5 text-white/78">
               {profile.tagline}
             </p>
           </div>

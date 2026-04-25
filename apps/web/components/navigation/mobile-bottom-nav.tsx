@@ -44,6 +44,11 @@ export function MobileBottomNav() {
   const pathname = usePathname();
   const { isAuthenticated } = useConvexAuth();
 
+  // Hide bottom nav when inside a chat conversation on mobile
+  const isChatConversation =
+    pathname.startsWith("/chat/") && pathname !== "/chat";
+  if (isChatConversation) return null;
+
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-background/95 backdrop-blur md:hidden">
       <div className="mx-auto grid max-w-md grid-cols-3 gap-1 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2">

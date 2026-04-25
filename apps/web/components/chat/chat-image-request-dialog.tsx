@@ -147,16 +147,8 @@ export function ChatImageRequestDialog({
             onChange={(event) => setDescription(event.target.value)}
             placeholder="Describe the vibe, pose, lighting, or anything else you want in the photo."
             className="min-h-28 rounded-3xl bg-muted/40"
-            maxLength={280}
+            maxLength={5000}
           />
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>
-              {creditsBalance === undefined || creditsBalance === null
-                ? "Credits will be deducted after sending."
-                : `${creditsBalance} credits available`}
-            </span>
-            <span>{description.trim().length}/280</span>
-          </div>
         </div>
 
         {!hasEnoughCredits && (
@@ -169,7 +161,7 @@ export function ChatImageRequestDialog({
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="w-full rounded-3xl sm:w-full"
+            className="w-full rounded-full py-5 cursor-pointer"
           >
             <Camera className="h-4 w-4" />
             {isSubmitting

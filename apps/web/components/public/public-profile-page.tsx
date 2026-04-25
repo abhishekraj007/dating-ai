@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OpenAuthModalButton } from "@/components/auth/open-auth-modal-button";
+import { StartChatButton } from "@/components/public/start-chat-button";
 import { PremiumProfileImage } from "@/components/public/premium-profile-image";
 import { getSegmentConfig, type PublicSegment } from "@/lib/public-segments";
 
@@ -110,9 +111,13 @@ export function PublicProfilePage({
             ) : null}
 
             <div className="flex flex-wrap gap-3">
-              <OpenAuthModalButton className="min-w-40" size="lg">
+              <StartChatButton
+                aiProfileId={profile._id}
+                className="min-w-40"
+                size="lg"
+              >
                 Chat
-              </OpenAuthModalButton>
+              </StartChatButton>
               <OpenAuthModalButton size="lg" variant="outline">
                 Save this companion
               </OpenAuthModalButton>

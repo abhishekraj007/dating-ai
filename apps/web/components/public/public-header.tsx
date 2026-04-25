@@ -51,11 +51,12 @@ export function PublicHeader() {
 
             <Link href="/" className="flex min-w-0 items-center gap-2">
               <Image src="/logo.png" alt="FeelAI logo" width={32} height={32} />
+              {/* <span className="text-lg font-bold italic">FEELAI</span> */}
             </Link>
           </div>
 
           {showSegmentSwitch ? (
-            <div className="flex justify-center pb-3">
+            <div className="flex justify-center fixed left-1/2 transform -translate-x-1/2 md:relative md:left-auto md:transform-none">
               <nav
                 className={cn(
                   "grid w-full max-w-[320px] gap-1 rounded-full border border-border/70 bg-card/70 p-1 shadow-[0_18px_30px_-24px_rgba(0,0,0,0.65)]",
