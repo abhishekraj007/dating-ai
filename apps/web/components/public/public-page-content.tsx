@@ -21,13 +21,14 @@ export function PublicPageContent({
 }: PublicPageContentProps) {
   const config = getSegmentConfig(segment);
   const isHome = variant === "home";
-  const heroBackground = heroBackgrounds[segment];
+  // const heroBackground = heroBackgrounds[segment];
+  const heroBackground = heroBackgrounds["anime"];
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-8">
       {isHome ? <DiscoverPreferenceDialog /> : null}
 
-      {/* <section className="relative overflow-hidden rounded-[calc(var(--radius)*1.75)] border border-border/70 bg-card shadow-[0_28px_70px_-44px_rgba(0,0,0,0.45)]">
+      <section className="relative overflow-hidden rounded-[calc(var(--radius)*1.75)] border border-border/70 bg-card shadow-[0_28px_70px_-44px_rgba(0,0,0,0.45)]">
         <div className="relative min-h-[150px] md:min-h-[220px]">
           <Image
             src={heroBackground}
@@ -41,14 +42,15 @@ export function PublicPageContent({
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,5,0.14)_0%,rgba(5,5,5,0.28)_38%,rgba(5,5,5,0.72)_100%)] dark:bg-[linear-gradient(180deg,rgba(5,5,5,0.18)_0%,rgba(5,5,5,0.36)_38%,rgba(5,5,5,0.82)_100%)]" />
 
           <div className="relative flex min-h-[150px] items-end p-5 md:min-h-[220px] md:p-8 max-w-md">
-            <h1 className="text-xl text-pretty text-balance font-semibold tracking-tight md:text-3xl text-white/82 pr-8 md:pr-0">
-              {isHome
-                ? "Discover AI companions built for dating, friendship, and immersive chat."
-                : config.heroTitle}
+            <h1 className="text-md text-pretty text-balance font-semibold tracking-tight md:text-2xl text-white/82 pr-8 md:pr-0">
+              {/* {isHome
+                ? "Discover AI Characters built for immersive chat."
+                : config.heroTitle} */}
+              Discover AI Characters for learning & creative conversations
             </h1>
           </div>
         </div>
-      </section> */}
+      </section>
 
       <section className="space-y-4">
         <PublicFilterBar />
