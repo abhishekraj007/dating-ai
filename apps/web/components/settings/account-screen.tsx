@@ -18,7 +18,6 @@ import {
   Settings2,
   Share2,
   Star,
-  UserRound,
 } from "lucide-react";
 import {
   Dialog,
@@ -50,6 +49,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAccountScreen } from "@/hooks/use-account-screen";
 import { cn } from "@/lib/utils";
 
+/**
+ * Hide scrollbars while keeping the region scrollable.
+ * Avoid `display:none` / `[&::-webkit-scrollbar]:hidden` on WebKit — it can break
+ * touch/momentum scrolling on iOS. Zero-sized scrollbar is the safe approach.
+ */
+const noScrollbarClass = [
+  "[-ms-overflow-style:none] [scrollbar-width:none]",
+  "[&::-webkit-scrollbar]:h-0 [&::-webkit-scrollbar]:w-0",
+  "touch-pan-y [-webkit-overflow-scrolling:touch]",
+].join(" ");
+
 type ActionRowProps = {
   icon: LucideIcon;
   label: string;
@@ -68,7 +78,7 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="rounded-[2rem] bg-card/90 py-5 shadow-[0_10px_54px_-34px_rgba(0,0,0,0.85)] ring-1 ring-white/5">
+    <Card className="shrink-0 rounded-[2rem] bg-card/90 py-5 shadow-[0_10px_54px_-34px_rgba(0,0,0,0.85)] ring-1 ring-white/5">
       <CardHeader className="gap-1 px-5">
         <CardTitle className="text-balance text-2xl font-semibold tracking-tight">
           {title}
@@ -160,7 +170,12 @@ function ThemeOptionButton({
 
 function AccountScreenSkeleton() {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
+    <div
+      className={cn(
+        "mx-auto flex h-full min-h-0 w-full max-w-3xl flex-1 flex-col gap-6 overflow-y-auto overscroll-y-auto px-4 py-6 md:px-8 md:py-10",
+        noScrollbarClass,
+      )}
+    >
       <Card className="rounded-[2rem] py-5">
         <CardContent className="space-y-6 px-5">
           <div className="flex items-center gap-4">
@@ -241,8 +256,13 @@ export function AccountScreen() {
 
   return (
     <>
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 pb-28 md:px-8 md:py-10 md:pb-10">
-        <Card className="rounded-[2rem] bg-card/95 py-5 shadow-[0_10px_54px_-34px_rgba(0,0,0,0.9)] ring-1 ring-white/5">
+      <div
+        className={cn(
+          "mx-auto flex h-full min-h-0 w-full max-w-3xl flex-1 flex-col gap-6 overflow-y-auto overscroll-y-auto px-4 py-6 pb-28 md:px-8 md:py-10 md:pb-10",
+          noScrollbarClass,
+        )}
+      >
+        <Card className="shrink-0 rounded-[2rem] bg-card/95 py-5 shadow-[0_10px_54px_-34px_rgba(0,0,0,0.9)] ring-1 ring-white/5">
           <CardContent className="space-y-6 px-5">
             <div className="flex items-center gap-4">
               <Avatar className="size-16 ring-1 ring-white/10">

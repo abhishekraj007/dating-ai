@@ -67,6 +67,7 @@ export default function CharactersPage() {
     selectedProfile,
     isSheetOpen,
     isSaving,
+    isDeletingProfile,
     isUploadingAvatar,
     isUploadingGallery,
     isGeneratingShowcaseImage,
@@ -92,6 +93,7 @@ export default function CharactersPage() {
     handleDeleteImage,
     handleGenerateShowcaseImage,
     handleSave,
+    handleDeleteProfile,
   } = useCharacterEdit(profiles);
 
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
@@ -284,6 +286,7 @@ export default function CharactersPage() {
             onAddInterest={handleAddInterest}
             onRemoveInterest={handleRemoveInterest}
             isSaving={isSaving}
+            isDeletingProfile={isDeletingProfile}
             isUploadingAvatar={isUploadingAvatar}
             isUploadingGallery={isUploadingGallery}
             isGeneratingShowcaseImage={isGeneratingShowcaseImage}
@@ -295,6 +298,7 @@ export default function CharactersPage() {
             onDeleteImage={handleDeleteImage}
             onGenerateShowcaseImage={handleGenerateShowcaseImage}
             onSave={handleSave}
+            onDeleteProfile={handleDeleteProfile}
             onClose={handleClose}
           />
         </PageShell>

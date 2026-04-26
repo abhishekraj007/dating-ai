@@ -539,6 +539,135 @@ export const adminUpdateProfile = mutation({
   },
 });
 
+export const adminDeleteProfile = mutation({
+  args: {
+    profileId: v.id("aiProfiles"),
+  },
+  returns: v.null(),
+  handler: async (ctx, { profileId }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    const userProfile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
+      .unique();
+
+    if (!userProfile?.isAdmin) {
+      throw new Error("Admin access required");
+    }
+
+    const profile = await ctx.db.get(profileId);
+    if (!profile) {
+      throw new Error("Profile not found");
+    }
+
+    if (profile.isUserCreated) {
+      throw new Error("Cannot admin-delete user-created profiles");
+    }
+
+    const imageKeys = [
+      profile.avatarImageKey,
+      ...(profile.profileImageKeys ?? []),
+    ].filter((key): key is string => Boolean(key));
+
+    for (const imageKey of new Set(imageKeys)) {
+      try {
+        await r2.deleteObject(ctx, imageKey);
+      } catch (error) {
+        console.error("[adminDeleteProfile] Failed to delete R2 object:", {
+          profileId,
+          imageKey,
+          error,
+        });
+      }
+    }
+
+    const pendingAdminUploads = await ctx.db
+      .query("pendingAdminUploads")
+      .collect();
+    for (const ticket of pendingAdminUploads) {
+      if (ticket.profileId === profileId) {
+        await ctx.db.delete(ticket._id);
+      }
+    }
+
+    const profileInteractions = await ctx.db
+      .query("profileInteractions")
+      .collect();
+    for (const interaction of profileInteractions) {
+      if (interaction.aiProfileId === profileId) {
+        await ctx.db.delete(interaction._id);
+      }
+    }
+
+    const conversations = await ctx.db.query("aiConversations").collect();
+
+    for (const conversation of conversations) {
+      if (conversation.aiProfileId !== profileId) {
+        continue;
+      }
+
+      let deleteResult = await ctx.runMutation(
+        components.agent.threads.deleteAllForThreadIdAsync,
+        { threadId: conversation.threadId },
+      );
+
+      while (!deleteResult.isDone) {
+        deleteResult = await ctx.runMutation(
+          components.agent.threads.deleteAllForThreadIdAsync,
+          { threadId: conversation.threadId },
+        );
+      }
+
+      const chatImages = await ctx.db
+        .query("chatImages")
+        .withIndex("by_conversation", (q) =>
+          q.eq("conversationId", conversation._id),
+        )
+        .collect();
+
+      for (const image of chatImages) {
+        if (image.imageKey) {
+          try {
+            await r2.deleteObject(ctx, image.imageKey);
+          } catch (error) {
+            console.error(
+              "[adminDeleteProfile] Failed to delete chat image from R2:",
+              {
+                profileId,
+                conversationId: conversation._id,
+                imageKey: image.imageKey,
+                error,
+              },
+            );
+          }
+        }
+
+        await ctx.db.delete(image._id);
+      }
+
+      const quizSessions = await ctx.db
+        .query("quizSessions")
+        .withIndex("by_conversation", (q) =>
+          q.eq("conversationId", conversation._id),
+        )
+        .collect();
+
+      for (const quizSession of quizSessions) {
+        await ctx.db.delete(quizSession._id);
+      }
+
+      await ctx.db.delete(conversation._id);
+    }
+
+    await ctx.db.delete(profileId);
+    return null;
+  },
+});
+
 /**
  * Admin: Generate upload URL for AI profile images.
  *
