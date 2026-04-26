@@ -212,12 +212,6 @@ export const generateResponse = internalAction({
     const nsfwEnabled =
       platform !== undefined && nsfwEnabledPlatforms.includes(platform);
 
-    console.log("NSFW eligibility", {
-      nsfwEnabled,
-      platform,
-      nsfwEnabledPlatforms,
-    });
-
     // Try each configured provider in preferred order (primary first, then
     // the fallback). This lets us degrade gracefully when the primary
     // provider errors out - e.g. Vercel AI Gateway returning HTTP 402

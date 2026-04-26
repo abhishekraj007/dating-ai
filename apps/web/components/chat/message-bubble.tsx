@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Camera, Trash2 } from "lucide-react";
+import { Camera, LogOut, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChatImageBubble } from "@/components/chat/chat-image-bubble";
@@ -16,52 +16,101 @@ interface MessageBubbleProps {
   viewerEmail?: string | null;
   viewerAuthUserId?: string | null;
   messageOrder?: number;
+  isQuizActive?: boolean;
+  onQuizAnswer?: (answer: string) => void;
+  onEndQuiz?: () => void;
   onDelete?: (order: number) => void;
 }
 
-function parseContent(content: string) {
+type StructuredPayload = {
+  type: string;
+  message?: string;
+  prompt?: string;
+  caption?: string;
+  imageUrl?: string;
+  imageKey?: string;
+  question?: string;
+  options?: string[];
+  explanation?: string;
+  isCorrect?: boolean;
+};
+
+function parseStructuredContent(content: string): StructuredPayload | null {
   try {
     const parsed = JSON.parse(content);
-    if (parsed && typeof parsed === "object" && parsed.type) {
-      if (parsed.type === "image_response") {
-        return {
-          kind: "image" as const,
-          imageUrl: parsed.imageUrl as string | undefined,
-          imageKey: parsed.imageKey as string | undefined,
-          text:
-            (parsed.caption as string | undefined) ||
-            (parsed.prompt as string | undefined),
-        };
-      }
-      if (parsed.type === "chat_error") {
-        return {
-          kind: "error" as const,
-          text: (parsed.message as string) || "Something went wrong",
-        };
-      }
-      if (parsed.type === "image_request") {
-        return {
-          kind: "image_request" as const,
-          text:
-            (parsed.message as string | undefined) ||
-            (parsed.prompt as string | undefined) ||
-            "Send me a selfie",
-        };
-      }
-      // quiz types and others — render empty (skip rendering)
-      if (
-        parsed.type === "quiz_question" ||
-        parsed.type === "quiz_start" ||
-        parsed.type === "quiz_end" ||
-        parsed.type === "quiz_answer_result"
-      ) {
-        return { kind: "skip" as const };
-      }
-      return { kind: "text" as const, text: content };
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      typeof parsed.type === "string"
+    ) {
+      return parsed as StructuredPayload;
     }
   } catch {
     // plain text
   }
+  return null;
+}
+
+function parseContent(content: string) {
+  const structured = parseStructuredContent(content);
+
+  if (!structured) {
+    return { kind: "text" as const, text: content };
+  }
+
+  if (structured.type === "image_response") {
+    return {
+      kind: "image" as const,
+      imageUrl: structured.imageUrl,
+      imageKey: structured.imageKey,
+      text: structured.caption || structured.prompt,
+    };
+  }
+
+  if (structured.type === "chat_error") {
+    return {
+      kind: "error" as const,
+      text: structured.message || "Something went wrong",
+    };
+  }
+
+  if (structured.type === "image_request") {
+    return {
+      kind: "image_request" as const,
+      text: structured.message || structured.prompt || "Send me a selfie",
+    };
+  }
+
+  if (structured.type === "quiz_question") {
+    return {
+      kind: "quiz_question" as const,
+      message: structured.message,
+      question: structured.question,
+      options: Array.isArray(structured.options) ? structured.options : [],
+    };
+  }
+
+  if (
+    structured.type === "quiz_start" ||
+    structured.type === "quiz_end" ||
+    structured.type === "quiz_answer_check"
+  ) {
+    return {
+      kind: "quiz_state" as const,
+      text: structured.message || "",
+      state: structured.type,
+    };
+  }
+
+  if (structured.type === "quiz_answer_result") {
+    return {
+      kind: "quiz_result" as const,
+      text: structured.message || "",
+      explanation: structured.explanation,
+      isCorrect: structured.isCorrect,
+    };
+  }
+
   return { kind: "text" as const, text: content };
 }
 
@@ -84,13 +133,23 @@ export function MessageBubble({
   viewerEmail,
   viewerAuthUserId,
   messageOrder,
+  isQuizActive = false,
+  onQuizAnswer,
+  onEndQuiz,
   onDelete,
 }: MessageBubbleProps) {
   const isUser = role === "user";
   const parsed = parseContent(content);
   const [isHovered, setIsHovered] = useState(false);
-
-  if (parsed.kind === "skip") return null;
+  const assistantBubbleClass =
+    "rounded-bl-lg bg-muted text-foreground ring-1 ring-black/6 dark:ring-white/6";
+  const bubbleClassName = cn(
+    "rounded-3xl px-4 py-2.5 text-sm leading-relaxed text-pretty shadow-[0_10px_24px_-20px_rgba(0,0,0,0.55)]",
+    isUser
+      ? "rounded-br-lg bg-primary text-primary-foreground"
+      : assistantBubbleClass,
+    isStreaming && "animate-pulse",
+  );
 
   return (
     <div
@@ -120,7 +179,7 @@ export function MessageBubble({
           <ChatImageBubble
             imageKey={parsed.imageKey}
             imageUrl={parsed.imageUrl}
-            caption={parsed.text}
+            // caption={parsed.text}
             isPremium={viewerIsPremium}
             profileName={profileName}
             profileAvatar={avatarUrl}
@@ -137,23 +196,65 @@ export function MessageBubble({
                 : "rounded-bl-lg bg-muted text-foreground ring-1 ring-black/6 dark:ring-white/6",
             )}
           >
-            <Camera className="h-4 w-4 shrink-0" />
             <span>{parsed.text}</span>
           </div>
         ) : parsed.kind === "error" ? (
           <div className="rounded-3xl rounded-bl-lg bg-destructive/10 px-4 py-2.5 text-sm text-destructive shadow-sm">
             {parsed.text}
           </div>
+        ) : parsed.kind === "quiz_question" ? (
+          <div className={bubbleClassName}>
+            <div className="space-y-3">
+              <p className="leading-6">
+                {parsed.question || parsed.message || "Quiz time"}
+              </p>
+              {isQuizActive && parsed.options.length > 0 ? (
+                <div className="space-y-2">
+                  {parsed.options.map((option: string, index: number) => (
+                    <button
+                      key={`${option}-${index}`}
+                      type="button"
+                      onClick={() => onQuizAnswer?.(option)}
+                      disabled={!onQuizAnswer}
+                      className="flex w-full items-center rounded-2xl border border-border/70 bg-background/50 px-3 py-2 text-left text-sm transition-colors hover:bg-background/80 disabled:cursor-default disabled:opacity-100"
+                    >
+                      {String.fromCharCode(65 + index)}. {option}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              {isQuizActive && onEndQuiz ? (
+                <button
+                  type="button"
+                  onClick={onEndQuiz}
+                  className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/40 px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-background/70"
+                >
+                  <LogOut className="h-4 w-4" />
+                  End quiz
+                </button>
+              ) : null}
+            </div>
+          </div>
+        ) : parsed.kind === "quiz_result" ? (
+          <div className={bubbleClassName}>
+            <div className="space-y-2">
+              {parsed.text ? <p>{parsed.text}</p> : null}
+              {parsed.explanation ? (
+                <p className="text-muted-foreground">{parsed.explanation}</p>
+              ) : null}
+            </div>
+          </div>
+        ) : parsed.kind === "quiz_state" ? (
+          <div className={bubbleClassName}>
+            {parsed.text ||
+              (parsed.state === "quiz_start"
+                ? "Quiz started"
+                : parsed.state === "quiz_end"
+                  ? "Quiz ended"
+                  : "Checking answer")}
+          </div>
         ) : (
-          <div
-            className={cn(
-              "rounded-3xl px-4 py-2.5 text-sm leading-relaxed text-pretty shadow-[0_10px_24px_-20px_rgba(0,0,0,0.55)]",
-              isUser
-                ? "rounded-br-lg bg-primary text-primary-foreground"
-                : "rounded-bl-lg bg-muted text-foreground ring-1 ring-black/6 dark:ring-white/6",
-              isStreaming && "animate-pulse",
-            )}
-          >
+          <div className={bubbleClassName}>
             {parsed.text}
             {isStreaming && (
               <span className="ml-1 inline-block h-3 w-0.5 animate-pulse bg-current opacity-70" />

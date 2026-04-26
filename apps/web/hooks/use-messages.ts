@@ -17,8 +17,39 @@ interface ProcessedMessage {
   isStreaming: boolean;
 }
 
+function getStructuredMessagePayload(value: string): string | null {
+  try {
+    const parsed = JSON.parse(value);
+
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      typeof parsed.type !== "string"
+    ) {
+      return null;
+    }
+
+    if (
+      parsed.type === "quiz_question" ||
+      parsed.type === "quiz_start" ||
+      parsed.type === "quiz_end" ||
+      parsed.type === "quiz_answer_check" ||
+      parsed.type === "quiz_answer_result" ||
+      parsed.type === "image_request" ||
+      parsed.type === "image_response" ||
+      parsed.type === "chat_error"
+    ) {
+      return JSON.stringify(parsed);
+    }
+  } catch {
+    // Not valid JSON, treat as plain text.
+  }
+
+  return null;
+}
+
 function extractToolOutputs(msg: any): string[] {
-  const outputs: string[] = [];
+  const outputs = new Set<string>();
 
   if (msg.parts && Array.isArray(msg.parts)) {
     for (const part of msg.parts) {
@@ -27,37 +58,22 @@ function extractToolOutputs(msg: any): string[] {
         part.output &&
         part.state === "output-available"
       ) {
-        try {
-          const parsed = JSON.parse(part.output);
-          if (
-            parsed.type === "quiz_question" ||
-            parsed.type === "quiz_start" ||
-            parsed.type === "quiz_end" ||
-            parsed.type === "quiz_answer_result" ||
-            parsed.type === "image_request" ||
-            parsed.type === "image_response"
-          ) {
-            outputs.push(part.output);
-          }
-        } catch {
-          // Not valid JSON
+        const payload = getStructuredMessagePayload(part.output);
+        if (payload) {
+          outputs.add(payload);
         }
       }
 
       if (part.type === "text" && part.text && part.state === "done") {
-        try {
-          const parsed = JSON.parse(part.text);
-          if (parsed.type === "image_response") {
-            outputs.push(part.text);
-          }
-        } catch {
-          // Not valid JSON
+        const payload = getStructuredMessagePayload(part.text);
+        if (payload) {
+          outputs.add(payload);
         }
       }
     }
   }
 
-  return outputs;
+  return Array.from(outputs);
 }
 
 function processMessage(msg: any, index: number): ProcessedMessage[] {
