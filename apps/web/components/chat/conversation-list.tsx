@@ -72,7 +72,7 @@ export function ConversationList() {
         {(isLoadingProfiles || newMatchProfiles.length > 0) && (
           <div className="shrink-0 border-b border-border/70">
             <p className="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              New Matches
+              Saved for later
             </p>
             <div className="flex gap-3 overflow-x-auto px-3 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {isLoadingProfiles
