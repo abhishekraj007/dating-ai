@@ -162,7 +162,7 @@ export function PublicHeaderAccountMenu({
           <Settings className="size-4" />
           Settings
         </DropdownMenuItem>
-        <DropdownMenuSub>
+        {/* <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <FileText className="size-4" />
             Policies
@@ -177,7 +177,7 @@ export function PublicHeaderAccountMenu({
               </DropdownMenuItem>
             ))}
           </DropdownMenuSubContent>
-        </DropdownMenuSub>
+        </DropdownMenuSub> */}
         <DropdownMenuItem
           disabled={isSigningOut}
           onSelect={() => {
