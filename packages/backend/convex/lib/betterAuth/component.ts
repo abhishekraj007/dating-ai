@@ -1,7 +1,6 @@
 import { type AuthFunctions, createClient } from "@convex-dev/better-auth";
 import { components, internal } from "../../_generated/api";
 import type { DataModel, Id } from "../../_generated/dataModel";
-import { isDevelopment } from "../../util";
 
 /**
  * NOTE:
@@ -27,7 +26,7 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
         await ctx.db.insert("profile", {
           name: authUser.name,
           authUserId: authUser._id,
-          credits: 0,
+          credits: 20,
           isPremium: false,
           email: authUser.email,
         });

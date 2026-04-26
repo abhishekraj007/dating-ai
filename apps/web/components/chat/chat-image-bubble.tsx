@@ -6,7 +6,7 @@ import { PremiumLockedImage } from "@/components/chat/premium-locked-image";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 
-const LOCKED_IMAGE_PLACEHOLDER_URL = "/discover/female.webp";
+const LOCKED_IMAGE_PLACEHOLDER_URL = "/placeholder.jpg";
 
 interface ChatImageBubbleProps {
   imageKey?: string;

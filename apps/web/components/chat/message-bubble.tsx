@@ -3,6 +3,7 @@ import { Camera, LogOut, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChatImageBubble } from "@/components/chat/chat-image-bubble";
+import { ChatMarkdown } from "@/components/chat/chat-markdown";
 
 interface MessageBubbleProps {
   content: string;
@@ -121,6 +122,18 @@ function formatTime(timestamp: number) {
   });
 }
 
+function renderTextContent(content: string | undefined, isUser: boolean) {
+  if (!content) {
+    return null;
+  }
+
+  if (isUser) {
+    return content;
+  }
+
+  return <ChatMarkdown content={content} />;
+}
+
 export function MessageBubble({
   content,
   role,
@@ -196,18 +209,21 @@ export function MessageBubble({
                 : "rounded-bl-lg bg-muted text-foreground ring-1 ring-black/6 dark:ring-white/6",
             )}
           >
-            <span>{parsed.text}</span>
+            <span>{renderTextContent(parsed.text, isUser)}</span>
           </div>
         ) : parsed.kind === "error" ? (
           <div className="rounded-3xl rounded-bl-lg bg-destructive/10 px-4 py-2.5 text-sm text-destructive shadow-sm">
-            {parsed.text}
+            {renderTextContent(parsed.text, isUser)}
           </div>
         ) : parsed.kind === "quiz_question" ? (
           <div className={bubbleClassName}>
             <div className="space-y-3">
-              <p className="leading-6">
-                {parsed.question || parsed.message || "Quiz time"}
-              </p>
+              <div className="leading-6">
+                {renderTextContent(
+                  parsed.question || parsed.message || "Quiz time",
+                  isUser,
+                )}
+              </div>
               {isQuizActive && parsed.options.length > 0 ? (
                 <div className="space-y-2">
                   {parsed.options.map((option: string, index: number) => (
@@ -238,24 +254,29 @@ export function MessageBubble({
         ) : parsed.kind === "quiz_result" ? (
           <div className={bubbleClassName}>
             <div className="space-y-2">
-              {parsed.text ? <p>{parsed.text}</p> : null}
+              {parsed.text ? renderTextContent(parsed.text, isUser) : null}
               {parsed.explanation ? (
-                <p className="text-muted-foreground">{parsed.explanation}</p>
+                <div className="text-muted-foreground">
+                  {renderTextContent(parsed.explanation, isUser)}
+                </div>
               ) : null}
             </div>
           </div>
         ) : parsed.kind === "quiz_state" ? (
           <div className={bubbleClassName}>
-            {parsed.text ||
-              (parsed.state === "quiz_start"
-                ? "Quiz started"
-                : parsed.state === "quiz_end"
-                  ? "Quiz ended"
-                  : "Checking answer")}
+            {renderTextContent(
+              parsed.text ||
+                (parsed.state === "quiz_start"
+                  ? "Quiz started"
+                  : parsed.state === "quiz_end"
+                    ? "Quiz ended"
+                    : "Checking answer"),
+              isUser,
+            )}
           </div>
         ) : (
           <div className={bubbleClassName}>
-            {parsed.text}
+            {renderTextContent(parsed.text, isUser)}
             {isStreaming && (
               <span className="ml-1 inline-block h-3 w-0.5 animate-pulse bg-current opacity-70" />
             )}

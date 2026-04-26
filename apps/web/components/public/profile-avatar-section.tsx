@@ -46,9 +46,9 @@ export function ProfileAvatarSection({ avatarUrl, name, aiProfileId }: Props) {
           <OpenAuthModalButton
             size="lg"
             variant="outline"
-            className="w-14 shrink-0 px-0"
+            className="w-10 h-10 shrink-0 px-0 rounded-full"
           >
-            <Heart className="h-5 w-5" />
+            <Heart className="h-5 w-5 text-white" />
           </OpenAuthModalButton>
           <StartChatButton
             aiProfileId={aiProfileId}

@@ -33,8 +33,7 @@ export function PublicProfilePage({
   profile,
 }: PublicProfilePageProps) {
   const config = getSegmentConfig(segment);
-  const placeholderImageUrl =
-    segment === "guys" ? "/discover/male.webp" : "/discover/female.webp";
+  const placeholderImageUrl = "/placeholder.jpg";
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-8">
