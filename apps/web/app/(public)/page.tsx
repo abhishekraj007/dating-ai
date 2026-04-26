@@ -10,23 +10,22 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = getSiteUrl();
 
   return {
-    title: "AI Dating, AI Companions & AI Friends",
-    description:
-      "Explore AI dating companions, AI friends, and immersive AI chat experiences built for roleplay, flirtation, and always-on connection.",
+    title: "Chat with AI Characters - FeelAI",
+    description: "Explore AI Characters for stories, roleplay, and knowledge.",
     alternates: {
       canonical: "/",
     },
     openGraph: {
-      title: "FeelAI | AI Dating, AI Companions & AI Friends",
+      title: "Chat with AI Characters - FeelAI",
       description:
-        "SSR-powered AI dating homepage built to showcase AI companions, AI friends, and immersive AI chats.",
+        "Engage with AI Characters for creative storytelling and learning.",
       url: siteUrl,
     },
     twitter: {
       card: "summary_large_image",
-      title: "FeelAI | AI Dating, AI Companions & AI Friends",
+      title: "Chat with AI Characters - FeelAI",
       description:
-        "Explore AI dating companions, AI friends, and immersive AI chats.",
+        "Chat with AI Characters designed for creativity, roleplay, and education.",
     },
   };
 }

@@ -85,20 +85,27 @@ export function PublicSidebar() {
           isOpen ? "flex" : "hidden md:flex",
         )}
       >
-        <div className="relative overflow-hidden border-b border-border/70 bg-gradient-to-b from-primary/[0.10] to-transparent px-5 py-2">
+        <div className="relative overflow-hidden border-b border-border/70 bg-gradient-to-b from-primary/[0.10] to-transparent px-5 py-1">
           <div
             className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-primary/15 blur-3xl dark:bg-primary/20"
             aria-hidden
           />
 
-          <div className="relative flex items-center justify-between gap-3">
-            <Link href="/" className="flex items-center gap-3" onClick={close}>
+          <div className="relative flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-1" onClick={close}>
               <Image
-                src="/logo.png"
+                src="/logo-dark.png"
                 alt="FeelAI logo"
-                width={64}
-                height={64}
-                objectFit="contain"
+                width={48}
+                height={48}
+                className="block object-contain dark:hidden"
+              />
+              <Image
+                src="/logo-white.png"
+                alt="FeelAI logo"
+                width={48}
+                height={48}
+                className="hidden object-contain dark:block"
               />
               <span className="text-lg font-bold italic">FEELAI</span>
             </Link>
@@ -187,7 +194,7 @@ export function PublicSidebar() {
               <div className="flex items-center justify-center gap-2 text-[10px] leading-none text-muted-foreground/75">
                 <Link
                   href="/terms"
-                  className="transition-coloGirrs hover:text-foreground"
+                  className="transition-colors hover:text-foreground"
                   onClick={close}
                 >
                   Terms

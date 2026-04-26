@@ -28,6 +28,10 @@ import {
   PROFILE_OCCUPATION_OPTIONS,
 } from "./profileGen/constants";
 import { assertAdmin } from "./profileGen/adminGuards";
+import {
+  isReservedPublicProfileUsername,
+  normalizePublicProfileUsername,
+} from "./publicProfileUsernames";
 import { resolveCountryCode } from "./profileGen/candidate";
 
 export const listSystemProfilesInternal = internalQuery({
@@ -53,9 +57,14 @@ export const usernameExistsInternal = internalQuery({
   },
   returns: v.boolean(),
   handler: async (ctx, { username }) => {
+    const normalizedUsername = normalizePublicProfileUsername(username);
+    if (isReservedPublicProfileUsername(normalizedUsername)) {
+      return true;
+    }
+
     const existing = await ctx.db
       .query("aiProfiles")
-      .withIndex("by_username", (q) => q.eq("username", username))
+      .withIndex("by_username", (q) => q.eq("username", normalizedUsername))
       .first();
     return !!existing;
   },
@@ -429,10 +438,28 @@ export const createSystemProfileInternal = internalMutation({
   },
   returns: v.id("aiProfiles"),
   handler: async (ctx, args) => {
+    const normalizedUsername = normalizePublicProfileUsername(args.username);
+    if (!normalizedUsername) {
+      throw new ConvexError("Username is required");
+    }
+
+    if (isReservedPublicProfileUsername(normalizedUsername)) {
+      throw new ConvexError("Username is reserved");
+    }
+
+    const existingProfile = await ctx.db
+      .query("aiProfiles")
+      .withIndex("by_username", (q) => q.eq("username", normalizedUsername))
+      .first();
+
+    if (existingProfile) {
+      throw new ConvexError("Username already exists");
+    }
+
     const countryCode = resolveCountryCode(args.location, args.countryCode);
     return await ctx.db.insert("aiProfiles", {
       name: args.name,
-      username: args.username,
+      username: normalizedUsername,
       gender: args.gender,
       avatarImageKey: args.avatarImageKey,
       isUserCreated: false,
@@ -802,7 +829,8 @@ export const adminApproveAvatar = mutation({
     if (edited.location !== undefined) {
       patch.location = edited.location;
       patch.countryCode =
-        resolveCountryCode(edited.location) ?? job.preview.candidate.countryCode;
+        resolveCountryCode(edited.location) ??
+        job.preview.candidate.countryCode;
     }
     if (edited.bio !== undefined) patch.bio = edited.bio;
     if (edited.interests !== undefined) patch.interests = edited.interests;

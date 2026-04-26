@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, internalMutation } from "../../_generated/server";
 import { internal } from "../../_generated/api";
 import {
@@ -16,6 +16,10 @@ import {
 } from "./agent";
 import { r2 } from "../../uploads";
 import { rateLimiter } from "../../lib/rateLimit";
+import {
+  isReservedPublicProfileUsername,
+  normalizePublicProfileUsername,
+} from "./publicProfileUsernames";
 
 /**
  * Start a new conversation with an AI profile.
@@ -527,11 +531,33 @@ export const adminUpdateProfile = mutation({
       throw new Error("Cannot admin-edit user-created profiles");
     }
 
+    let normalizedUsername: string | undefined;
+    if (updates.username !== undefined) {
+      normalizedUsername = normalizePublicProfileUsername(updates.username);
+
+      if (!normalizedUsername) {
+        throw new ConvexError("Username is required");
+      }
+
+      if (isReservedPublicProfileUsername(normalizedUsername)) {
+        throw new ConvexError("Username is reserved");
+      }
+
+      const matchingProfiles = await ctx.db
+        .query("aiProfiles")
+        .withIndex("by_username", (q) => q.eq("username", normalizedUsername))
+        .collect();
+
+      if (matchingProfiles.some((item) => item._id !== profileId)) {
+        throw new ConvexError("Username already exists");
+      }
+    }
+
     // Filter out undefined values
     const patch: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(updates)) {
       if (value !== undefined) {
-        patch[key] = value;
+        patch[key] = key === "username" ? normalizedUsername : value;
       }
     }
 

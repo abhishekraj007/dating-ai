@@ -158,17 +158,24 @@ export function PremiumLockedImage({
             </div>
 
             <DialogHeader className="items-center text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
+              {/* <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
                 <Crown className="h-3.5 w-3.5 text-primary" />
                 Premium Access
-              </div>
-              <DialogTitle className="text-2xl font-semibold">
+              </div> */}
+              <DialogTitle className="inline-flex items-center gap-2 text-lg font-semibold rounded-full border border-border/70 bg-background/80 px-3 py-1 backdrop-blur">
+                <Crown className="h-5 w-5 text-primary" /> Premium Access
+              </DialogTitle>
+              <DialogDescription className="max-w-sm text-sm leading-6">
+                Unlock premium feature by subscribing to send and receive photos
+                from <span className="font-semibold">{profileName}</span>
+              </DialogDescription>
+              {/* <DialogTitle className="text-2xl font-semibold">
                 Get closer to {profileName}
               </DialogTitle>
               <DialogDescription className="max-w-sm text-sm leading-6">
-                Unlock premium to see every private photo and keep exclusive
+                Unlock premium feature to see every private photo and keep exclusive
                 chat moments unblurred.
-              </DialogDescription>
+              </DialogDescription> */}
             </DialogHeader>
 
             <div className="grid gap-3">

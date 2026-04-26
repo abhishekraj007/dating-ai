@@ -1,13 +1,13 @@
 import Image from "next/image";
 import { CharacterGrid } from "@/components/public/character-grid";
-import { DiscoverPreferenceDialog } from "@/components/public/discover-preference-dialog";
+// import { DiscoverPreferenceDialog } from "@/components/public/discover-preference-dialog";
 import { PublicFilterBar } from "@/components/public/public-filter-bar";
 import { getSegmentConfig, type PublicSegment } from "@/lib/public-segments";
 
 const heroBackgrounds: Record<PublicSegment, string> = {
   girls: "/gf.webp",
   guys: "/bf.webp",
-  anime: "/anime.webp",
+  anime: "/cover.webp",
 };
 
 type PublicPageContentProps = {
@@ -26,7 +26,7 @@ export function PublicPageContent({
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-8">
-      {isHome ? <DiscoverPreferenceDialog /> : null}
+      {/* {isHome ? <DiscoverPreferenceDialog /> : null} */}
 
       <section className="relative overflow-hidden rounded-[calc(var(--radius)*1.75)] border border-border/70 bg-card shadow-[0_28px_70px_-44px_rgba(0,0,0,0.45)]">
         <div className="relative min-h-[150px] md:min-h-[220px]">
@@ -46,7 +46,8 @@ export function PublicPageContent({
               {/* {isHome
                 ? "Discover AI Characters built for immersive chat."
                 : config.heroTitle} */}
-              Discover AI Characters for learning & creative conversations
+              Discover AI Characters trained for learning & creative
+              conversations
             </h1>
           </div>
         </div>

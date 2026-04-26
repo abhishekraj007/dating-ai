@@ -12,6 +12,10 @@ import {
   ethnicityMatchesFilters,
   type Ethnicity,
 } from "./profileGenerationData";
+import {
+  isReservedPublicProfileUsername,
+  normalizePublicProfileUsername,
+} from "./publicProfileUsernames";
 
 function sanitizeStructuredMessage(
   value: string | undefined,
@@ -323,14 +327,15 @@ export const getPublicProfileByUsername = query({
     username: v.string(),
   },
   handler: async (ctx, { username }) => {
-    const normalizedUsername = username.trim().toLowerCase();
-    if (!normalizedUsername) {
+    const normalizedUsername = normalizePublicProfileUsername(username);
+    if (isReservedPublicProfileUsername(normalizedUsername)) {
       return null;
     }
 
     const profile = await ctx.db
       .query("aiProfiles")
       .withIndex("by_username", (q) => q.eq("username", normalizedUsername))
+      .order("desc")
       .first();
 
     if (!profile || profile.status !== "active") {
