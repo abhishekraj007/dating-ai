@@ -18,7 +18,7 @@ const discoverOptions = [
     label: "Females",
     eyebrow: "Soft match",
     description:
-      "Start with women-first profiles tuned for flirtier chat, warmth, and everyday chemistry.",
+      "Start with Women-first profiles tuned for flirtier chat, warmth, and everyday chemistry.",
     image: "/discover/female.webp",
     imageAlt: "Portrait preview for the females explore feed",
   },

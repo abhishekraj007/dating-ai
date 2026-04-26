@@ -21,7 +21,7 @@ async function getPublicProfile(profileSlug: string) {
     },
   );
 
-  if (!profile || profile.gender !== "female") {
+  if (!profile || profile.gender !== "male") {
     return null;
   }
 
@@ -38,42 +38,42 @@ export async function generateMetadata({
   const { profileSlug } = await params;
   const profile = await getPublicProfile(profileSlug);
   const siteUrl = getSiteUrl();
-  const pageUrl = `${siteUrl}/ai-girlfriend/${profileSlug}`;
+  const pageUrl = `${siteUrl}/ai-boyfriends/${profileSlug}`;
 
   if (!profile) {
     return {
       title: "Profile Not Found",
-      alternates: { canonical: "/ai-girlfriend" },
+      alternates: { canonical: "/ai-boyfriends" },
     };
   }
 
   return {
-    title: `${profile.name} | AI Girlfriend`,
+    title: `${profile.name} | Men`,
     description:
       profile.bio ||
-      `Meet ${profile.name}, an AI girlfriend on FeelAI for immersive dating and conversation.`,
+      `Meet ${profile.name}, an AI boyfriend on FeelAI for immersive dating and conversation.`,
     alternates: {
-      canonical: `/ai-girlfriend/${profileSlug}`,
+      canonical: `/ai-boyfriends/${profileSlug}`,
     },
     openGraph: {
-      title: `${profile.name} | AI Girlfriend`,
+      title: `${profile.name} | Men`,
       description:
         profile.bio ||
-        `Meet ${profile.name}, an AI girlfriend on FeelAI for immersive dating and conversation.`,
+        `Meet ${profile.name}, an AI boyfriend on FeelAI for immersive dating and conversation.`,
       url: pageUrl,
       images: profile.avatarUrl ? [{ url: profile.avatarUrl }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
-      title: `${profile.name} | AI Girlfriend`,
+      title: `${profile.name} | Men`,
       description:
         profile.bio ||
-        `Meet ${profile.name}, an AI girlfriend on FeelAI for immersive dating and conversation.`,
+        `Meet ${profile.name}, an AI boyfriend on FeelAI for immersive dating and conversation.`,
     },
   };
 }
 
-export default async function AIGirlfriendProfilePage({
+export default async function AIBoyfriendProfilePage({
   params,
 }: ProfileRouteProps) {
   const { profileSlug } = await params;
@@ -83,7 +83,7 @@ export default async function AIGirlfriendProfilePage({
   }
 
   const siteUrl = getSiteUrl();
-  const pageUrl = `${siteUrl}/ai-girlfriend/${profileSlug}`;
+  const pageUrl = `${siteUrl}/ai-boyfriends/${profileSlug}`;
 
   return (
     <>
@@ -91,7 +91,7 @@ export default async function AIGirlfriendProfilePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
-            buildPublicProfileStructuredData(siteUrl, "girls", pageUrl, {
+            buildPublicProfileStructuredData(siteUrl, "guys", pageUrl, {
               name: profile.name,
               age: profile.age,
               bio: profile.bio,
@@ -101,7 +101,7 @@ export default async function AIGirlfriendProfilePage({
           ),
         }}
       />
-      <PublicProfilePage profile={profile} segment="girls" />
+      <PublicProfilePage profile={profile} segment="guys" />
     </>
   );
 }

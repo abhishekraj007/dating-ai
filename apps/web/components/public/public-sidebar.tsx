@@ -182,6 +182,26 @@ export function PublicSidebar() {
             <div className="hidden border-t border-border/70 pt-4 md:block">
               <PublicHeaderAccountMenu placement="sidebar" />
             </div>
+
+            {!isLoading ? (
+              <div className="flex items-center justify-center gap-2 text-[10px] leading-none text-muted-foreground/75">
+                <Link
+                  href="/terms"
+                  className="transition-coloGirrs hover:text-foreground"
+                  onClick={close}
+                >
+                  Terms
+                </Link>
+                <span aria-hidden>•</span>
+                <Link
+                  href="/privacy"
+                  className="transition-colors hover:text-foreground"
+                  onClick={close}
+                >
+                  Privacy
+                </Link>
+              </div>
+            ) : null}
           </div>
         </div>
       </aside>

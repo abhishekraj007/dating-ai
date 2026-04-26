@@ -19,30 +19,30 @@ type SegmentConfig = {
 
 const ALL_SEGMENTS: Record<PublicSegment, SegmentConfig> = {
   girls: {
-    label: "Girls",
-    href: "/ai-girlfriend",
+    label: "Women",
+    href: "/women",
     heroTitle: "Meet AI Women built for immersive dating and chat.",
     heroDescription:
       "Explore AI girlfriends designed for flirting, companionship, roleplay, and always-on conversation.",
     sectionTitle: "Featured AI girlfriends",
-    metaTitle: "AI Girlfriend",
+    metaTitle: "Women",
     metaDescription:
       "Browse AI girlfriend profiles built for immersive dating, roleplay, and always-on companionship.",
   },
   guys: {
-    label: "Guys",
-    href: "/ai-boyfriends",
+    label: "Men",
+    href: "/men",
     heroTitle: "Discover AI Men built for companionship and dating.",
     heroDescription:
       "Browse AI boyfriend profiles created for emotional connection, flirty chat, and always-available companionship.",
     sectionTitle: "Featured AI boyfriends",
-    metaTitle: "AI Boyfriends",
+    metaTitle: "Men",
     metaDescription:
       "Explore AI boyfriend profiles for immersive dating chats, roleplay, and virtual companionship.",
   },
   anime: {
     label: "Anime",
-    href: "/ai-anime",
+    href: "/anime",
     heroTitle: "Explore anime AI companions crafted for fantasy and roleplay.",
     heroDescription:
       "Discover anime-inspired AI companions built for stylized conversation, roleplay, and immersive chats.",
