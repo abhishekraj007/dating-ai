@@ -11,7 +11,7 @@ export default function PublicLayout({
 }) {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen flex-col bg-background md:h-screen md:overflow-hidden">
+      <div className="flex min-h-svh flex-col bg-background md:h-screen md:overflow-hidden">
         <Suspense
           fallback={
             <div className="h-[60px] border-b border-border/70 bg-background/90 md:hidden" />

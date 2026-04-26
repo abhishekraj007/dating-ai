@@ -1,5 +1,17 @@
 export const APP_CONFIG_KEY = "global";
 
+export type NsfwPlatform = "ios" | "android" | "web";
+
+export const normalizeNsfwEnabledPlatforms = (
+  value?: Array<NsfwPlatform> | null,
+): Array<NsfwPlatform> => {
+  if (!value || value.length === 0) {
+    return [];
+  }
+
+  return Array.from(new Set(value));
+};
+
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
 
 const isLocalhostHost = (hostname: string) => {
@@ -22,7 +34,9 @@ export const normalizeUrl = (value?: string) => {
     parsed.protocol === "http:" && isLocalhostHost(parsed.hostname);
 
   if (!isHttps && !isLocalHttp) {
-    throw new Error("Only https URLs are allowed (http allowed only for localhost)");
+    throw new Error(
+      "Only https URLs are allowed (http allowed only for localhost)",
+    );
   }
 
   return trimTrailingSlash(parsed.toString());

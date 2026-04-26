@@ -6,11 +6,59 @@ import { listUIMessages, syncStreams, vStreamArgs } from "@convex-dev/agent";
 import { r2 } from "../../uploads";
 import { authComponent } from "../../lib/betterAuth";
 import { buildAiProfileAvatarUrl } from "../../lib/aiProfileAvatar";
+import { getPremiumAccessSnapshot } from "../premium/guards";
 import {
   ETHNICITIES,
   ethnicityMatchesFilters,
   type Ethnicity,
 } from "./profileGenerationData";
+
+function sanitizeStructuredMessage(
+  value: string | undefined,
+  allowProtectedMedia: boolean,
+) {
+  if (!value || allowProtectedMedia) {
+    return value;
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    if (parsed?.type === "image_response" && typeof parsed === "object") {
+      const sanitized = { ...parsed };
+      delete sanitized.imageUrl;
+      return JSON.stringify(sanitized);
+    }
+  } catch {
+    // Plain text content should be returned unchanged.
+  }
+
+  return value;
+}
+
+function sanitizeAgentMessage<T extends { text?: string; parts?: Array<any> }>(
+  message: T,
+  allowProtectedMedia: boolean,
+) {
+  if (allowProtectedMedia) {
+    return message;
+  }
+
+  return {
+    ...message,
+    text: sanitizeStructuredMessage(message.text, allowProtectedMedia),
+    parts: message.parts?.map((part) => ({
+      ...part,
+      text:
+        typeof part?.text === "string"
+          ? sanitizeStructuredMessage(part.text, allowProtectedMedia)
+          : part?.text,
+      output:
+        typeof part?.output === "string"
+          ? sanitizeStructuredMessage(part.output, allowProtectedMedia)
+          : part?.output,
+    })),
+  };
+}
 
 /**
  * Get all active AI profiles with optional gender filter.
@@ -302,15 +350,44 @@ export const getPublicProfileByUsername = query({
       profile.avatarImageKey,
     );
 
-    const profileImageUrls = profile.profileImageKeys
-      ? await Promise.all(profile.profileImageKeys.map((key) => r2.getUrl(key)))
-      : [];
-
     return {
       ...profile,
       avatarUrl,
-      profileImageUrls,
+      profileImageKeys: profile.profileImageKeys ?? [],
     };
+  },
+});
+
+export const getProfileImageUrl = query({
+  args: {
+    profileId: v.id("aiProfiles"),
+    imageKey: v.string(),
+  },
+  handler: async (ctx, { profileId, imageKey }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      return null;
+    }
+
+    const premiumState = await getPremiumAccessSnapshot(ctx);
+    if (!premiumState.isPremium) {
+      return null;
+    }
+
+    const profile = await ctx.db.get(profileId);
+    if (
+      !profile ||
+      profile.status !== "active" ||
+      !(profile.profileImageKeys ?? []).includes(imageKey)
+    ) {
+      return null;
+    }
+
+    try {
+      return await r2.getUrl(imageKey);
+    } catch {
+      return null;
+    }
   },
 });
 
@@ -525,6 +602,9 @@ export const getMessages = query({
       return null;
     }
 
+    const premiumState = await getPremiumAccessSnapshot(ctx);
+    const allowProtectedMedia = premiumState.isPremium;
+
     const conversation = await ctx.db.get(conversationId);
     if (!conversation || conversation.userId !== user._id) {
       return null;
@@ -543,7 +623,13 @@ export const getMessages = query({
     // Fetch streaming deltas for real-time updates
     const streams = await syncStreams(ctx, components.agent, agentArgs);
 
-    return { ...paginated, streams };
+    return {
+      ...paginated,
+      page: paginated.page.map((message) =>
+        sanitizeAgentMessage(message, allowProtectedMedia),
+      ),
+      streams,
+    };
   },
 });
 
@@ -562,6 +648,9 @@ export const listThreadMessages = query({
     if (!user) {
       throw new Error("Unauthorized");
     }
+
+    const premiumState = await getPremiumAccessSnapshot(ctx);
+    const allowProtectedMedia = premiumState.isPremium;
 
     // Verify the user owns the conversation with this thread
     const conversation = await ctx.db
@@ -593,7 +682,13 @@ export const listThreadMessages = query({
     // Fetch streaming deltas for real-time updates
     const streams = await syncStreams(ctx, components.agent, agentArgs);
 
-    return { ...paginated, streams };
+    return {
+      ...paginated,
+      page: paginated.page.map((message) =>
+        sanitizeAgentMessage(message, allowProtectedMedia),
+      ),
+      streams,
+    };
   },
 });
 
@@ -704,6 +799,11 @@ export const getChatImageUrl = query({
   handler: async (ctx, { imageKey }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
+      return null;
+    }
+
+    const premiumState = await getPremiumAccessSnapshot(ctx);
+    if (!premiumState.isPremium) {
       return null;
     }
 

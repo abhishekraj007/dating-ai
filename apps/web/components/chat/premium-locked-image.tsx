@@ -125,10 +125,10 @@ export function PremiumLockedImage({
           loading="lazy"
         />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/20 px-4 text-center">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-background/90 text-foreground shadow-lg">
-            <Lock className="h-5 w-5" />
+          <div className="flex h-8 w-8 md:h-11 md:w-11 items-center justify-center rounded-full bg-background/90 text-foreground shadow-lg">
+            <Lock className="h-3 w-3 md:h-5 md:w-5" />
           </div>
-          <div className="rounded-full bg-background/95 px-4 py-2 text-sm font-medium text-foreground shadow-lg">
+          <div className="rounded-full bg-background/95 px-4 py-2 text-xs md:text-sm font-medium text-foreground shadow-lg">
             Tap to see photo
           </div>
         </div>

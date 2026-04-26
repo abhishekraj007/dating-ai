@@ -2,7 +2,7 @@
 
 import { v } from "convex/values";
 import { internalAction } from "../../_generated/server";
-import { internal, components } from "../../_generated/api";
+import { internal, api, components } from "../../_generated/api";
 import { createAIProfileAgent, getAvailableAgentProviders } from "./agent";
 import { r2 } from "../../uploads";
 import { saveMessage } from "@convex-dev/agent";
@@ -140,11 +140,21 @@ export const generateResponse = internalAction({
     threadId: v.optional(v.string()),
     userId: v.optional(v.string()),
     aiProfileId: v.optional(v.id("aiProfiles")),
+    platform: v.optional(
+      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    ),
   },
   returns: v.null(),
   handler: async (
     ctx,
-    { conversationId, promptMessageId, threadId, userId, aiProfileId },
+    {
+      conversationId,
+      promptMessageId,
+      threadId,
+      userId,
+      aiProfileId,
+      platform,
+    },
   ) => {
     const latestConversation = await ctx.runQuery(
       internal.features.ai.internalQueries.getConversationInternal,
@@ -192,6 +202,16 @@ export const generateResponse = internalAction({
       return null;
     }
 
+    // Determine NSFW eligibility based on app config and request platform.
+    // Missing config is treated as disabled until an allowed platform is set.
+    const appConfig = await ctx.runQuery(
+      api.features.appConfig.queries.getPublicAppConfig,
+      {},
+    );
+    const nsfwEnabledPlatforms = appConfig?.nsfwEnabledPlatforms ?? [];
+    const nsfwEnabled =
+      platform !== undefined && nsfwEnabledPlatforms.includes(platform);
+
     // Try each configured provider in preferred order (primary first, then
     // the fallback). This lets us degrade gracefully when the primary
     // provider errors out - e.g. Vercel AI Gateway returning HTTP 402
@@ -217,7 +237,7 @@ export const generateResponse = internalAction({
 
     for (const provider of providers) {
       try {
-        const agent = createAIProfileAgent(profile, provider);
+        const agent = createAIProfileAgent(profile, provider, nsfwEnabled);
         result = await agent.streamText(
           ctx,
           { threadId: convThreadId!, userId: convUserId! },

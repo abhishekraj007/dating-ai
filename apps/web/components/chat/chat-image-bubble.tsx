@@ -4,6 +4,9 @@ import { useQuery } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { PremiumLockedImage } from "@/components/chat/premium-locked-image";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "../ui/skeleton";
+
+const LOCKED_IMAGE_PLACEHOLDER_URL = "/discover/female.webp";
 
 interface ChatImageBubbleProps {
   imageKey?: string;
@@ -30,21 +33,37 @@ export function ChatImageBubble({
 }: ChatImageBubbleProps) {
   const freshImageUrl = useQuery(
     api.features.ai.queries.getChatImageUrl,
-    imageKey ? { imageKey } : "skip",
+    isPremium && imageKey ? { imageKey } : "skip",
   );
 
-  const resolvedImageUrl = freshImageUrl ?? imageUrl;
+  const resolvedImageUrl = isPremium ? (freshImageUrl ?? imageUrl) : undefined;
 
   if (!resolvedImageUrl) {
+    if (!isPremium) {
+      return (
+        <PremiumLockedImage
+          imageUrl={LOCKED_IMAGE_PLACEHOLDER_URL}
+          profileName={profileName}
+          profileAvatar={profileAvatar}
+          viewerName={viewerName}
+          viewerEmail={viewerEmail}
+          viewerAuthUserId={viewerAuthUserId}
+        />
+      );
+    }
+
     return (
-      <div className="flex w-[260px] items-center justify-center rounded-3xl bg-muted/60 px-4 py-16 text-sm text-muted-foreground ring-1 ring-black/10 dark:ring-white/10">
-        Loading photo...
+      <div className="relative border rounded-3xl animate-border-slow">
+        <Skeleton className="w-[140px] h-[180px] rounded-3xl animate-pulse" />
+        <span className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">
+          In progress...
+        </span>
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-3xl shadow-[0_18px_32px_-24px_rgba(0,0,0,0.65)]">
+    <div className="overflow-hidden rounded-3xl">
       {isPremium ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -55,7 +74,7 @@ export function ChatImageBubble({
         />
       ) : (
         <PremiumLockedImage
-          imageUrl={resolvedImageUrl}
+          imageUrl={LOCKED_IMAGE_PLACEHOLDER_URL}
           profileName={profileName}
           profileAvatar={profileAvatar}
           viewerName={viewerName}

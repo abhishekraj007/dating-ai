@@ -468,6 +468,12 @@ export default defineSchema({
     iosAppStoreId: v.optional(v.string()),
     androidAppId: v.optional(v.string()),
     showMyCreationTab: v.optional(v.boolean()),
+    // Platforms where NSFW content is enabled. Missing or empty means disabled.
+    nsfwEnabledPlatforms: v.optional(
+      v.array(
+        v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+      ),
+    ),
     updatedAt: v.number(),
     updatedBy: v.string(),
   }).index("by_key", ["key"]),

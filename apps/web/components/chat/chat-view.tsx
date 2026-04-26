@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import {
@@ -30,8 +31,10 @@ import {
   useMessages,
   useSendMessage,
   useClearChat,
+  useDeleteMessage,
 } from "@/hooks/use-messages";
 import { useRequestChatImage } from "@/hooks/use-request-chat-image";
+import { buildPublicProfileHref } from "@/lib/public-profile-routes";
 import { cn } from "@/lib/utils";
 import type { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { toast } from "sonner";
@@ -40,20 +43,82 @@ interface ChatViewProps {
   conversationId: string;
 }
 
+function getInteractiveQuizQuestionId(
+  messages: Array<{ _id: string; role: string; content: string }>,
+) {
+  let lastQuizQuestionId: string | null = null;
+  let lastQuizQuestionIndex = -1;
+
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+
+    if (message.role === "user") {
+      continue;
+    }
+
+    try {
+      const parsed = JSON.parse(message.content);
+      if (parsed?.type === "quiz_question") {
+        lastQuizQuestionId = message._id;
+        lastQuizQuestionIndex = index;
+        break;
+      }
+    } catch {
+      // Ignore non-JSON messages.
+    }
+  }
+
+  if (!lastQuizQuestionId || lastQuizQuestionIndex === -1) {
+    return null;
+  }
+
+  for (
+    let index = lastQuizQuestionIndex + 1;
+    index < messages.length;
+    index += 1
+  ) {
+    const message = messages[index];
+
+    if (message.role === "user") {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(message.content);
+      if (
+        parsed?.type === "quiz_answer_result" ||
+        parsed?.type === "quiz_end"
+      ) {
+        return null;
+      }
+    } catch {
+      // Ignore non-JSON messages.
+    }
+  }
+
+  return lastQuizQuestionId;
+}
+
 export function ChatView({ conversationId }: ChatViewProps) {
   const router = useRouter();
   const { conversation, isLoading: isLoadingConversation } =
     useConversation(conversationId);
   const viewerData = useQuery(api.user.fetchUserAndProfile);
+  const premiumState = useQuery(api.features.premium.queries.isPremium);
   const threadId = conversation?.threadId;
   const profile = (conversation as any)?.profile;
   const viewerProfile = viewerData?.profile;
+  const profileHref = buildPublicProfileHref(
+    profile?.gender === "male" ? "guys" : "girls",
+    profile?.username,
+  );
 
   const { messages, isLoading, isLoadingMore, hasMore, loadMore, isAITyping } =
     useMessages(threadId);
 
   const { sendMessage } = useSendMessage();
   const { clearChat } = useClearChat();
+  const { deleteMessage } = useDeleteMessage();
   const { requestImage } = useRequestChatImage();
 
   const [isSending, setIsSending] = useState(false);
@@ -64,6 +129,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const isFirstLoad = useRef(true);
+  const interactiveQuizQuestionId = getInteractiveQuizQuestionId(messages);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -101,6 +167,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
       await sendMessage({
         conversationId: conversationId as Id<"aiConversations">,
         content,
+        platform: "web",
       });
     } catch {
       // error handled silently - user can retry
@@ -154,6 +221,14 @@ export function ChatView({ conversationId }: ChatViewProps) {
     }
   };
 
+  const handleQuizAnswer = async (answer: string) => {
+    await handleSend(answer);
+  };
+
+  const handleEndQuiz = async () => {
+    await handleSend("End the quiz");
+  };
+
   if (isLoadingConversation) {
     return <ChatLoadingSkeleton />;
   }
@@ -200,22 +275,34 @@ export function ChatView({ conversationId }: ChatViewProps) {
           <ArrowLeft className="h-5 w-5" />
         </Button>
 
-        <div className="flex flex-1 items-center gap-3 min-w-0">
-          <Avatar className="h-10 w-10 shrink-0 ring-1 ring-black/10 dark:ring-white/10">
-            <AvatarImage src={profile?.avatarUrl} alt={profile?.name} />
-            <AvatarFallback>{profile?.name?.[0] ?? "AI"}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <p className="truncate text-balance font-semibold leading-tight">
-              {profile?.name ?? "AI"}
-            </p>
-            {isAITyping ? (
-              <p className="text-xs text-primary">typing...</p>
-            ) : (
-              <p className="text-xs text-muted-foreground">AI Companion</p>
-            )}
+        {profileHref ? (
+          <Link
+            href={profileHref}
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          >
+            <Avatar className="h-10 w-10 shrink-0 ring-1 ring-black/10 dark:ring-white/10">
+              <AvatarImage src={profile?.avatarUrl} alt={profile?.name} />
+              <AvatarFallback>{profile?.name?.[0] ?? "AI"}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="truncate text-balance font-semibold leading-tight">
+                {profile?.name ?? "AI"}
+              </p>
+            </div>
+          </Link>
+        ) : (
+          <div className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl text-left">
+            <Avatar className="h-10 w-10 shrink-0 ring-1 ring-black/10 dark:ring-white/10">
+              <AvatarImage src={profile?.avatarUrl} alt={profile?.name} />
+              <AvatarFallback>{profile?.name?.[0] ?? "AI"}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="truncate text-balance font-semibold leading-tight">
+                {profile?.name ?? "AI"}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -282,12 +369,17 @@ export function ChatView({ conversationId }: ChatViewProps) {
                 avatarUrl={profile?.avatarUrl}
                 profileName={profile?.name}
                 isStreaming={msg.isStreaming}
-                viewerIsPremium={Boolean(viewerProfile?.isPremium)}
+                viewerIsPremium={Boolean(premiumState?.isPremium)}
                 viewerName={
                   viewerProfile?.name ?? viewerData?.userMetadata?.name ?? null
                 }
                 viewerEmail={viewerData?.userMetadata?.email ?? null}
                 viewerAuthUserId={viewerProfile?.authUserId ?? null}
+                messageOrder={msg.order}
+                isQuizActive={msg._id === interactiveQuizQuestionId}
+                onQuizAnswer={handleQuizAnswer}
+                onEndQuiz={handleEndQuiz}
+                onDelete={(order) => deleteMessage(conversationId, order)}
               />
             ))}
             {isAITyping && !messages[messages.length - 1]?.isStreaming && (

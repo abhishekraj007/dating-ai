@@ -1,5 +1,9 @@
 import { query } from "../../_generated/server";
-import { APP_CONFIG_KEY, buildUrlFromBase } from "./shared";
+import {
+  APP_CONFIG_KEY,
+  buildUrlFromBase,
+  normalizeNsfwEnabledPlatforms,
+} from "./shared";
 import { requireAdmin } from "./guards";
 
 const fallbackBaseWebUrl =
@@ -34,6 +38,9 @@ export const getPublicAppConfig = query({
       iosAppStoreId: config?.iosAppStoreId,
       androidAppId: config?.androidAppId ?? fallbackAndroidAppId,
       showMyCreationTab: config?.showMyCreationTab ?? false,
+      nsfwEnabledPlatforms: normalizeNsfwEnabledPlatforms(
+        config?.nsfwEnabledPlatforms,
+      ),
       updatedAt: config?.updatedAt,
     };
   },
@@ -59,6 +66,9 @@ export const getAdminAppConfig = query({
       iosAppStoreId: config?.iosAppStoreId,
       androidAppId: config?.androidAppId ?? fallbackAndroidAppId,
       showMyCreationTab: config?.showMyCreationTab ?? false,
+      nsfwEnabledPlatforms: normalizeNsfwEnabledPlatforms(
+        config?.nsfwEnabledPlatforms,
+      ),
       updatedAt: config?.updatedAt,
       updatedBy: config?.updatedBy,
     };

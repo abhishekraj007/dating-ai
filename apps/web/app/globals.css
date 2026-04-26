@@ -131,4 +131,15 @@
   html {
     @apply font-sans;
   }
+
+  @media (hover: none) and (pointer: coarse) {
+    input,
+    textarea,
+    select,
+    [data-slot="input"],
+    [data-slot="textarea"],
+    [data-slot="select-trigger"] {
+      font-size: 16px;
+    }
+  }
 }

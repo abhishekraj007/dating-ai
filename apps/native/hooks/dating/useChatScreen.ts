@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { useConversation } from "./useConversations";
@@ -21,6 +21,13 @@ export function useChatScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  // Map Platform.OS to the supported platform values. macOS is treated as iOS.
+  const platform: "ios" | "android" | "web" =
+    Platform.OS === "android"
+      ? "android"
+      : Platform.OS === "web"
+        ? "web"
+        : "ios";
   const [message, setMessage] = useState("");
   const [isStopRequested, setIsStopRequested] = useState(false);
   const listRef = useRef<any>(null);
@@ -212,13 +219,18 @@ export function useChatScreen() {
       try {
         if (options?.optimistic) {
           await sendMessageWithOptimistic(
-            { conversationId: id as Id<"aiConversations">, content },
+            {
+              conversationId: id as Id<"aiConversations">,
+              content,
+              platform,
+            },
             threadId,
           );
         } else {
           await sendMessage({
             conversationId: id as Id<"aiConversations">,
             content,
+            platform,
           });
         }
 

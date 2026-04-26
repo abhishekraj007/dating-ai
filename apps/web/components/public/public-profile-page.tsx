@@ -18,7 +18,7 @@ type PublicProfileDetails = {
   relationshipGoal?: string | null;
   personalityTraits?: string[] | null;
   interests?: string[] | null;
-  profileImageUrls?: string[] | null;
+  profileImageKeys?: string[] | null;
   avatarUrl?: string | null;
 };
 
@@ -32,6 +32,8 @@ export function PublicProfilePage({
   profile,
 }: PublicProfilePageProps) {
   const config = getSegmentConfig(segment);
+  const placeholderImageUrl =
+    segment === "guys" ? "/discover/male.webp" : "/discover/female.webp";
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-8">
@@ -132,19 +134,21 @@ export function PublicProfilePage({
         </div>
       </section>
 
-      {profile.profileImageUrls && profile.profileImageUrls.length > 0 ? (
+      {profile.profileImageKeys && profile.profileImageKeys.length > 0 ? (
         <section className="space-y-4 pb-4">
           <h2 className="text-2xl font-semibold tracking-tight">Gallery</h2>
           <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
-            {profile.profileImageUrls.map((url, index) => (
+            {profile.profileImageKeys.map((imageKey, index) => (
               <div
-                key={url}
+                key={imageKey}
                 className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-border/70 bg-card"
               >
                 <PremiumProfileImage
                   alt={`${profile.name} photo ${index + 1}`}
                   fallbackText={profile.name[0]}
-                  imageUrl={url}
+                  imageKey={imageKey}
+                  placeholderImageUrl={placeholderImageUrl}
+                  profileId={profile._id}
                   profileName={profile.name}
                   sizes="(max-width: 768px) 50vw, (max-width: 1280px) 50vw, 33vw"
                 />

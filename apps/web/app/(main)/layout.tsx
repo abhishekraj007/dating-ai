@@ -30,7 +30,7 @@ export default function MainLayout({
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-svh items-center justify-center">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
           <p className="mt-4 text-muted-foreground">Loading...</p>
@@ -48,9 +48,7 @@ export default function MainLayout({
       <div
         className={cn(
           "flex flex-col bg-background md:h-screen md:overflow-hidden",
-          isChatConversation
-            ? "h-dvh overflow-hidden"
-            : "min-h-screen",
+          isChatConversation ? "h-svh overflow-hidden" : "min-h-svh",
         )}
       >
         {!isChatConversation && (
