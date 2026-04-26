@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +16,15 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -21,6 +32,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   Plus,
+  Trash2,
   X,
   ImagePlus,
   Loader2,
@@ -87,6 +99,7 @@ interface EditCharacterSheetProps {
   onAddInterest: () => void;
   onRemoveInterest: (interest: string) => void;
   isSaving: boolean;
+  isDeletingProfile: boolean;
   isUploadingAvatar: boolean;
   isUploadingGallery: boolean;
   isGeneratingShowcaseImage: boolean;
@@ -98,6 +111,7 @@ interface EditCharacterSheetProps {
   onDeleteImage: (key: string, type: "avatar" | "gallery") => void;
   onGenerateShowcaseImage: () => void;
   onSave: () => void;
+  onDeleteProfile: () => void;
   onClose: () => void;
 }
 
@@ -116,6 +130,7 @@ export function EditCharacterSheet({
   onAddInterest,
   onRemoveInterest,
   isSaving,
+  isDeletingProfile,
   isUploadingAvatar,
   isUploadingGallery,
   isGeneratingShowcaseImage,
@@ -127,11 +142,20 @@ export function EditCharacterSheet({
   onDeleteImage,
   onGenerateShowcaseImage,
   onSave,
+  onDeleteProfile,
   onClose,
 }: EditCharacterSheetProps) {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const isReadOnly = mode === "view";
   const canAddShowcaseImage =
     !!profile?.avatarImageKey && (profile?.profileImageUrls.length ?? 0) < 10;
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsDeleteDialogOpen(false);
+    }
+  }, [isOpen]);
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent
@@ -672,6 +696,50 @@ export function EditCharacterSheet({
         <div className="border-t p-4 flex gap-2 shrink-0 bg-background">
           {isReadOnly ? (
             <>
+              <Dialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    disabled={isDeletingProfile}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    {isDeletingProfile ? "Deleting..." : "Delete"}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Delete this character?</DialogTitle>
+                    <DialogDescription>
+                      This action cannot be undone. It will permanently delete
+                      this AI profile, remove its avatar and gallery images, and
+                      clear related chat history tied to this character.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsDeleteDialogOpen(false)}
+                      disabled={isDeletingProfile}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={async () => {
+                        await onDeleteProfile();
+                        setIsDeleteDialogOpen(false);
+                      }}
+                      disabled={isDeletingProfile}
+                    >
+                      {isDeletingProfile ? "Deleting..." : "Delete Character"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
               <Button variant="outline" onClick={onClose} className="flex-1">
                 Close
               </Button>
@@ -682,10 +750,58 @@ export function EditCharacterSheet({
             </>
           ) : (
             <>
+              <Dialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    disabled={isSaving || isDeletingProfile}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    {isDeletingProfile ? "Deleting..." : "Delete"}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Delete this character?</DialogTitle>
+                    <DialogDescription>
+                      This action cannot be undone. It will permanently delete
+                      this AI profile, remove its avatar and gallery images, and
+                      clear related chat history tied to this character.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsDeleteDialogOpen(false)}
+                      disabled={isDeletingProfile}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={async () => {
+                        await onDeleteProfile();
+                        setIsDeleteDialogOpen(false);
+                      }}
+                      disabled={isDeletingProfile}
+                    >
+                      {isDeletingProfile ? "Deleting..." : "Delete Character"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
               <Button variant="outline" onClick={onClose} className="flex-1">
                 Cancel
               </Button>
-              <Button onClick={onSave} disabled={isSaving} className="flex-1">
+              <Button
+                onClick={onSave}
+                disabled={isSaving || isDeletingProfile}
+                className="flex-1"
+              >
                 {isSaving ? "Saving..." : "Save"}
               </Button>
             </>

@@ -83,6 +83,9 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
   const updateProfile = useMutation(
     api.features.ai.mutations.adminUpdateProfile,
   );
+  const deleteProfile = useMutation(
+    api.features.ai.mutations.adminDeleteProfile,
+  );
   const generateUploadUrl = useMutation(
     api.features.ai.mutations.adminGenerateUploadUrl,
   );
@@ -104,6 +107,7 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     profiles?.find((p) => p._id === selectedProfileId) ?? null;
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeletingProfile, setIsDeletingProfile] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isGeneratingShowcaseImage, setIsGeneratingShowcaseImage] =
@@ -340,11 +344,30 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     }
   };
 
+  const handleDeleteProfile = async () => {
+    if (!selectedProfile) return;
+
+    setIsDeletingProfile(true);
+    try {
+      await deleteProfile({
+        profileId: selectedProfile._id,
+      });
+      toast.success("Character deleted successfully");
+      handleClose();
+    } catch (error) {
+      toast.error("Failed to delete character");
+      console.error(error);
+    } finally {
+      setIsDeletingProfile(false);
+    }
+  };
+
   return {
     // State
     selectedProfile,
     isSheetOpen,
     isSaving,
+    isDeletingProfile,
     isUploadingAvatar,
     isUploadingGallery,
     isGeneratingShowcaseImage,
@@ -373,5 +396,6 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     handleDeleteImage,
     handleGenerateShowcaseImage,
     handleSave,
+    handleDeleteProfile,
   };
 }
