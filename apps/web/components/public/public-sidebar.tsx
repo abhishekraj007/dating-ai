@@ -92,7 +92,7 @@ export function PublicSidebar() {
           />
 
           <div className="relative flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3" onClick={close}>
+            <Link href="/" className="flex items-center gap-1" onClick={close}>
               <Image
                 src="/logo-dark.png"
                 alt="FeelAI logo"

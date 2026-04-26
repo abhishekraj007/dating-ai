@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PremiumProfileImage } from "@/components/public/premium-profile-image";
 import { ProfileAvatarSection } from "@/components/public/profile-avatar-section";
 import { getSegmentConfig, type PublicSegment } from "@/lib/public-segments";
+import { ArrowLeft } from "lucide-react";
 
 type PublicProfileDetails = {
   _id: string;
@@ -39,15 +40,12 @@ export function PublicProfilePage({
     <main className="flex min-w-0 flex-1 flex-col gap-8">
       <section className="flex flex-col gap-4 rounded-[calc(var(--radius)*1.5)] border border-border/70 bg-card/80 p-5 shadow-sm md:p-8">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link className="transition-colors hover:text-foreground" href="/">
-            Home
-          </Link>
-          <span>/</span>
           <Link
-            className="transition-colors hover:text-foreground"
-            href={config.href}
+            className="transition-colors hover:text-foreground flex items-center gap-1"
+            href="/"
           >
-            {config.metaTitle}
+            <ArrowLeft className="size-4" />
+            Home
           </Link>
           <span>/</span>
           <span className="text-foreground">{profile.name}</span>

@@ -38,6 +38,7 @@ import type * as features_ai_profileGeneration from "../features/ai/profileGener
 import type * as features_ai_profileGenerationActions from "../features/ai/profileGenerationActions.js";
 import type * as features_ai_profileGenerationData from "../features/ai/profileGenerationData.js";
 import type * as features_ai_profiles from "../features/ai/profiles.js";
+import type * as features_ai_publicProfileUsernames from "../features/ai/publicProfileUsernames.js";
 import type * as features_ai_queries from "../features/ai/queries.js";
 import type * as features_ai_r2Helpers from "../features/ai/r2Helpers.js";
 import type * as features_ai_seed from "../features/ai/seed.js";
@@ -118,6 +119,7 @@ declare const fullApi: ApiFromModules<{
   "features/ai/profileGenerationActions": typeof features_ai_profileGenerationActions;
   "features/ai/profileGenerationData": typeof features_ai_profileGenerationData;
   "features/ai/profiles": typeof features_ai_profiles;
+  "features/ai/publicProfileUsernames": typeof features_ai_publicProfileUsernames;
   "features/ai/queries": typeof features_ai_queries;
   "features/ai/r2Helpers": typeof features_ai_r2Helpers;
   "features/ai/seed": typeof features_ai_seed;

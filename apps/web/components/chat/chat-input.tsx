@@ -83,7 +83,7 @@ export function ChatInput({
 
   const animatedPhrases = [
     characterName ? `Message ${characterName}` : "Write a message...",
-    "Send me a selfie",
+    // "Send me a selfie",
     "Let's play a quiz",
   ];
   const animatedPlaceholder = useTypingPlaceholder(animatedPhrases);

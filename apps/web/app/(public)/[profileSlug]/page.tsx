@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PublicProfilePage } from "@/components/public/public-profile-page";
 import { api, fetchQuery } from "@/lib/convex-client";
+import {
+  isReservedPublicUsername,
+  normalizePublicUsername,
+} from "@/lib/public-profile-routes";
 import { buildPublicProfileStructuredData } from "@/lib/public-structured-data";
-import { normalizePublicUsername } from "@/lib/public-profile-routes";
 import { getSiteUrl } from "@/lib/site";
 
 export const revalidate = 60;
@@ -14,22 +17,27 @@ type ProfileRouteProps = {
 };
 
 async function getPublicProfile(profileSlug: string) {
-  const profile = await fetchQuery(
-    api.features.ai.queries.getPublicProfileByUsername,
-    {
-      username: normalizePublicUsername(profileSlug),
-    },
-  );
-
-  if (!profile || profile.gender !== "female") {
+  const normalizedUsername = normalizePublicUsername(profileSlug);
+  if (isReservedPublicUsername(normalizedUsername)) {
     return null;
   }
 
-  if (profile.username !== normalizePublicUsername(profileSlug)) {
+  const profile = await fetchQuery(
+    api.features.ai.queries.getPublicProfileByUsername,
+    {
+      username: normalizedUsername,
+    },
+  );
+
+  if (!profile || profile.username !== normalizedUsername) {
     return null;
   }
 
   return profile;
+}
+
+function getProfileSegment(gender: "female" | "male") {
+  return gender === "male" ? "guys" : "girls";
 }
 
 export async function generateMetadata({
@@ -37,53 +45,56 @@ export async function generateMetadata({
 }: ProfileRouteProps): Promise<Metadata> {
   const { profileSlug } = await params;
   const profile = await getPublicProfile(profileSlug);
-  const siteUrl = getSiteUrl();
-  const pageUrl = `${siteUrl}women/${profileSlug}`;
 
   if (!profile) {
     return {
       title: "Profile Not Found",
-      alternates: { canonical: "women" },
+      alternates: { canonical: "/" },
     };
   }
 
+  const canonicalPath = `/${profile.username}`;
+  const siteUrl = getSiteUrl();
+  const pageUrl = `${siteUrl}${canonicalPath}`;
+
   return {
-    title: `${profile.name} | Women`,
+    title: `${profile.name} | FeelAI`,
     description:
       profile.bio ||
-      `Meet ${profile.name}, an AI girlfriend on FeelAI for immersive dating and conversation.`,
+      `Meet ${profile.name} on FeelAI for immersive dating and conversation.`,
     alternates: {
-      canonical: `women/${profileSlug}`,
+      canonical: canonicalPath,
     },
     openGraph: {
-      title: `${profile.name} | Women`,
+      title: `${profile.name} | FeelAI`,
       description:
         profile.bio ||
-        `Meet ${profile.name}, an AI girlfriend on FeelAI for immersive dating and conversation.`,
+        `Meet ${profile.name} on FeelAI for immersive dating and conversation.`,
       url: pageUrl,
       images: profile.avatarUrl ? [{ url: profile.avatarUrl }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
-      title: `${profile.name} | Women`,
+      title: `${profile.name} | FeelAI`,
       description:
         profile.bio ||
-        `Meet ${profile.name}, an AI girlfriend on FeelAI for immersive dating and conversation.`,
+        `Meet ${profile.name} on FeelAI for immersive dating and conversation.`,
     },
   };
 }
 
-export default async function AIGirlfriendProfilePage({
-  params,
-}: ProfileRouteProps) {
+export default async function PublicProfileRoute({ params }: ProfileRouteProps) {
   const { profileSlug } = await params;
   const profile = await getPublicProfile(profileSlug);
+
   if (!profile) {
     notFound();
   }
 
+  const segment = getProfileSegment(profile.gender);
+  const canonicalPath = `/${profile.username}`;
   const siteUrl = getSiteUrl();
-  const pageUrl = `${siteUrl}women/${profileSlug}`;
+  const pageUrl = `${siteUrl}${canonicalPath}`;
 
   return (
     <>
@@ -91,7 +102,7 @@ export default async function AIGirlfriendProfilePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
-            buildPublicProfileStructuredData(siteUrl, "girls", pageUrl, {
+            buildPublicProfileStructuredData(siteUrl, segment, pageUrl, {
               name: profile.name,
               age: profile.age,
               bio: profile.bio,
@@ -101,7 +112,7 @@ export default async function AIGirlfriendProfilePage({
           ),
         }}
       />
-      <PublicProfilePage profile={profile} segment="girls" />
+      <PublicProfilePage profile={profile} segment={segment} />
     </>
   );
 }

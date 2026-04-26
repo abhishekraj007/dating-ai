@@ -415,7 +415,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
           isSending={isSending || isAITyping}
           disabled={isClearing}
           characterName={profile?.name}
-          onRequestImage={() => setIsImageRequestOpen(true)}
+          // onRequestImage={() => setIsImageRequestOpen(true)}
           isRequestingImage={isRequestingImage}
         />
       </div>
