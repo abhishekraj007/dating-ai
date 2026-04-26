@@ -6,6 +6,8 @@ import { PremiumLockedImage } from "@/components/chat/premium-locked-image";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 
+const LOCKED_IMAGE_PLACEHOLDER_URL = "/discover/female.webp";
+
 interface ChatImageBubbleProps {
   imageKey?: string;
   imageUrl?: string;
@@ -31,12 +33,25 @@ export function ChatImageBubble({
 }: ChatImageBubbleProps) {
   const freshImageUrl = useQuery(
     api.features.ai.queries.getChatImageUrl,
-    imageKey ? { imageKey } : "skip",
+    isPremium && imageKey ? { imageKey } : "skip",
   );
 
-  const resolvedImageUrl = freshImageUrl ?? imageUrl;
+  const resolvedImageUrl = isPremium ? (freshImageUrl ?? imageUrl) : undefined;
 
   if (!resolvedImageUrl) {
+    if (!isPremium) {
+      return (
+        <PremiumLockedImage
+          imageUrl={LOCKED_IMAGE_PLACEHOLDER_URL}
+          profileName={profileName}
+          profileAvatar={profileAvatar}
+          viewerName={viewerName}
+          viewerEmail={viewerEmail}
+          viewerAuthUserId={viewerAuthUserId}
+        />
+      );
+    }
+
     return (
       <div className="relative border rounded-3xl animate-border-slow">
         <Skeleton className="w-[140px] h-[180px] rounded-3xl animate-pulse" />
@@ -59,7 +74,7 @@ export function ChatImageBubble({
         />
       ) : (
         <PremiumLockedImage
-          imageUrl={resolvedImageUrl}
+          imageUrl={LOCKED_IMAGE_PLACEHOLDER_URL}
           profileName={profileName}
           profileAvatar={profileAvatar}
           viewerName={viewerName}

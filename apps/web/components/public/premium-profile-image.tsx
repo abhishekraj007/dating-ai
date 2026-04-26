@@ -6,15 +6,18 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useConvexAuth, useQuery } from "convex/react";
 import { Lock } from "lucide-react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
+import type { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { useAuthModal } from "@/components/auth/auth-modal-provider";
 import { PremiumSubscriptionModal } from "@/components/premium-subscription-modal";
 
 type PremiumProfileImageProps = {
-  imageUrl?: string | null;
+  imageKey?: string | null;
   alt: string;
   fallbackText: string;
   sizes: string;
   priority?: boolean;
+  profileId: string;
+  placeholderImageUrl: string;
   profileName: string;
 };
 
@@ -39,11 +42,13 @@ function buildPathWithoutUpgradeFlag(
 }
 
 export function PremiumProfileImage({
-  imageUrl,
+  imageKey,
   alt,
   fallbackText,
   sizes,
   priority = false,
+  profileId,
+  placeholderImageUrl,
   profileName,
 }: PremiumProfileImageProps) {
   const pathname = usePathname();
@@ -51,10 +56,19 @@ export function PremiumProfileImage({
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { open } = useAuthModal();
-  const viewerData = useQuery(api.user.fetchUserAndProfile);
+  const premiumState = useQuery(api.features.premium.queries.isPremium);
+  const resolvedImageUrl = useQuery(
+    api.features.ai.queries.getProfileImageUrl,
+    isAuthenticated && premiumState?.isPremium && imageKey
+      ? {
+          profileId: profileId as Id<"aiProfiles">,
+          imageKey,
+        }
+      : "skip",
+  );
   const [isPremiumOpen, setIsPremiumOpen] = useState(false);
 
-  const isPremium = Boolean(viewerData?.profile?.isPremium);
+  const isPremium = Boolean(premiumState?.isPremium);
   const isLocked = !isAuthenticated || !isPremium;
   const searchParamsString = searchParams?.toString() ?? "";
 
@@ -98,13 +112,19 @@ export function PremiumProfileImage({
     setIsPremiumOpen(true);
   };
 
-  if (!imageUrl) {
+  if (!imageKey) {
     return (
       <div className="flex h-full items-center justify-center bg-muted text-6xl font-semibold text-muted-foreground">
         {fallbackText}
       </div>
     );
   }
+
+  if (!isLocked && !resolvedImageUrl) {
+    return <div className="h-full w-full animate-pulse bg-muted" />;
+  }
+
+  const displayImageUrl = isLocked ? placeholderImageUrl : resolvedImageUrl;
 
   return (
     <>
@@ -120,7 +140,7 @@ export function PremiumProfileImage({
             fill
             priority={priority}
             sizes={sizes}
-            src={imageUrl}
+            src={displayImageUrl!}
             unoptimized
           />
           <div className="absolute inset-0 bg-black/20" />
@@ -142,7 +162,7 @@ export function PremiumProfileImage({
           fill
           priority={priority}
           sizes={sizes}
-          src={imageUrl}
+          src={displayImageUrl!}
           unoptimized
         />
       )}
