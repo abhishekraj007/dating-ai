@@ -61,7 +61,7 @@ export function CharacterCard({
 
         <div className="absolute inset-x-0 bottom-0 space-y-3 p-4 text-white">
           <div className="space-y-1">
-            <h3 className="relative z-20 text-[1.1rem] md:text-2xl font-semibold tracking-tight">
+            <h3 className="relative z-20 text-[1.1rem] md:text-xl font-semibold tracking-tight">
               {profile.name}
               {/* {profile.age ? (
                 <span className="ml-1 text-white/72">{profile.age}</span>
