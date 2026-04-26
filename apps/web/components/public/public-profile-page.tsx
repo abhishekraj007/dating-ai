@@ -76,14 +76,15 @@ export function PublicProfilePage({
                     @{profile.username}
                   </p>
                 ) : null}
+                {profile.occupation ? (
+                  <p className="mt-1 text-md">{profile.occupation}</p>
+                ) : null}
               </div>
               <div className="flex flex-wrap gap-2">
                 {profile.zodiacSign ? (
                   <Badge variant="outline">{profile.zodiacSign}</Badge>
                 ) : null}
-                {profile.occupation ? (
-                  <Badge variant="outline">{profile.occupation}</Badge>
-                ) : null}
+
                 {profile.mbtiType ? (
                   <Badge variant="outline">{profile.mbtiType}</Badge>
                 ) : null}
@@ -96,14 +97,14 @@ export function PublicProfilePage({
               </p>
             ) : null}
 
-            {profile.relationshipGoal ? (
+            {/* {profile.relationshipGoal ? (
               <div className="">
                 <span>Looking for</span>
                 <p className="text-sm leading-6 text-muted-foreground">
                   {profile.relationshipGoal}
                 </p>
               </div>
-            ) : null}
+            ) : null} */}
             {profile.personalityTraits &&
             profile.personalityTraits.length > 0 ? (
               <div>
