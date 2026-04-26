@@ -397,7 +397,11 @@ export function useSendMessage() {
 
   // Enhanced send with local optimistic update for instant feedback
   const sendMessageWithOptimistic = (
-    args: { conversationId: Id<"aiConversations">; content: string },
+    args: {
+      conversationId: Id<"aiConversations">;
+      content: string;
+      platform?: "ios" | "android" | "web";
+    },
     threadId?: string,
   ) => {
     // Add optimistic message immediately for instant UI feedback

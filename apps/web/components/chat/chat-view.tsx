@@ -30,6 +30,7 @@ import {
   useMessages,
   useSendMessage,
   useClearChat,
+  useDeleteMessage,
 } from "@/hooks/use-messages";
 import { useRequestChatImage } from "@/hooks/use-request-chat-image";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
 
   const { sendMessage } = useSendMessage();
   const { clearChat } = useClearChat();
+  const { deleteMessage } = useDeleteMessage();
   const { requestImage } = useRequestChatImage();
 
   const [isSending, setIsSending] = useState(false);
@@ -101,6 +103,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
       await sendMessage({
         conversationId: conversationId as Id<"aiConversations">,
         content,
+        platform: "web",
       });
     } catch {
       // error handled silently - user can retry
@@ -288,6 +291,8 @@ export function ChatView({ conversationId }: ChatViewProps) {
                 }
                 viewerEmail={viewerData?.userMetadata?.email ?? null}
                 viewerAuthUserId={viewerProfile?.authUserId ?? null}
+                messageOrder={msg.order}
+                onDelete={(order) => deleteMessage(conversationId, order)}
               />
             ))}
             {isAITyping && !messages[messages.length - 1]?.isStreaming && (

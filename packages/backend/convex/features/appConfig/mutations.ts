@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { requireAdmin } from "./guards";
 import {
   APP_CONFIG_KEY,
+  normalizeNsfwEnabledPlatforms,
   normalizeAndroidAppId,
   normalizeAppStoreId,
   normalizeUrl,
@@ -19,6 +20,11 @@ export const upsertAppConfig = mutation({
     iosAppStoreId: v.optional(v.string()),
     androidAppId: v.optional(v.string()),
     showMyCreationTab: v.optional(v.boolean()),
+    nsfwEnabledPlatforms: v.optional(
+      v.array(
+        v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     const userData = await requireAdmin(ctx);
@@ -34,6 +40,9 @@ export const upsertAppConfig = mutation({
       iosAppStoreId: normalizeAppStoreId(args.iosAppStoreId),
       androidAppId: normalizeAndroidAppId(args.androidAppId),
       showMyCreationTab: args.showMyCreationTab,
+      nsfwEnabledPlatforms: normalizeNsfwEnabledPlatforms(
+        args.nsfwEnabledPlatforms,
+      ),
       updatedAt: Date.now(),
       updatedBy: userData.userMetadata._id,
     };

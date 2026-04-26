@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { ProtectedRoute } from "@/components/protected-route";
 import { PageShell } from "@/components/admin/page-shell";
@@ -21,6 +21,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
+type NsfwPlatform = "ios" | "android" | "web";
+
 type ConfigForm = {
   baseWebUrl: string;
   termsUrl: string;
@@ -31,6 +33,7 @@ type ConfigForm = {
   iosAppStoreId: string;
   androidAppId: string;
   showMyCreationTab: boolean;
+  nsfwEnabledPlatforms: Array<NsfwPlatform>;
 };
 
 const emptyForm: ConfigForm = {
@@ -43,14 +46,18 @@ const emptyForm: ConfigForm = {
   iosAppStoreId: "",
   androidAppId: "",
   showMyCreationTab: false,
+  nsfwEnabledPlatforms: [],
 };
 
 export default function AppConfigPage() {
+  const { isAuthenticated } = useConvexAuth();
   const adminConfig = useQuery(
     (api as any).features.appConfig.queries.getAdminAppConfig,
+    isAuthenticated ? {} : "skip",
   );
   const publicConfig = useQuery(
     (api as any).features.appConfig.queries.getPublicAppConfig,
+    isAuthenticated ? {} : "skip",
   );
   const upsertConfig = useMutation(
     (api as any).features.appConfig.mutations.upsertAppConfig,
@@ -75,6 +82,8 @@ export default function AppConfigPage() {
       iosAppStoreId: adminConfig.iosAppStoreId ?? "",
       androidAppId: adminConfig.androidAppId ?? "",
       showMyCreationTab: adminConfig.showMyCreationTab ?? false,
+      nsfwEnabledPlatforms: (adminConfig.nsfwEnabledPlatforms ??
+        []) as Array<NsfwPlatform>,
     });
     setHasLoadedInitial(true);
   }, [adminConfig, hasLoadedInitial]);
@@ -93,30 +102,70 @@ export default function AppConfigPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const onSave = async () => {
+  const buildConfigPayload = (nextForm: ConfigForm) => ({
+    baseWebUrl: nextForm.baseWebUrl || undefined,
+    termsUrl: nextForm.termsUrl || undefined,
+    privacyUrl: nextForm.privacyUrl || undefined,
+    helpCenterUrl: nextForm.helpCenterUrl || undefined,
+    supportUrl: nextForm.supportUrl || undefined,
+    shareUrl: nextForm.shareUrl || undefined,
+    iosAppStoreId: nextForm.iosAppStoreId || undefined,
+    androidAppId: nextForm.androidAppId || undefined,
+    showMyCreationTab: nextForm.showMyCreationTab,
+    nsfwEnabledPlatforms: nextForm.nsfwEnabledPlatforms,
+  });
+
+  const saveConfig = async (
+    nextForm: ConfigForm,
+    successMessage: string,
+    previousForm?: ConfigForm,
+  ) => {
     setIsSaving(true);
 
     try {
-      await upsertConfig({
-        baseWebUrl: form.baseWebUrl || undefined,
-        termsUrl: form.termsUrl || undefined,
-        privacyUrl: form.privacyUrl || undefined,
-        helpCenterUrl: form.helpCenterUrl || undefined,
-        supportUrl: form.supportUrl || undefined,
-        shareUrl: form.shareUrl || undefined,
-        iosAppStoreId: form.iosAppStoreId || undefined,
-        androidAppId: form.androidAppId || undefined,
-        showMyCreationTab: form.showMyCreationTab,
-      });
-
-      toast.success("App configuration updated");
+      await upsertConfig(buildConfigPayload(nextForm));
+      toast.success(successMessage);
+      return true;
     } catch (error) {
+      if (previousForm) {
+        setForm(previousForm);
+      }
+
       toast.error(
         error instanceof Error ? error.message : "Failed to update config",
       );
+      return false;
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const onToggleShowMyCreationTab = (checked: boolean) => {
+    const previousForm = form;
+    const nextForm = {
+      ...form,
+      showMyCreationTab: checked,
+    };
+
+    setForm(nextForm);
+    void saveConfig(nextForm, "Feature flags updated", previousForm);
+  };
+
+  const onToggleNsfwPlatform = (platform: NsfwPlatform, checked: boolean) => {
+    const previousForm = form;
+    const nextForm = {
+      ...form,
+      nsfwEnabledPlatforms: checked
+        ? Array.from(new Set([...form.nsfwEnabledPlatforms, platform]))
+        : form.nsfwEnabledPlatforms.filter((item) => item !== platform),
+    };
+
+    setForm(nextForm);
+    void saveConfig(nextForm, "NSFW config updated", previousForm);
+  };
+
+  const onSave = async () => {
+    await saveConfig(form, "App configuration updated");
   };
 
   const isLoading = adminConfig === undefined;
@@ -243,14 +292,62 @@ export default function AppConfigPage() {
                     <Switch
                       id="showMyCreationTab"
                       checked={form.showMyCreationTab}
-                      onCheckedChange={(checked) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          showMyCreationTab: checked,
-                        }))
-                      }
+                      disabled={isSaving}
+                      onCheckedChange={onToggleShowMyCreationTab}
                     />
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>NSFW Config</CardTitle>
+                  <CardDescription>
+                    Control which platforms are allowed to send and receive NSFW
+                    content. Disabled platforms receive SFW-only agent
+                    responses.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {(
+                    [
+                      {
+                        id: "nsfw-ios",
+                        platform: "ios" as NsfwPlatform,
+                        label: "iOS",
+                        description: "Allow NSFW content on iOS devices.",
+                      },
+                      {
+                        id: "nsfw-android",
+                        platform: "android" as NsfwPlatform,
+                        label: "Android",
+                        description: "Allow NSFW content on Android devices.",
+                      },
+                      {
+                        id: "nsfw-web",
+                        platform: "web" as NsfwPlatform,
+                        label: "Web",
+                        description: "Allow NSFW content on web browsers.",
+                      },
+                    ] as const
+                  ).map(({ id, platform, label, description }) => (
+                    <div key={id} className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor={id}>{label}</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {description}
+                        </p>
+                      </div>
+                      <Switch
+                        id={id}
+                        checked={form.nsfwEnabledPlatforms.includes(platform)}
+                        disabled={isSaving}
+                        onCheckedChange={(checked) =>
+                          onToggleNsfwPlatform(platform, checked)
+                        }
+                      />
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
 

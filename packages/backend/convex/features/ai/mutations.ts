@@ -79,8 +79,11 @@ export const sendMessage = mutation({
   args: {
     conversationId: v.id("aiConversations"),
     content: v.string(),
+    platform: v.optional(
+      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    ),
   },
-  handler: async (ctx, { conversationId, content }) => {
+  handler: async (ctx, { conversationId, content, platform }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new Error("Not authenticated");
@@ -152,6 +155,7 @@ export const sendMessage = mutation({
         threadId: conversation.threadId,
         userId: user._id,
         aiProfileId: conversation.aiProfileId,
+        platform,
       },
     );
 

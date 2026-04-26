@@ -1,4 +1,5 @@
-import { Camera } from "lucide-react";
+import { useState } from "react";
+import { Camera, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChatImageBubble } from "@/components/chat/chat-image-bubble";
@@ -14,6 +15,8 @@ interface MessageBubbleProps {
   viewerName?: string | null;
   viewerEmail?: string | null;
   viewerAuthUserId?: string | null;
+  messageOrder?: number;
+  onDelete?: (order: number) => void;
 }
 
 function parseContent(content: string) {
@@ -80,9 +83,12 @@ export function MessageBubble({
   viewerName,
   viewerEmail,
   viewerAuthUserId,
+  messageOrder,
+  onDelete,
 }: MessageBubbleProps) {
   const isUser = role === "user";
   const parsed = parseContent(content);
+  const [isHovered, setIsHovered] = useState(false);
 
   if (parsed.kind === "skip") return null;
 
@@ -92,6 +98,8 @@ export function MessageBubble({
         "flex items-end gap-2 px-3 py-1.5 md:px-4",
         isUser ? "flex-row-reverse" : "flex-row",
       )}
+      onMouseEnter={() => isUser && setIsHovered(true)}
+      onMouseLeave={() => isUser && setIsHovered(false)}
     >
       {!isUser && (
         <Avatar className="mb-0.5 h-8 w-8 shrink-0 ring-1 ring-black/10 dark:ring-white/10">
@@ -153,9 +161,21 @@ export function MessageBubble({
           </div>
         )}
 
-        <span className="px-1 text-[10px] text-muted-foreground tabular-nums">
-          {formatTime(timestamp)}
-        </span>
+        {/* Delete button — always visible on mobile, hover-only on md+ */}
+        {isUser && onDelete && messageOrder !== undefined && (
+          <button
+            onClick={() => onDelete(messageOrder)}
+            aria-label="Delete message"
+            className={cn(
+              "flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground/60",
+              "transition-[opacity,color] hover:text-destructive",
+              "md:opacity-0",
+              isHovered && "md:opacity-100",
+            )}
+          >
+            <Trash2 className="h-3 w-3" />
+          </button>
+        )}
       </div>
     </div>
   );
