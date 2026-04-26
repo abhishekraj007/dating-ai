@@ -139,10 +139,10 @@ export function PublicFilterBar() {
       <div className="flex flex-wrap items-center gap-2">
         <div className="inline-flex h-9 items-center rounded-full border border-border/70 bg-card/70 px-3 text-sm text-muted-foreground shadow-sm gap-2">
           <SlidersHorizontal className="size-4" />
-          <span className="hidden sm:inline-block">Refine matches</span>
+          <span className="hidden sm:inline-block">Filter</span>
         </div>
 
-        <DropdownMenu>
+        {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
@@ -187,7 +187,7 @@ export function PublicFilterBar() {
                   </DropdownMenuCheckboxItem>
                 ))}
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -254,7 +254,7 @@ export function PublicFilterBar() {
           </Button>
         ) : null}
 
-        <div className="ml-auto hidden rounded-full border border-border/70 bg-card/50 p-1 shadow-sm md:block">
+        {/* <div className="ml-auto hidden rounded-full border border-border/70 bg-card/50 p-1 shadow-sm md:block">
           <div
             className={cn(
               "grid gap-1",
@@ -288,7 +288,7 @@ export function PublicFilterBar() {
               );
             })}
           </div>
-        </div>
+        </div> */}
       </div>
 
       {hasActiveFilters ? (

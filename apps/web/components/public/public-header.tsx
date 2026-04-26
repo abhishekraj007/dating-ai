@@ -42,8 +42,21 @@ export function PublicHeader() {
         <div className="flex h-[60px] items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <Link href="/" className="flex min-w-0 items-center gap-2">
-              <Image src="/logo.png" alt="FeelAI logo" width={32} height={32} />
-              {/* <span className="text-lg font-bold italic">FEELAI</span> */}
+              <Image
+                src="/logo-dark.png"
+                alt="FeelAI logo"
+                width={32}
+                height={32}
+                className="block dark:hidden"
+              />
+              <Image
+                src="/logo-white.png"
+                alt="FeelAI logo"
+                width={32}
+                height={32}
+                className="hidden dark:block"
+              />
+              <span className="text-lg font-bold italic">FEELAI</span>
             </Link>
           </div>
 

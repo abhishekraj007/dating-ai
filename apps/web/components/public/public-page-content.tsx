@@ -7,7 +7,7 @@ import { getSegmentConfig, type PublicSegment } from "@/lib/public-segments";
 const heroBackgrounds: Record<PublicSegment, string> = {
   girls: "/gf.webp",
   guys: "/bf.webp",
-  anime: "/anime.webp",
+  anime: "/cover.webp",
 };
 
 type PublicPageContentProps = {
@@ -46,7 +46,8 @@ export function PublicPageContent({
               {/* {isHome
                 ? "Discover AI Characters built for immersive chat."
                 : config.heroTitle} */}
-              Discover AI Characters for learning & creative conversations
+              Discover AI Characters trained for learning & creative
+              conversations
             </h1>
           </div>
         </div>
