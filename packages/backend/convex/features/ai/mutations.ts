@@ -531,6 +531,14 @@ export const adminUpdateProfile = mutation({
       throw new Error("Cannot admin-edit user-created profiles");
     }
 
+    if (
+      updates.avatarImageKey !== undefined &&
+      updates.avatarImageKey !== profile.avatarImageKey &&
+      !(profile.profileImageKeys ?? []).includes(updates.avatarImageKey)
+    ) {
+      throw new ConvexError("Avatar image must belong to this profile");
+    }
+
     let normalizedUsername: string | undefined;
     if (updates.username !== undefined) {
       normalizedUsername = normalizePublicProfileUsername(updates.username);

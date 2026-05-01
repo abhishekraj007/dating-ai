@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Figtree } from "next/font/google";
 import "../index.css";
+import "yet-another-react-lightbox/styles.css";
+import "yet-another-react-lightbox/plugins/counter.css";
 import Providers from "@/components/providers";
 import { LayoutContent } from "@/components/layout-content";
 import { cn } from "@/lib/utils";

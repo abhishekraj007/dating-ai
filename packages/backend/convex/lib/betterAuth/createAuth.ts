@@ -6,6 +6,7 @@ import { betterAuth } from "better-auth";
 import { authComponent } from "./component";
 
 const siteUrl = process.env.SITE_URL!;
+const authBaseUrl = process.env.CONVEX_SITE_URL ?? siteUrl;
 const nativeAppUrl = process.env.NATIVE_APP_URL || "datingai://";
 const extraTrustedOrigins = (process.env.TRUSTED_ORIGINS || "")
   .split(",")
@@ -14,6 +15,7 @@ const extraTrustedOrigins = (process.env.TRUSTED_ORIGINS || "")
 const trustedOrigins = Array.from(
   new Set([
     siteUrl,
+    authBaseUrl,
     nativeAppUrl,
     // Local development
     "http://localhost:3004", // admin local
@@ -35,7 +37,7 @@ export function createAuth(
     logger: {
       disabled: optionsOnly,
     },
-    baseURL: siteUrl,
+    baseURL: authBaseUrl,
     trustedOrigins,
     database: authComponent.adapter(ctx),
     user: {

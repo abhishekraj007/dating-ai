@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Roboto } from "next/font/google";
 import "./globals.css";
+import "yet-another-react-lightbox/styles.css";
+import "yet-another-react-lightbox/plugins/counter.css";
 import Providers from "@/components/providers";
 import { getSiteUrl } from "@/lib/site";
 import { cn } from "@/lib/utils";

@@ -113,6 +113,9 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
   const [isGeneratingShowcaseImage, setIsGeneratingShowcaseImage] =
     useState(false);
   const [deletingImageKey, setDeletingImageKey] = useState<string | null>(null);
+  const [selectingAvatarImageKey, setSelectingAvatarImageKey] = useState<
+    string | null
+  >(null);
   const [formData, setFormData] = useState<CharacterFormData>(initialFormData);
   const [newInterest, setNewInterest] = useState("");
   const [showcasePromptSuggestion, setShowcasePromptSuggestion] = useState("");
@@ -304,6 +307,29 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     }
   };
 
+  const handleSelectShowcaseAvatar = async (imageKey: string) => {
+    if (!selectedProfile) return;
+
+    if (imageKey === selectedProfile.avatarImageKey) {
+      toast.info("This showcase image is already the avatar");
+      return;
+    }
+
+    setSelectingAvatarImageKey(imageKey);
+    try {
+      await updateProfile({
+        profileId: selectedProfile._id,
+        avatarImageKey: imageKey,
+      });
+      toast.success("Avatar changed");
+    } catch (error) {
+      toast.error("Failed to change avatar");
+      console.error(error);
+    } finally {
+      setSelectingAvatarImageKey(null);
+    }
+  };
+
   const handleSave = async () => {
     if (!selectedProfile) return;
 
@@ -372,6 +398,7 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     isUploadingGallery,
     isGeneratingShowcaseImage,
     deletingImageKey,
+    selectingAvatarImageKey,
     formData,
     newInterest,
     showcasePromptSuggestion,
@@ -394,6 +421,7 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     handleAvatarUpload,
     handleGalleryUpload,
     handleDeleteImage,
+    handleSelectShowcaseAvatar,
     handleGenerateShowcaseImage,
     handleSave,
     handleDeleteProfile,
