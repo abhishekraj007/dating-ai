@@ -608,7 +608,6 @@ function buildAdminShowcaseInputs(profile: AdminShowcaseProfile): {
     hair: "same hair as the reference image",
     eyes: "same eyes as the reference image",
     skinTone: "same skin tone as the reference image",
-    skinCue: "natural realistic skin",
     build: "same body type as the reference image",
     outfit: "stylish contemporary outfit",
     signatureStyle: "premium dating profile style",

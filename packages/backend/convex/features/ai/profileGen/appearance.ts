@@ -70,8 +70,8 @@ export function sampleAppearanceProfile(
     eyes: overrides?.eyeColor
       ? `${randomItem(EYE_SHAPES)} ${overrides.eyeColor} eyes`
       : `${randomItem(EYE_SHAPES)} ${randomItem(EYE_COLORS)} eyes`,
-    skinTone: overrides?.skinTone || randomItem(SKIN_TONES),
-    skinCue: randomItem(SKIN_CUES),
+    // skinTone: overrides?.skinTone || randomItem(SKIN_TONES),
+    // skinCue: randomItem(SKIN_CUES),
     build,
     outfit,
     signatureStyle,
@@ -104,9 +104,9 @@ export function buildCanonicalSubjectDescriptor(
   // which is the single biggest lever for character consistency on
   // nano-banana-2 and seedream-5-lite.
   return [
-    `a ${candidate.age}-year-old ${genderNoun(candidate.gender)}`,
-    appearance.skinTone,
-    appearance.skinCue,
+    `${genderNoun(candidate.gender)}`,
+    // appearance.skinTone,
+    // appearance.skinCue,
     `${appearance.hair}`,
     appearance.eyes,
     appearance.build,

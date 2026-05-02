@@ -1678,4 +1678,4 @@ export const STOPWORDS = new Set([
 // produce the opposite effect (over-smoothed plastic skin, or amplified
 // freckles/marks). The rest of the list targets pure image-quality issues.
 export const INLINE_NEGATIVES =
-  "Avoid extra fingers or distorted hands, avoid text or watermarks, avoid cartoon or render look, avoid over-smoothed plastic skin, lot of freckles/marks, avoid uncanny valley AI artifacts.";
+  "NEGATIVE PROMPTS: NO extra fingers or distorted hands, NO text or watermarks.";

@@ -75,8 +75,8 @@ export type AppearanceProfile = {
   ageHint: number;
   hair: string;
   eyes: string;
-  skinTone: string;
-  skinCue: string;
+  skinTone?: string;
+  skinCue?: string;
   build: string;
   outfit: string;
   signatureStyle: string;

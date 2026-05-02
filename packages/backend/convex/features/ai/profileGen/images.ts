@@ -119,8 +119,4 @@ export async function createAndStoreGeneratedImage(
   );
 }
 
-export function imageGenerationModelName(isDev: boolean): string {
-  return isDev
-    ? "picsum.photos (dev)"
-    : "google/nano-banana-2 -> bytedance/seedream-5-lite -> qwen/qwen-image-edit-2511";
-}
+export { imageGenerationModelName } from "../imageGeneration";

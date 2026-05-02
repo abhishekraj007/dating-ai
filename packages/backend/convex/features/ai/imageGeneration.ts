@@ -33,6 +33,100 @@ export type ImageGenerationResult =
       attempts: ImageModelAttempt[];
     };
 
+// ---------------------------------------------------------------------------
+// fal.ai GPT-Image-2 (primary model)
+// ---------------------------------------------------------------------------
+
+const FAL_BASE_URL = "https://fal.run";
+
+/**
+ * Map common aspect-ratio strings (e.g. "3:4", "9:16") to the preset
+ * `image_size` names accepted by fal.ai's GPT-Image-2 endpoint.
+ * Falls back to "landscape_4_3" when no match is found.
+ */
+function mapAspectRatioToFalSize(
+  aspectRatio: string,
+): string | { width: number; height: number } {
+  const presets: Record<string, string> = {
+    "1:1": "square",
+    "4:3": "landscape_4_3",
+    "3:4": "portrait_4_3",
+    "16:9": "landscape_16_9",
+    "9:16": "portrait_16_9",
+  };
+  return presets[aspectRatio] ?? "portrait_4_3";
+}
+
+type FalImageResponse = {
+  images: Array<{
+    url: string;
+    width: number;
+    height: number;
+    content_type?: string;
+    file_name?: string;
+  }>;
+};
+
+/**
+ * Generate an image using fal.ai GPT-Image-2.
+ * Uses the text-to-image endpoint when no reference images are provided,
+ * and the edit endpoint when reference images are available.
+ */
+async function generateWithFal(args: {
+  prompt: string;
+  aspectRatio: string;
+  referenceImageUrls: string[];
+}): Promise<{ imageUrl: string } | null> {
+  const falKey = process.env.FAL_KEY;
+  if (!falKey) return null;
+
+  const hasReference = args.referenceImageUrls.length > 0;
+  const endpoint = hasReference
+    ? `${FAL_BASE_URL}/openai/gpt-image-2/edit`
+    : `${FAL_BASE_URL}/openai/gpt-image-2`;
+
+  const body: Record<string, unknown> = {
+    prompt: args.prompt,
+    quality: "medium",
+    output_format: "webp",
+    num_images: 1,
+    image_size: "portrait_4_3",
+  };
+
+  if (hasReference) {
+    body.image_urls = args.referenceImageUrls;
+    body.image_size = "auto";
+  } else {
+    body.image_size = mapAspectRatioToFalSize(args.aspectRatio);
+  }
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Key ${falKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "unknown");
+    throw new Error(`fal.ai responded with ${response.status}: ${errorText}`);
+  }
+
+  const data = (await response.json()) as FalImageResponse;
+  const url = data.images?.[0]?.url;
+  if (!url) {
+    throw new Error("fal.ai returned no image URL in response");
+  }
+
+  return { imageUrl: url };
+}
+
+// ---------------------------------------------------------------------------
+// Replicate fallback chain
+// ---------------------------------------------------------------------------
+
 const IMAGE_MODEL_CHAIN: ImageModelConfig[] = [
   {
     id: "google/nano-banana-2",
@@ -127,10 +221,19 @@ function extractImageUrl(output: unknown): string | null {
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+const FAL_MODEL_NAME = "openai/gpt-image-2 (fal.ai)";
+
 export function imageGenerationModelName(isDev: boolean): string {
-  return isDev
-    ? "picsum.photos (dev)"
-    : IMAGE_MODEL_CHAIN.map((model) => model.id).join(" -> ");
+  if (isDev) return "picsum.photos (dev)";
+  const falAvailable = Boolean(process.env.FAL_KEY);
+  const replicateChain = IMAGE_MODEL_CHAIN.map((m) => m.id).join(" -> ");
+  return falAvailable
+    ? `${FAL_MODEL_NAME} -> ${replicateChain}`
+    : replicateChain;
 }
 
 export async function generateImageWithFallback(args: {
@@ -173,6 +276,30 @@ export async function generateImageWithFallback(args: {
       : args.prompt;
   const attempts: ImageModelAttempt[] = [];
 
+  // --- Primary: fal.ai GPT-Image-2 ---
+  if (process.env.FAL_KEY) {
+    try {
+      const result = await generateWithFal({
+        prompt,
+        aspectRatio: args.aspectRatio,
+        referenceImageUrls,
+      });
+      if (result) {
+        return {
+          success: true,
+          imageUrl: result.imageUrl,
+          model: FAL_MODEL_NAME,
+        };
+      }
+    } catch (error) {
+      attempts.push({
+        model: FAL_MODEL_NAME,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  // --- Fallback: Replicate model chain ---
   for (const model of IMAGE_MODEL_CHAIN) {
     if (
       referenceImageUrls.length === 0 &&
