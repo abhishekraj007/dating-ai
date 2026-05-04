@@ -16,6 +16,7 @@
     "@convex-dev/better-auth": "^0.9.1",
     "@dating-ai/backend": "workspace:*",
     "@expo-google-fonts/inter": "^0.4.2",
+    "@expo/dom-webview": "^55.0.5",
     "@expo/html-elements": "^0.10.1",
     "@expo/metro-runtime": "^55.0.10",
     "@expo/vector-icons": "^15.0.2",
