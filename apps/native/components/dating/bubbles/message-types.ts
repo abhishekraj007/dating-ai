@@ -41,8 +41,8 @@ export interface ImageRequestData {
 
 export interface ImageResponseData {
   type: "image_response";
-  imageUrl: string;
-  imageKey: string;
+  imageUrl?: string;
+  imageKey?: string;
   prompt?: string;
 }
 

@@ -42,7 +42,7 @@ For self-hosted Better Auth, do not point `SITE_URL` at the Convex actions host.
 These are the env files you will usually manage:
 
 - `packages/backend/.env.local`: backend env used for local development and the default deploy target
-- `packages/backend/.env.prod.local`: backend env used when deploying to self-hosted production with `--env-file`
+- `packages/backend/.env.production.local`: backend env used when deploying to self-hosted production with `--env-file`
 - `apps/web/.env.local`: web app Convex client envs
 - `apps/admin/.env.local`: admin app Convex client envs
 - `apps/native/.env.local`: native app Convex client envs
@@ -212,12 +212,12 @@ npx convex env list --prod
 
 ### Self-hosted Production
 
-Do not rely on `packages/backend/.env.local` for prod deploys. Keep a dedicated prod backend env file such as `packages/backend/.env.prod.local`.
+Do not rely on `packages/backend/.env.local` for prod deploys. Keep a dedicated prod backend env file such as `packages/backend/.env.production.local`.
 
 Example:
 
 ```bash
-# packages/backend/.env.prod.local
+# packages/backend/.env.production.local
 CONVEX_SELF_HOSTED_URL=https://api.example.com
 CONVEX_SELF_HOSTED_ADMIN_KEY=your-prod-admin-key
 CONVEX_URL=https://api.example.com
@@ -229,20 +229,32 @@ NATIVE_APP_URL=datingai://
 Sanity-check before deploying:
 
 ```bash
-pnpm convex:deploy -- --env-file .env.prod.local --dry-run
+pnpm convex:deploy -- --env-file .env.production.local --dry-run
 ```
 
 Deploy from the repo root:
 
 ```bash
-pnpm convex:deploy -- --env-file .env.prod.local
+pnpm convex:deploy -- --env-file .env.production.local
 ```
 
 Equivalent command from `packages/backend`:
 
 ```bash
-pnpm exec convex deploy --env-file .env.prod.local
+pnpm exec convex deploy --env-file .env.production.local
 ```
+
+### Self-hosted Runtime Knobs
+
+For self-hosted Convex, runtime knobs from Convex's Rust backend source must be set on the self-hosted Convex server process/container, not with `convex env set` and not in the Convex function env dashboard.
+
+To raise the query/mutation function timeout from the self-hosted default of 1 second, set this on the self-hosted Convex backend service in Railway/Docker/your host provider, then restart or redeploy that service:
+
+```bash
+DATABASE_UDF_USER_TIMEOUT_SECONDS=5
+```
+
+The app's Convex env/dashboard should still contain app-level function variables such as auth, AI, storage, billing, `SITE_URL`, `NATIVE_APP_URL`, `CONVEX_URL`, and `CONVEX_SITE_URL`. The timeout knob above only affects the server runtime when it is present before the Convex backend process starts.
 
 ### Frontend Production Env
 
@@ -274,7 +286,8 @@ EXPO_PUBLIC_CONVEX_SITE_URL=https://actions.example.com
 - Web, admin, and native builds point at prod Convex URLs
 - Google OAuth redirect URIs include the prod callback on `CONVEX_SITE_URL`
 - Google Authorized JavaScript origins include the app origin on `SITE_URL`
-- Self-hosted deploys use `--env-file .env.prod.local`
+- Self-hosted Convex runtime service has `DATABASE_UDF_USER_TIMEOUT_SECONDS=5` and has been restarted
+- Self-hosted deploys use `--env-file .env.production.local`
 
 ## Available Scripts
 

@@ -1,7 +1,7 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
-import { Image } from "expo-image";
-import { useEffect, useRef, useState } from "react";
-import { Button, Avatar, useThemeColor, Dialog } from "heroui-native";
+import { Image, type ImageProps } from "expo-image";
+import { useState } from "react";
+import { Button, Avatar, Dialog } from "heroui-native";
 import { X, Lock } from "lucide-react-native";
 import { usePurchases } from "@/contexts/purchases-context";
 import { useConvexAuth } from "convex/react";
@@ -9,7 +9,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "@/hooks/use-translation";
 
 interface BlurredPremiumImageProps {
-  imageUrl: string;
+  imageUrl: NonNullable<ImageProps["source"]>;
   width: number;
   height: number;
   profileName?: string;
@@ -30,6 +30,8 @@ export function BlurredPremiumImage({
   const { presentPaywall } = usePurchases();
   const { isAuthenticated } = useConvexAuth();
   const router = useRouter();
+  const imageSource =
+    typeof imageUrl === "string" ? { uri: imageUrl } : imageUrl;
 
   const handleUnlock = () => {
     setShowUnlockModal(false);
@@ -54,10 +56,10 @@ export function BlurredPremiumImage({
         style={[styles.container, { width, height, borderRadius }]}
       >
         <Image
-          source={{ uri: imageUrl }}
+          source={imageSource}
           style={[styles.image, { width, height, borderRadius }]}
           contentFit="cover"
-          blurRadius={30}
+          blurRadius={100}
           cachePolicy="disk"
         />
         <View style={[styles.overlay, { borderRadius }]}>
@@ -72,10 +74,7 @@ export function BlurredPremiumImage({
 
       <Dialog isOpen={showUnlockModal} onOpenChange={setShowUnlockModal}>
         <Dialog.Portal
-          style={[
-            StyleSheet.absoluteFillObject,
-            styles.dialogPortal,
-          ]}
+          style={[StyleSheet.absoluteFillObject, styles.dialogPortal]}
         >
           <Dialog.Overlay className="bg-black/70" />
           <Dialog.Content className="w-[90%] max-w-[360px] self-center bg-[#1a1a1a] rounded-3xl overflow-hidden p-0">
@@ -84,7 +83,7 @@ export function BlurredPremiumImage({
             </Dialog.Close>
 
             <Image
-              source={{ uri: imageUrl }}
+              source={imageSource}
               style={styles.modalImage}
               contentFit="cover"
               blurRadius={75}
@@ -96,7 +95,7 @@ export function BlurredPremiumImage({
                 {profileAvatar ? (
                   <Avatar.Image source={{ uri: profileAvatar }} />
                 ) : (
-                  <Avatar.Fallback>{profileName[0]}</Avatar.Fallback>
+                  <Avatar.Fallback>{profileName[0] ?? "A"}</Avatar.Fallback>
                 )}
               </Avatar>
 

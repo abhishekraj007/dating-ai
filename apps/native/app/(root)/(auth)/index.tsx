@@ -1,13 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Button } from "heroui-native";
-import {
-  Text,
-  View,
-  ActivityIndicator,
-  StyleSheet,
-  Dimensions,
-} from "react-native";
+import { Button, Spinner } from "heroui-native";
+import { Text, View, Alert, StyleSheet, Dimensions } from "react-native";
 import { Image } from "expo-image";
 import { useState } from "react";
 import { useAppleAuth, useGoogleAuth } from "@/lib/betterAuth/oauth";
@@ -37,11 +31,19 @@ export default function Landing() {
   };
 
   const handleGoogleSignIn = async () => {
-    await signInWithGoogle();
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error("Google Sign-In error:", error);
+    }
   };
 
   const handleAppleSignIn = async () => {
-    await signInWithApple();
+    try {
+      await signInWithApple();
+    } catch (error) {
+      console.error("Apple Sign-In error:", error);
+    }
   };
 
   const isLoading = isGoogleLoading || isAppleLoading;
@@ -131,7 +133,7 @@ export default function Landing() {
         >
           <View className="flex-1 justify-end">
             <Text className="font-extrabold text-6xl text-white/90">
-              ChatAI
+              FeelAI
             </Text>
             <Text className="text-white/80">{t("auth.tagline")}</Text>
           </View>
@@ -144,7 +146,11 @@ export default function Landing() {
               onPress={handleGoogleSignIn}
               isDisabled={isLoading}
             >
-              <Ionicons name="logo-google" size={20} color="white" />
+              {isGoogleLoading ? (
+                <Spinner size="sm" color="white" />
+              ) : (
+                <Ionicons name="logo-google" size={20} color="white" />
+              )}
               <Text className="text-white">{t("auth.continueGoogle")}</Text>
             </Button>
             {/* apple */}
@@ -155,7 +161,11 @@ export default function Landing() {
               onPress={handleAppleSignIn}
               isDisabled={isLoading}
             >
-              <Ionicons name="logo-apple" size={20} color={"white"} />
+              {isAppleLoading ? (
+                <Spinner size="sm" color="white" />
+              ) : (
+                <Ionicons name="logo-apple" size={20} color="white" />
+              )}
               <Text className="text-white">{t("auth.continueApple")}</Text>
             </Button>
           </View>
@@ -174,24 +184,6 @@ export default function Landing() {
         isOpen={isLanguageSheetOpen}
         onOpenChange={setIsLanguageSheetOpen}
       />
-
-      {/* Loading overlay */}
-      {isLoading && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <ActivityIndicator size="large" color="#fff" />
-        </View>
-      )}
     </>
   );
 }

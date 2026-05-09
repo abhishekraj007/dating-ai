@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import Markdown from "react-native-markdown-display";
 import { useQuery } from "convex/react";
 import { api } from "@dating-ai/backend";
@@ -18,6 +18,7 @@ interface RequestProps extends AIBubbleProps {
   data: ImageRequestData;
 }
 
+const LOCKED_IMAGE_PLACEHOLDER = require("@/assets/images/placeholder.jpg");
 /**
  * AI image request bubble (pending/generating state).
  */
@@ -58,17 +59,17 @@ export function ImageResponseBubble({
   profileName,
   time,
 }: ResponseProps) {
-  const { isPremium } = useCredits();
+  const { isPremium, isLoading: isCreditsLoading } = useCredits();
 
   // Fetch fresh signed URL using permanent imageKey
   // This prevents expired URL issues
   const freshUrl = useQuery(
     api.features.ai.queries.getChatImageUrl,
-    data.imageKey ? { imageKey: data.imageKey } : "skip",
+    isPremium && data.imageKey ? { imageKey: data.imageKey } : "skip",
   );
 
   // Use fresh URL if available, fall back to stored URL (might be expired)
-  const imageUrl = freshUrl ?? data.imageUrl;
+  const imageUrl = isPremium ? (freshUrl ?? data.imageUrl) : undefined;
 
   return (
     <AIBubbleWrapper
@@ -77,24 +78,26 @@ export function ImageResponseBubble({
       time={time}
     >
       <View className="bg-surface rounded-2xl rounded-tl-sm overflow-hidden">
-        {!imageUrl ? (
+        {isCreditsLoading ? (
           <Skeleton style={{ width: 250, height: 350 }} />
-        ) : isPremium ? (
+        ) : !isPremium ? (
+          <BlurredPremiumImage
+            imageUrl={LOCKED_IMAGE_PLACEHOLDER}
+            width={250}
+            height={350}
+            profileName={profileName}
+            profileAvatar={avatarUrl}
+            borderRadius={0}
+          />
+        ) : !imageUrl ? (
+          <Skeleton style={{ width: 250, height: 350 }} />
+        ) : (
           <ZoomableImage
             source={{ uri: imageUrl }}
             style={{ width: 250, height: 350 }}
             contentFit="cover"
             transition={200}
             cachePolicy="disk"
-          />
-        ) : (
-          <BlurredPremiumImage
-            imageUrl={imageUrl}
-            width={250}
-            height={350}
-            profileName={profileName}
-            profileAvatar={avatarUrl}
-            borderRadius={0}
           />
         )}
       </View>
