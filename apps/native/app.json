@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.noosperai.datingai"
+      "bundleIdentifier": "com.noosperai.datingai",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -65,6 +68,12 @@
         "projectId": "30076408-2843-4f4f-9288-b94bd6ff262e"
       }
     },
-    "owner": "abhishekrajemail"
+    "owner": "abhishekrajemail",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/30076408-2843-4f4f-9288-b94bd6ff262e"
+    }
   }
 }

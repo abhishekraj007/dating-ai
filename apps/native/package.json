@@ -7,7 +7,15 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "prebuild": "expo prebuild --clean",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:ios:preview": "eas build --platform ios --profile preview --local",
+    "build:android:preview": "eas build --platform android --profile preview --local",
+    "build:ios": "eas build --platform ios --profile production --local",
+    "build:ios:dev": "eas build --platform ios --profile development --local",
+    "build:android": "eas build --platform android --profile production --local",
+    "build:android:apk": "eas build --platform android --profile production-apk --local",
+    "build:android:remote": "eas build --platform android --profile production",
+    "build:android:dev": "eas build --platform android --profile development --local"
   },
   "dependencies": {
     "@babel/highlight": "^7.25.9",
@@ -56,6 +64,7 @@
     "expo-splash-screen": "~55.0.19",
     "expo-status-bar": "~55.0.5",
     "expo-system-ui": "~55.0.16",
+    "expo-updates": "~55.0.21",
     "expo-video": "~55.0.15",
     "expo-web-browser": "~55.0.14",
     "heroui-native": "1.0.0",
