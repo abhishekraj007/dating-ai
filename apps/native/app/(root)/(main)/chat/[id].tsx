@@ -110,6 +110,8 @@ export default function ChatScreen() {
     handleClearChat,
   } = useChatScreen();
 
+  console.log("messages", messages);
+
   const renderMessage = ({ item }: { item: any }) => {
     const isUser = item.role === "user";
     const isInteractiveQuizQuestion = item._id === interactiveQuizQuestionId;

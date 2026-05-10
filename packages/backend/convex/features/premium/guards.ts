@@ -3,9 +3,8 @@ import * as Users from "../../model/user";
 type PremiumAccessSnapshot =
   | {
       isPremium: true;
-      grantedBy: "lifetime" | "manual" | "subscription";
+      grantedBy?: "lifetime" | "manual" | "subscription";
       expiresAt?: number;
-      platform?: string;
       reason?: string;
     }
   | {
@@ -14,7 +13,7 @@ type PremiumAccessSnapshot =
     };
 
 /**
- * Returns the authenticated user's current premium status without mutating data.
+ * Returns the authenticated user's current premium status from the profile row.
  */
 export async function getPremiumAccessSnapshot(
   ctx: any,
@@ -27,44 +26,32 @@ export async function getPremiumAccessSnapshot(
   const profile = userData.profile;
   const now = Date.now();
 
-  if (profile?.isPremium) {
-    if (profile.premiumGrantedBy === "lifetime") {
-      return { isPremium: true, grantedBy: "lifetime" };
-    }
-
-    if (profile.premiumGrantedBy === "manual") {
-      if (profile.premiumExpiresAt && profile.premiumExpiresAt < now) {
-        return { isPremium: false, reason: "Manual grant expired" };
-      }
-
-      return {
-        isPremium: true,
-        grantedBy: "manual",
-        expiresAt: profile.premiumExpiresAt,
-      };
-    }
-
-    if (profile.premiumGrantedBy === "subscription") {
-      return { isPremium: true, grantedBy: "subscription" };
-    }
+  if (!profile?.isPremium) {
+    return { isPremium: false, reason: "Profile is not premium" };
   }
 
-  const activeSubscription = await ctx.db
-    .query("subscriptions")
-    .withIndex("by_user_status", (q: any) =>
-      q.eq("userId", userData.userMetadata._id).eq("status", "active"),
-    )
-    .first();
-
-  if (activeSubscription) {
-    return {
-      isPremium: true,
-      grantedBy: "subscription",
-      platform: activeSubscription.platform,
-    };
+  if (
+    profile.premiumGrantedBy === "manual" &&
+    profile.premiumExpiresAt &&
+    profile.premiumExpiresAt < now
+  ) {
+    return { isPremium: false, reason: "Manual grant expired" };
   }
 
-  return { isPremium: false, reason: "No active subscription or grant" };
+  const snapshot: PremiumAccessSnapshot = {
+    isPremium: true,
+    reason: "Profile premium flag",
+  };
+
+  if (profile.premiumGrantedBy) {
+    snapshot.grantedBy = profile.premiumGrantedBy;
+  }
+
+  if (profile.premiumExpiresAt) {
+    snapshot.expiresAt = profile.premiumExpiresAt;
+  }
+
+  return snapshot;
 }
 
 /**

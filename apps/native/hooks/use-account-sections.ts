@@ -82,7 +82,7 @@ export const useAccountSections = ({
   const router = useRouter();
   const { t } = useTranslation();
   const runtimeConfig = useQuery(
-    (api as any).features.appConfig.queries.getPublicAppConfig,
+    api.features.appConfig.queries.getPublicAppConfig,
   ) as RuntimeAppConfig | undefined;
 
   const openExternal = async (url: string, fallbackMessage: string) => {

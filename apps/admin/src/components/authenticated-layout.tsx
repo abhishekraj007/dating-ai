@@ -25,8 +25,6 @@ export function AuthenticatedLayout({
   children: React.ReactNode;
 }) {
   const userData = useQuery(api.user.fetchUserAndProfile);
-  const userCredits = useQuery(api.features.credits.queries.getUserCredits);
-  const premiumStatus = useQuery(api.features.premium.queries.isPremium);
   const [creditsModalOpen, setCreditsModalOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();

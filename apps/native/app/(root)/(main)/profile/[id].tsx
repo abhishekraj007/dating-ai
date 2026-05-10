@@ -25,7 +25,7 @@ import { useState, useCallback } from "react";
 import { Text } from "@/components";
 import { LinearGradient } from "expo-linear-gradient";
 import { useConvexAuth } from "convex/react";
-import { getChipTone, isAndroid } from "@/utils";
+import { getChipTone } from "@/utils";
 import { useTranslation } from "@/hooks/use-translation";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
@@ -439,7 +439,7 @@ export default function ProfileDetailScreen() {
             <Text variant="semi-muted" className="font-semibold mb-2">
               {t("profile.photos")}
             </Text>
-            <View className="flex-row flex-wrap gap-2">
+            <View className="flex-row flex-wrap gap-1">
               {profile.profileImageUrls.map((url, index) =>
                 isPremium ? (
                   <ZoomableImage

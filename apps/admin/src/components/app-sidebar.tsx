@@ -71,12 +71,12 @@ export function AppSidebar({ isLoading = false }: { isLoading?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const userData = useQuery(api.user.fetchUserAndProfile);
-  const premiumStatus = useQuery(api.features.premium.queries.isPremium);
 
   const userName =
     userData?.profile?.name || userData?.userMetadata?.name || "User";
   const userEmail = userData?.userMetadata?.email || "";
   const userImage = userData?.userMetadata?.image;
+  const isPremium = Boolean(userData?.profile?.isPremium);
 
   return (
     <Sidebar>
@@ -87,7 +87,7 @@ export function AppSidebar({ isLoading = false }: { isLoading?: boolean }) {
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold">Chating AI</span>
-            {premiumStatus?.isPremium && (
+            {isPremium && (
               <span className="text-xs text-muted-foreground">Premium</span>
             )}
           </div>

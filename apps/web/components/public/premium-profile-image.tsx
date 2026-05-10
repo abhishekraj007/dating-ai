@@ -56,10 +56,11 @@ export function PremiumProfileImage({
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { open } = useAuthModal();
-  const premiumState = useQuery(api.features.premium.queries.isPremium);
+  const userData = useQuery(api.user.fetchUserAndProfile);
+  const isPremium = Boolean(userData?.profile?.isPremium);
   const resolvedImageUrl = useQuery(
     api.features.ai.queries.getProfileImageUrl,
-    isAuthenticated && premiumState?.isPremium && imageKey
+    isAuthenticated && isPremium && imageKey
       ? {
           profileId: profileId as Id<"aiProfiles">,
           imageKey,
@@ -68,7 +69,6 @@ export function PremiumProfileImage({
   );
   const [isPremiumOpen, setIsPremiumOpen] = useState(false);
 
-  const isPremium = Boolean(premiumState?.isPremium);
   const isLocked = !isAuthenticated || !isPremium;
   const searchParamsString = searchParams?.toString() ?? "";
 
@@ -78,7 +78,12 @@ export function PremiumProfileImage({
   );
 
   useEffect(() => {
-    if (!searchParams?.get("upgrade") || isLoading || !isAuthenticated) {
+    if (
+      !searchParams?.get("upgrade") ||
+      isLoading ||
+      !isAuthenticated ||
+      userData === undefined
+    ) {
       return;
     }
 
@@ -97,6 +102,7 @@ export function PremiumProfileImage({
     router,
     searchParams,
     searchParamsString,
+    userData,
   ]);
 
   const handleLockedClick = () => {

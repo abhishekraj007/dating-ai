@@ -39,9 +39,8 @@ import { ProtectedRoute } from "@/components/protected-route";
 export default function SettingsPage() {
   const router = useRouter();
   const userData = useQuery(api.user.fetchUserAndProfile);
-  const premiumStatus = useQuery(api.features.premium.queries.isPremium);
   const subscriptions = useQuery(
-    api.features.subscriptions.queries.getUserSubscriptions
+    api.features.subscriptions.queries.getUserSubscriptions,
   );
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -49,7 +48,7 @@ export default function SettingsPage() {
 
   // Check if user has a canceled subscription
   const hasCanceledSubscription = subscriptions?.subscriptions?.some(
-    (sub) => sub.status === "canceled" && sub.canceledAt
+    (sub) => sub.status === "canceled" && sub.canceledAt,
   );
 
   const goToPortal = async () => {
@@ -95,6 +94,7 @@ export default function SettingsPage() {
   const userName =
     userData?.profile?.name || userData?.userMetadata?.name || "User";
   const userEmail = userData?.userMetadata?.email;
+  const isPremium = Boolean(userData?.profile?.isPremium);
   const joinedDate = userData?.userMetadata?.createdAt
     ? new Date(userData.userMetadata.createdAt).toLocaleDateString("en-US", {
         year: "numeric",
@@ -121,7 +121,7 @@ export default function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <CardTitle>Profile Information</CardTitle>
-                {premiumStatus?.isPremium && (
+                {isPremium && (
                   <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-primary text-primary-foreground text-xs font-medium">
                     <Crown className="h-3 w-3" />
                     Premium
@@ -168,7 +168,9 @@ export default function SettingsPage() {
                   {isLoading ? (
                     <Skeleton className="h-4 w-36 mt-1" />
                   ) : (
-                    <p className="text-sm text-muted-foreground">{joinedDate}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {joinedDate}
+                    </p>
                   )}
                 </div>
               </div>
@@ -187,7 +189,7 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {premiumStatus?.isPremium ? (
+              {isPremium ? (
                 <>
                   <div className="flex items-start justify-between p-4 rounded-lg bg-primary/10 border border-primary/20">
                     <div className="flex-1">
@@ -333,10 +335,10 @@ export default function SettingsPage() {
                         variant="outline"
                         onClick={(e) => {
                           const dialog = (e.target as HTMLElement).closest(
-                            '[role="dialog"]'
+                            '[role="dialog"]',
                           );
                           const trigger = document.querySelector(
-                            '[data-state="open"]'
+                            '[data-state="open"]',
                           );
                           if (trigger) (trigger as HTMLElement).click();
                         }}
