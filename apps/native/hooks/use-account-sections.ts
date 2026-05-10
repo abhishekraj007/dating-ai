@@ -18,7 +18,7 @@ import {
 import { Alert, Platform, Share } from "react-native";
 import { useTranslation } from "@/hooks/use-translation";
 
-const FALLBACK_ANDROID_APP_ID = "com.noosperai.datingai";
+const FALLBACK_ANDROID_APP_ID = "com.noosperai.feelchat";
 
 type RuntimeAppConfig = {
   baseWebUrl?: string;

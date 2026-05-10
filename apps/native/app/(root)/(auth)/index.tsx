@@ -133,7 +133,7 @@ export default function Landing() {
         >
           <View className="flex-1 justify-end">
             <Text className="font-extrabold text-6xl text-white/90">
-              FeelAI
+              FeelChat
             </Text>
             <Text className="text-white/80">{t("auth.tagline")}</Text>
           </View>

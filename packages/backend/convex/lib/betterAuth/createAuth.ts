@@ -7,7 +7,7 @@ import { authComponent } from "./component";
 
 const siteUrl = process.env.SITE_URL!;
 const authBaseUrl = process.env.CONVEX_SITE_URL ?? siteUrl;
-const nativeAppUrl = process.env.NATIVE_APP_URL || "datingai://";
+const nativeAppUrl = process.env.NATIVE_APP_URL || "feelchat://";
 const extraTrustedOrigins = (process.env.TRUSTED_ORIGINS || "")
   .split(",")
   .map((origin) => origin.trim())

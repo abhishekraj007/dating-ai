@@ -55,7 +55,7 @@ These are the env files you will usually manage:
 | Variable                       | Required for        | Purpose                                            |
 | ------------------------------ | ------------------- | -------------------------------------------------- |
 | `SITE_URL`                     | Cloud + self-hosted | Frontend app origin used for redirects after auth  |
-| `NATIVE_APP_URL`               | Cloud + self-hosted | Native deep link origin, for example `datingai://` |
+| `NATIVE_APP_URL`               | Cloud + self-hosted | Native deep link origin, for example `feelchat://` |
 | `CONVEX_URL`                   | Cloud + self-hosted | Convex API host                                    |
 | `CONVEX_SITE_URL`              | Cloud + self-hosted | Convex site/actions host used by Better Auth       |
 | `CONVEX_DEPLOYMENT`            | Convex Cloud        | Convex Cloud deployment name used by `convex dev`  |
@@ -109,7 +109,7 @@ CONVEX_DEPLOYMENT=dev:your-project
 CONVEX_URL=https://your-dev-deployment.convex.cloud
 CONVEX_SITE_URL=https://your-dev-deployment.convex.site
 SITE_URL=http://localhost:3004
-NATIVE_APP_URL=datingai://
+NATIVE_APP_URL=feelchat://
 ```
 
 ```bash
@@ -135,7 +135,7 @@ CONVEX_SELF_HOSTED_ADMIN_KEY=your-dev-admin-key
 CONVEX_URL=https://dev-api.example.com
 CONVEX_SITE_URL=https://dev-actions.example.com
 SITE_URL=http://localhost:3004
-NATIVE_APP_URL=datingai://
+NATIVE_APP_URL=feelchat://
 ```
 
 ```bash
@@ -223,7 +223,7 @@ CONVEX_SELF_HOSTED_ADMIN_KEY=your-prod-admin-key
 CONVEX_URL=https://api.example.com
 CONVEX_SITE_URL=https://actions.example.com
 SITE_URL=https://app.example.com
-NATIVE_APP_URL=datingai://
+NATIVE_APP_URL=feelchat://
 ```
 
 Sanity-check before deploying:

@@ -268,7 +268,7 @@ export default function AppConfigPage() {
                   label="Android App ID"
                   value={form.androidAppId}
                   onChange={(value) => onChange("androidAppId", value)}
-                  placeholder="com.noosperai.datingai"
+                  placeholder="com.noosperai.feelchat"
                 />
               </CardContent>
             </Card>
