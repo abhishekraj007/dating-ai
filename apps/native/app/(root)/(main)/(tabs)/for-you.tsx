@@ -9,7 +9,6 @@ import { Text } from "@/components/ui/text";
 import { useRouter } from "expo-router";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { X, Heart } from "lucide-react-native";
-import { Skeleton } from "heroui-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -27,6 +26,7 @@ import {
 import { useStartConversation } from "@/hooks/dating";
 import type { Id } from "@dating-ai/backend";
 import { ForYouHeroUISkeleton } from "@/components/dating/for-you-skeleton";
+import { useForYouImagePreload } from "@/hooks/dating/useForYouImagePreload";
 
 export default function ForYouScreen() {
   return <ForYouContent />;
@@ -52,6 +52,8 @@ function ForYouContent() {
 
   const currentProfile = profiles[0];
   const nextProfile = profiles[1];
+
+  useForYouImagePreload(profiles);
 
   // Prefetch more profiles when nearing the end of loaded batch
   useEffect(() => {
