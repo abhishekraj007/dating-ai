@@ -59,7 +59,7 @@ export function BlurredPremiumImage({
           source={imageSource}
           style={[styles.image, { width, height, borderRadius }]}
           contentFit="cover"
-          blurRadius={100}
+          blurRadius={70}
           cachePolicy="disk"
         />
         <View style={[styles.overlay, { borderRadius }]}>

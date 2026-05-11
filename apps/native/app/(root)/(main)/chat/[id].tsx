@@ -10,7 +10,15 @@ import {
   ScrollShadow,
 } from "heroui-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { ChevronLeft, MoreVertical, Trash2 } from "lucide-react-native";
+import {
+  ChevronLeft,
+  Circle,
+  Dot,
+  DotIcon,
+  Hand,
+  MoreVertical,
+  Trash2,
+} from "lucide-react-native";
 import {
   ChatForm,
   MessageBubble,
@@ -29,6 +37,7 @@ const BOTTOM_SHADOW_SIZE = 20;
 export default function ChatScreen() {
   const { t } = useTranslation();
   const foregroundColor = useThemeColor("foreground");
+  const foregroundColorMuted = useThemeColor("muted");
   const { height } = useWindowDimensions();
   const emptyHeight = height - 350;
 
@@ -177,9 +186,17 @@ export default function ChatScreen() {
                     </Avatar.Fallback>
                   )}
                 </Avatar>
-                <Text className="text-foreground font-semibold">
-                  {profile?.name ?? "AI"}
-                </Text>
+                <View style={{ flexDirection: "column" }}>
+                  <Text className="text-foreground font-semibold text-base">
+                    {profile?.name ?? "AI"}
+                  </Text>
+                  <View className="flex-row items-center gap-1">
+                    <View className="w-2 h-2 bg-green-500 rounded-full" />
+                    <Text className="text-foreground/60 text-[10px]">
+                      {"AI Character"}
+                    </Text>
+                  </View>
+                </View>
               </Pressable>
             )}
           </View>
@@ -318,7 +335,7 @@ export default function ChatScreen() {
                         height: emptyHeight,
                       }}
                     >
-                      <Text className="text-foreground text-lg font-semibold mb-2">
+                      <Text className="text-foreground text-lg font-semibold">
                         {t("chat.startConversation")}
                       </Text>
                       <Text className="text-muted text-center">
@@ -326,6 +343,16 @@ export default function ChatScreen() {
                           name: profile?.name ?? t("chat.aiCompanion"),
                         })}
                       </Text>
+                      <Button
+                        variant="ghost"
+                        className="mt-4 rounded-full px-6"
+                        isDisabled={isSending || showTypingIndicator}
+                        onPress={() => handleSend("Hi")}
+                      >
+                        <Button.Label>
+                          <Hand color={foregroundColorMuted} />
+                        </Button.Label>
+                      </Button>
                     </View>
                   )
                 }

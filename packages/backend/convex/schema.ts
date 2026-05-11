@@ -254,6 +254,9 @@ export default defineSchema({
     conversationId: v.id("aiConversations"),
     userId: v.string(),
     aiProfileId: v.id("aiProfiles"),
+    platform: v.optional(
+      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    ),
     prompt: v.string(),
     styleOptions: v.optional(
       v.object({

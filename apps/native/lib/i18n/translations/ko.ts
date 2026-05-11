@@ -274,8 +274,7 @@ export const ko: TranslationMap = {
   "imageRequest.clothing": "의상",
   "imageRequest.scene": "장면",
   "imageRequest.extraDetailsLabel": "추가 세부 정보",
-  "imageRequest.extraDetailsPlaceholder":
-    "어뗌너 종류의 사진을 보고 싶나요?",
+  "imageRequest.extraDetailsPlaceholder": "어뗌너 종류의 사진을 보고 싶나요?",
   "imageRequest.generatePhoto": "사진 생성",
   "imageRequest.insufficientCredits":
     "크레딧이 부족합니다. 최소 5크레딧이 필요합니다.",

@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "convex dev",
+    "deploy": "convex deploy",
+    "deploy:prod": "convex deploy --env-file .env.production.local",
     "dev:setup": "convex dev --configure --until-success"
   },
   "author": "",

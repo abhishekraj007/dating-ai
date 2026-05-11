@@ -279,8 +279,7 @@ export const hi: TranslationMap = {
   "imageRequest.clothing": "कपड़े",
   "imageRequest.scene": "सीन",
   "imageRequest.extraDetailsLabel": "अतिरिक्त जानकारी",
-  "imageRequest.extraDetailsPlaceholder":
-    "आप किस तरह की फोटो देखना चाहते हैं?",
+  "imageRequest.extraDetailsPlaceholder": "आप किस तरह की फोटो देखना चाहते हैं?",
   "imageRequest.generatePhoto": "फोटो बनाएं",
   "imageRequest.insufficientCredits":
     "क्रेडिट कम हैं। कम से कम 5 क्रेडिट चाहिए।",

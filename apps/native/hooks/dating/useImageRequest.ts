@@ -20,6 +20,7 @@ export function useRequestChatImage() {
   const requestImage = async (
     conversationId: string,
     styleOptions?: ImageRequestOptions,
+    platform?: "ios" | "android" | "web",
   ) => {
     const normalizedDescription = styleOptions?.description?.trim();
     const normalizedStyleOptions = styleOptions
@@ -49,6 +50,7 @@ export function useRequestChatImage() {
     return await requestMutation({
       conversationId: conversationId as Id<"aiConversations">,
       prompt,
+      platform,
       styleOptions: normalizedStyleOptions,
     });
   };

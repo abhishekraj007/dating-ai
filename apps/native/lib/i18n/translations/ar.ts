@@ -272,8 +272,7 @@ export const ar: TranslationMap = {
   "imageRequest.clothing": "الملابس",
   "imageRequest.scene": "المشهد",
   "imageRequest.extraDetailsLabel": "تفاصيل إضافية",
-  "imageRequest.extraDetailsPlaceholder":
-    "ما نوع الصورة التي تريد رؤيتها؟",
+  "imageRequest.extraDetailsPlaceholder": "ما نوع الصورة التي تريد رؤيتها؟",
   "imageRequest.generatePhoto": "إنشاء صورة",
   "imageRequest.insufficientCredits":
     "رصيد غير كافٍ. تحتاج إلى 5 أرصدة على الأقل.",

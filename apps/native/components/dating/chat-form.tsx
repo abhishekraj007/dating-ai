@@ -57,7 +57,9 @@ export function ChatForm({
   const { t } = useTranslation();
   const { bottom } = useSafeAreaInsets();
   const foregroundColor = useThemeColor("foreground");
+  const foregroundColorMuted = useThemeColor("muted");
   const backgroundColor = useThemeColor("background");
+  const actionButtonColor = "";
 
   return (
     <KeyboardStickyView>
@@ -107,9 +109,11 @@ export function ChatForm({
               {isRequestingImage ? (
                 <Spinner size="sm" />
               ) : (
-                <Camera size={16} color={foregroundColor} />
+                <Camera size={16} color={foregroundColorMuted} />
               )}
-              <Button.Label>{t("chat.selfie")}</Button.Label>
+              <Button.Label className={actionButtonColor}>
+                {t("chat.selfie")}
+              </Button.Label>
             </Button>
             <Button
               variant="secondary"
@@ -117,8 +121,10 @@ export function ChatForm({
               onPress={onStartQuiz}
               isDisabled={isSending}
             >
-              <HelpCircle size={16} color={foregroundColor} />
-              <Button.Label>{t("chat.quiz")}</Button.Label>
+              <HelpCircle size={16} color={foregroundColorMuted} />
+              <Button.Label className={actionButtonColor}>
+                {t("chat.quiz")}
+              </Button.Label>
             </Button>
             <Button
               variant="secondary"
@@ -126,8 +132,10 @@ export function ChatForm({
               onPress={onOpenTopicsSheet}
               isDisabled={isSending}
             >
-              <MessageSquare size={16} color={foregroundColor} />
-              <Button.Label>{t("chat.topic")}</Button.Label>
+              <MessageSquare size={16} color={foregroundColorMuted} />
+              <Button.Label className={actionButtonColor}>
+                {t("chat.topic")}
+              </Button.Label>
             </Button>
             <Button
               variant="secondary"
@@ -135,8 +143,10 @@ export function ChatForm({
               onPress={onOpenSuggestionsSheet}
               isDisabled={isSending}
             >
-              <Lightbulb size={16} color={foregroundColor} />
-              <Button.Label>{t("chat.suggestion")}</Button.Label>
+              <Lightbulb size={16} color={foregroundColorMuted} />
+              <Button.Label className={actionButtonColor}>
+                {t("chat.suggestion")}
+              </Button.Label>
             </Button>
           </ScrollView>
           <View style={styles.composerRow}>

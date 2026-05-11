@@ -315,7 +315,7 @@ export function useChatScreen() {
 
       setIsRequestingImage(true);
       try {
-        await requestImage(id, options);
+        await requestImage(id, options, platform);
         setIsImageSheetOpen(false);
       } catch (error: any) {
         if (error.message && error.message.includes("Insufficient credits")) {
@@ -327,7 +327,7 @@ export function useChatScreen() {
         setIsRequestingImage(false);
       }
     },
-    [id, requestImage, hasEnoughCredits, router],
+    [id, requestImage, hasEnoughCredits, platform, router],
   );
 
   const handleOpenImageSheet = () => {

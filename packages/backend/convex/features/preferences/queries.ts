@@ -420,6 +420,7 @@ export const getExploreProfiles = query({
     let zodiacPreferences: string[] = [];
     let interestPreferences: string[] = [];
     let userId: string | null = null;
+    let conversationProfileIds = new Set<string>();
 
     // Filter precedence:
     // 1. Explicit arguments (overrides)
@@ -444,6 +445,17 @@ export const getExploreProfiles = query({
         zodiacPreferences = preferences.zodiacPreferences;
         interestPreferences = preferences.interestPreferences;
       }
+
+      const conversations = await ctx.db
+        .query("aiConversations")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .collect();
+
+      conversationProfileIds = new Set(
+        conversations.map((conversation) =>
+          conversation.aiProfileId.toString(),
+        ),
+      );
     }
 
     // Apply strict overrides if provided (e.g. from unauthenticated client state)
@@ -474,6 +486,10 @@ export const getExploreProfiles = query({
     const filteredProfiles = allProfiles.filter((profile) => {
       // Exclude user's own created profiles
       if (user && profile.createdByUserId === userId) {
+        return false;
+      }
+
+      if (user && conversationProfileIds.has(profile._id.toString())) {
         return false;
       }
 
@@ -576,6 +592,7 @@ export const getExploreProfilesPaginated = query({
     let zodiacPreferences: string[] = [];
     let interestPreferences: string[] = [];
     let userId: string | null = null;
+    let conversationProfileIds = new Set<string>();
 
     if (user) {
       userId = user._id;
@@ -591,6 +608,17 @@ export const getExploreProfilesPaginated = query({
         zodiacPreferences = preferences.zodiacPreferences;
         interestPreferences = preferences.interestPreferences;
       }
+
+      const conversations = await ctx.db
+        .query("aiConversations")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .collect();
+
+      conversationProfileIds = new Set(
+        conversations.map((conversation) =>
+          conversation.aiProfileId.toString(),
+        ),
+      );
     }
 
     if (overrideGender) genderPreference = overrideGender;
@@ -616,6 +644,8 @@ export const getExploreProfilesPaginated = query({
 
     const filteredPage = result.page.filter((profile) => {
       if (user && profile.createdByUserId === userId) return false;
+      if (user && conversationProfileIds.has(profile._id.toString()))
+        return false;
       if (profile.age !== undefined && profile.age !== null) {
         if (ageMin !== undefined && profile.age < ageMin) return false;
         if (ageMax !== undefined && profile.age > ageMax) return false;

@@ -827,6 +827,9 @@ export const createChatImageRequestInternal = internalMutation({
     conversationId: v.id("aiConversations"),
     userId: v.string(), // Better Auth user ID (string, not v.id("users"))
     aiProfileId: v.id("aiProfiles"),
+    platform: v.optional(
+      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    ),
     prompt: v.string(),
     styleOptions: v.optional(
       v.object({
@@ -839,7 +842,7 @@ export const createChatImageRequestInternal = internalMutation({
   },
   handler: async (
     ctx,
-    { conversationId, userId, aiProfileId, prompt, styleOptions },
+    { conversationId, userId, aiProfileId, platform, prompt, styleOptions },
   ) => {
     // Get user profile to check/deduct credits
     const profile = await ctx.db
@@ -871,6 +874,7 @@ export const createChatImageRequestInternal = internalMutation({
       conversationId,
       userId,
       aiProfileId,
+      platform,
       prompt,
       styleOptions: styleOptions
         ? {
@@ -905,6 +909,9 @@ export const requestChatImage = mutation({
   args: {
     conversationId: v.id("aiConversations"),
     prompt: v.string(),
+    platform: v.optional(
+      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    ),
     styleOptions: v.optional(
       v.object({
         hairstyle: v.optional(v.string()),
@@ -914,7 +921,7 @@ export const requestChatImage = mutation({
       }),
     ),
   },
-  handler: async (ctx, { conversationId, prompt, styleOptions }) => {
+  handler: async (ctx, { conversationId, prompt, platform, styleOptions }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new Error("Not authenticated");
@@ -952,6 +959,7 @@ export const requestChatImage = mutation({
       conversationId,
       userId: user._id,
       aiProfileId: conversation.aiProfileId,
+      platform,
       prompt,
       styleOptions,
       status: "pending",

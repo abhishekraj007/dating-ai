@@ -287,8 +287,7 @@ export const de: TranslationMap = {
   "imageRequest.clothing": "Kleidung",
   "imageRequest.scene": "Szene",
   "imageRequest.extraDetailsLabel": "Zusätzliche Details",
-  "imageRequest.extraDetailsPlaceholder":
-    "Was für ein Foto möchtest du sehen?",
+  "imageRequest.extraDetailsPlaceholder": "Was für ein Foto möchtest du sehen?",
   "imageRequest.generatePhoto": "Foto generieren",
   "imageRequest.insufficientCredits":
     "Nicht genug Credits. Du brauchst mindestens 5 Credits.",
