@@ -178,6 +178,7 @@ export const en: TranslationMap = {
   "chat.conversationNotFound": "Conversation not found",
   "chat.startConversation": "Start a conversation",
   "chat.sayHello": "Say hello to {{name}}!",
+  "chat.aiCharacter": "AI Character",
   "chat.aiCompanion": "your AI companion",
   "chat.selfie": "Selfie",
   "chat.selfieLabel": "AI Selfie",
@@ -193,6 +194,8 @@ export const en: TranslationMap = {
   "chat.stopFailed": "Couldn't stop the response. Please try again.",
   "chat.errorRateLimited": "I'm having trouble right now :(",
   "chat.errorGeneric": "I'm having a bad day today :(",
+  "chat.creditsRequiredMessage":
+    "You need at least {{count}} credits for this request.",
   "chat.quiz": "Quiz",
   "chat.topic": "Topic",
   "chat.suggestion": "Suggestion",

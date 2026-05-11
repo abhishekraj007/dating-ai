@@ -167,6 +167,7 @@ export const pt: TranslationMap = {
   "chat.conversationNotFound": "Conversa não encontrada",
   "chat.startConversation": "Iniciar uma conversa",
   "chat.sayHello": "Diga olá para {{name}}!",
+  "chat.aiCharacter": "Personagem de IA",
   "chat.aiCompanion": "seu companheiro IA",
   "chat.selfie": "Selfie",
   "chat.selfieLabel": "Selfie IA",
@@ -177,6 +178,8 @@ export const pt: TranslationMap = {
   "chat.clear": "Limpar",
   "chat.clearFailed": "Falha ao limpar o chat. Tente novamente.",
   "chat.quiz": "Quiz",
+  "chat.creditsRequiredMessage":
+    "Você precisa de pelo menos {{count}} créditos para esta solicitação.",
   "chat.topic": "Tópico",
   "chat.suggestion": "Sugestão",
   "chat.typeMessage": "Digite uma mensagem...",

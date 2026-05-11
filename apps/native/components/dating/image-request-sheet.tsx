@@ -77,6 +77,7 @@ interface ImageRequestSheetProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (options: ImageRequestOptions) => void;
+  onBuyCredits?: () => void;
   isLoading?: boolean;
   credits?: number;
 }
@@ -295,6 +296,7 @@ export function ImageRequestSheet({
   isOpen,
   onClose,
   onSubmit,
+  onBuyCredits,
   isLoading = false,
   credits = 0,
 }: ImageRequestSheetProps) {
@@ -314,6 +316,7 @@ export function ImageRequestSheet({
   const hasAnySelection = Boolean(
     selectedHairstyle || selectedClothing || selectedScene || hasExtraDetails,
   );
+  const hasEnoughCredits = credits >= 5;
 
   const handleExtraDetailsChange = (value: string, hasDetails: boolean) => {
     extraDetailsRef.current = value;
@@ -344,6 +347,16 @@ export function ImageRequestSheet({
     resetForm();
   };
 
+  const handleFooterAction = () => {
+    if (!hasEnoughCredits) {
+      Keyboard.dismiss();
+      onBuyCredits?.();
+      return;
+    }
+
+    handleSubmit();
+  };
+
   const handleReset = () => {
     resetForm();
     Keyboard.dismiss();
@@ -367,21 +380,25 @@ export function ImageRequestSheet({
           )}
           <Button
             className="flex-1"
-            onPress={handleSubmit}
-            isDisabled={isLoading || credits < 5}
+            onPress={handleFooterAction}
+            isDisabled={isLoading || (!hasEnoughCredits && !onBuyCredits)}
           >
             {isLoading ? (
               <Spinner color={accentForegroundColor} size="sm" />
             ) : (
               <>
                 <Camera size={18} color={accentForegroundColor} />
-                <Button.Label>{t("imageRequest.generatePhoto")}</Button.Label>
+                <Button.Label>
+                  {hasEnoughCredits
+                    ? t("imageRequest.generatePhoto")
+                    : t("account.profile.buyCredits")}
+                </Button.Label>
               </>
             )}
           </Button>
         </View>
 
-        {credits < 5 && (
+        {!hasEnoughCredits && (
           <Text size="xs" variant="danger" className="text-center mt-2">
             {t("imageRequest.insufficientCredits")}
           </Text>

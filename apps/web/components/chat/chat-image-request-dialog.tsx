@@ -153,7 +153,7 @@ export function ChatImageRequestDialog({
 
         {!hasEnoughCredits && (
           <div className="rounded-3xl border border-border/70 bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
-            You need at least 5 credits to request a new photo.
+            You need at least 5 credits for this request.
           </div>
         )}
 

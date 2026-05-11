@@ -357,7 +357,7 @@ export const generateResponse = internalAction({
 
             // Create the image request via mutation
             try {
-              await ctx.runMutation(
+              const requestId = await ctx.runMutation(
                 internal.features.ai.mutations.createChatImageRequestInternal,
                 {
                   conversationId,
@@ -373,6 +373,13 @@ export const generateResponse = internalAction({
                   },
                 },
               );
+              if (!requestId) {
+                await ctx.runMutation(
+                  internal.features.ai.mutations.finalizePendingPromptState,
+                  { conversationId, promptMessageId },
+                );
+                return null;
+              }
               console.log("Image request created successfully");
               // Only create one image request per response
               await ctx.runMutation(

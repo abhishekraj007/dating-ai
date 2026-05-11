@@ -173,6 +173,7 @@ export const fr: TranslationMap = {
   "chat.conversationNotFound": "Conversation introuvable",
   "chat.startConversation": "Démarrer une conversation",
   "chat.sayHello": "Dites bonjour à {{name}} !",
+  "chat.aiCharacter": "Personnage IA",
   "chat.aiCompanion": "votre compagnon IA",
   "chat.selfie": "Selfie",
   "chat.selfieLabel": "Selfie IA",
@@ -182,6 +183,8 @@ export const fr: TranslationMap = {
   "chat.thisAi": "cette IA",
   "chat.clear": "Effacer",
   "chat.clearFailed": "Échec de l'effacement du chat. Veuillez réessayer.",
+  "chat.creditsRequiredMessage":
+    "Il vous faut au moins {{count}} crédits pour cette demande.",
   "chat.quiz": "Quiz",
   "chat.topic": "Sujet",
   "chat.suggestion": "Suggestion",

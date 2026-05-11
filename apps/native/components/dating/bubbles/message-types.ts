@@ -54,6 +54,14 @@ export interface ChatErrorData {
   message?: string;
 }
 
+export interface CreditsRequiredData {
+  type: "credits_required";
+  action?: "image_request" | string;
+  requiredCredits?: number;
+  currentCredits?: number;
+  message?: string;
+}
+
 export type StructuredContent =
   | QuizQuestionData
   | QuizAnswerResultData
@@ -62,6 +70,7 @@ export type StructuredContent =
   | ImageRequestData
   | ImageResponseData
   | ChatErrorData
+  | CreditsRequiredData
   | { type: string; message?: string };
 
 // Shared props for AI bubble components

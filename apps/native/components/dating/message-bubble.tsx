@@ -6,11 +6,13 @@ import {
   type ImageRequestData,
   type ImageResponseData,
   type ChatErrorData,
+  type CreditsRequiredData,
 } from "./bubbles";
 import { QuizQuestionBubble } from "./bubbles/QuizQuestionBubble";
 import { QuizResultBubble } from "./bubbles/QuizResultBubble";
 import { QuizStartBubble } from "./bubbles/QuizStartBubble";
 import { ChatErrorBubble } from "./bubbles/ChatErrorBubble";
+import { CreditsRequiredBubble } from "./bubbles/CreditsRequiredBubble";
 import { ImageRequestBubble, ImageResponseBubble } from "./bubbles/ImageBubble";
 import {
   AITextBubble,
@@ -29,6 +31,7 @@ interface MessageBubbleProps {
   onEndQuiz?: () => void;
   onRetryChatError?: (promptMessageId: string) => void;
   isRetrying?: boolean;
+  onBuyCredits?: () => void;
   onLongPress?: () => void;
 }
 
@@ -47,6 +50,7 @@ export const MessageBubble = ({
   onEndQuiz,
   onRetryChatError,
   isRetrying = false,
+  onBuyCredits,
   onLongPress,
 }: MessageBubbleProps) => {
   const time = format(new Date(timestamp), "HH:mm");
@@ -130,6 +134,15 @@ export const MessageBubble = ({
             data={structuredContent as ChatErrorData}
             onRetry={onRetryChatError}
             isRetrying={isRetrying}
+            {...bubbleProps}
+          />
+        );
+
+      case "credits_required":
+        return (
+          <CreditsRequiredBubble
+            data={structuredContent as CreditsRequiredData}
+            onBuyCredits={onBuyCredits}
             {...bubbleProps}
           />
         );

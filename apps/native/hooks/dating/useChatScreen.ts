@@ -12,10 +12,33 @@ import {
 import { useRequestChatImage } from "./useImageRequest";
 import type { ImageRequestOptions } from "./useImageRequest";
 import { useChatScroll } from "./useChatScroll";
-import { useCredits, CREDIT_COSTS } from "./useCredits";
+import { useCredits } from "./useCredits";
 import { useTranslation } from "@/hooks/use-translation";
 
 const AI_RESPONSE_WAIT_TIMEOUT_MS = 15000;
+const openedCreditsRequiredMessageIds = new Set<string>();
+
+function getLatestCreditsRequiredMessageId(
+  messages: Array<{ _id: string; role: string; content: string }>,
+) {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const message = messages[i];
+    if (message.role === "user") {
+      continue;
+    }
+
+    try {
+      const parsed = JSON.parse(message.content);
+      if (parsed?.type === "credits_required") {
+        return message._id;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
 
 export function useChatScreen() {
   const { t } = useTranslation();
@@ -96,6 +119,10 @@ export function useChatScreen() {
   > | null>(null);
 
   const conversationKey = threadId ?? id ?? null;
+  const latestCreditsRequiredMessageId = useMemo(
+    () => getLatestCreditsRequiredMessageId(messages),
+    [messages],
+  );
 
   const clearPendingAssistantState = useCallback(() => {
     if (pendingAssistantTimeoutRef.current) {
@@ -149,6 +176,11 @@ export function useChatScreen() {
   const showTypingIndicator =
     !isStopRequested && (isAITyping || isWaitingForAI);
 
+  const handleOpenCreditsModal = useCallback(() => {
+    setIsImageSheetOpen(false);
+    router.push("/buy-credits");
+  }, [router]);
+
   // Chat scroll behavior
   const {
     shouldLoadMore,
@@ -201,6 +233,19 @@ export function useChatScreen() {
     }
   }, [hasAIResponseAfterSend, isAITyping, isWaitingForAI]);
 
+  useEffect(() => {
+    if (!latestCreditsRequiredMessageId) {
+      return;
+    }
+
+    if (openedCreditsRequiredMessageIds.has(latestCreditsRequiredMessageId)) {
+      return;
+    }
+
+    openedCreditsRequiredMessageIds.add(latestCreditsRequiredMessageId);
+    handleOpenCreditsModal();
+  }, [handleOpenCreditsModal, latestCreditsRequiredMessageId]);
+
   const sendConversationMessage = useCallback(
     async (content: string, options?: { optimistic?: boolean }) => {
       if (!id || isSending) {
@@ -208,7 +253,7 @@ export function useChatScreen() {
       }
 
       if (!hasEnoughCredits("TEXT_MESSAGE")) {
-        router.push("/buy-credits");
+        handleOpenCreditsModal();
         return false;
       }
 
@@ -239,7 +284,7 @@ export function useChatScreen() {
         clearPendingAssistantState();
 
         if (error.message?.includes("Insufficient credits")) {
-          router.push("/buy-credits");
+          handleOpenCreditsModal();
         } else {
           console.error("Failed to send message:", error);
           Alert.alert(t("alerts.error"), t("alerts.tryAgainMoment"));
@@ -253,10 +298,11 @@ export function useChatScreen() {
     [
       clearPendingAssistantState,
       hasEnoughCredits,
+      handleOpenCreditsModal,
       id,
       isSending,
-      router,
       t,
+      platform,
       sendMessage,
       sendMessageWithOptimistic,
       startPendingAssistantState,
@@ -309,7 +355,7 @@ export function useChatScreen() {
 
       // Client-side credit check for image requests (5 credits)
       if (!hasEnoughCredits("IMAGE_REQUEST")) {
-        router.push("/buy-credits");
+        handleOpenCreditsModal();
         return;
       }
 
@@ -319,7 +365,7 @@ export function useChatScreen() {
         setIsImageSheetOpen(false);
       } catch (error: any) {
         if (error.message && error.message.includes("Insufficient credits")) {
-          router.push("/buy-credits");
+          handleOpenCreditsModal();
         } else {
           console.error("Failed to request image:", error);
         }
@@ -327,7 +373,7 @@ export function useChatScreen() {
         setIsRequestingImage(false);
       }
     },
-    [id, requestImage, hasEnoughCredits, platform, router],
+    [id, requestImage, hasEnoughCredits, handleOpenCreditsModal, platform],
   );
 
   const handleOpenImageSheet = () => {
@@ -540,6 +586,7 @@ export function useChatScreen() {
     isClearing,
     isSending,
     isRequestingImage,
+    credits,
 
     // Pagination
     hasMore,
@@ -601,5 +648,6 @@ export function useChatScreen() {
     handleSuggestionSelect,
     handleRetryFailedResponse,
     handleClearChat,
+    handleOpenCreditsModal,
   };
 }

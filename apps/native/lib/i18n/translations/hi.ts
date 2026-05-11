@@ -165,6 +165,7 @@ export const hi: TranslationMap = {
   "chat.conversationNotFound": "बातचीत नहीं मिली",
   "chat.startConversation": "बातचीत शुरू करें",
   "chat.sayHello": "{{name}} को हेलो कहें!",
+  "chat.aiCharacter": "एआई कैरेक्टर",
   "chat.aiCompanion": "आपका AI साथी",
   "chat.selfie": "सेल्फी",
   "chat.selfieLabel": "AI सेल्फी",
@@ -177,6 +178,8 @@ export const hi: TranslationMap = {
   "chat.quiz": "क्विज़",
   "chat.topic": "विषय",
   "chat.suggestion": "सुझाव",
+  "chat.creditsRequiredMessage":
+    "इस अनुरोध के लिए आपको कम से कम {{count}} क्रेडिट चाहिए।",
   "chat.typeMessage": "संदेश लिखें...",
   "profile.notFound": "प्रोफ़ाइल नहीं मिली",
   "profile.aboutMe": "मेरे बारे में",

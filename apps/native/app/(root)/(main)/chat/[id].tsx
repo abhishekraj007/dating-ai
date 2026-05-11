@@ -61,6 +61,7 @@ export default function ChatScreen() {
     isClearing,
     isSending,
     isRequestingImage,
+    credits,
 
     // Pagination
     hasMore,
@@ -117,6 +118,7 @@ export default function ChatScreen() {
     handleSuggestionSelect,
     handleRetryFailedResponse,
     handleClearChat,
+    handleOpenCreditsModal,
   } = useChatScreen();
 
   console.log("messages", messages);
@@ -137,6 +139,7 @@ export default function ChatScreen() {
         onEndQuiz={handleEndQuiz}
         onRetryChatError={handleRetryFailedResponse}
         isRetrying={isSending}
+        onBuyCredits={handleOpenCreditsModal}
         onLongPress={
           isUser ? () => handleOpenMessageActions(item.order) : undefined
         }
@@ -193,7 +196,7 @@ export default function ChatScreen() {
                   <View className="flex-row items-center gap-1">
                     <View className="w-2 h-2 bg-green-500 rounded-full" />
                     <Text className="text-foreground/60 text-[10px]">
-                      {"AI Character"}
+                      {t("chat.aiCharacter")}
                     </Text>
                   </View>
                 </View>
@@ -388,8 +391,9 @@ export default function ChatScreen() {
         isOpen={isImageSheetOpen}
         onClose={() => setIsImageSheetOpen(false)}
         onSubmit={handleImageRequest}
+        onBuyCredits={handleOpenCreditsModal}
         isLoading={isRequestingImage}
-        credits={5}
+        credits={credits}
       />
 
       {/* Message Actions Sheet */}

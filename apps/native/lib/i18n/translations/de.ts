@@ -168,6 +168,7 @@ export const de: TranslationMap = {
   "chat.conversationNotFound": "Gespräch nicht gefunden",
   "chat.startConversation": "Gespräch starten",
   "chat.sayHello": "Sag Hallo zu {{name}}!",
+  "chat.aiCharacter": "KI-Charakter",
   "chat.aiCompanion": "dein KI-Begleiter",
   "chat.selfie": "Selfie",
   "chat.selfieLabel": "KI-Selfie",
@@ -178,6 +179,8 @@ export const de: TranslationMap = {
   "chat.clear": "Löschen",
   "chat.clearFailed":
     "Chat konnte nicht gelöscht werden. Bitte versuche es erneut.",
+  "chat.creditsRequiredMessage":
+    "Du brauchst mindestens {{count}} Credits für diese Anfrage.",
   "chat.quiz": "Quiz",
   "chat.topic": "Thema",
   "chat.suggestion": "Vorschlag",
