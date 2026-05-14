@@ -29,6 +29,7 @@
     "ai": "^5.0.101",
     "better-auth": "catalog:",
     "convex": "catalog:",
+    "jose": "^6.2.3",
     "replicate": "^1.4.0",
     "zod": "^4.1.12"
   }

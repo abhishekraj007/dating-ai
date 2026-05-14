@@ -7,8 +7,8 @@ import { Download, ImageIcon, Smartphone, Tablet } from "lucide-react";
 
 const ROOT = "/store-screenshots";
 
-const W = 1320;
-const H = 2868;
+const W = 1284;
+const H = 2778;
 const IPAD_W = 2064;
 const IPAD_H = 2752;
 const AW = 1080;
@@ -32,15 +32,13 @@ type Locale = (typeof LOCALES)[number];
 type Device = "iphone" | "ipad" | "android" | "feature-graphic";
 
 const IPHONE_SIZES = [
-  { label: '6.9"', w: 1320, h: 2868 },
-  { label: '6.5"', w: 1284, h: 2778 },
-  { label: '6.3"', w: 1206, h: 2622 },
-  { label: '6.1"', w: 1125, h: 2436 },
+  { label: "App Store 1284x2778", w: 1284, h: 2778 },
+  { label: "App Store 1242x2688", w: 1242, h: 2688 },
 ] as const;
 
 const IPAD_SIZES = [
-  { label: '13" iPad', w: 2064, h: 2752 },
-  { label: '12.9" iPad Pro', w: 2048, h: 2732 },
+  { label: "App Store 2064x2752", w: 2064, h: 2752 },
+  { label: "App Store 2048x2732", w: 2048, h: 2732 },
 ] as const;
 
 const ANDROID_SIZES = [{ label: "Phone", w: 1080, h: 1920 }] as const;
@@ -99,6 +97,7 @@ type SlideProps = {
   cH: number;
   basePath: string;
   theme: Theme;
+  renderMode: "preview" | "export";
 };
 type SlideDef = {
   id: string;
@@ -106,7 +105,14 @@ type SlideDef = {
   component: (props: SlideProps) => ReactElement;
 };
 
-const screenshotNames = ["for-you", "explore", "chat"] as const;
+const screenshotNames = [
+  "for-you",
+  "explore",
+  "chat",
+  "swipe",
+  "ask-for-image",
+] as const;
+const alwaysSlideShots = ["for-you", "explore", "chat"] as const;
 const screenshotBases = [
   `${ROOT}/screenshots/apple/iphone/en`,
   `${ROOT}/screenshots/apple/ipad/en`,
@@ -462,7 +468,8 @@ function Caption({
   color?: string;
   compact?: boolean;
 }) {
-  const textColor = color ?? theme.fg;
+  // Headings always render in pure white per design spec.
+  const headlineColor = "#ffffff";
   return (
     <div style={{ position: "relative", zIndex: 4 }}>
       <div
@@ -479,12 +486,12 @@ function Caption({
       </div>
       <div
         style={{
-          color: textColor,
+          color: headlineColor,
           fontSize: cW * (compact ? 0.074 : 0.094),
           fontWeight: 900,
           lineHeight: 0.96,
           letterSpacing: 0,
-          textShadow: color ? "none" : "0 10px 30px rgba(0, 0, 0, 0.24)",
+          textShadow: "0 10px 30px rgba(0, 0, 0, 0.32)",
         }}
       >
         {headline}
@@ -508,7 +515,15 @@ function Caption({
   );
 }
 
-function AppIcon({ cW, size, style }: { cW: number; size?: number; style?: CSSProperties }) {
+function AppIcon({
+  cW,
+  size,
+  style,
+}: {
+  cW: number;
+  size?: number;
+  style?: CSSProperties;
+}) {
   const iconSize = size ?? cW * 0.13;
   return (
     <img
@@ -533,12 +548,17 @@ function GlassPill({
   children,
   theme,
   light = false,
+  fontSize,
+  renderMode = "preview",
 }: {
   cW: number;
   children: ReactNode;
   theme: Theme;
   light?: boolean;
+  fontSize?: number;
+  renderMode?: "preview" | "export";
 }) {
+  const isExport = renderMode === "export";
   return (
     <div
       style={{
@@ -546,14 +566,20 @@ function GlassPill({
         alignItems: "center",
         borderRadius: cW * 0.04,
         border: `1px solid ${light ? "rgba(38, 10, 18, 0.12)" : theme.line}`,
-        background: light ? "rgba(255, 255, 255, 0.72)" : "rgba(255, 255, 255, 0.1)",
+        background: light
+          ? isExport
+            ? "rgba(255, 255, 255, 0.84)"
+            : "rgba(255, 255, 255, 0.72)"
+          : isExport
+            ? "rgba(255, 255, 255, 0.16)"
+            : "rgba(255, 255, 255, 0.1)",
         color: light ? theme.ink : theme.fg,
         padding: `${cW * 0.014}px ${cW * 0.028}px`,
-        fontSize: cW * 0.028,
+        fontSize: fontSize ?? cW * 0.028,
         fontWeight: 800,
         lineHeight: 1,
         boxShadow: "0 18px 38px rgba(0, 0, 0, 0.16)",
-        backdropFilter: "blur(16px)",
+        backdropFilter: isExport ? "none" : "blur(16px)",
       }}
     >
       {children}
@@ -565,16 +591,39 @@ function makeHeroSlide(Frame: FrameComponent, widthFn: WidthFn): SlideDef {
   return {
     id: "hero-real-conversations",
     title: "Hero",
-    component: ({ cW, cH, basePath, theme }) => {
+    component: ({ cW, cH, basePath, theme, renderMode }) => {
       const frameW = widthFn(cW, cH) * 100;
       return (
         <CanvasShell cW={cW} cH={cH} theme={theme}>
-          <AppIcon cW={cW} style={{ position: "absolute", top: cW * 0.08, right: cW * 0.08, zIndex: 5 }} />
-          <div style={{ position: "absolute", top: cH * 0.075, left: cW * 0.08, zIndex: 6 }}>
+          <AppIcon
+            cW={cW}
+            style={{
+              position: "absolute",
+              top: cW * 0.08,
+              right: cW * 0.08,
+              zIndex: 5,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: cH * 0.075,
+              left: cW * 0.08,
+              zIndex: 6,
+            }}
+          >
             <Caption
               cW={cW}
               label="FeelChat"
-              headline={<>Meet AI<br />characters<br />who feel real.</>}
+              headline={
+                <>
+                  Meet AI
+                  <br />
+                  characters
+                  <br />
+                  who feel real.
+                </>
+              }
               subline="Swipe into conversations with personality, rhythm, and a little spark."
               theme={theme}
             />
@@ -603,8 +652,12 @@ function makeHeroSlide(Frame: FrameComponent, widthFn: WidthFn): SlideDef {
               width: cW * 0.5,
             }}
           >
-            <GlassPill cW={cW} theme={theme}>Real talk</GlassPill>
-            <GlassPill cW={cW} theme={theme}>Always on</GlassPill>
+            <GlassPill cW={cW} theme={theme} renderMode={renderMode}>
+              Real talk
+            </GlassPill>
+            <GlassPill cW={cW} theme={theme} renderMode={renderMode}>
+              Always on
+            </GlassPill>
           </div>
         </CanvasShell>
       );
@@ -612,65 +665,109 @@ function makeHeroSlide(Frame: FrameComponent, widthFn: WidthFn): SlideDef {
   };
 }
 
-function makeSwipeSlide(Frame: FrameComponent, widthFn: WidthFn, widthFn2: WidthFn): SlideDef {
+function makeSwipeSlide(
+  Frame: FrameComponent,
+  widthFn: WidthFn,
+  _widthFn2: WidthFn,
+): SlideDef {
+  void _widthFn2;
   return {
     id: "find-your-spark",
     title: "Swipe",
-    component: ({ cW, cH, basePath, theme }) => {
-      const frontW = widthFn(cW, cH) * 100;
-      const backW = widthFn2(cW, cH) * 100;
+    component: ({ cW, cH, basePath, theme, renderMode }) => {
+      const frameW = widthFn(cW, cH) * 100;
       return (
-        <CanvasShell cW={cW} cH={cH} theme={theme} tone="light">
-          <div style={{ position: "absolute", top: cH * 0.08, left: cW * 0.08, zIndex: 7, width: cW * 0.74 }}>
+        <CanvasShell cW={cW} cH={cH} theme={theme}>
+          <div
+            style={{
+              position: "absolute",
+              top: cH * 0.075,
+              left: cW * 0.08,
+              width: cW * 0.78,
+              zIndex: 8,
+            }}
+          >
             <Caption
               cW={cW}
               label="Discover"
-              headline={<>Find your<br />kind of spark.</>}
+              headline={
+                <>
+                  Find your
+                  <br />
+                  kind of spark.
+                </>
+              }
               subline="Profiles feel cinematic before the first message."
               theme={theme}
-              color={theme.ink}
             />
           </div>
           <Frame
-            src={img(`${basePath}/explore.png`)}
-            alt="Explore screen"
-            style={{
-              position: "absolute",
-              width: `${backW}%`,
-              left: cW * -0.04,
-              bottom: cH * 0.06,
-              transform: "rotate(-7deg)",
-              opacity: 0.72,
-              zIndex: 2,
-            }}
-          />
-          <Frame
-            src={img(`${basePath}/for-you.png`)}
+            src={img(`${basePath}/swipe.png`)}
             alt="Swipe screen"
             style={{
               position: "absolute",
-              width: `${frontW}%`,
-              right: cW * -0.04,
-              bottom: cH * -0.03,
-              transform: "rotate(4deg)",
-              zIndex: 5,
+              width: `${frameW}%`,
+              left: "50%",
+              bottom: cH * -0.04,
+              transform: "translateX(-50%) rotate(-2deg)",
+              zIndex: 4,
             }}
           />
           <div
             style={{
               position: "absolute",
-              left: cW * 0.09,
-              bottom: cH * 0.105,
-              zIndex: 8,
-              display: "flex",
-              gap: cW * 0.02,
-              flexWrap: "wrap",
-              width: cW * 0.48,
+              right: cW * 0.05,
+              top: cH * 0.39,
+              zIndex: 9,
+              borderRadius: cW * 0.05,
+              padding: `${cW * 0.025}px ${cW * 0.038}px`,
+              background: theme.accent,
+              color: "#ffffff",
+              fontSize: cW * 0.034,
+              fontWeight: 800,
+              boxShadow: `0 24px 48px ${theme.accent}55`,
+              transform: "rotate(8deg)",
             }}
           >
-            <GlassPill cW={cW} theme={theme} light>Swipe</GlassPill>
-            <GlassPill cW={cW} theme={theme} light>Match</GlassPill>
-            <GlassPill cW={cW} theme={theme} light>Chat</GlassPill>
+            Liked
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              left: cW * 0.03,
+              bottom: cH * 0.4,
+              zIndex: 9,
+              display: "flex",
+              gap: cW * 0.018,
+              flexWrap: "wrap",
+              flexDirection: "column",
+            }}
+          >
+            <GlassPill
+              fontSize={42}
+              cW={cW}
+              theme={theme}
+              renderMode={renderMode}
+            >
+              Swipe
+            </GlassPill>
+            <GlassPill
+              fontSize={42}
+              cW={cW}
+              theme={theme}
+              renderMode={renderMode}
+            >
+              Match
+            </GlassPill>
+            <GlassPill
+              fontSize={42}
+              cW={cW}
+              theme={theme}
+              renderMode={renderMode}
+            >
+              Chat
+            </GlassPill>
           </div>
         </CanvasShell>
       );
@@ -682,37 +779,38 @@ function makeExploreSlide(Frame: FrameComponent, widthFn: WidthFn): SlideDef {
   return {
     id: "many-new-moods",
     title: "Explore",
-    component: ({ cW, cH, basePath, theme }) => {
+    component: ({ cW, cH, basePath, theme, renderMode }) => {
       const frameW = widthFn(cW, cH) * 100;
+      const moods = [
+        { label: "Slow burn", hint: "Soft, lingering" },
+        { label: "Flirty", hint: "Light and playful" },
+        { label: "Cozy", hint: "Warm and easy" },
+        { label: "Playful", hint: "Tease, laugh, repeat" },
+      ];
       return (
         <CanvasShell cW={cW} cH={cH} theme={theme}>
-          <div style={{ position: "absolute", top: cH * 0.075, left: cW * 0.08, width: cW * 0.78, zIndex: 7 }}>
-            <Caption
-              cW={cW}
-              label="Explore"
-              headline={<>A room full<br />of new moods.</>}
-              subline="Pick the energy you want tonight."
-              theme={theme}
-            />
-          </div>
           <div
             style={{
               position: "absolute",
+              top: cH * 0.075,
               left: cW * 0.08,
-              top: cH * 0.39,
-              zIndex: 6,
-              display: "grid",
-              gap: cW * 0.024,
+              width: cW * 0.84,
+              zIndex: 8,
             }}
           >
-            {[
-              "Slow burn",
-              "Flirty",
-              "Cozy",
-              "Playful",
-            ].map((item) => (
-              <GlassPill key={item} cW={cW} theme={theme}>{item}</GlassPill>
-            ))}
+            <Caption
+              cW={cW}
+              label="Explore"
+              headline={
+                <>
+                  A room full
+                  <br />
+                  of new moods.
+                </>
+              }
+              subline="Pick the energy you want tonight."
+              theme={theme}
+            />
           </div>
           <Frame
             src={img(`${basePath}/explore.png`)}
@@ -720,12 +818,62 @@ function makeExploreSlide(Frame: FrameComponent, widthFn: WidthFn): SlideDef {
             style={{
               position: "absolute",
               width: `${frameW}%`,
-              right: cW * -0.08,
-              bottom: cH * -0.015,
-              transform: "rotate(-2deg)",
+              right: cW * -0.06,
+              bottom: cH * -0.04,
+              transform: "rotate(3deg)",
               zIndex: 4,
             }}
           />
+          <div
+            style={{
+              position: "absolute",
+              left: cW * 0.06,
+              top: cH * 0.4,
+              width: cW * 0.46,
+              zIndex: 9,
+              display: "grid",
+              gap: cW * 0.022,
+            }}
+          >
+            {moods.map((mood) => (
+              <div
+                key={mood.label}
+                style={{
+                  borderRadius: cW * 0.05,
+                  padding: `${cW * 0.024}px ${cW * 0.032}px`,
+                  background:
+                    renderMode === "export"
+                      ? "rgba(255, 255, 255, 0.16)"
+                      : "rgba(255, 255, 255, 0.1)",
+                  border: `1px solid ${theme.line}`,
+                  backdropFilter:
+                    renderMode === "export" ? "none" : "blur(18px)",
+                  boxShadow: "0 22px 44px rgba(0, 0, 0, 0.32)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "#ffffff",
+                    fontSize: cW * 0.034,
+                    fontWeight: 850,
+                    lineHeight: 1,
+                  }}
+                >
+                  {mood.label}
+                </div>
+                <div
+                  style={{
+                    marginTop: cW * 0.008,
+                    color: "rgba(255, 244, 247, 0.7)",
+                    fontSize: cW * 0.022,
+                    fontWeight: 600,
+                  }}
+                >
+                  {mood.hint}
+                </div>
+              </div>
+            ))}
+          </div>
         </CanvasShell>
       );
     },
@@ -738,13 +886,16 @@ function MessageCard({
   theme,
   sent = false,
   style,
+  renderMode = "preview",
 }: {
   cW: number;
   text: string;
   theme: Theme;
   sent?: boolean;
   style?: CSSProperties;
+  renderMode?: "preview" | "export";
 }) {
+  const isExport = renderMode === "export";
   return (
     <div
       style={{
@@ -753,14 +904,18 @@ function MessageCard({
         maxWidth: cW * 0.62,
         borderRadius: cW * 0.045,
         padding: `${cW * 0.026}px ${cW * 0.034}px`,
-        background: sent ? theme.accent : "rgba(255, 255, 255, 0.12)",
+        background: sent
+          ? theme.accent
+          : isExport
+            ? "rgba(255, 255, 255, 0.18)"
+            : "rgba(255, 255, 255, 0.12)",
         border: sent ? "none" : `1px solid ${theme.line}`,
         color: theme.fg,
         fontSize: cW * 0.034,
         fontWeight: 760,
         lineHeight: 1.14,
         boxShadow: "0 24px 48px rgba(0, 0, 0, 0.28)",
-        backdropFilter: "blur(18px)",
+        backdropFilter: isExport ? "none" : "blur(18px)",
         ...style,
       }}
     >
@@ -773,43 +928,59 @@ function makeChatSlide(Frame: FrameComponent, widthFn: WidthFn): SlideDef {
   return {
     id: "chat-that-listens",
     title: "Chat",
-    component: ({ cW, cH, basePath, theme }) => {
+    component: ({ cW, cH, basePath, theme, renderMode }) => {
       const frameW = widthFn(cW, cH) * 100;
       return (
         <CanvasShell cW={cW} cH={cH} theme={theme}>
-          <div style={{ position: "absolute", top: cH * 0.07, left: cW * 0.08, width: cW * 0.78, zIndex: 8 }}>
+          <div
+            style={{
+              position: "absolute",
+              top: cH * 0.07,
+              left: cW * 0.08,
+              width: cW * 0.84,
+              zIndex: 8,
+            }}
+          >
             <Caption
               cW={cW}
               label="Conversation"
-              headline={<>Talk like<br />it knows you.</>}
-              subline="Replies land fast, warm, and in character."
+              headline={
+                <>
+                  Ask and they
+                  <br />
+                  send a moment.
+                </>
+              }
+              subline="Replies feel close, warm, and in character."
               theme={theme}
             />
           </div>
           <Frame
-            src={img(`${basePath}/chat.png`)}
+            src={img(`${basePath}/ask-for-image.png`)}
             alt="Chat screen"
             style={{
               position: "absolute",
               width: `${frameW}%`,
               left: "50%",
               bottom: cH * -0.045,
-              transform: "translateX(-50%)",
+              transform: "translateX(-50%) rotate(2deg)",
               zIndex: 3,
             }}
           />
           <MessageCard
             cW={cW}
-            text="You free tonight?"
+            text="Send me a pic?"
             theme={theme}
             sent
-            style={{ right: cW * 0.07, top: cH * 0.43 }}
+            renderMode={renderMode}
+            style={{ right: cW * 0.05, top: cH * 0.4 }}
           />
           <MessageCard
             cW={cW}
-            text="I saved you a seat."
+            text="One sec, smiling for you."
             theme={theme}
-            style={{ left: cW * 0.06, bottom: cH * 0.18 }}
+            renderMode={renderMode}
+            style={{ left: cW * 0.05, top: cH * 0.5 }}
           />
         </CanvasShell>
       );
@@ -824,15 +995,28 @@ function makeQuizSlide(Frame: FrameComponent, widthFn: WidthFn): SlideDef {
     component: ({ cW, cH, basePath, theme }) => {
       const frameW = widthFn(cW, cH) * 100;
       return (
-        <CanvasShell cW={cW} cH={cH} theme={theme} tone="light">
-          <div style={{ position: "absolute", top: cH * 0.075, left: cW * 0.08, width: cW * 0.76, zIndex: 8 }}>
+        <CanvasShell cW={cW} cH={cH} theme={theme}>
+          <div
+            style={{
+              position: "absolute",
+              top: cH * 0.075,
+              left: cW * 0.08,
+              width: cW * 0.76,
+              zIndex: 8,
+            }}
+          >
             <Caption
               cW={cW}
               label="Quiz"
-              headline={<>Turn chats<br />into little games.</>}
+              headline={
+                <>
+                  Turn chats
+                  <br />
+                  into little games.
+                </>
+              }
               subline="Play, tease, guess, and keep the conversation moving."
               theme={theme}
-              color={theme.ink}
             />
           </div>
           <Frame
@@ -858,7 +1042,7 @@ function makeQuizSlide(Frame: FrameComponent, widthFn: WidthFn): SlideDef {
               gap: cW * 0.026,
             }}
           >
-            {["Guess her vibe", "Pick a topic", "Ask for a selfie"].map((item) => (
+            {["Guess her vibe", "Pick a topic", "Play a game"].map((item) => (
               <div
                 key={item}
                 style={{
@@ -886,7 +1070,7 @@ function makeAlwaysSlide(): SlideDef {
   return {
     id: "always-ready",
     title: "Always",
-    component: ({ cW, cH, basePath, theme }) => {
+    component: ({ cW, cH, basePath, theme, renderMode }) => {
       return (
         <CanvasShell cW={cW} cH={cH} theme={theme}>
           <div
@@ -903,7 +1087,13 @@ function makeAlwaysSlide(): SlideDef {
               <Caption
                 cW={cW}
                 label="FeelChat"
-                headline={<>Always someone<br />ready to talk.</>}
+                headline={
+                  <>
+                    Always someone
+                    <br />
+                    ready to talk.
+                  </>
+                }
                 subline="A private place for sparks, stories, and late-night energy."
                 theme={theme}
               />
@@ -924,7 +1114,14 @@ function makeAlwaysSlide(): SlideDef {
                 "Custom chats",
                 "Premium moments",
               ].map((item) => (
-                <GlassPill key={item} cW={cW} theme={theme}>{item}</GlassPill>
+                <GlassPill
+                  key={item}
+                  cW={cW}
+                  theme={theme}
+                  renderMode={renderMode}
+                >
+                  {item}
+                </GlassPill>
               ))}
             </div>
           </div>
@@ -938,7 +1135,7 @@ function makeAlwaysSlide(): SlideDef {
               zIndex: 5,
             }}
           >
-            {screenshotNames.map((name, index) => (
+            {alwaysSlideShots.map((name, index) => (
               <img
                 key={name}
                 src={img(`${basePath}/${name}.png`)}
@@ -1014,10 +1211,24 @@ const FEATURE_GRAPHIC_SLIDE: SlideDef = {
       >
         <AppIcon cW={cW} size={cW * 0.13} />
         <div>
-          <div style={{ fontSize: cW * 0.064, fontWeight: 950, lineHeight: 0.95, letterSpacing: 0 }}>
+          <div
+            style={{
+              fontSize: cW * 0.064,
+              fontWeight: 950,
+              lineHeight: 0.95,
+              letterSpacing: 0,
+            }}
+          >
             FeelChat
           </div>
-          <div style={{ marginTop: cW * 0.014, color: theme.muted, fontSize: cW * 0.027, fontWeight: 800 }}>
+          <div
+            style={{
+              marginTop: cW * 0.014,
+              color: theme.muted,
+              fontSize: cW * 0.027,
+              fontWeight: 800,
+            }}
+          >
             AI characters that feel real.
           </div>
         </div>
@@ -1064,12 +1275,20 @@ function ScreenshotPreview({
   cH,
   basePath,
   theme,
+  onDownload,
+  downloadLabel,
+  isDownloading,
+  isDisabled,
 }: {
   slide: SlideDef;
   cW: number;
   cH: number;
   basePath: string;
   theme: Theme;
+  onDownload: () => void;
+  downloadLabel: string;
+  isDownloading: boolean;
+  isDisabled: boolean;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.24);
@@ -1114,7 +1333,38 @@ function ScreenshotPreview({
         }}
       >
         <span>{slide.title}</span>
-        <span style={{ color: "rgba(255, 255, 255, 0.48)" }}>{slide.id}</span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          {/* <span style={{ color: "rgba(255, 255, 255, 0.48)" }}>{slide.id}</span> */}
+          <button
+            type="button"
+            onClick={onDownload}
+            disabled={isDisabled}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              borderRadius: 7,
+              padding: "6px 10px",
+              background: isDisabled
+                ? "rgba(255, 255, 255, 0.08)"
+                : "rgba(255, 255, 255, 0.12)",
+              color: isDisabled ? "rgba(255, 255, 255, 0.45)" : "#fff4f7",
+              fontSize: 11,
+              fontWeight: 900,
+              whiteSpace: "nowrap",
+              cursor: isDisabled ? "not-allowed" : "pointer",
+            }}
+          >
+            <Download size={12} />
+          </button>
+        </div>
       </div>
       <div ref={hostRef} style={{ width: "100%" }}>
         <div
@@ -1134,7 +1384,13 @@ function ScreenshotPreview({
               transformOrigin: "top left",
             }}
           >
-            {slide.component({ cW, cH, basePath, theme })}
+            {slide.component({
+              cW,
+              cH,
+              basePath,
+              theme,
+              renderMode: "preview",
+            })}
           </div>
         </div>
       </div>
@@ -1190,11 +1446,16 @@ export default function StoreScreenshotsPage() {
   const exportRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   const theme = THEMES[themeId];
-  const { cW, cH, sizes, label } = getDeviceConfig(device);
+  const { sizes, label } = getDeviceConfig(device);
   const currentSizes: readonly SizeDef[] = sizes;
-  const slides = buildSlides(device);
-  const basePath = getBasePath(device === "feature-graphic" ? "iphone" : device, locale);
   const currentSize = currentSizes[Math.min(sizeIdx, currentSizes.length - 1)];
+  const cW = currentSize.w;
+  const cH = currentSize.h;
+  const slides = buildSlides(device);
+  const basePath = getBasePath(
+    device === "feature-graphic" ? "iphone" : device,
+    locale,
+  );
 
   useEffect(() => {
     let active = true;
@@ -1206,13 +1467,32 @@ export default function StoreScreenshotsPage() {
       })
       .catch((error: unknown) => {
         if (active) {
-          setLoadError(error instanceof Error ? error.message : "Image preload failed");
+          setLoadError(
+            error instanceof Error ? error.message : "Image preload failed",
+          );
         }
       });
     return () => {
       active = false;
     };
   }, []);
+
+  async function exportSlideAtIndex(index: number) {
+    const el = exportRefs.current[index];
+    if (!el) {
+      return;
+    }
+
+    const dataUrl = await captureSlide(
+      el,
+      cW,
+      cH,
+      currentSize.w,
+      currentSize.h,
+    );
+    const filename = `${String(index + 1).padStart(2, "0")}-${device}-${slides[index].id}-${locale}-${currentSize.w}x${currentSize.h}.png`;
+    downloadPng(dataUrl, filename);
+  }
 
   async function exportAll() {
     if (!ready || exporting) {
@@ -1222,13 +1502,7 @@ export default function StoreScreenshotsPage() {
     try {
       for (let index = 0; index < slides.length; index++) {
         setExporting(`${index + 1}/${slides.length}`);
-        const el = exportRefs.current[index];
-        if (!el) {
-          continue;
-        }
-        const dataUrl = await captureSlide(el, cW, cH, currentSize.w, currentSize.h);
-        const filename = `${String(index + 1).padStart(2, "0")}-${device}-${slides[index].id}-${locale}-${currentSize.w}x${currentSize.h}.png`;
-        downloadPng(dataUrl, filename);
+        await exportSlideAtIndex(index);
         await sleep(300);
       }
     } catch (error) {
@@ -1238,12 +1512,41 @@ export default function StoreScreenshotsPage() {
     }
   }
 
+  async function exportSingle(index: number) {
+    if (!ready || exporting) {
+      return;
+    }
+
+    setExportError(null);
+    try {
+      setExporting(slides[index].id);
+      await exportSlideAtIndex(index);
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : "Export failed");
+    } finally {
+      setExporting(null);
+    }
+  }
+
   if (loadError) {
     return (
-      <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#090407", color: "white", padding: 24 }}>
+      <main
+        style={{
+          minHeight: "100vh",
+          display: "grid",
+          placeItems: "center",
+          background: "#090407",
+          color: "white",
+          padding: 24,
+        }}
+      >
         <div style={{ maxWidth: 560, lineHeight: 1.5 }}>
-          <h1 style={{ fontSize: 28, margin: "0 0 12px", fontWeight: 900 }}>Could not load screenshot assets</h1>
-          <p style={{ margin: 0, color: "rgba(255, 255, 255, 0.74)" }}>{loadError}</p>
+          <h1 style={{ fontSize: 28, margin: "0 0 12px", fontWeight: 900 }}>
+            Could not load screenshot assets
+          </h1>
+          <p style={{ margin: 0, color: "rgba(255, 255, 255, 0.74)" }}>
+            {loadError}
+          </p>
         </div>
       </main>
     );
@@ -1294,7 +1597,9 @@ export default function StoreScreenshotsPage() {
             style={controlStyle}
           >
             {LOCALES.map((item) => (
-              <option key={item} value={item}>{item.toUpperCase()}</option>
+              <option key={item} value={item}>
+                {item.toUpperCase()}
+              </option>
             ))}
           </select>
           <select
@@ -1303,7 +1608,9 @@ export default function StoreScreenshotsPage() {
             style={controlStyle}
           >
             {Object.entries(THEMES).map(([id, item]) => (
-              <option key={id} value={id}>{item.name}</option>
+              <option key={id} value={id}>
+                {item.name}
+              </option>
             ))}
           </select>
           <div
@@ -1364,11 +1671,24 @@ export default function StoreScreenshotsPage() {
               </option>
             ))}
           </select>
-          <span style={{ color: "rgba(255, 255, 255, 0.56)", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>
+          <span
+            style={{
+              color: "rgba(255, 255, 255, 0.56)",
+              fontSize: 12,
+              fontWeight: 700,
+              whiteSpace: "nowrap",
+            }}
+          >
             {label} preview at {cW}x{cH}
           </span>
         </div>
-        <div style={{ flexShrink: 0, padding: "10px 16px", borderLeft: "1px solid rgba(255, 255, 255, 0.1)" }}>
+        <div
+          style={{
+            flexShrink: 0,
+            padding: "10px 16px",
+            borderLeft: "1px solid rgba(255, 255, 255, 0.1)",
+          }}
+        >
           <button
             type="button"
             onClick={exportAll}
@@ -1380,7 +1700,8 @@ export default function StoreScreenshotsPage() {
               border: "none",
               borderRadius: 8,
               padding: "8px 16px",
-              background: !ready || exporting ? "rgba(236, 72, 153, 0.5)" : "#ec4899",
+              background:
+                !ready || exporting ? "rgba(236, 72, 153, 0.5)" : "#ec4899",
               color: "white",
               fontSize: 12,
               fontWeight: 900,
@@ -1389,14 +1710,31 @@ export default function StoreScreenshotsPage() {
             }}
           >
             <Download size={14} />
-            {exporting ? `Exporting ${exporting}` : ready ? "Export All" : "Loading"}
+            {exporting
+              ? `Exporting ${exporting}`
+              : ready
+                ? "Export All"
+                : "Loading"}
           </button>
         </div>
       </div>
 
-      <section style={{ maxWidth: 1480, margin: "0 auto", padding: "26px 16px 54px" }}>
+      <section
+        style={{ maxWidth: 1480, margin: "0 auto", padding: "26px 16px 54px" }}
+      >
         {exportError ? (
-          <div style={{ marginBottom: 16, borderRadius: 8, border: "1px solid rgba(248, 113, 113, 0.4)", background: "rgba(127, 29, 29, 0.32)", padding: 12, color: "#fecaca", fontSize: 13, fontWeight: 700 }}>
+          <div
+            style={{
+              marginBottom: 16,
+              borderRadius: 8,
+              border: "1px solid rgba(248, 113, 113, 0.4)",
+              background: "rgba(127, 29, 29, 0.32)",
+              padding: 12,
+              color: "#fecaca",
+              fontSize: 13,
+              fontWeight: 700,
+            }}
+          >
             {exportError}
           </div>
         ) : null}
@@ -1408,7 +1746,7 @@ export default function StoreScreenshotsPage() {
             alignItems: "start",
           }}
         >
-          {slides.map((slide) => (
+          {slides.map((slide, index) => (
             <ScreenshotPreview
               key={slide.id}
               slide={slide}
@@ -1416,12 +1754,21 @@ export default function StoreScreenshotsPage() {
               cH={cH}
               basePath={basePath}
               theme={theme}
+              onDownload={() => {
+                void exportSingle(index);
+              }}
+              downloadLabel={`Download ${currentSize.w}x${currentSize.h}`}
+              isDownloading={exporting === slide.id}
+              isDisabled={!ready || !!exporting}
             />
           ))}
         </div>
       </section>
 
-      <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+      <div
+        aria-hidden
+        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+      >
         {ready
           ? slides.map((slide, index) => (
               <div
@@ -1439,7 +1786,13 @@ export default function StoreScreenshotsPage() {
                   background: "#090407",
                 }}
               >
-                {slide.component({ cW, cH, basePath, theme })}
+                {slide.component({
+                  cW,
+                  cH,
+                  basePath,
+                  theme,
+                  renderMode: "export",
+                })}
               </div>
             ))
           : null}

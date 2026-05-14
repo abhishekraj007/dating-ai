@@ -17,6 +17,12 @@ export const useAppleAuth = () => {
   const signIn = async () => {
     setIsLoading(true);
     try {
+      const isAvailable = await AppleAuthentication.isAvailableAsync();
+
+      if (!isAvailable) {
+        throw new Error("Apple Sign-In is not available on this device");
+      }
+
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -32,8 +38,6 @@ export const useAppleAuth = () => {
         provider: "apple",
         idToken: {
           token: credential.identityToken,
-          nonce: credential.authorizationCode ?? undefined,
-          accessToken: credential.identityToken,
         },
       });
 
