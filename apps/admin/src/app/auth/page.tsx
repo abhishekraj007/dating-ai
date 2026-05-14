@@ -1,5 +1,6 @@
 "use client";
 
+import AuthScreen from "@/components/auth-screen";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -11,12 +12,5 @@ export default function AuthPage() {
     router.replace("/");
   }, [router]);
 
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="text-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-        <p className="mt-4 text-muted-foreground">Redirecting...</p>
-      </div>
-    </div>
-  );
+  return <AuthScreen isPending pendingMessage="Opening admin portal..." />;
 }

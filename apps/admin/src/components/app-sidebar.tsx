@@ -77,6 +77,7 @@ export function AppSidebar({ isLoading = false }: { isLoading?: boolean }) {
   const userEmail = userData?.userMetadata?.email || "";
   const userImage = userData?.userMetadata?.image;
   const isPremium = Boolean(userData?.profile?.isPremium);
+  const userBadgeLabel = isPremium ? "Premium" : "Admin console";
 
   return (
     <Sidebar>
@@ -85,11 +86,11 @@ export function AppSidebar({ isLoading = false }: { isLoading?: boolean }) {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <BookOpen className="h-4 w-4" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold">Chating AI</span>
-            {isPremium && (
-              <span className="text-xs text-muted-foreground">Premium</span>
-            )}
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate text-sm font-semibold">Chating AI</span>
+            <span className="flex h-4 items-center text-xs text-muted-foreground">
+              {isLoading ? <Skeleton className="h-3 w-20" /> : userBadgeLabel}
+            </span>
           </div>
         </div>
       </SidebarHeader>
@@ -120,7 +121,7 @@ export function AppSidebar({ isLoading = false }: { isLoading?: boolean }) {
         <SidebarMenu>
           <SidebarMenuItem>
             {isLoading ? (
-              <div className="flex items-center gap-2 p-2">
+              <div className="flex h-14 items-center gap-2 rounded-lg px-3">
                 <Skeleton className="h-8 w-8 rounded-lg" />
                 <div className="flex-1 space-y-1">
                   <Skeleton className="h-4 w-24" />
@@ -143,13 +144,13 @@ export function AppSidebar({ isLoading = false }: { isLoading?: boolean }) {
                         {userName.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
+                    <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">{userName}</span>
                       <span className="truncate text-xs text-muted-foreground">
                         {userEmail}
                       </span>
                     </div>
-                    <ChevronUp className="ml-auto size-4" />
+                    <ChevronUp className="ml-auto size-4 shrink-0" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -170,7 +171,7 @@ export function AppSidebar({ isLoading = false }: { isLoading?: boolean }) {
                         authClient.signOut({
                           fetchOptions: {
                             onSuccess: () => {
-                              router.push("/auth");
+                              router.replace("/");
                             },
                           },
                         });
