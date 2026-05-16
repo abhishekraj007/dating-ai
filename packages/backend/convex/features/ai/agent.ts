@@ -366,7 +366,7 @@ export const generateImageTool = createTool({
       args.description?.toLowerCase().includes("hot");
 
     const message = isSpicy
-      ? `let me snap something that'll drive you wild... 🔥 give me just a sec!`
+      ? `let me snap something, give me a sec!`
       : `Sure! taking a pic, give me a sec...`;
 
     // Return structured data for the frontend to handle

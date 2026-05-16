@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import Markdown from "react-native-markdown-display";
 import { useQuery } from "convex/react";
 import { api } from "@dating-ai/backend";
@@ -58,16 +58,13 @@ export function ImageResponseBubble({
   profileName,
   time,
 }: ResponseProps) {
-  const { isPremium } = useCredits();
+  const { isPremium, isLoading: isCreditsLoading } = useCredits();
 
-  // Fetch fresh signed URL using permanent imageKey
-  // This prevents expired URL issues
   const freshUrl = useQuery(
     api.features.ai.queries.getChatImageUrl,
     data.imageKey ? { imageKey: data.imageKey } : "skip",
   );
 
-  // Use fresh URL if available, fall back to stored URL (might be expired)
   const imageUrl = freshUrl ?? data.imageUrl;
 
   return (
@@ -77,17 +74,11 @@ export function ImageResponseBubble({
       time={time}
     >
       <View className="bg-surface rounded-2xl rounded-tl-sm overflow-hidden">
-        {!imageUrl ? (
+        {isCreditsLoading ? (
           <Skeleton style={{ width: 250, height: 350 }} />
-        ) : isPremium ? (
-          <ZoomableImage
-            source={{ uri: imageUrl }}
-            style={{ width: 250, height: 350 }}
-            contentFit="cover"
-            transition={200}
-            cachePolicy="disk"
-          />
-        ) : (
+        ) : !imageUrl ? (
+          <Skeleton style={{ width: 250, height: 350 }} />
+        ) : !isPremium ? (
           <BlurredPremiumImage
             imageUrl={imageUrl}
             width={250}
@@ -95,6 +86,14 @@ export function ImageResponseBubble({
             profileName={profileName}
             profileAvatar={avatarUrl}
             borderRadius={0}
+          />
+        ) : (
+          <ZoomableImage
+            source={{ uri: imageUrl }}
+            style={{ width: 250, height: 350 }}
+            contentFit="cover"
+            transition={200}
+            cachePolicy="disk"
           />
         )}
       </View>

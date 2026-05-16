@@ -8,14 +8,29 @@ export const useGoogleAuth = () => {
   const signIn = async () => {
     setIsLoading(true);
     try {
-      await authClient.signIn.social({
+      const callbackURL = Linking.createURL("");
+
+      console.log("Starting Google sign in", { callbackURL });
+
+      const result = await authClient.signIn.social({
         provider: "google",
-        callbackURL: Linking.createURL(""),
+        callbackURL,
       });
+
+      if (result?.error) {
+        console.error("Google sign in returned an error:", result.error);
+        throw new Error(result.error.message || "Google sign in failed");
+      }
+
+      const session = await authClient.getSession();
+
+      if (!session.data) {
+        setIsLoading(false);
+      }
     } catch (error) {
-      console.error("Google sign in error:", error);
-    } finally {
       setIsLoading(false);
+      console.error("Google sign in error:", error);
+      throw error;
     }
   };
 

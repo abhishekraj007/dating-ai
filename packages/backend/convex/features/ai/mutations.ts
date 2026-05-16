@@ -21,6 +21,50 @@ import {
   normalizePublicProfileUsername,
 } from "./publicProfileUsernames";
 
+const TEXT_MESSAGE_CREDIT_COST = 1;
+const CHAT_IMAGE_REQUEST_CREDIT_COST = 5;
+
+function isLikelyChatImageRequest(content: string) {
+  const normalized = content.toLowerCase().trim();
+
+  return [
+    /\b(send|show|give|get|see|take|snap|share|make|create|generate)\b[\s\S]{0,80}\b(selfie|photo|picture|pic|image|shot|snap)\b/,
+    /\b(can|could|would|will)\s+(you|u|i)\b[\s\S]{0,80}\b(selfie|photo|picture|pic|image|shot|snap)\b/,
+    /\b(new|another|more|your|ur)\b[\s\S]{0,40}\b(selfie|photo|picture|pic|image|shot|snap)\b/,
+    /\b(selfie|photo|picture|pic|image|shot|snap)\b[\s\S]{0,40}\b(please|pls|plz|rn|now|of you|from you|for me|your|ur)\b/,
+    /^\s*(selfie|photo|picture|pic|image|shot|snap)\??\s*$/,
+  ].some((pattern) => pattern.test(normalized));
+}
+
+async function saveImageCreditsRequiredMessage(
+  ctx: Parameters<typeof saveMessage>[0],
+  args: {
+    threadId: string;
+    userId: string;
+    agentName: string;
+    requiredCredits: number;
+    currentCredits: number;
+    promptMessageId?: string;
+  },
+) {
+  await saveMessage(ctx, components.agent, {
+    threadId: args.threadId,
+    userId: args.userId,
+    message: {
+      role: "assistant",
+      content: JSON.stringify({
+        type: "credits_required",
+        action: "image_request",
+        requiredCredits: args.requiredCredits,
+        currentCredits: args.currentCredits,
+        message: `You need at least ${args.requiredCredits} credits for this request.`,
+      }),
+    },
+    agentName: args.agentName,
+    ...(args.promptMessageId ? { promptMessageId: args.promptMessageId } : {}),
+  });
+}
+
 /**
  * Start a new conversation with an AI profile.
  * Creates an Agent thread and links it to the conversation.
@@ -87,6 +131,7 @@ export const sendMessage = mutation({
       v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
     ),
   },
+  returns: v.object({ messageId: v.string() }),
   handler: async (ctx, { conversationId, content, platform }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
@@ -109,16 +154,13 @@ export const sendMessage = mutation({
     }
 
     const currentCredits = profile.credits ?? 0;
-    const messageCost = 1;
+    const messageCost = TEXT_MESSAGE_CREDIT_COST;
+    const imageCost = CHAT_IMAGE_REQUEST_CREDIT_COST;
+    const isImageRequest = isLikelyChatImageRequest(content);
 
     if (currentCredits < messageCost) {
       throw new Error("Insufficient credits");
     }
-
-    // Deduct credits
-    await ctx.db.patch(profile._id, {
-      credits: currentCredits - messageCost,
-    });
 
     // Get AI profile data now to pass to action (avoids re-fetch)
     const aiProfile = await ctx.db.get(conversation.aiProfileId);
@@ -146,8 +188,28 @@ export const sendMessage = mutation({
       lastMessageAt: Date.now(),
       relationshipLevel: newLevel,
       compatibilityScore: newScore,
-      pendingPromptMessageId: messageId,
+      pendingPromptMessageId:
+        isImageRequest && currentCredits < imageCost ? null : messageId,
     });
+
+    if (isImageRequest && currentCredits < imageCost) {
+      await saveImageCreditsRequiredMessage(ctx, {
+        threadId: conversation.threadId,
+        userId: user._id,
+        agentName: aiProfile.name,
+        requiredCredits: imageCost,
+        currentCredits,
+        promptMessageId: messageId,
+      });
+
+      return { messageId };
+    }
+
+    if (!isImageRequest) {
+      await ctx.db.patch(profile._id, {
+        credits: currentCredits - messageCost,
+      });
+    }
 
     // Schedule async AI response generation with pre-fetched data
     await ctx.scheduler.runAfter(
@@ -531,6 +593,14 @@ export const adminUpdateProfile = mutation({
       throw new Error("Cannot admin-edit user-created profiles");
     }
 
+    if (
+      updates.avatarImageKey !== undefined &&
+      updates.avatarImageKey !== profile.avatarImageKey &&
+      !(profile.profileImageKeys ?? []).includes(updates.avatarImageKey)
+    ) {
+      throw new ConvexError("Avatar image must belong to this profile");
+    }
+
     let normalizedUsername: string | undefined;
     if (updates.username !== undefined) {
       normalizedUsername = normalizePublicProfileUsername(updates.username);
@@ -819,6 +889,9 @@ export const createChatImageRequestInternal = internalMutation({
     conversationId: v.id("aiConversations"),
     userId: v.string(), // Better Auth user ID (string, not v.id("users"))
     aiProfileId: v.id("aiProfiles"),
+    platform: v.optional(
+      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    ),
     prompt: v.string(),
     styleOptions: v.optional(
       v.object({
@@ -829,9 +902,10 @@ export const createChatImageRequestInternal = internalMutation({
       }),
     ),
   },
+  returns: v.union(v.id("chatImages"), v.null()),
   handler: async (
     ctx,
-    { conversationId, userId, aiProfileId, prompt, styleOptions },
+    { conversationId, userId, aiProfileId, platform, prompt, styleOptions },
   ) => {
     // Get user profile to check/deduct credits
     const profile = await ctx.db
@@ -845,11 +919,23 @@ export const createChatImageRequestInternal = internalMutation({
     }
 
     const currentCredits = profile.credits ?? 0;
-    const imageCost = 5;
+    const imageCost = CHAT_IMAGE_REQUEST_CREDIT_COST;
 
     if (currentCredits < imageCost) {
       console.log("Insufficient credits for agent image request");
-      // Don't throw, just return - the agent already sent a message
+      const conversation = await ctx.db.get(conversationId);
+      const aiProfile = await ctx.db.get(aiProfileId);
+
+      if (conversation?.threadId && aiProfile) {
+        await saveImageCreditsRequiredMessage(ctx, {
+          threadId: conversation.threadId,
+          userId,
+          agentName: aiProfile.name,
+          requiredCredits: imageCost,
+          currentCredits,
+        });
+      }
+
       return null;
     }
 
@@ -863,6 +949,7 @@ export const createChatImageRequestInternal = internalMutation({
       conversationId,
       userId,
       aiProfileId,
+      platform,
       prompt,
       styleOptions: styleOptions
         ? {
@@ -897,6 +984,9 @@ export const requestChatImage = mutation({
   args: {
     conversationId: v.id("aiConversations"),
     prompt: v.string(),
+    platform: v.optional(
+      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    ),
     styleOptions: v.optional(
       v.object({
         hairstyle: v.optional(v.string()),
@@ -906,7 +996,8 @@ export const requestChatImage = mutation({
       }),
     ),
   },
-  handler: async (ctx, { conversationId, prompt, styleOptions }) => {
+  returns: v.id("chatImages"),
+  handler: async (ctx, { conversationId, prompt, platform, styleOptions }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new Error("Not authenticated");
@@ -944,6 +1035,7 @@ export const requestChatImage = mutation({
       conversationId,
       userId: user._id,
       aiProfileId: conversation.aiProfileId,
+      platform,
       prompt,
       styleOptions,
       status: "pending",
@@ -954,6 +1046,7 @@ export const requestChatImage = mutation({
     if (conversation.threadId) {
       const styleDescription = styleOptions
         ? [
+            "Send me a selfie",
             styleOptions.hairstyle && `with ${styleOptions.hairstyle}`,
             styleOptions.clothing && `wearing ${styleOptions.clothing}`,
             styleOptions.scene && `in a ${styleOptions.scene} setting`,

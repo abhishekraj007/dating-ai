@@ -31,7 +31,7 @@ export function buildImagePromptCore(input: ImagePromptInput): string {
   // quality dating profile photo") was redundant with the photorealistic
   // preamble and paradoxically primed the model to over-smooth skin or
   // amplify cues like freckles.
-  const realismCues = "natural realistic skin, dating profile photo look";
+  const realismCues = "";
 
   const settingWithContext = [
     input.setting,
@@ -81,7 +81,7 @@ export function buildImagePromptCore(input: ImagePromptInput): string {
   // features). `withReferenceClause` is preserved on the input type for
   // backward compat but is now a no-op.
 
-  prompt += ` ${INLINE_NEGATIVES}`;
+  // prompt += ` ${INLINE_NEGATIVES}`;
   return prompt;
 }
 

@@ -14,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -30,19 +29,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  Plus,
-  Trash2,
-  X,
-  ImagePlus,
-  Loader2,
-  Pencil,
-  WandSparkles,
-} from "lucide-react";
+import { Plus, Trash2, X, Loader2, Pencil, WandSparkles } from "lucide-react";
 import { GalleryUpload } from "@/components/gallery-upload";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AvatarImageEditor } from "./avatar-image-editor";
 import type {
   AIProfile,
   CharacterFormData,
@@ -104,11 +96,13 @@ interface EditCharacterSheetProps {
   isUploadingGallery: boolean;
   isGeneratingShowcaseImage: boolean;
   deletingImageKey: string | null;
+  selectingAvatarImageKey: string | null;
   avatarInputRef: React.RefObject<HTMLInputElement | null>;
   galleryInputRef: React.RefObject<HTMLInputElement | null>;
   onAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onGalleryUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDeleteImage: (key: string, type: "avatar" | "gallery") => void;
+  onSelectShowcaseAvatar: (key: string) => void;
   onGenerateShowcaseImage: () => void;
   onSave: () => void;
   onDeleteProfile: () => void;
@@ -135,11 +129,13 @@ export function EditCharacterSheet({
   isUploadingGallery,
   isGeneratingShowcaseImage,
   deletingImageKey,
+  selectingAvatarImageKey,
   avatarInputRef,
   galleryInputRef,
   onAvatarUpload,
   onGalleryUpload,
   onDeleteImage,
+  onSelectShowcaseAvatar,
   onGenerateShowcaseImage,
   onSave,
   onDeleteProfile,
@@ -183,62 +179,19 @@ export function EditCharacterSheet({
 
         <div className="flex-1 overflow-y-auto px-6">
           <div className="space-y-6 py-6">
-            {/* Avatar Preview */}
+            {/* Avatar */}
             {profile && (
-              <div className="flex justify-center">
-                <div className="relative">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage
-                      className="object-cover position-top"
-                      src={profile.avatarUrl ?? undefined}
-                    />
-                    <AvatarFallback className="text-2xl">
-                      {profile.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  {!isReadOnly && (
-                    <>
-                      <input
-                        ref={avatarInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={onAvatarUpload}
-                      />
-                      <Button
-                        size="icon"
-                        variant="secondary"
-                        className="absolute bottom-0 right-0 h-8 w-8 rounded-full"
-                        onClick={() => avatarInputRef.current?.click()}
-                        disabled={isUploadingAvatar}
-                      >
-                        {isUploadingAvatar ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <ImagePlus className="h-4 w-4" />
-                        )}
-                      </Button>
-                      {profile.avatarImageKey && (
-                        <Button
-                          size="icon"
-                          variant="destructive"
-                          className="absolute top-0 right-0 h-6 w-6 rounded-full"
-                          onClick={() =>
-                            onDeleteImage(profile.avatarImageKey!, "avatar")
-                          }
-                          disabled={deletingImageKey === profile.avatarImageKey}
-                        >
-                          {deletingImageKey === profile.avatarImageKey ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <X className="h-3 w-3" />
-                          )}
-                        </Button>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
+              <AvatarImageEditor
+                profile={profile}
+                isReadOnly={isReadOnly}
+                isUploadingAvatar={isUploadingAvatar}
+                deletingImageKey={deletingImageKey}
+                selectingAvatarImageKey={selectingAvatarImageKey}
+                avatarInputRef={avatarInputRef}
+                onAvatarUpload={onAvatarUpload}
+                onDeleteAvatar={(key) => onDeleteImage(key, "avatar")}
+                onSelectShowcaseAvatar={onSelectShowcaseAvatar}
+              />
             )}
 
             {/* Name */}

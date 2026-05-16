@@ -20,6 +20,7 @@ export function useRequestChatImage() {
   const requestImage = async (
     conversationId: string,
     styleOptions?: ImageRequestOptions,
+    platform?: "ios" | "android" | "web",
   ) => {
     const normalizedDescription = styleOptions?.description?.trim();
     const normalizedStyleOptions = styleOptions
@@ -30,7 +31,8 @@ export function useRequestChatImage() {
       : undefined;
 
     // Build a prompt from style options
-    const promptParts: string[] = ["Generate a selfie"];
+    const promptParts: string[] = ["Send me a selfie"];
+
     if (normalizedStyleOptions?.hairstyle) {
       promptParts.push(`with ${normalizedStyleOptions.hairstyle} hairstyle`);
     }
@@ -49,6 +51,7 @@ export function useRequestChatImage() {
     return await requestMutation({
       conversationId: conversationId as Id<"aiConversations">,
       prompt,
+      platform,
       styleOptions: normalizedStyleOptions,
     });
   };

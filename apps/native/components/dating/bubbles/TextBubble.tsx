@@ -63,7 +63,7 @@ export function UserTextBubble({ content, time, onLongPress }: UserTextProps) {
           <View className="bg-pink-500 rounded-2xl rounded-br-sm px-4 py-3">
             <Text className="text-white">{content}</Text>
           </View>
-          <Text className="text-muted text-xs text-right mt-1">{time}</Text>
+          {/* <Text className="text-muted text-xs text-right mt-1">{time}</Text> */}
         </View>
       </View>
     </Pressable>

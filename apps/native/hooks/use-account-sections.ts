@@ -18,7 +18,7 @@ import {
 import { Alert, Platform, Share } from "react-native";
 import { useTranslation } from "@/hooks/use-translation";
 
-const FALLBACK_ANDROID_APP_ID = "com.noosperai.datingai";
+const FALLBACK_ANDROID_APP_ID = "com.noosperai.feelchat";
 
 type RuntimeAppConfig = {
   baseWebUrl?: string;
@@ -82,7 +82,7 @@ export const useAccountSections = ({
   const router = useRouter();
   const { t } = useTranslation();
   const runtimeConfig = useQuery(
-    (api as any).features.appConfig.queries.getPublicAppConfig,
+    api.features.appConfig.queries.getPublicAppConfig,
   ) as RuntimeAppConfig | undefined;
 
   const openExternal = async (url: string, fallbackMessage: string) => {

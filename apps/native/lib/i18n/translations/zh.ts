@@ -158,6 +158,7 @@ export const zh: TranslationMap = {
   "chat.conversationNotFound": "未找到对话",
   "chat.startConversation": "开始对话",
   "chat.sayHello": "向 {{name}} 打个招呼吧！",
+  "chat.aiCharacter": "AI 角色",
   "chat.aiCompanion": "你的 AI 伙伴",
   "chat.selfie": "自拍",
   "chat.selfieLabel": "AI 自拍",
@@ -177,6 +178,7 @@ export const zh: TranslationMap = {
   "profile.personality": "性格",
   "profile.interests": "兴趣",
   "profile.photos": "照片",
+  "chat.creditsRequiredMessage": "此请求至少需要 {{count}} 个积分。",
   "profile.compatibility": "兼容性",
   "myCreation.emptyTitle": "还没有角色",
   "myCreation.emptyDescription":

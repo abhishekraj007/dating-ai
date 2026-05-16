@@ -104,10 +104,10 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const { conversation, isLoading: isLoadingConversation } =
     useConversation(conversationId);
   const viewerData = useQuery(api.user.fetchUserAndProfile);
-  const premiumState = useQuery(api.features.premium.queries.isPremium);
   const threadId = conversation?.threadId;
   const profile = (conversation as any)?.profile;
   const viewerProfile = viewerData?.profile;
+  const viewerIsPremium = Boolean(viewerProfile?.isPremium);
   const profileHref = buildPublicProfileHref(
     profile?.gender === "male" ? "guys" : "girls",
     profile?.username,
@@ -369,7 +369,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
                 avatarUrl={profile?.avatarUrl}
                 profileName={profile?.name}
                 isStreaming={msg.isStreaming}
-                viewerIsPremium={Boolean(premiumState?.isPremium)}
+                viewerIsPremium={viewerIsPremium}
                 viewerName={
                   viewerProfile?.name ?? viewerData?.userMetadata?.name ?? null
                 }

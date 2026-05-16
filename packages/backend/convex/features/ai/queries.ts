@@ -801,14 +801,10 @@ export const getChatImageUrl = query({
   args: {
     imageKey: v.string(),
   },
+  returns: v.union(v.string(), v.null()),
   handler: async (ctx, { imageKey }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
-      return null;
-    }
-
-    const premiumState = await getPremiumAccessSnapshot(ctx);
-    if (!premiumState.isPremium) {
       return null;
     }
 

@@ -16,20 +16,38 @@ import {
   CardTitle,
 } from "./ui/card";
 import { Separator } from "./ui/separator";
-import { Shield } from "lucide-react";
+import { Loader2, Shield } from "lucide-react";
 
-export default function AuthScreen() {
+interface AuthScreenProps {
+  isPending?: boolean;
+  pendingMessage?: string;
+}
+
+export default function AuthScreen({
+  isPending = false,
+  pendingMessage,
+}: AuthScreenProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
+  const isSubmitting = isLoading || isPending;
+  const statusMessage =
+    pendingMessage ?? (isLoading ? "Signing in..." : undefined);
 
   const handleGoogleSignIn = async () => {
+    if (isSubmitting) return;
+
     setIsLoading(true);
     const callbackURL =
       typeof window !== "undefined" ? `${window.location.origin}/` : "/";
-    await authClient.signIn.social({
-      provider: "google",
-      // Must be absolute URL for multi-app auth
-      callbackURL,
-    });
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+        // Must be absolute URL for multi-app auth
+        callbackURL,
+      });
+    } catch {
+      toast.error("Failed to start Google sign in");
+      setIsLoading(false);
+    }
   };
 
   const form = useForm({
@@ -80,7 +98,7 @@ export default function AuthScreen() {
           <Button
             variant="outline"
             onClick={handleGoogleSignIn}
-            disabled={isLoading}
+            disabled={isSubmitting}
             className="w-full"
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -135,7 +153,7 @@ export default function AuthScreen() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    disabled={isLoading}
+                    disabled={isSubmitting}
                   />
                   {field.state.meta.errors.length > 0 && (
                     <p className="text-sm text-destructive">
@@ -158,7 +176,7 @@ export default function AuthScreen() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    disabled={isLoading}
+                    disabled={isSubmitting}
                   />
                   {field.state.meta.errors.length > 0 && (
                     <p className="text-sm text-destructive">
@@ -174,15 +192,25 @@ export default function AuthScreen() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={!state.canSubmit || state.isSubmitting || isLoading}
+                  disabled={
+                    !state.canSubmit || state.isSubmitting || isSubmitting
+                  }
                 >
-                  {state.isSubmitting || isLoading
+                  {state.isSubmitting || isSubmitting
                     ? "Signing in..."
                     : "Sign In"}
                 </Button>
               )}
             </form.Subscribe>
           </form>
+          <div className="min-h-9">
+            {statusMessage ? (
+              <div className="flex h-9 items-center justify-center gap-2 rounded-md bg-muted/60 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>{statusMessage}</span>
+              </div>
+            ) : null}
+          </div>
         </CardContent>
       </Card>
     </div>

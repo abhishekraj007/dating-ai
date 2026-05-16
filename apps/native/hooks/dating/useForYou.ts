@@ -104,13 +104,29 @@ export function useForYouProfiles(initialNumItems: number = 20) {
   }, [filterSignature]);
 
   useEffect(() => {
-    if (!results || results.length === 0) {
+    if (!results) {
       return;
     }
 
+    const resultProfileIds = new Set(
+      (results as ForYouProfile[]).map((profile) => String(profile._id)),
+    );
+
     setProfiles((currentProfiles) => {
       let hasChanges = false;
-      const nextProfiles = [...currentProfiles];
+      const nextProfiles = currentProfiles.filter((profile) => {
+        const profileId = String(profile._id);
+        const shouldKeep =
+          resultProfileIds.has(profileId) ||
+          removedProfileIdsRef.current.has(profileId);
+
+        if (!shouldKeep) {
+          seenProfileIdsRef.current.delete(profileId);
+          hasChanges = true;
+        }
+
+        return shouldKeep;
+      });
 
       for (const profile of results as ForYouProfile[]) {
         const profileId = String(profile._id);

@@ -34,7 +34,10 @@ export const SHOWCASE_VIGNETTE_FALLBACK_MODELS = (
   .filter(Boolean);
 
 export const IS_DEV =
-  process.env.CONVEX_CLOUD_URL?.includes("cheery-akita") ?? false;
+  process.env.CONVEX_CLOUD_URL?.includes("cheery-akita") ||
+  process.env.SITE_URL?.includes("dev") ||
+  process.env.APP_ENV === "development" ||
+  false;
 
 export const JOB_PROGRESS_STEPS: JobProgressStep[] = [
   "candidate_generation",

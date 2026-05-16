@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 type NsfwPlatform = "ios" | "android" | "web";
@@ -32,6 +33,7 @@ type ConfigForm = {
   shareUrl: string;
   iosAppStoreId: string;
   androidAppId: string;
+  revenueCatCreditProductIds: string;
   showMyCreationTab: boolean;
   nsfwEnabledPlatforms: Array<NsfwPlatform>;
 };
@@ -45,8 +47,42 @@ const emptyForm: ConfigForm = {
   shareUrl: "",
   iosAppStoreId: "",
   androidAppId: "",
+  revenueCatCreditProductIds: "[]",
   showMyCreationTab: false,
   nsfwEnabledPlatforms: [],
+};
+
+const formatStringArrayValue = (value?: Array<string>) => {
+  return JSON.stringify(value ?? [], null, 2);
+};
+
+const parseStringArrayValue = (value: string, label: string) => {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return [];
+  }
+
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch {
+    throw new Error(`${label} must be a valid JSON array of strings`);
+  }
+
+  if (
+    !Array.isArray(parsed) ||
+    parsed.some((item) => typeof item !== "string")
+  ) {
+    throw new Error(`${label} must be a JSON array of strings`);
+  }
+
+  return Array.from(
+    new Set(
+      parsed.map((item) => item.trim()).filter((item) => item.length > 0),
+    ),
+  );
 };
 
 export default function AppConfigPage() {
@@ -81,6 +117,9 @@ export default function AppConfigPage() {
       shareUrl: adminConfig.shareUrl ?? "",
       iosAppStoreId: adminConfig.iosAppStoreId ?? "",
       androidAppId: adminConfig.androidAppId ?? "",
+      revenueCatCreditProductIds: formatStringArrayValue(
+        adminConfig.revenueCatCreditProductIds,
+      ),
       showMyCreationTab: adminConfig.showMyCreationTab ?? false,
       nsfwEnabledPlatforms: (adminConfig.nsfwEnabledPlatforms ??
         []) as Array<NsfwPlatform>,
@@ -95,6 +134,8 @@ export default function AppConfigPage() {
       helpCenterUrl: publicConfig?.helpCenterUrl ?? "-",
       supportUrl: publicConfig?.supportUrl ?? "-",
       shareUrl: publicConfig?.shareUrl ?? "-",
+      revenueCatCreditProductIds:
+        publicConfig?.revenueCatCreditProductIds?.join(", ") ?? "-",
     };
   }, [publicConfig]);
 
@@ -111,6 +152,10 @@ export default function AppConfigPage() {
     shareUrl: nextForm.shareUrl || undefined,
     iosAppStoreId: nextForm.iosAppStoreId || undefined,
     androidAppId: nextForm.androidAppId || undefined,
+    revenueCatCreditProductIds: parseStringArrayValue(
+      nextForm.revenueCatCreditProductIds,
+      "RevenueCat credit product IDs",
+    ),
     showMyCreationTab: nextForm.showMyCreationTab,
     nsfwEnabledPlatforms: nextForm.nsfwEnabledPlatforms,
   });
@@ -268,7 +313,24 @@ export default function AppConfigPage() {
                   label="Android App ID"
                   value={form.androidAppId}
                   onChange={(value) => onChange("androidAppId", value)}
-                  placeholder="com.noosperai.datingai"
+                  placeholder="com.noosperai.feelchat"
+                />
+
+                <Separator />
+
+                <ArrayField
+                  id="revenueCatCreditProductIds"
+                  label="RevenueCat Credit Product IDs"
+                  value={form.revenueCatCreditProductIds}
+                  onChange={(value) =>
+                    onChange("revenueCatCreditProductIds", value)
+                  }
+                  placeholder={`[
+  "feelchat.rc_credit_1999",
+  "feelchat.rc_credit_3900",
+  "feelchat.rc_credit_4999",
+  "feelchat.rc_credit_8999"
+]`}
                 />
               </CardContent>
             </Card>
@@ -368,6 +430,10 @@ export default function AppConfigPage() {
                   />
                   <ResolvedRow label="Support" value={resolved.supportUrl} />
                   <ResolvedRow label="Share" value={resolved.shareUrl} />
+                  <ResolvedRow
+                    label="Credit IDs"
+                    value={resolved.revenueCatCreditProductIds}
+                  />
                   <Separator className="my-3" />
                   <p className="text-xs text-muted-foreground">
                     Last updated:{" "}
@@ -406,6 +472,33 @@ function Field({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
+      />
+    </div>
+  );
+}
+
+function ArrayField({
+  id,
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <Textarea
+        id={id}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="min-h-36 font-mono text-xs sm:text-sm"
       />
     </div>
   );

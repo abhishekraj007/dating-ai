@@ -17,8 +17,8 @@ import { authComponent } from "../lib/betterAuth";
  * @returns The user's subject ID from the JWT, or undefined if not authenticated
  */
 export const getUserId = async (ctx: GenericCtx<DataModel>) => {
-	const identity = await ctx.auth.getUserIdentity();
-	return identity?.subject;
+  const identity = await ctx.auth.getUserIdentity();
+  return identity?.subject;
 };
 
 /**
@@ -33,7 +33,7 @@ export const getUserId = async (ctx: GenericCtx<DataModel>) => {
  * @returns The Better Auth user document, or null if not authenticated
  */
 export async function safeGetUser(ctx: GenericCtx<DataModel>) {
-	return await authComponent.safeGetAuthUser(ctx);
+  return await authComponent.safeGetAuthUser(ctx);
 }
 
 /**
@@ -51,7 +51,7 @@ export async function safeGetUser(ctx: GenericCtx<DataModel>) {
  * @throws Error with message "Unauthenticated" if not authenticated
  */
 export async function getUser(ctx: GenericCtx<DataModel>) {
-	return await authComponent.getAuthUser(ctx);
+  return await authComponent.getAuthUser(ctx);
 }
 
 /**
@@ -68,18 +68,18 @@ export async function getUser(ctx: GenericCtx<DataModel>) {
  * @returns Combined user and profile data, or null if not authenticated
  */
 export async function getUserAndProfile(ctx: QueryCtx | MutationCtx) {
-	const userMetadata = await authComponent.safeGetAuthUser(ctx);
-	if (!userMetadata) {
-		return null;
-	}
-	const profile = await ctx.db
-		.query("profile")
-		.withIndex("by_auth_user_id", (q) => q.eq("authUserId", userMetadata._id))
-		.unique();
-	return {
-		userMetadata,
-		profile,
-	};
+  const userMetadata = await authComponent.safeGetAuthUser(ctx);
+  if (!userMetadata) {
+    return null;
+  }
+  const profile = await ctx.db
+    .query("profile")
+    .withIndex("by_auth_user_id", (q) => q.eq("authUserId", userMetadata._id))
+    .unique();
+  return {
+    userMetadata,
+    profile,
+  };
 }
 
 /**
@@ -93,16 +93,16 @@ export async function getUserAndProfile(ctx: QueryCtx | MutationCtx) {
  * @throws Error with message "Unauthenticated" if not authenticated
  */
 export async function getUserAndProfileOrThrow(ctx: QueryCtx | MutationCtx) {
-	const userMetadata = await authComponent.getAuthUser(ctx);
-	const profile = await ctx.db
-		.query("profile")
-		.withIndex("by_auth_user_id", (q) => q.eq("authUserId", userMetadata._id))
-		.unique();
-	if (!profile) {
-		throw new Error("No Profile Associated with User");
-	}
-	return {
-		userMetadata,
-		profile,
-	};
+  const userMetadata = await authComponent.getAuthUser(ctx);
+  const profile = await ctx.db
+    .query("profile")
+    .withIndex("by_auth_user_id", (q) => q.eq("authUserId", userMetadata._id))
+    .unique();
+  if (!profile) {
+    throw new Error("No Profile Associated with User");
+  }
+  return {
+    userMetadata,
+    profile,
+  };
 }

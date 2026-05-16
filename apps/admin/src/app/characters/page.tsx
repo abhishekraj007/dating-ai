@@ -72,6 +72,7 @@ export default function CharactersPage() {
     isUploadingGallery,
     isGeneratingShowcaseImage,
     deletingImageKey,
+    selectingAvatarImageKey,
     formData,
     newInterest,
     showcasePromptSuggestion,
@@ -91,6 +92,7 @@ export default function CharactersPage() {
     handleAvatarUpload,
     handleGalleryUpload,
     handleDeleteImage,
+    handleSelectShowcaseAvatar,
     handleGenerateShowcaseImage,
     handleSave,
     handleDeleteProfile,
@@ -291,11 +293,13 @@ export default function CharactersPage() {
             isUploadingGallery={isUploadingGallery}
             isGeneratingShowcaseImage={isGeneratingShowcaseImage}
             deletingImageKey={deletingImageKey}
+            selectingAvatarImageKey={selectingAvatarImageKey}
             avatarInputRef={avatarInputRef}
             galleryInputRef={galleryInputRef}
             onAvatarUpload={handleAvatarUpload}
             onGalleryUpload={handleGalleryUpload}
             onDeleteImage={handleDeleteImage}
+            onSelectShowcaseAvatar={handleSelectShowcaseAvatar}
             onGenerateShowcaseImage={handleGenerateShowcaseImage}
             onSave={handleSave}
             onDeleteProfile={handleDeleteProfile}

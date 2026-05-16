@@ -162,6 +162,7 @@ export const ko: TranslationMap = {
   "chat.conversationNotFound": "대화를 찾을 수 없습니다",
   "chat.startConversation": "대화 시작하기",
   "chat.sayHello": "{{name}}에게 인사하세요!",
+  "chat.aiCharacter": "AI 캐릭터",
   "chat.aiCompanion": "당신의 AI 동반자",
   "chat.selfie": "셀피",
   "chat.selfieLabel": "AI 셀피",
@@ -177,6 +178,8 @@ export const ko: TranslationMap = {
   "chat.typeMessage": "메시지를 입력하세요...",
   "profile.notFound": "프로필을 찾을 수 없습니다",
   "profile.aboutMe": "소개",
+  "chat.creditsRequiredMessage":
+    "이 요청에는 최소 {{count}} 크레딧이 필요합니다.",
   "profile.lookingFor": "찾고 있는 것",
   "profile.personality": "성격",
   "profile.interests": "관심사",
@@ -274,8 +277,7 @@ export const ko: TranslationMap = {
   "imageRequest.clothing": "의상",
   "imageRequest.scene": "장면",
   "imageRequest.extraDetailsLabel": "추가 세부 정보",
-  "imageRequest.extraDetailsPlaceholder":
-    "어뗌너 종류의 사진을 보고 싶나요?",
+  "imageRequest.extraDetailsPlaceholder": "어뗌너 종류의 사진을 보고 싶나요?",
   "imageRequest.generatePhoto": "사진 생성",
   "imageRequest.insufficientCredits":
     "크레딧이 부족합니다. 최소 5크레딧이 필요합니다.",

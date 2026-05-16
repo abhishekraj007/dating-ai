@@ -22,9 +22,9 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withTiming,
-  runOnJS,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { scheduleOnRN } from "react-native-worklets";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -93,7 +93,7 @@ export function ZoomableImage({
   // Animated close (for close button)
   const handleClose = useCallback(() => {
     opacity.value = withTiming(0, { duration: 200 }, () => {
-      runOnJS(closeModal)();
+      scheduleOnRN(closeModal);
     });
   }, [opacity, closeModal]);
 
@@ -131,7 +131,7 @@ export function ZoomableImage({
           e.translationY > 0 ? screenHeight : -screenHeight,
           { duration: 150 },
           () => {
-            runOnJS(closeModal)();
+            scheduleOnRN(closeModal);
           },
         );
       } else {

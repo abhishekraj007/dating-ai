@@ -7,10 +7,7 @@ import { createAIProfileAgent, getAvailableAgentProviders } from "./agent";
 import { r2 } from "../../uploads";
 import { saveMessage } from "@convex-dev/agent";
 import { generateImageWithFallback } from "./imageGeneration";
-
-// Check if we're in development mode based on Convex deployment URL
-// Dev deployments typically have animal-based names like "cheery-akita"
-const isDev = process.env.CONVEX_CLOUD_URL?.includes("cheery-akita") ?? false;
+import { IS_DEV } from "./profileGen/constants";
 
 type ChatErrorCode = "rate_limited" | "generation_failed";
 
@@ -360,12 +357,13 @@ export const generateResponse = internalAction({
 
             // Create the image request via mutation
             try {
-              await ctx.runMutation(
+              const requestId = await ctx.runMutation(
                 internal.features.ai.mutations.createChatImageRequestInternal,
                 {
                   conversationId,
                   userId: convUserId!,
                   aiProfileId: profileId!,
+                  platform,
                   prompt: args.description || "A selfie",
                   styleOptions: {
                     hairstyle: args.hairstyle,
@@ -375,6 +373,13 @@ export const generateResponse = internalAction({
                   },
                 },
               );
+              if (!requestId) {
+                await ctx.runMutation(
+                  internal.features.ai.mutations.finalizePendingPromptState,
+                  { conversationId, promptMessageId },
+                );
+                return null;
+              }
               console.log("Image request created successfully");
               // Only create one image request per response
               await ctx.runMutation(
@@ -415,7 +420,7 @@ function buildImagePrompt(
   },
 ): string {
   const baseDescription = [
-    `A photorealistic selfie of a ${profile.age ?? 25}-year-old`,
+    `A realistic selfie`,
     profile.gender ?? "woman",
     profile.ethnicity ? `of ${profile.ethnicity} ethnicity` : "",
     `named ${profile.name}`,
@@ -518,7 +523,7 @@ export const generateChatImage = internalAction({
     }
 
     try {
-      console.log("Generating image, isDev:", isDev);
+      console.log("Generating image, isDev:", IS_DEV);
 
       const prompt = buildImagePrompt(
         {
@@ -537,11 +542,22 @@ export const generateChatImage = internalAction({
 
       console.log("Using reference image:", referenceImageUrl ? "yes" : "no");
 
+      const appConfig = await ctx.runQuery(
+        api.features.appConfig.queries.getPublicAppConfig,
+        {},
+      );
+      const nsfwEnabledPlatforms = appConfig?.nsfwEnabledPlatforms ?? [];
+      const nsfwEnabled =
+        request.platform !== undefined &&
+        nsfwEnabledPlatforms.includes(request.platform);
+
       const imageResult = await generateImageWithFallback({
         prompt,
         aspectRatio: "9:16",
         referenceImageUrls: referenceImageUrl ? [referenceImageUrl] : [],
-        isDev,
+        primaryFalModel: "qwen-image-2-edit",
+        enableSafety: !nsfwEnabled,
+        isDev: IS_DEV,
         devWidth: 512,
         devHeight: 768,
       });

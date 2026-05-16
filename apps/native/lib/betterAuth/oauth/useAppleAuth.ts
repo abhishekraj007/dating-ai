@@ -17,6 +17,12 @@ export const useAppleAuth = () => {
   const signIn = async () => {
     setIsLoading(true);
     try {
+      const isAvailable = await AppleAuthentication.isAvailableAsync();
+
+      if (!isAvailable) {
+        throw new Error("Apple Sign-In is not available on this device");
+      }
+
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -28,20 +34,31 @@ export const useAppleAuth = () => {
         throw new Error("Failed to get Apple identity token");
       }
 
-      await authClient.signIn.social({
+      const result = await authClient.signIn.social({
         provider: "apple",
         idToken: {
           token: credential.identityToken,
-          nonce: credential.authorizationCode ?? undefined,
-          accessToken: credential.identityToken,
         },
       });
-    } catch (error) {
-      if (!isAppleSignInCancelled(error)) {
-        console.error("Apple sign in error:", error);
+
+      if (result?.error) {
+        throw new Error(result.error.message || "Apple sign in failed");
       }
-    } finally {
+
+      const session = await authClient.getSession();
+
+      if (!session.data) {
+        setIsLoading(false);
+      }
+    } catch (error) {
       setIsLoading(false);
+
+      if (isAppleSignInCancelled(error)) {
+        return;
+      }
+
+      console.error("Apple sign in error:", error);
+      throw error;
     }
   };
 

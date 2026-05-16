@@ -5,8 +5,19 @@ import type { DataModel } from "../../_generated/dataModel";
 import { betterAuth } from "better-auth";
 import { authComponent } from "./component";
 
+// web client id com.noosperai.feelchat.web
+
 const siteUrl = process.env.SITE_URL!;
-const nativeAppUrl = process.env.NATIVE_APP_URL || "datingai://";
+const authBaseUrl = process.env.CONVEX_SITE_URL ?? siteUrl;
+const nativeAppUrl = process.env.NATIVE_APP_URL || "feelchat://";
+const iosAppBundleIdentifier = "com.noosperai.feelchat";
+const appleClientId = process.env.APPLE_CLIENT_ID || iosAppBundleIdentifier;
+// Generated via: node scripts/generate-apple-secret.mjs
+const appleClientSecret = process.env.APPLE_CLIENT_SECRET;
+
+const appleAudience = Array.from(
+  new Set([appleClientId, iosAppBundleIdentifier]),
+);
 const extraTrustedOrigins = (process.env.TRUSTED_ORIGINS || "")
   .split(",")
   .map((origin) => origin.trim())
@@ -14,6 +25,7 @@ const extraTrustedOrigins = (process.env.TRUSTED_ORIGINS || "")
 const trustedOrigins = Array.from(
   new Set([
     siteUrl,
+    authBaseUrl,
     nativeAppUrl,
     // Local development
     "http://localhost:3004", // admin local
@@ -23,6 +35,7 @@ const trustedOrigins = Array.from(
     "https://admin-dating.up.railway.app",
     "https://web-dating.up.railway.app",
     "https://admin-dating-dev.up.railway.app",
+    "https://appleid.apple.com",
     ...extraTrustedOrigins,
   ]),
 );
@@ -35,7 +48,7 @@ export function createAuth(
     logger: {
       disabled: optionsOnly,
     },
-    baseURL: siteUrl,
+    baseURL: authBaseUrl,
     trustedOrigins,
     database: authComponent.adapter(ctx),
     user: {
@@ -52,6 +65,12 @@ export function createAuth(
         prompt: "select_account",
         clientId: process.env.GOOGLE_CLIENT_ID as string,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      },
+      apple: {
+        clientId: appleClientId,
+        ...(appleClientSecret ? { clientSecret: appleClientSecret } : {}),
+        appBundleIdentifier: iosAppBundleIdentifier,
+        audience: appleAudience,
       },
     },
     // crossDomain plugin enables multi-app OAuth by skipping state cookie check

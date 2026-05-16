@@ -49,6 +49,7 @@ export function useRequestChatImage() {
     return requestChatImage({
       conversationId: conversationId as Id<"aiConversations">,
       prompt,
+      platform: "web",
       styleOptions: normalizedStyleOptions,
     });
   };

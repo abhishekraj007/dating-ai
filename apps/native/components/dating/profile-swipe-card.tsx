@@ -3,12 +3,11 @@ import {
   useWindowDimensions,
   StyleSheet,
   Pressable,
-  ScrollView,
   Text,
 } from "react-native";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 // import { Text } from "@/components/ui/text";
-import { Chip } from "heroui-native";
+import { Chip, Skeleton } from "heroui-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
@@ -16,12 +15,12 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withTiming,
-  runOnJS,
   interpolate,
   Extrapolation,
   type SharedValue,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { scheduleOnRN } from "react-native-worklets";
 import type { ForYouProfile } from "@/hooks/dating/useForYou";
 import { getChipTone } from "@/utils";
 
@@ -65,8 +64,10 @@ export function ProfileSwipeCard({
   const rotation = useSharedValue(0);
   const scale = useSharedValue(1);
   const didPan = useSharedValue(false);
+  const imageOpacity = useSharedValue(profile.avatarUrl ? 0 : 1);
   const blockCardPressUntilRef = useRef(0);
   const hasReportedImageReadyRef = useRef(false);
+  const [isImageReady, setIsImageReady] = useState(!profile.avatarUrl);
 
   const handleAuthRequired = () => {
     if (onAuthRequired) {
@@ -85,7 +86,17 @@ export function ProfileSwipeCard({
     onPress();
   };
 
+  const hideImageSkeleton = () => {
+    setIsImageReady(true);
+  };
+
   const reportImageReady = () => {
+    imageOpacity.value = withTiming(1, { duration: 260 }, (finished) => {
+      if (finished) {
+        scheduleOnRN(hideImageSkeleton);
+      }
+    });
+
     if (!isFirst || !onImageReady || hasReportedImageReadyRef.current) {
       return;
     }
@@ -93,11 +104,25 @@ export function ProfileSwipeCard({
     onImageReady();
   };
 
+  const handleImageError = () => {
+    imageOpacity.value = 0;
+  };
+
   useEffect(() => {
+    hasReportedImageReadyRef.current = false;
+    setIsImageReady(!profile.avatarUrl);
+    imageOpacity.value = profile.avatarUrl ? 0 : 1;
+
     if (!profile.avatarUrl) {
-      reportImageReady();
+      setIsImageReady(true);
     }
-  }, [profile.avatarUrl]);
+  }, [profile._id, profile.avatarUrl]);
+
+  const imageAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: imageOpacity.value,
+    };
+  });
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {
@@ -108,7 +133,7 @@ export function ProfileSwipeCard({
         Math.abs(event.translationX) > 8 || Math.abs(event.translationY) > 8;
       if (hasMeaningfulPan && !didPan.value) {
         didPan.value = true;
-        runOnJS(markPanInteraction)();
+        scheduleOnRN(markPanInteraction);
       }
       translateX.value = event.translationX;
       translateY.value = event.translationY;
@@ -134,13 +159,13 @@ export function ProfileSwipeCard({
 
       // If not authenticated and user swiped, snap back and prompt login
       if (!isAuthenticated && (swipedRight || swipedLeft)) {
-        runOnJS(markPanInteraction)();
+        scheduleOnRN(markPanInteraction);
         translateX.value = withSpring(0);
         translateY.value = withSpring(0);
         rotation.value = withSpring(0);
         scale.value = withSpring(1);
         if (dragX) dragX.value = withSpring(0);
-        runOnJS(handleAuthRequired)();
+        scheduleOnRN(handleAuthRequired);
         return;
       }
 
@@ -148,7 +173,7 @@ export function ProfileSwipeCard({
         // Swipe right - like
         if (dragX) dragX.value = withTiming(0, { duration: 150 });
         translateX.value = withTiming(width * 1.5, { duration: 300 }, () => {
-          runOnJS(onSwipeRight)();
+          scheduleOnRN(onSwipeRight);
         });
         rotation.value = withTiming(30);
         scale.value = withTiming(0.8);
@@ -156,7 +181,7 @@ export function ProfileSwipeCard({
         // Swipe left - skip
         if (dragX) dragX.value = withTiming(0, { duration: 150 });
         translateX.value = withTiming(-width * 1.5, { duration: 300 }, () => {
-          runOnJS(onSwipeLeft)();
+          scheduleOnRN(onSwipeLeft);
         });
         rotation.value = withTiming(-30);
         scale.value = withTiming(0.8);
@@ -229,21 +254,28 @@ export function ProfileSwipeCard({
         ]}
       >
         {/* Profile Image */}
-        <Image
-          source={
-            profile.avatarUrl
-              ? {
-                  uri: profile.avatarUrl,
-                  cacheKey: profile.avatarImageKey ?? String(profile._id),
-                }
-              : undefined
-          }
-          style={styles.image}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-          onLoad={reportImageReady}
-          onError={reportImageReady}
-        />
+        {!isImageReady && (
+          <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
+        )}
+
+        <Animated.View style={[styles.image, imageAnimatedStyle]}>
+          <Image
+            source={
+              profile.avatarUrl
+                ? {
+                    uri: profile.avatarUrl,
+                    cacheKey: profile.avatarImageKey ?? String(profile._id),
+                  }
+                : undefined
+            }
+            style={styles.image}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={260}
+            onLoad={reportImageReady}
+            onError={handleImageError}
+          />
+        </Animated.View>
 
         {/* Gradient Overlay */}
         <LinearGradient

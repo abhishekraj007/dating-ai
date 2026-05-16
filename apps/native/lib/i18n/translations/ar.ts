@@ -163,6 +163,7 @@ export const ar: TranslationMap = {
   "chat.conversationNotFound": "المحادثة غير موجودة",
   "chat.startConversation": "بدء محادثة",
   "chat.sayHello": "قل مرحباً لـ {{name}}!",
+  "chat.aiCharacter": "شخصية ذكاء اصطناعي",
   "chat.aiCompanion": "رفيقك AI",
   "chat.selfie": "سيلفي",
   "chat.selfieLabel": "سيلفي AI",
@@ -177,6 +178,8 @@ export const ar: TranslationMap = {
   "chat.suggestion": "اقتراح",
   "chat.typeMessage": "اكتب رسالة...",
   "profile.notFound": "الملف الشخصي غير موجود",
+  "chat.creditsRequiredMessage":
+    "أنت بحاجة إلى {{count}} رصيدًا على الأقل لهذا الطلب.",
   "profile.aboutMe": "عني",
   "profile.lookingFor": "أبحث عن",
   "profile.personality": "الشخصية",
@@ -272,8 +275,7 @@ export const ar: TranslationMap = {
   "imageRequest.clothing": "الملابس",
   "imageRequest.scene": "المشهد",
   "imageRequest.extraDetailsLabel": "تفاصيل إضافية",
-  "imageRequest.extraDetailsPlaceholder":
-    "ما نوع الصورة التي تريد رؤيتها؟",
+  "imageRequest.extraDetailsPlaceholder": "ما نوع الصورة التي تريد رؤيتها؟",
   "imageRequest.generatePhoto": "إنشاء صورة",
   "imageRequest.insufficientCredits":
     "رصيد غير كافٍ. تحتاج إلى 5 أرصدة على الأقل.",

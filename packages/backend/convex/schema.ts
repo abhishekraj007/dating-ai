@@ -254,6 +254,9 @@ export default defineSchema({
     conversationId: v.id("aiConversations"),
     userId: v.string(),
     aiProfileId: v.id("aiProfiles"),
+    platform: v.optional(
+      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    ),
     prompt: v.string(),
     styleOptions: v.optional(
       v.object({
@@ -375,8 +378,8 @@ export default defineSchema({
           ageHint: v.number(),
           hair: v.string(),
           eyes: v.string(),
-          skinTone: v.string(),
-          skinCue: v.string(),
+          skinTone: v.optional(v.string()),
+          skinCue: v.optional(v.string()),
           build: v.string(),
           outfit: v.string(),
           signatureStyle: v.string(),
@@ -468,6 +471,7 @@ export default defineSchema({
     iosAppStoreId: v.optional(v.string()),
     androidAppId: v.optional(v.string()),
     showMyCreationTab: v.optional(v.boolean()),
+    revenueCatCreditProductIds: v.optional(v.array(v.string())),
     // Platforms where NSFW content is enabled. Missing or empty means disabled.
     nsfwEnabledPlatforms: v.optional(
       v.array(

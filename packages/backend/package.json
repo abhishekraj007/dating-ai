@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "convex dev",
+    "deploy": "convex deploy",
+    "deploy:prod": "convex deploy --env-file .env.production.local",
     "dev:setup": "convex dev --configure --until-success"
   },
   "author": "",
@@ -27,6 +29,7 @@
     "ai": "^5.0.101",
     "better-auth": "catalog:",
     "convex": "catalog:",
+    "jose": "^6.2.3",
     "replicate": "^1.4.0",
     "zod": "^4.1.12"
   }

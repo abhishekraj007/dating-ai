@@ -18,7 +18,7 @@ export function AIBubbleWrapper({
   time,
   children,
   maxWidth = "max-w-[75%]",
-  showTime = true,
+  showTime = false,
 }: Props) {
   return (
     <View className="flex-row mb-3 px-4">

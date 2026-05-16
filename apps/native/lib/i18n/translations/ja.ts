@@ -168,6 +168,7 @@ export const ja: TranslationMap = {
   "chat.conversationNotFound": "会話が見つかりません",
   "chat.startConversation": "会話を始める",
   "chat.sayHello": "{{name}}に挨拶しましょう！",
+  "chat.aiCharacter": "AIキャラクター",
   "chat.aiCompanion": "あなたのAIコンパニオン",
   "chat.selfie": "セルフィー",
   "chat.selfieLabel": "AIセルフィー",
@@ -177,6 +178,8 @@ export const ja: TranslationMap = {
   "chat.thisAi": "このAI",
   "chat.clear": "削除",
   "chat.clearFailed": "チャットの削除に失敗しました。もう一度お試しください。",
+  "chat.creditsRequiredMessage":
+    "このリクエストには少なくとも{{count}}クレジットが必要です。",
   "chat.quiz": "クイズ",
   "chat.topic": "トピック",
   "chat.suggestion": "提案",
@@ -281,8 +284,7 @@ export const ja: TranslationMap = {
   "imageRequest.clothing": "服装",
   "imageRequest.scene": "シーン",
   "imageRequest.extraDetailsLabel": "追加の詳細",
-  "imageRequest.extraDetailsPlaceholder":
-    "どんな写真が見たいですか？",
+  "imageRequest.extraDetailsPlaceholder": "どんな写真が見たいですか？",
   "imageRequest.generatePhoto": "写真を生成",
   "imageRequest.insufficientCredits":
     "クレジットが不足しています。最低5クレジットが必要です。",

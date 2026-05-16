@@ -1,29 +1,31 @@
 import { query } from "../../_generated/server";
+import { v } from "convex/values";
 import * as Users from "../../model/user";
 
 /**
  * Get user's current credit balance and premium status
- * Premium status is derived from active subscriptions
+ * Premium status is read from the profile table.
  */
 export const getUserCredits = query({
+  args: {},
+  returns: v.union(
+    v.null(),
+    v.object({
+      credits: v.number(),
+      isPremium: v.boolean(),
+      name: v.string(),
+    }),
+  ),
   handler: async (ctx) => {
     const userData = await Users.getUserAndProfile(ctx);
     if (!userData) {
       return null;
     }
 
-    // Check if user has any active subscription
-    const activeSubscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_user_status", (q: any) =>
-        q.eq("userId", userData.userMetadata._id).eq("status", "active")
-      )
-      .first();
-
     return {
       credits: userData.profile?.credits ?? 0,
-      isPremium: !!activeSubscription,
-      name: userData.profile?.name || userData.userMetadata.name,
+      isPremium: Boolean(userData.profile?.isPremium),
+      name: userData.profile?.name ?? userData.userMetadata.name ?? "",
     };
   },
 });

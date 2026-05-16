@@ -4,6 +4,7 @@ import { requireAdmin } from "./guards";
 import {
   APP_CONFIG_KEY,
   normalizeNsfwEnabledPlatforms,
+  normalizeRevenueCatCreditProductIds,
   normalizeAndroidAppId,
   normalizeAppStoreId,
   normalizeUrl,
@@ -20,12 +21,17 @@ export const upsertAppConfig = mutation({
     iosAppStoreId: v.optional(v.string()),
     androidAppId: v.optional(v.string()),
     showMyCreationTab: v.optional(v.boolean()),
+    revenueCatCreditProductIds: v.optional(v.array(v.string())),
     nsfwEnabledPlatforms: v.optional(
       v.array(
         v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
       ),
     ),
   },
+  returns: v.object({
+    success: v.boolean(),
+    updated: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     const userData = await requireAdmin(ctx);
 
@@ -40,6 +46,9 @@ export const upsertAppConfig = mutation({
       iosAppStoreId: normalizeAppStoreId(args.iosAppStoreId),
       androidAppId: normalizeAndroidAppId(args.androidAppId),
       showMyCreationTab: args.showMyCreationTab,
+      revenueCatCreditProductIds: normalizeRevenueCatCreditProductIds(
+        args.revenueCatCreditProductIds,
+      ),
       nsfwEnabledPlatforms: normalizeNsfwEnabledPlatforms(
         args.nsfwEnabledPlatforms,
       ),

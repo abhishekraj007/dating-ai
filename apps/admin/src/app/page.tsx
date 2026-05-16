@@ -13,9 +13,17 @@ export default function LoginPage() {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const userData = useQuery(
     api.user.fetchUserAndProfile,
-    isAuthenticated ? {} : "skip"
+    isAuthenticated ? {} : "skip",
   );
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
+  const isWaitingForUserData = isAuthenticated && userData === undefined;
+  const pendingMessage = authLoading
+    ? "Checking session..."
+    : isWaitingForUserData || isCheckingAdmin
+      ? "Verifying admin access..."
+      : isAuthenticated && userData?.profile?.isAdmin
+        ? "Opening dashboard..."
+        : undefined;
 
   useEffect(() => {
     async function checkAdminAccess() {
@@ -34,28 +42,16 @@ export default function LoginPage() {
       }
 
       // Admin user - redirect to dashboard
-      router.push("/dashboard");
+      router.replace("/dashboard");
     }
 
     checkAdminAccess();
   }, [authLoading, isAuthenticated, userData, router]);
 
-  if (authLoading || isCheckingAdmin || (isAuthenticated && userData === undefined)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-          <p className="mt-4 text-muted-foreground">
-            {isCheckingAdmin ? "Verifying access..." : "Loading..."}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isAuthenticated && userData?.profile?.isAdmin) {
-    return null; // Will redirect to dashboard
-  }
-
-  return <AuthScreen />;
+  return (
+    <AuthScreen
+      isPending={Boolean(pendingMessage)}
+      pendingMessage={pendingMessage}
+    />
+  );
 }

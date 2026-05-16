@@ -20,8 +20,7 @@ import {
 export default function Header() {
   const router = useRouter();
   const userData = useQuery(api.user.fetchUserAndProfile);
-  const userCredits = useQuery(api.features.credits.queries.getUserCredits);
-  const premiumStatus = useQuery(api.features.premium.queries.isPremium);
+  const isPremium = Boolean(userData?.profile?.isPremium);
   const [creditsModalOpen, setCreditsModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -84,7 +83,7 @@ export default function Header() {
           <ModeToggle />
 
           {userData ? (
-            <UserMenu isPremium={premiumStatus?.isPremium ?? false} />
+            <UserMenu isPremium={isPremium} />
           ) : (
             <Button onClick={() => router.push("/")} size="sm">
               Login

@@ -173,6 +173,7 @@ export const es: TranslationMap = {
   "chat.conversationNotFound": "Conversación no encontrada",
   "chat.startConversation": "Iniciar una conversación",
   "chat.sayHello": "¡Saluda a {{name}}!",
+  "chat.aiCharacter": "Personaje de IA",
   "chat.aiCompanion": "tu compañero IA",
   "chat.selfie": "Selfie",
   "chat.selfieLabel": "Selfie IA",
@@ -182,6 +183,8 @@ export const es: TranslationMap = {
   "chat.thisAi": "esta IA",
   "chat.clear": "Borrar",
   "chat.clearFailed": "Error al borrar el chat. Inténtalo de nuevo.",
+  "chat.creditsRequiredMessage":
+    "Necesitas al menos {{count}} créditos para esta solicitud.",
   "chat.quiz": "Quiz",
   "chat.topic": "Tema",
   "chat.suggestion": "Sugerencia",
@@ -291,8 +294,7 @@ export const es: TranslationMap = {
   "imageRequest.clothing": "Ropa",
   "imageRequest.scene": "Escena",
   "imageRequest.extraDetailsLabel": "Detalles extra",
-  "imageRequest.extraDetailsPlaceholder":
-    "¿Qué tipo de foto te gustaría ver?",
+  "imageRequest.extraDetailsPlaceholder": "¿Qué tipo de foto te gustaría ver?",
   "imageRequest.generatePhoto": "Generar foto",
   "imageRequest.insufficientCredits":
     "Créditos insuficientes. Necesitas al menos 5 créditos.",
