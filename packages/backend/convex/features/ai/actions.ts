@@ -420,7 +420,7 @@ function buildImagePrompt(
   },
 ): string {
   const baseDescription = [
-    `A photorealistic selfie of a ${profile.age ?? 25}-year-old`,
+    `A realistic selfie`,
     profile.gender ?? "woman",
     profile.ethnicity ? `of ${profile.ethnicity} ethnicity` : "",
     `named ${profile.name}`,

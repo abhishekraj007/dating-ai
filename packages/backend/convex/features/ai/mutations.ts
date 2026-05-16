@@ -1046,6 +1046,7 @@ export const requestChatImage = mutation({
     if (conversation.threadId) {
       const styleDescription = styleOptions
         ? [
+            "Send me a selfie",
             styleOptions.hairstyle && `with ${styleOptions.hairstyle}`,
             styleOptions.clothing && `wearing ${styleOptions.clothing}`,
             styleOptions.scene && `in a ${styleOptions.scene} setting`,
