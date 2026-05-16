@@ -10,7 +10,6 @@ import Animated, {
   FadeInUp,
   ZoomIn,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -26,14 +25,19 @@ export default function BuyCreditsScreen() {
     useState<PurchasesStoreProduct>();
   const [isPurchasing, setIsPurchasing] = useState(false);
 
+  const sortedPackages = [...creditPackages].sort((a, b) => a.price - b.price);
+
+  const getPopularIndex = () => {
+    if (sortedPackages.length === 0) return -1;
+    return Math.floor(sortedPackages.length / 2);
+  };
+
   const handlePurchase = async () => {
     if (!selectedProduct) return;
 
     try {
       setIsPurchasing(true);
-
-      const { customerInfo } =
-        await Purchases.purchaseStoreProduct(selectedProduct);
+      await Purchases.purchaseStoreProduct(selectedProduct);
       router.back();
     } catch (error) {
       console.log("Purchase error:", error);
@@ -42,192 +46,147 @@ export default function BuyCreditsScreen() {
     }
   };
 
-  //   const getPackageForAmount = (amount: number) => {
-  //     return creditPackages.find((pkg) =>
-  //       pkg.product.identifier.includes(`credits_${amount}`)
-  //     );
-  //   };
-
-  const getPopularIndex = () => {
-    if (creditPackages.length === 0) return -1;
-    // Middle package is popular, or second if only 3 packages
-    return Math.floor(creditPackages.length / 2);
-  };
-
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1 bg-background ">
+      {/* Fixed Header */}
+      <Animated.View
+        entering={FadeInUp.duration(600).springify()}
+        className="items-center gap-4 pt-8 pb-6 px-5"
+      >
+        <View className="relative">
+          <View
+            className="absolute w-24 h-24 rounded-full opacity-20"
+            style={{ backgroundColor: accentColor, top: -2, left: -2 }}
+          />
+          <View
+            className="w-18 h-18 rounded-full items-center justify-center shadow-lg"
+            style={{ backgroundColor: accentColor }}
+          >
+            <Coins size={40} color={accentForeground} strokeWidth={2.5} />
+          </View>
+          <Animated.View
+            entering={ZoomIn.delay(400).springify()}
+            className="absolute -top-1 -right-1"
+          >
+            <Sparkles size={20} color={accentColor} fill={accentColor} />
+          </Animated.View>
+        </View>
+
+        <Text className="text-3xl font-bold text-foreground">Buy Credits</Text>
+      </Animated.View>
+
+      {/* Scrollable Packages */}
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 32 }}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+        }}
       >
-        <View className="gap-8">
-          {/* Header Section with Animation */}
-          <Animated.View
-            entering={FadeInUp.duration(600).springify()}
-            className="items-center gap-4"
-          >
-            <View className="relative">
-              {/* Glowing background circle */}
-              <View
-                className="absolute w-24 h-24 rounded-full opacity-20"
-                style={{ backgroundColor: accentColor, top: -2, left: -2 }}
-              />
-              <View
-                className="w-20 h-20 rounded-full items-center justify-center shadow-lg"
-                style={{ backgroundColor: accentColor }}
-              >
-                <Coins size={40} color={accentForeground} strokeWidth={2.5} />
-              </View>
-              {/* Sparkle decoration */}
-              <Animated.View
-                entering={ZoomIn.delay(400).springify()}
-                className="absolute -top-1 -right-1"
-              >
-                <Sparkles size={20} color={accentColor} fill={accentColor} />
-              </Animated.View>
-            </View>
+        {isLoading ? (
+          <View className="py-8 items-center">
+            <Spinner size="lg" />
+          </View>
+        ) : (
+          <View className="gap-4">
+            {sortedPackages.map((option, index) => {
+              const isSelected =
+                selectedProduct?.identifier === option.identifier;
+              const isPopular = index === getPopularIndex();
+              const delay = index * 100;
 
-            <View className="items-center gap-2">
-              <Text className="text-3xl font-bold text-foreground">
-                Buy Credits
-              </Text>
-              <Text className="text-center text-muted text-base px-4">
-                Choose a credit package to continue
-              </Text>
-            </View>
-          </Animated.View>
+              return (
+                <AnimatedPressable
+                  key={option.identifier}
+                  entering={FadeInDown.delay(delay).duration(500).springify()}
+                  onPress={() => setSelectedProduct(option)}
+                >
+                  <View className="relative">
+                    {isPopular && (
+                      <Animated.View
+                        entering={ZoomIn.delay(delay + 200).springify()}
+                        className="absolute -top-3 right-4 px-4 py-1.5 rounded-full z-10 flex-row items-center gap-1 shadow-md"
+                        style={{ backgroundColor: accentColor }}
+                      >
+                        <Zap
+                          size={12}
+                          color={accentForeground}
+                          fill={accentForeground}
+                        />
+                        <Text className="text-xs font-bold text-accent-foreground">
+                          POPULAR
+                        </Text>
+                      </Animated.View>
+                    )}
 
-          {/* Credit Packages */}
-          {isLoading ? (
-            <View className="py-8 items-center">
-              <Spinner size="lg" />
-            </View>
-          ) : (
-            <View className="gap-4">
-              {creditPackages.map((option, index) => {
-                const isSelected =
-                  selectedProduct?.identifier === option.identifier;
-                const isPopular = index === getPopularIndex();
-                const delay = index * 100;
-
-                return (
-                  <AnimatedPressable
-                    key={option.identifier}
-                    entering={FadeInDown.delay(delay).duration(500).springify()}
-                    onPress={() => setSelectedProduct(option)}
-                  >
-                    <View className="relative">
-                      {/* Popular Badge */}
-                      {isPopular && (
-                        <Animated.View
-                          entering={ZoomIn.delay(delay + 200).springify()}
-                          className="absolute -top-3 right-4 px-4 py-1.5 rounded-full z-10 flex-row items-center gap-1 shadow-md"
-                          style={{ backgroundColor: accentColor }}
-                        >
-                          <Zap
-                            size={12}
-                            color={accentForeground}
-                            fill={accentForeground}
-                          />
-                          <Text className="text-xs font-bold text-accent-foreground">
-                            POPULAR
-                          </Text>
-                        </Animated.View>
-                      )}
-
-                      {/* Card Container */}
+                    <View
+                      className="rounded-3xl overflow-hidden"
+                      style={{
+                        shadowColor: isSelected ? accentColor : "#000",
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: isSelected ? 0.3 : 0.1,
+                        shadowRadius: isSelected ? 12 : 8,
+                        elevation: isSelected ? 8 : 4,
+                      }}
+                    >
                       <View
-                        className="rounded-3xl overflow-hidden"
+                        className="px-6 py-4 border-2"
                         style={{
-                          shadowColor: isSelected ? accentColor : "#000",
-                          shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: isSelected ? 0.3 : 0.1,
-                          shadowRadius: isSelected ? 12 : 8,
-                          elevation: isSelected ? 8 : 4,
+                          backgroundColor: isSelected
+                            ? accentColor
+                            : surfaceColor,
+                          borderColor: isSelected ? accentColor : "transparent",
                         }}
                       >
-                        {isSelected ? (
-                          <View
-                            className="p-6"
-                            style={{ backgroundColor: accentColor }}
-                          >
-                            <PackageContent
-                              option={option}
-                              isSelected={isSelected}
-                              foregroundColor={foregroundColor}
-                              accentForeground={accentForeground}
-                            />
-                          </View>
-                        ) : (
-                          <View
-                            className="p-6 border-2 border-border"
-                            style={{ backgroundColor: surfaceColor }}
-                          >
-                            <PackageContent
-                              option={option}
-                              isSelected={isSelected}
-                              foregroundColor={foregroundColor}
-                              accentForeground={accentForeground}
-                            />
-                          </View>
-                        )}
+                        <PackageContent
+                          option={option}
+                          isSelected={isSelected}
+                          foregroundColor={foregroundColor}
+                          accentForeground={accentForeground}
+                        />
                       </View>
                     </View>
-                  </AnimatedPressable>
-                );
-              })}
-            </View>
-          )}
-
-          {/* Purchase Button */}
-          <Animated.View
-            entering={FadeInUp.delay(400).duration(600).springify()}
-            className="gap-3 mt-2"
-          >
-            <Button
-              variant="primary"
-              size="lg"
-              onPress={handlePurchase}
-              isDisabled={!selectedProduct || isPurchasing}
-              className="w-full shadow-lg"
-            >
-              {isPurchasing ? (
-                <View className="flex-row items-center gap-2">
-                  <Spinner size="sm" color={accentForeground} />
-                  <Text className="text-accent-foreground font-semibold text-base">
-                    Processing...
-                  </Text>
-                </View>
-              ) : (
-                <>
-                  {selectedProduct && (
-                    <Coins
-                      size={20}
-                      color={accentForeground}
-                      strokeWidth={2.5}
-                    />
-                  )}
-                  <Text className="text-accent-foreground font-semibold text-base">
-                    {selectedProduct
-                      ? `Buy ${selectedProduct.title}`
-                      : "Select a Package"}
-                  </Text>
-                </>
-              )}
-            </Button>
-
-            {selectedProduct && (
-              <Animated.Text
-                entering={FadeInUp.duration(400)}
-                className="text-center text-muted text-sm"
-              >
-                Secure payment • Instant delivery
-              </Animated.Text>
-            )}
-          </Animated.View>
-        </View>
+                  </View>
+                </AnimatedPressable>
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
+
+      {/* Fixed Footer */}
+      <Animated.View
+        entering={FadeInUp.delay(400).duration(600).springify()}
+        className="px-5 pt-4 pb-8"
+      >
+        <Button
+          variant="primary"
+          size="lg"
+          onPress={handlePurchase}
+          isDisabled={!selectedProduct || isPurchasing}
+          className="w-full shadow-lg"
+        >
+          {isPurchasing ? (
+            <View className="flex-row items-center gap-2">
+              <Spinner size="sm" color={accentForeground} />
+              <Text className="text-accent-foreground font-semibold text-base">
+                Processing...
+              </Text>
+            </View>
+          ) : (
+            <>
+              {selectedProduct && (
+                <Coins size={20} color={accentForeground} strokeWidth={2.5} />
+              )}
+              <Text className="text-accent-foreground font-semibold text-base">
+                {selectedProduct
+                  ? `Buy ${selectedProduct.title}`
+                  : "Select a Package"}
+              </Text>
+            </>
+          )}
+        </Button>
+      </Animated.View>
     </View>
   );
 }

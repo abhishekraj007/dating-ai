@@ -134,23 +134,19 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
 
   const getProducts = async () => {
     console.log("fetching revenue products...");
-    const CREDIT_OPTIONS = [
-      { id: "credits_1000", amount: 1000, popular: false },
-      { id: "credits_2500", amount: 2500, popular: true },
-      { id: "credits_5000", amount: 5000, popular: false },
+    const CREDIT_IDS = [
+      "feelchat.rc_credit_1999",
+      "feelchat.rc_credit_3900",
+      "feelchat.rc_credit_4999",
+      "feelchat.rc_credit_8999",
     ];
 
     const products = await Purchases.getProducts(
-      CREDIT_OPTIONS.map((option) => option.id),
+      CREDIT_IDS,
       Purchases.PRODUCT_CATEGORY.NON_SUBSCRIPTION,
     );
 
     setCreditPackages(products);
-
-    // console.log(
-    //   "revenuecat-> Fetched products:",
-    //   JSON.stringify(products, null, 2)
-    // );
 
     return products;
   };
