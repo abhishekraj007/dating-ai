@@ -6,17 +6,17 @@ export const addCredits = mutation({
   args: {
     amount: v.number(),
   },
-  handler: async (ctx, args) => {
-    const { profile } = await getUserAndProfileOrThrow(ctx);
-    
-    const currentCredits = profile.credits ?? 0;
-    const newBalance = currentCredits + args.amount;
-    
-    await ctx.db.patch(profile._id, {
-      credits: newBalance,
-    });
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+  }),
+  handler: async (ctx, _args) => {
+    await getUserAndProfileOrThrow(ctx);
 
-    return { success: true, newBalance };
+    return {
+      success: false,
+      message: "Credit purchases are fulfilled by RevenueCat webhooks.",
+    };
   },
 });
 
@@ -24,28 +24,17 @@ export const upgradeToPremium = mutation({
   args: {
     expiresAt: v.optional(v.number()),
   },
-  handler: async (ctx, args) => {
-    const { profile } = await getUserAndProfileOrThrow(ctx);
-    
-    const currentCredits = profile.credits ?? 0;
-    const newCredits = currentCredits + 1000;
-    
-    const updates: {
-      isPremium: boolean;
-      credits: number;
-      premiumExpiresAt?: number;
-    } = {
-      isPremium: true,
-      credits: newCredits,
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+  }),
+  handler: async (ctx, _args) => {
+    await getUserAndProfileOrThrow(ctx);
+
+    return {
+      success: false,
+      message: "Premium purchases are fulfilled by RevenueCat webhooks.",
     };
-
-    if (args.expiresAt) {
-      updates.premiumExpiresAt = args.expiresAt;
-    }
-
-    await ctx.db.patch(profile._id, updates);
-
-    return { success: true, newCredits };
   },
 });
 

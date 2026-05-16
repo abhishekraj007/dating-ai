@@ -5,10 +5,21 @@ import Purchases, {
   PurchasesStoreProduct,
 } from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
-import { useConvexAuth, useMutation } from "convex/react";
+import { useConvexAuth } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend";
 import { getAPIKey } from "@/utils/payment";
+
+const DEFAULT_CREDIT_PRODUCT_IDS: Array<string> = [
+  "feelchat.rc_credit_1999",
+  "feelchat.rc_credit_3900",
+  "feelchat.rc_credit_4999",
+  "feelchat.rc_credit_8999",
+];
+
+type RuntimeAppConfig = {
+  revenueCatCreditProductIds?: Array<string>;
+};
 
 interface PurchasesContextType {
   customerInfo: CustomerInfo | null;
@@ -42,9 +53,16 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
     api.user.fetchUserAndProfile,
     isAuthenticated ? {} : "skip",
   );
+  const appConfig = useQuery(
+    api.features.appConfig.queries.getPublicAppConfig,
+  ) as RuntimeAppConfig | undefined;
 
-  const addCredits = useMutation(api.purchases.addCredits);
-  const upgradeToPremium = useMutation(api.purchases.upgradeToPremium);
+  const configuredCreditProductIds = appConfig?.revenueCatCreditProductIds;
+  const creditProductIds =
+    configuredCreditProductIds && configuredCreditProductIds.length > 0
+      ? configuredCreditProductIds
+      : DEFAULT_CREDIT_PRODUCT_IDS;
+  const creditProductIdKey = creditProductIds.join("|");
 
   useEffect(() => {
     // console.log("customerInfo changed:", JSON.stringify(customerInfo, null, 2));
@@ -59,6 +77,10 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
 
   // Log in to RevenueCat when user authenticates
   useEffect(() => {
+    if (!isInitialized) {
+      return;
+    }
+
     const loginToRevenueCat = async () => {
       if (
         isAuthenticated &&
@@ -79,11 +101,11 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    loginToRevenueCat();
-    getSubscriptions();
+    void loginToRevenueCat();
+    void getSubscriptions();
 
-    getProducts();
-  }, [isAuthenticated, userAndProfile, isInitialized]);
+    void getProducts(creditProductIds);
+  }, [isAuthenticated, userAndProfile, isInitialized, creditProductIdKey]);
 
   const initializePurchases = async () => {
     try {
@@ -132,45 +154,28 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const getProducts = async () => {
+  const getProducts = async (productIds: Array<string>) => {
     console.log("fetching revenue products...");
-    const CREDIT_IDS = [
-      "feelchat.rc_credit_1999",
-      "feelchat.rc_credit_3900",
-      "feelchat.rc_credit_4999",
-      "feelchat.rc_credit_8999",
-    ];
 
-    const products = await Purchases.getProducts(
-      CREDIT_IDS,
-      Purchases.PRODUCT_CATEGORY.NON_SUBSCRIPTION,
-    );
+    try {
+      const products = await Purchases.getProducts(
+        productIds,
+        Purchases.PRODUCT_CATEGORY.NON_SUBSCRIPTION,
+      );
 
-    setCreditPackages(products);
+      setCreditPackages(products);
 
-    return products;
+      return products;
+    } catch (error) {
+      console.error("Error fetching credit products:", error);
+      return [];
+    }
   };
 
   const purchasePackage = async (pkg: PurchasesPackage): Promise<boolean> => {
     try {
       const { customerInfo: info } = await Purchases.purchasePackage(pkg);
       setCustomerInfo(info);
-
-      // Handle different product types
-      const productId = pkg.product.identifier;
-
-      if (productId.includes("premium")) {
-        // Premium subscription
-        const expiresAt = info.entitlements.active["premium"]?.expirationDate;
-        await upgradeToPremium({
-          expiresAt: expiresAt ? new Date(expiresAt).getTime() : undefined,
-        });
-      } else if (productId.includes("credits")) {
-        // Credits purchase
-        const creditsAmount = parseInt(productId.match(/\d+/)?.[0] || "0", 10);
-        await addCredits({ amount: creditsAmount });
-      }
-
       return true;
     } catch (error) {
       console.error("Error purchasing package:", error);
@@ -182,14 +187,6 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
     try {
       const info = await Purchases.restorePurchases();
       setCustomerInfo(info);
-
-      // Check if user has active premium subscription
-      if (info.entitlements.active["premium"]) {
-        const expiresAt = info.entitlements.active["premium"].expirationDate;
-        await upgradeToPremium({
-          expiresAt: expiresAt ? new Date(expiresAt).getTime() : undefined,
-        });
-      }
     } catch (error) {
       console.error("Error restoring purchases:", error);
     }
@@ -217,23 +214,6 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
             activeEntitlements: Object.keys(info.entitlements.active),
             allEntitlements: Object.keys(info.entitlements.all),
           });
-
-          // Check if user now has premium
-          if (info.entitlements.active["premium"]) {
-            const expiresAt =
-              info.entitlements.active["premium"].expirationDate;
-            console.log(
-              "[RevenueCat] Premium entitlement found, syncing with backend...",
-            );
-            await upgradeToPremium({
-              expiresAt: expiresAt ? new Date(expiresAt).getTime() : undefined,
-            });
-            console.log("[RevenueCat] Backend sync complete");
-          } else {
-            console.warn(
-              "[RevenueCat] No premium entitlement found after purchase",
-            );
-          }
           break;
 
         case PAYWALL_RESULT.CANCELLED:

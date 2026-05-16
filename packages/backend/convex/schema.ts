@@ -471,6 +471,7 @@ export default defineSchema({
     iosAppStoreId: v.optional(v.string()),
     androidAppId: v.optional(v.string()),
     showMyCreationTab: v.optional(v.boolean()),
+    revenueCatCreditProductIds: v.optional(v.array(v.string())),
     // Platforms where NSFW content is enabled. Missing or empty means disabled.
     nsfwEnabledPlatforms: v.optional(
       v.array(

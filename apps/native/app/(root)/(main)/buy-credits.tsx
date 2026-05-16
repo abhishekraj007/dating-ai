@@ -1,5 +1,5 @@
 import { Button, Spinner, useThemeColor } from "heroui-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollView, Text, View, Pressable } from "react-native";
 import { Coins, Check, Sparkles, Zap } from "lucide-react-native";
 import { usePurchases } from "@/contexts/purchases-context";
@@ -20,16 +20,39 @@ export default function BuyCreditsScreen() {
   const accentForeground = useThemeColor("accent-foreground");
 
   const router = useRouter();
-  const { creditPackages, purchasePackage, isLoading } = usePurchases();
+  const { creditPackages, isLoading } = usePurchases();
   const [selectedProduct, setSelectedProduct] =
     useState<PurchasesStoreProduct>();
   const [isPurchasing, setIsPurchasing] = useState(false);
 
   const sortedPackages = [...creditPackages].sort((a, b) => a.price - b.price);
+  const popularIndex =
+    sortedPackages.length === 0 ? -1 : Math.floor(sortedPackages.length / 2);
+
+  useEffect(() => {
+    if (sortedPackages.length === 0) {
+      return;
+    }
+
+    const hasSelectedProduct = selectedProduct
+      ? sortedPackages.some(
+          (product) => product.identifier === selectedProduct.identifier,
+        )
+      : false;
+
+    if (hasSelectedProduct) {
+      return;
+    }
+
+    const defaultProduct = sortedPackages[popularIndex];
+
+    if (defaultProduct) {
+      setSelectedProduct(defaultProduct);
+    }
+  }, [popularIndex, selectedProduct, sortedPackages]);
 
   const getPopularIndex = () => {
-    if (sortedPackages.length === 0) return -1;
-    return Math.floor(sortedPackages.length / 2);
+    return popularIndex;
   };
 
   const handlePurchase = async () => {

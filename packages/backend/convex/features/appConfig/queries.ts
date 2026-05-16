@@ -1,8 +1,10 @@
 import { query } from "../../_generated/server";
+import { v } from "convex/values";
 import {
   APP_CONFIG_KEY,
   buildUrlFromBase,
   normalizeNsfwEnabledPlatforms,
+  resolveRevenueCatCreditProductIds,
 } from "./shared";
 import { requireAdmin } from "./guards";
 
@@ -10,8 +12,44 @@ const fallbackBaseWebUrl =
   process.env.SITE_URL ?? process.env.EXPO_PUBLIC_CONVEX_SITE_URL;
 const fallbackAndroidAppId = "com.noosperai.feelchat";
 
+const nsfwEnabledPlatformsValidator = v.array(
+  v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+);
+
+const publicAppConfigValidator = v.object({
+  baseWebUrl: v.optional(v.string()),
+  termsUrl: v.optional(v.string()),
+  privacyUrl: v.optional(v.string()),
+  helpCenterUrl: v.optional(v.string()),
+  supportUrl: v.optional(v.string()),
+  shareUrl: v.optional(v.string()),
+  iosAppStoreId: v.optional(v.string()),
+  androidAppId: v.string(),
+  showMyCreationTab: v.boolean(),
+  nsfwEnabledPlatforms: nsfwEnabledPlatformsValidator,
+  revenueCatCreditProductIds: v.array(v.string()),
+  updatedAt: v.optional(v.number()),
+});
+
+const adminAppConfigValidator = v.object({
+  baseWebUrl: v.optional(v.string()),
+  termsUrl: v.optional(v.string()),
+  privacyUrl: v.optional(v.string()),
+  helpCenterUrl: v.optional(v.string()),
+  supportUrl: v.optional(v.string()),
+  shareUrl: v.optional(v.string()),
+  iosAppStoreId: v.optional(v.string()),
+  androidAppId: v.string(),
+  showMyCreationTab: v.boolean(),
+  nsfwEnabledPlatforms: nsfwEnabledPlatformsValidator,
+  revenueCatCreditProductIds: v.array(v.string()),
+  updatedAt: v.optional(v.number()),
+  updatedBy: v.optional(v.string()),
+});
+
 export const getPublicAppConfig = query({
   args: {},
+  returns: publicAppConfigValidator,
   handler: async (ctx) => {
     const config = await ctx.db
       .query("appConfig")
@@ -41,6 +79,9 @@ export const getPublicAppConfig = query({
       nsfwEnabledPlatforms: normalizeNsfwEnabledPlatforms(
         config?.nsfwEnabledPlatforms,
       ),
+      revenueCatCreditProductIds: resolveRevenueCatCreditProductIds(
+        config?.revenueCatCreditProductIds,
+      ),
       updatedAt: config?.updatedAt,
     };
   },
@@ -48,6 +89,7 @@ export const getPublicAppConfig = query({
 
 export const getAdminAppConfig = query({
   args: {},
+  returns: adminAppConfigValidator,
   handler: async (ctx) => {
     await requireAdmin(ctx);
 
@@ -68,6 +110,9 @@ export const getAdminAppConfig = query({
       showMyCreationTab: config?.showMyCreationTab ?? false,
       nsfwEnabledPlatforms: normalizeNsfwEnabledPlatforms(
         config?.nsfwEnabledPlatforms,
+      ),
+      revenueCatCreditProductIds: resolveRevenueCatCreditProductIds(
+        config?.revenueCatCreditProductIds,
       ),
       updatedAt: config?.updatedAt,
       updatedBy: config?.updatedBy,
