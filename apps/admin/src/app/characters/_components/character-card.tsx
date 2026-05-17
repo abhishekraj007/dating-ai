@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil } from "lucide-react";
+import { Eye, Pencil, ZoomIn } from "lucide-react";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { ImageLightbox } from "@/components/image-lightbox";
 import type { AIProfile } from "../_hooks/use-character-edit";
@@ -25,20 +25,43 @@ export function CharacterCard({
   const visibleInterests = profile.interests?.slice(0, 2) ?? [];
   const remainingInterests = Math.max((profile.interests?.length ?? 0) - 2, 0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [avatarLightboxOpen, setAvatarLightboxOpen] = useState(false);
 
   return (
     <div className="group rounded-xl border border-border/70 bg-card/60 p-4 transition-colors hover:border-primary/50">
       <div className="mb-3 flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12 border border-border/60">
-            <AvatarImage
-              className="object-cover position-top"
-              src={profile.avatarUrl ?? undefined}
-            />
-            <AvatarFallback>
-              {profile.name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          {profile.avatarUrl ? (
+            <button
+              type="button"
+              className="group relative h-12 w-12 shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              onClick={() => setAvatarLightboxOpen(true)}
+              aria-label="View avatar in full size"
+            >
+              <Avatar className="h-12 w-12 border border-border/60">
+                <AvatarImage
+                  className="object-cover position-top"
+                  src={profile.avatarUrl}
+                />
+                <AvatarFallback>
+                  {profile.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                <ZoomIn className="h-4 w-4 text-white" />
+              </div>
+            </button>
+          ) : (
+            <Avatar className="h-12 w-12 border border-border/60">
+              <AvatarImage
+                className="object-cover position-top"
+                src={undefined}
+              />
+              <AvatarFallback>
+                {profile.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          )}
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-2xl font-semibold leading-none">
@@ -148,6 +171,14 @@ export function CharacterCard({
           if (!open) setLightboxIndex(null);
         }}
       />
+
+      {profile.avatarUrl && (
+        <ImageLightbox
+          images={[profile.avatarUrl]}
+          open={avatarLightboxOpen}
+          onOpenChange={setAvatarLightboxOpen}
+        />
+      )}
     </div>
   );
 }

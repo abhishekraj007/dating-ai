@@ -1,10 +1,12 @@
 "use client";
 
-import { Check, ImagePlus, Images, Loader2, X } from "lucide-react";
+import { useState } from "react";
+import { Check, ImagePlus, Images, Loader2, X, ZoomIn } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { ImageLightbox } from "@/components/image-lightbox";
 import type { AIProfile } from "../_hooks/use-character-edit";
 
 interface AvatarImageEditorProps {
@@ -30,6 +32,8 @@ export function AvatarImageEditor({
   onDeleteAvatar,
   onSelectShowcaseAvatar,
 }: AvatarImageEditorProps) {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
   const showcaseImages = profile.profileImageUrls
     .map((url, index) => ({ url, key: profile.profileImageKeys?.[index] }))
     .filter((image): image is { url: string; key: string } =>
@@ -40,20 +44,42 @@ export function AvatarImageEditor({
     <div className="space-y-4 rounded-lg border border-border/60 p-4">
       <div className="flex items-center gap-4">
         <div className="relative shrink-0">
-          <Avatar className="h-24 w-24">
-            <AvatarImage
-              className="object-cover position-top"
-              src={profile.avatarUrl ?? undefined}
-            />
-            <AvatarFallback className="text-2xl">
-              {profile.name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          {profile.avatarUrl ? (
+            <button
+              type="button"
+              className="group relative block h-24 w-24 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              onClick={() => setLightboxOpen(true)}
+              aria-label="View avatar in full size"
+            >
+              <Avatar className="h-24 w-24">
+                <AvatarImage
+                  className="object-cover position-top"
+                  src={profile.avatarUrl}
+                />
+                <AvatarFallback className="text-2xl">
+                  {profile.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                <ZoomIn className="h-5 w-5 text-white" />
+              </div>
+            </button>
+          ) : (
+            <Avatar className="h-24 w-24">
+              <AvatarImage
+                className="object-cover position-top"
+                src={undefined}
+              />
+              <AvatarFallback className="text-2xl">
+                {profile.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          )}
           {!isReadOnly && profile.avatarImageKey && (
             <Button
               size="icon"
               variant="destructive"
-              className="absolute top-0 right-0 h-6 w-6 rounded-full"
+              className="absolute top-0 right-0 z-10 h-6 w-6 rounded-full"
               onClick={() => onDeleteAvatar(profile.avatarImageKey!)}
               disabled={deletingImageKey === profile.avatarImageKey}
               aria-label="Remove avatar image"
@@ -153,6 +179,12 @@ export function AvatarImageEditor({
           )}
         </div>
       )}
+
+      <ImageLightbox
+        images={profile.avatarUrl ? [profile.avatarUrl] : []}
+        open={lightboxOpen}
+        onOpenChange={setLightboxOpen}
+      />
     </div>
   );
 }
