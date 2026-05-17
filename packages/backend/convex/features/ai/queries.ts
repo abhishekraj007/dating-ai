@@ -703,6 +703,7 @@ export const listThreadMessages = query({
  */
 export const getSystemProfiles = query({
   args: {
+    genderFilter: v.optional(v.union(v.literal("female"), v.literal("male"))),
     search: v.optional(v.string()),
     statusFilter: v.optional(
       v.union(v.literal("active"), v.literal("pending"), v.literal("archived")),
@@ -731,23 +732,48 @@ export const getSystemProfiles = query({
     const recentCutoff = Date.now() - 24 * 60 * 60 * 1000;
     const scanLimit = Math.max(limit * (hasSearch ? 8 : 2), 160);
 
-    const profiles = args.statusFilter
-      ? await ctx.db
-          .query("aiProfiles")
-          .withIndex("by_system_status_created_at", (q) =>
-            q.eq("isUserCreated", false).eq("status", args.statusFilter!),
-          )
-          .order("desc")
-          .take(scanLimit)
-      : await ctx.db
-          .query("aiProfiles")
-          .withIndex("by_system_created_at", (q) =>
-            q.eq("isUserCreated", false),
-          )
-          .order("desc")
-          .take(scanLimit);
+    const profiles =
+      args.statusFilter && args.genderFilter
+        ? await ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_and_gender", (q) =>
+              q
+                .eq("status", args.statusFilter!)
+                .eq("gender", args.genderFilter!),
+            )
+            .order("desc")
+            .take(scanLimit)
+        : args.statusFilter
+          ? await ctx.db
+              .query("aiProfiles")
+              .withIndex("by_system_status_created_at", (q) =>
+                q.eq("isUserCreated", false).eq("status", args.statusFilter!),
+              )
+              .order("desc")
+              .take(scanLimit)
+          : args.genderFilter
+            ? await ctx.db
+                .query("aiProfiles")
+                .withIndex("by_gender", (q) =>
+                  q.eq("gender", args.genderFilter!),
+                )
+                .order("desc")
+                .take(scanLimit)
+            : await ctx.db
+                .query("aiProfiles")
+                .withIndex("by_system_created_at", (q) =>
+                  q.eq("isUserCreated", false),
+                )
+                .order("desc")
+                .take(scanLimit);
 
     const filteredProfiles = profiles.filter((profile) => {
+      if (profile.isUserCreated) return false;
+
+      if (args.genderFilter && profile.gender !== args.genderFilter) {
+        return false;
+      }
+
       if (args.recentOnly) {
         const createdAt = profile.createdAt ?? profile._creationTime;
         if (createdAt < recentCutoff) return false;
