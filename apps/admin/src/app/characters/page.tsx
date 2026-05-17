@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CharacterCard } from "./_components/character-card";
 import { EditCharacterSheet } from "./_components/edit-character-sheet";
-import { useCharacterEdit } from "./_hooks/use-character-edit";
+import { useCharacterEdit, type AIProfile } from "./_hooks/use-character-edit";
 import { ProtectedRoute } from "@/components/protected-route";
 import { useCharacterGeneration } from "./_hooks/use-character-generation";
 import { CharacterGenerationPanel } from "./_components/character-generation-panel";
@@ -17,12 +17,17 @@ import { PageHeader } from "@/components/admin/page-header";
 import { EmptyState } from "@/components/admin/empty-state";
 import { Search } from "lucide-react";
 
+const PAGE_SIZE = 20;
+
 export default function CharactersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
+  const [resolvedProfiles, setResolvedProfiles] = useState<AIProfile[]>([]);
   const [profileFilter, setProfileFilter] = useState<
     "all" | "active" | "pending" | "new"
   >("all");
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const userData = useQuery(
     api.user.fetchUserAndProfile,
@@ -30,12 +35,21 @@ export default function CharactersPage() {
   );
   const canQueryProfiles =
     isAuthenticated && userData?.profile?.isAdmin === true;
+
   useEffect(() => {
     const handle = setTimeout(() => {
       setDebouncedSearch(searchQuery.trim());
+      setVisibleLimit(PAGE_SIZE);
     }, 250);
     return () => clearTimeout(handle);
   }, [searchQuery]);
+
+  const updateProfileFilter = (
+    nextFilter: "all" | "active" | "pending" | "new",
+  ) => {
+    setProfileFilter(nextFilter);
+    setVisibleLimit(PAGE_SIZE);
+  };
 
   const profiles = useQuery(
     api.features.ai.queries.getSystemProfiles,
@@ -47,10 +61,17 @@ export default function CharactersPage() {
               ? profileFilter
               : undefined,
           recentOnly: profileFilter === "new" ? true : undefined,
-          limit: 120,
+          limit: visibleLimit,
         }
       : "skip",
   );
+
+  useEffect(() => {
+    if (profiles !== undefined) {
+      setResolvedProfiles(profiles);
+    }
+  }, [profiles]);
+
   const {
     isGenerating,
     triggerGeneration,
@@ -101,8 +122,43 @@ export default function CharactersPage() {
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
   const isAuthGateLoading =
     authLoading || (isAuthenticated && userData === undefined);
-  const isProfilesLoading = profiles === undefined;
-  const visibleProfiles = profiles ?? [];
+  const isProfilesLoading =
+    profiles === undefined && visibleLimit === PAGE_SIZE;
+  const isLoadingMoreProfiles =
+    profiles === undefined && visibleLimit > PAGE_SIZE;
+  const visibleProfiles =
+    profiles ?? (isLoadingMoreProfiles ? resolvedProfiles : []);
+  const canLoadMoreProfiles =
+    !isProfilesLoading &&
+    !isLoadingMoreProfiles &&
+    visibleProfiles.length > 0 &&
+    visibleProfiles.length >= visibleLimit;
+
+  useEffect(() => {
+    const node = loadMoreRef.current;
+
+    if (!node || !canLoadMoreProfiles) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          observer.disconnect();
+          setVisibleLimit((current) => current + PAGE_SIZE);
+        }
+      },
+      {
+        rootMargin: "300px 0px",
+      },
+    );
+
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [canLoadMoreProfiles]);
 
   const loader = () => {
     return (
@@ -141,7 +197,7 @@ export default function CharactersPage() {
             subtitle={
               isProfilesLoading
                 ? "Loading system characters..."
-                : `Showing ${visibleProfiles.length} system characters`
+                : `Showing ${visibleProfiles.length}${canLoadMoreProfiles || isLoadingMoreProfiles ? "+" : ""} system characters`
             }
           />
           <CharacterGenerationPanel
@@ -172,28 +228,28 @@ export default function CharactersPage() {
               <Button
                 size="sm"
                 variant={profileFilter === "all" ? "default" : "outline"}
-                onClick={() => setProfileFilter("all")}
+                onClick={() => updateProfileFilter("all")}
               >
                 All
               </Button>
               <Button
                 size="sm"
                 variant={profileFilter === "active" ? "default" : "outline"}
-                onClick={() => setProfileFilter("active")}
+                onClick={() => updateProfileFilter("active")}
               >
                 Active
               </Button>
               <Button
                 size="sm"
                 variant={profileFilter === "pending" ? "default" : "outline"}
-                onClick={() => setProfileFilter("pending")}
+                onClick={() => updateProfileFilter("pending")}
               >
                 Pending
               </Button>
               <Button
                 size="sm"
                 variant={profileFilter === "new" ? "default" : "outline"}
-                onClick={() => setProfileFilter("new")}
+                onClick={() => updateProfileFilter("new")}
               >
                 New (24h)
               </Button>
@@ -228,49 +284,81 @@ export default function CharactersPage() {
               description="Try clearing search or changing filters to see more profiles."
             />
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: runningCount }).map((_, i) => (
-                <div
-                  key={`generating-${i}`}
-                  className="rounded-xl border border-primary/30 bg-card/60 p-4"
-                >
-                  <div className="mb-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="h-12 w-12 rounded-full" />
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-28" />
-                        <Skeleton className="h-3 w-20" />
+            <>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: runningCount }).map((_, i) => (
+                  <div
+                    key={`generating-${i}`}
+                    className="rounded-xl border border-primary/30 bg-card/60 p-4"
+                  >
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-28" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
                       </div>
+                      <span className="text-[11px] text-primary animate-pulse">
+                        Generating...
+                      </span>
                     </div>
-                    <span className="text-[11px] text-primary animate-pulse">
-                      Generating...
-                    </span>
+                    <Skeleton className="mb-2 h-5 w-28" />
+                    <Skeleton className="mb-2 h-3 w-full" />
+                    <Skeleton className="mb-3 h-3 w-4/5" />
+                    <div className="mb-3 flex gap-1.5">
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                      <Skeleton className="h-6 w-12 rounded-full" />
+                    </div>
+                    <Skeleton className="h-14 w-14 rounded-md" />
                   </div>
-                  <Skeleton className="mb-2 h-5 w-28" />
-                  <Skeleton className="mb-2 h-3 w-full" />
-                  <Skeleton className="mb-3 h-3 w-4/5" />
-                  <div className="mb-3 flex gap-1.5">
-                    <Skeleton className="h-6 w-16 rounded-full" />
-                    <Skeleton className="h-6 w-12 rounded-full" />
-                  </div>
-                  <Skeleton className="h-14 w-14 rounded-md" />
-                </div>
-              ))}
-              {visibleProfiles.map((profile) => {
-                const isNew =
-                  (profile.createdAt ?? profile._creationTime ?? 0) >=
-                  oneDayAgo;
-                return (
-                  <CharacterCard
-                    key={profile._id}
-                    profile={profile}
-                    onView={handleView}
-                    onEdit={handleEdit}
-                    isNew={isNew}
-                  />
-                );
-              })}
-            </div>
+                ))}
+                {visibleProfiles.map((profile) => {
+                  const isNew = (profile._creationTime ?? 0) >= oneDayAgo;
+                  return (
+                    <CharacterCard
+                      key={profile._id}
+                      profile={profile}
+                      onView={handleView}
+                      onEdit={handleEdit}
+                      isNew={isNew}
+                    />
+                  );
+                })}
+                {isLoadingMoreProfiles
+                  ? Array.from({ length: 3 }).map((_, i) => (
+                      <div
+                        key={`loading-more-${i}`}
+                        className="rounded-xl border border-border/60 p-4"
+                      >
+                        <div className="mb-3 flex items-center gap-3">
+                          <Skeleton className="h-12 w-12 rounded-full" />
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-28" />
+                            <Skeleton className="h-3 w-20" />
+                          </div>
+                        </div>
+                        <Skeleton className="mb-2 h-5 w-28" />
+                        <Skeleton className="mb-2 h-3 w-full" />
+                        <Skeleton className="mb-3 h-3 w-4/5" />
+                        <div className="mb-3 flex gap-1.5">
+                          <Skeleton className="h-6 w-16 rounded-full" />
+                          <Skeleton className="h-6 w-12 rounded-full" />
+                        </div>
+                        <Skeleton className="h-14 w-14 rounded-md" />
+                      </div>
+                    ))
+                  : null}
+              </div>
+
+              {canLoadMoreProfiles ? (
+                <div
+                  ref={loadMoreRef}
+                  className="h-px w-full"
+                  aria-hidden="true"
+                />
+              ) : null}
+            </>
           )}
 
           <EditCharacterSheet
