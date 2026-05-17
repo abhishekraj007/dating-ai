@@ -153,10 +153,13 @@ export function EditCharacterSheet({
   }, [isOpen]);
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+    <Sheet open={isOpen} onOpenChange={onOpenChange} modal={false}>
       <SheetContent
         side="right"
         className="w-full sm:max-w-lg flex flex-col p-0 h-full"
+        onEscapeKeyDown={(event) => event.preventDefault()}
+        onPointerDownOutside={(event) => event.preventDefault()}
+        onInteractOutside={(event) => event.preventDefault()}
       >
         <SheetHeader className="px-6 py-4 border-b shrink-0">
           <div className="flex items-center justify-between gap-2 mr-8">
