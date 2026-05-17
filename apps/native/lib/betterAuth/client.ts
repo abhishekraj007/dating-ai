@@ -5,7 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import { convexClient } from "./convex-client";
 
 const authBaseURL = process.env.EXPO_PUBLIC_CONVEX_SITE_URL;
-const configuredScheme = Constants.expoConfig?.scheme;
+const configuredScheme = Constants?.expoConfig?.scheme || "feelchat";
 const appScheme = Array.isArray(configuredScheme)
   ? configuredScheme[0]
   : configuredScheme;

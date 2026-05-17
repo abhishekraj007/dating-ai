@@ -417,10 +417,9 @@ export function AddCharacterDialog({
   ].filter((v) => v !== PLACEHOLDER).length;
 
   const canGenerateReference = referenceAnalysis !== null && !isAnalyzingPhoto;
-  const shouldBlockEscapeClose = stage !== "form";
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange} modal={false}>
       <SheetTrigger asChild>
         <Button className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
@@ -431,11 +430,9 @@ export function AddCharacterDialog({
         side="right"
         className="w-full md:w-[500px] md:max-w-[500px] overflow-y-auto"
         onPaste={handlePaste}
-        onEscapeKeyDown={(event) => {
-          if (shouldBlockEscapeClose) {
-            event.preventDefault();
-          }
-        }}
+        onEscapeKeyDown={(event) => event.preventDefault()}
+        onPointerDownOutside={(event) => event.preventDefault()}
+        onInteractOutside={(event) => event.preventDefault()}
       >
         <SheetHeader>
           <SheetTitle>
