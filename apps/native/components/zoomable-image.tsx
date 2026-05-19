@@ -96,9 +96,12 @@ export function ZoomableImage({
     });
   }, [opacity, closeModal]);
 
-  const updateZoomState = useCallback((zoomed: boolean) => {
-    isZoomed.value = zoomed;
-  }, [isZoomed]);
+  const updateZoomState = useCallback(
+    (zoomed: boolean) => {
+      isZoomed.value = zoomed;
+    },
+    [isZoomed],
+  );
 
   // Extract URI from source for the image viewer
   const getImageUri = (): string => {

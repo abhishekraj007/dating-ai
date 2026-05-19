@@ -130,10 +130,7 @@ export default function SettingsRoute() {
 
       await disableNotifications();
     } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message === "Permission denied"
-      ) {
+      if (error instanceof Error && error.message === "Permission denied") {
         Alert.alert(
           t("alerts.error"),
           t("notifications.permissionDeniedDescription"),
