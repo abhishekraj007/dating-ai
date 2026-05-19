@@ -1,0 +1,24 @@
+diff --git a/ios/KeyboardAwareWrapper.swift b/ios/KeyboardAwareWrapper.swift
+index ddc8848a79ca37ce8b8cc7ea17e35df3f3a96885..9e2441b1729aeaefe8481e53be40cbd147746303 100644
+--- a/ios/KeyboardAwareWrapper.swift
++++ b/ios/KeyboardAwareWrapper.swift
+@@ -317,19 +317,6 @@ class KeyboardAwareWrapper: ExpoView, KeyboardAwareScrollHandlerDelegate {
+     }
+     
+     // MARK: - React Native Subview Management
+-    
+-    override func insertReactSubview(_ subview: UIView!, at atIndex: Int) {
+-        super.insertReactSubview(subview, at: atIndex)
+-        // Note: Don't reset hasAttached or composerContainer here
+-        // React calls this frequently during layout, resetting would lose our references
+-        if let sv = findFirstScrollView(in: subview) {
+-            registerScrollViewIfNeeded(sv)
+-        }
+-        if let composer = findFirstComposerView(in: subview) {
+-            registerComposerView(composer)
+-        }
+-        setNeedsLayout()
+-    }
+ 
+     override func didAddSubview(_ subview: UIView) {
+         super.didAddSubview(subview)
