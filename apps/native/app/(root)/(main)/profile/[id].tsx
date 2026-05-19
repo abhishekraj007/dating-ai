@@ -285,7 +285,7 @@ export default function ProfileDetailScreen() {
               }}
             />
           )}
-          <Link.AppleZoomTarget>
+          <Link.AppleZoomTarget key={profile._id}>
             <ZoomableImage
               source={
                 profile.avatarUrl && !hasImageError

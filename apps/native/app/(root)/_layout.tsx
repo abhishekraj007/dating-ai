@@ -36,9 +36,6 @@ export default function RootLayout() {
     isAuthenticated ? {} : "skip",
   );
 
-  // Register for push notifications when user is authenticated
-  usePushNotifications(userData?.userMetadata._id);
-
   useSyncOnboardingPreferences();
 
   const hasResolvedAuthenticatedUser = Boolean(userData?.userMetadata);
@@ -49,6 +46,16 @@ export default function RootLayout() {
   const needsOnboarding =
     hasResolvedAuthenticatedUser && !hasCompletedOnboarding;
   const isUserBootstrapPending = isAuthenticated && userData === undefined;
+
+  const shouldRegisterPushNotifications =
+    Boolean(userData?.userMetadata?._id) &&
+    hasCompletedOnboarding &&
+    !isOnOnboarding;
+
+  usePushNotifications({
+    userId: userData?.userMetadata._id,
+    enabled: shouldRegisterPushNotifications,
+  });
 
   useEffect(() => {
     if (hasFinishedInitialBootstrap) {

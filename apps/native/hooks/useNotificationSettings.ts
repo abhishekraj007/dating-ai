@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+import { useToast } from "heroui-native";
 import { useMutation } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import Constants from "expo-constants";
+import { useTranslation } from "@/hooks/use-translation";
 
 export function useNotificationSettings() {
+  const { t } = useTranslation();
+  const { toast } = useToast();
   const [isRequesting, setIsRequesting] = useState(false);
 
   const status = useQuery(api.pushNotifications.getMyPushNotificationStatus);
@@ -52,15 +56,27 @@ export function useNotificationSettings() {
         );
       }
 
-      const tokenData = await Notifications.getExpoPushTokenAsync({
-        projectId,
-      });
+      const tokenData = await getExpoPushTokenWithRetry(projectId);
 
       await recordToken({ token: tokenData.data });
       await setNotificationsEnabled({ enabled: true });
       return true;
     } catch (error) {
       console.error("Error enabling notifications:", error);
+
+      if (!isPermissionDeniedError(error)) {
+        toast.show({
+          id: "notification-settings-enable-error",
+          variant: "warning",
+          label: t("notifications.statusTitle"),
+          description: getNotificationErrorMessage(
+            error,
+            t("notifications.registerFailed"),
+            t("alerts.tryAgainMoment"),
+          ),
+        });
+      }
+
       throw error;
     } finally {
       setIsRequesting(false);
@@ -78,6 +94,18 @@ export function useNotificationSettings() {
       return true;
     } catch (error) {
       console.error("Error disabling notifications:", error);
+
+      toast.show({
+        id: "notification-settings-disable-error",
+        variant: "warning",
+        label: t("notifications.statusTitle"),
+        description: getNotificationErrorMessage(
+          error,
+          t("notifications.requestFailed"),
+          t("alerts.tryAgainMoment"),
+        ),
+      });
+
       throw error;
     } finally {
       setIsRequesting(false);
@@ -102,4 +130,68 @@ export function useNotificationSettings() {
     disableNotifications,
     checkPermissionStatus,
   };
+}
+
+function isPermissionDeniedError(error: unknown) {
+  return error instanceof Error && error.message === "Permission denied";
+}
+
+function getNotificationErrorMessage(
+  error: unknown,
+  fallbackMessage: string,
+  retryHint: string,
+) {
+  if (error instanceof Error) {
+    if (isNotificationNetworkError(error.message)) {
+      return `${fallbackMessage}. ${retryHint}`;
+    }
+
+    return error.message || fallbackMessage;
+  }
+
+  if (typeof error === "string" && error.trim().length > 0) {
+    if (isNotificationNetworkError(error)) {
+      return `${fallbackMessage}. ${retryHint}`;
+    }
+
+    return error;
+  }
+
+  return fallbackMessage;
+}
+
+function isNotificationNetworkError(message: string) {
+  const normalizedMessage = message.toLowerCase();
+
+  return (
+    normalizedMessage.includes("fetch failed") ||
+    normalizedMessage.includes("aborted") ||
+    normalizedMessage.includes("canceled") ||
+    normalizedMessage.includes("cancelled") ||
+    normalizedMessage.includes("network")
+  );
+}
+
+async function getExpoPushTokenWithRetry(projectId: string) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      return await Notifications.getExpoPushTokenAsync({
+        projectId,
+      });
+    } catch (error) {
+      if (attempt === 1 || !shouldRetryNotificationTokenRequest(error)) {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error("Failed to get Expo push token.");
+}
+
+function shouldRetryNotificationTokenRequest(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return isNotificationNetworkError(error.message);
 }

@@ -100,14 +100,6 @@ export default function MainLayout() {
           ...standard,
         }}
       />
-      <Stack.Screen
-        name="notifications"
-        options={{
-          title: t("nav.notifications"),
-          headerBackTitle: t("common.back"),
-          ...standard,
-        }}
-      />
     </Stack>
   );
 }
