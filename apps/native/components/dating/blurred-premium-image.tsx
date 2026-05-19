@@ -59,7 +59,7 @@ export function BlurredPremiumImage({
           source={imageSource}
           style={[styles.image, { width, height, borderRadius }]}
           contentFit="cover"
-          blurRadius={70}
+          blurRadius={60}
           cachePolicy="disk"
         />
         <View style={[styles.overlay, { borderRadius }]}>
@@ -86,7 +86,7 @@ export function BlurredPremiumImage({
               source={imageSource}
               style={styles.modalImage}
               contentFit="cover"
-              blurRadius={75}
+              blurRadius={60}
               cachePolicy="memory-disk"
             />
 
@@ -110,7 +110,7 @@ export function BlurredPremiumImage({
                 variant="primary"
                 size="lg"
                 onPress={handleUnlock}
-                className="w-full mt-4"
+                className="w-full mt-4 bg-gradient-to-r from-green-500 to-green-800"
               >
                 <Button.Label>{t("premium.unlockUnlimited")}</Button.Label>
               </Button>
@@ -131,6 +131,7 @@ const styles = StyleSheet.create({
   container: {
     overflow: "hidden",
     position: "relative",
+    marginBottom: 4,
   },
   image: {
     position: "absolute",

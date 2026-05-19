@@ -121,7 +121,7 @@ export default function ChatScreen() {
     handleOpenCreditsModal,
   } = useChatScreen();
 
-  console.log("messages", messages);
+  // console.log("messages", messages);
 
   const renderMessage = ({ item }: { item: any }) => {
     const isUser = item.role === "user";

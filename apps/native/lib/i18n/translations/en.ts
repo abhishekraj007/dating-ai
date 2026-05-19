@@ -322,8 +322,8 @@ export const en: TranslationMap = {
   "premium.tapToSeePhoto": "Tap to See Photo",
   "premium.getCloser": "Get closer to {{name}}",
   "premium.unlockDescription":
-    "{{name}} has sent you a photo. Get Premium and find out what hides beneath the blur.",
-  "premium.unlockUnlimited": "Unlock Unlimited Access",
+    "Get FeelChat Pro and find out what {{name}} made for you!",
+  "premium.unlockUnlimited": "Unlock Premium Content",
 
   "quiz.started": "Quiz started",
   "quiz.letsPlay": "Let's play a quiz!",
