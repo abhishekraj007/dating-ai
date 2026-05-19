@@ -20,6 +20,11 @@
     "convex:deploy": "pnpm -F @dating-ai/backend exec convex deploy",
     "convex:deploy:prod": "cd packages/backend && convex deploy --env-file .env.production.local"
   },
+  "pnpm": {
+    "patchedDependencies": {
+      "@launchhq/react-native-keyboard-composer@1.0.1": "apps/native/patches/@launchhq__react-native-keyboard-composer@1.0.1.patch"
+    }
+  },
   "dependencies": {},
   "devDependencies": {
     "turbo": "^2.5.4"
