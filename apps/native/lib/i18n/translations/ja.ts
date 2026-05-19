@@ -49,6 +49,17 @@ export const ja: TranslationMap = {
   "welcome.subtitle":
     "寂しいと感じていますか？あなただけではありません。本当にあなたの話を聞いて理解してくれるキャラクターに出会いましょう。",
   "welcome.cta": "はじめる",
+  "onboarding.languages.title": "言語を選択",
+  "onboarding.languages.subtitle":
+    "アプリの表示とAIマッチの会話言語を設定します。",
+  "onboarding.languages.appTitle": "アプリの言語",
+  "onboarding.languages.appDescription":
+    "メニュー、ボタン、その他のアプリ内テキストを制御します。",
+  "onboarding.languages.chatTitle": "チャットの言語",
+  "onboarding.languages.chatDescription":
+    "AIコンパニオンが返信する言語を制御します。",
+
+
   "onboarding.gender.title": "誰に興味がありますか？",
   "onboarding.gender.female": "女性",
   "onboarding.gender.male": "男性",
@@ -96,6 +107,9 @@ export const ja: TranslationMap = {
   "account.actions.deleting": "削除中...",
   "account.sheet.title": "アプリの言語を選択",
   "account.sheet.subtitle": "母国語を選択してください。既定は英語です。",
+  "account.sheet.chatTitle": "チャットの言語を選択",
+  "account.sheet.chatSubtitle":
+    "AIコンパニオンが会話で使う言語を選択してください。",
   "account.section.quickActions": "クイックアクション",
   "account.section.support": "サポート",
   "account.section.supportDescription":
@@ -107,7 +121,8 @@ export const ja: TranslationMap = {
   "account.item.appearance": "外観",
   "account.item.settings": "設定",
   "account.item.notifications": "通知",
-  "account.item.language": "言語",
+  "account.item.language": "アプリの言語",
+  "account.item.chatLanguage": "チャットの言語",
   "account.item.account": "アカウント",
   "account.item.accountDescription": "サインアウトとアカウント削除の管理。",
   "account.item.signOutDescription": "このデバイスからサインアウトします。",

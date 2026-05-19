@@ -8,6 +8,7 @@ import { PublicSidebar } from "@/components/public/public-sidebar";
 import { PublicHeader } from "@/components/public/public-header";
 import { SidebarProvider } from "@/components/public/sidebar-context";
 import { cn } from "@/lib/utils";
+import { useOnboardingRedirect } from "@/hooks/use-onboarding-redirect";
 
 export default function MainLayout({
   children,
@@ -17,6 +18,7 @@ export default function MainLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, isLoading } = useConvexAuth();
+  useOnboardingRedirect();
 
   // Hide bottom nav padding when inside a chat conversation on mobile
   const isChatConversation =

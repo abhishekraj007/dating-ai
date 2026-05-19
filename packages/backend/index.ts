@@ -18,3 +18,10 @@ export {
   type ZodiacSign,
   type Interest,
 } from "./convex/lib/constants";
+export {
+  SUPPORTED_LANGUAGES,
+  DEFAULT_LANGUAGE,
+  getLanguageLabel,
+  resolveChatLanguage,
+  type AppLanguage,
+} from "./convex/lib/languages";

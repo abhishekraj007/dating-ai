@@ -70,6 +70,7 @@ import type * as lib_betterAuth_component from "../lib/betterAuth/component.js";
 import type * as lib_betterAuth_createAuth from "../lib/betterAuth/createAuth.js";
 import type * as lib_betterAuth_index from "../lib/betterAuth/index.js";
 import type * as lib_constants from "../lib/constants.js";
+import type * as lib_languages from "../lib/languages.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as lib_revenuecatWebhooks from "../lib/revenuecatWebhooks.js";
 import type * as lib_uploadValidation from "../lib/uploadValidation.js";
@@ -151,6 +152,7 @@ declare const fullApi: ApiFromModules<{
   "lib/betterAuth/createAuth": typeof lib_betterAuth_createAuth;
   "lib/betterAuth/index": typeof lib_betterAuth_index;
   "lib/constants": typeof lib_constants;
+  "lib/languages": typeof lib_languages;
   "lib/rateLimit": typeof lib_rateLimit;
   "lib/revenuecatWebhooks": typeof lib_revenuecatWebhooks;
   "lib/uploadValidation": typeof lib_uploadValidation;

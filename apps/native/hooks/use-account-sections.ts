@@ -10,6 +10,7 @@ import {
   LifeBuoy,
   MessageCircleQuestion,
   Palette,
+  MessageCircle,
   Settings,
   Share2,
   Star,
@@ -67,7 +68,8 @@ export type AccountSection = {
 type UseAccountSectionsOptions = {
   onOpenAppearance: () => void;
   onOpenNotifications: () => void;
-  onOpenLanguage: () => void;
+  onOpenAppLanguage: () => void;
+  onOpenChatLanguage: () => void;
   onOpenAccountActions: () => void;
   isAuthenticated: boolean;
 };
@@ -75,7 +77,8 @@ type UseAccountSectionsOptions = {
 export const useAccountSections = ({
   onOpenAppearance,
   onOpenNotifications,
-  onOpenLanguage,
+  onOpenAppLanguage,
+  onOpenChatLanguage,
   onOpenAccountActions,
   isAuthenticated,
 }: UseAccountSectionsOptions) => {
@@ -210,10 +213,16 @@ export const useAccountSections = ({
             : () => router.push("/(root)/(auth)"),
         },
         {
-          id: "language",
+          id: "app-language",
           title: t("account.item.language"),
           icon: Settings,
-          onPress: onOpenLanguage,
+          onPress: onOpenAppLanguage,
+        },
+        {
+          id: "chat-language",
+          title: t("account.item.chatLanguage"),
+          icon: MessageCircle,
+          onPress: onOpenChatLanguage,
         },
         ...(isAuthenticated
           ? [

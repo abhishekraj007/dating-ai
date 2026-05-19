@@ -3,6 +3,11 @@ import { z } from "zod/v3";
 import { components } from "../../_generated/api";
 import type { Doc } from "../../_generated/dataModel";
 import { gatewayProvider, openRouterProvider } from "./aiProviders";
+import {
+  DEFAULT_LANGUAGE,
+  getLanguageLabel,
+  type AppLanguage,
+} from "../../lib/languages";
 
 // Default ElevenLabs voice IDs per gender
 export const DEFAULT_VOICES = {
@@ -87,6 +92,7 @@ function getAgentEmbeddingModel(provider: AgentProvider) {
 export function buildPersonalityPrompt(
   profile: Doc<"aiProfiles">,
   nsfwEnabled: boolean = true,
+  chatLanguage: AppLanguage = DEFAULT_LANGUAGE,
 ): string {
   const parts: Array<string> = [`You are ${profile.name}`];
 
@@ -182,6 +188,13 @@ export function buildPersonalityPrompt(
       }
     }
   }
+
+  const languageName = getLanguageLabel(chatLanguage);
+  prompt += `
+
+## Language Guidelines:
+- Always reply in ${languageName} (${chatLanguage}) unless the user clearly writes in another language.
+- When the user switches languages mid-conversation, match their latest message language naturally.`;
 
   // Add consistent behavior instructions
   prompt += `
@@ -507,6 +520,7 @@ export function createAIProfileAgent(
   profile: Doc<"aiProfiles">,
   provider: AgentProvider = AI_AGENT_PROVIDER,
   nsfwEnabled: boolean = true,
+  chatLanguage: AppLanguage = DEFAULT_LANGUAGE,
 ) {
   const languageModel = getAgentLanguageModel(provider);
   if (!languageModel) {
@@ -532,7 +546,7 @@ export function createAIProfileAgent(
     name: profile.name,
     languageModel,
     textEmbeddingModel: embeddingModel,
-    instructions: buildPersonalityPrompt(profile, nsfwEnabled),
+    instructions: buildPersonalityPrompt(profile, nsfwEnabled, chatLanguage),
     tools: {
       generateImage: generateImageTool,
       generateQuiz: generateQuizTool,

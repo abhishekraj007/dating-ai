@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api, useConvexAuth, useMutation, useQuery } from "@dating-ai/backend";
 import {
+  useCallback,
   createContext,
   useContext,
   useEffect,
@@ -53,11 +54,11 @@ export const LanguageProvider = ({
   const [isLanguageLoaded, setIsLanguageLoaded] = useState(false);
   const hasSyncedSessionRef = useRef(false);
   const remoteLanguage = useQuery(
-    (api as any).features.preferences.queries.getUserAppLanguage,
+    api.features.preferences.queries.getUserAppLanguage,
     isAuthenticated ? {} : "skip",
   ) as AppLanguage | null | undefined;
   const setRemoteLanguage = useMutation(
-    (api as any).features.preferences.queries.setUserAppLanguage,
+    api.features.preferences.queries.setUserAppLanguage,
   );
 
   const isSupportedLanguage = (
@@ -136,17 +137,20 @@ export const LanguageProvider = ({
     setRemoteLanguage,
   ]);
 
-  const setLanguage = async (nextLanguage: AppLanguage) => {
-    setLanguageState(nextLanguage);
-    try {
-      await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
-      if (isAuthenticated) {
-        await setRemoteLanguage({ appLanguage: nextLanguage });
+  const setLanguage = useCallback(
+    async (nextLanguage: AppLanguage) => {
+      setLanguageState(nextLanguage);
+      try {
+        await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
+        if (isAuthenticated) {
+          await setRemoteLanguage({ appLanguage: nextLanguage });
+        }
+      } catch (error) {
+        console.log("Error saving language preference:", error);
       }
-    } catch (error) {
-      console.log("Error saving language preference:", error);
-    }
-  };
+    },
+    [isAuthenticated, setRemoteLanguage],
+  );
 
   const value = useMemo(() => {
     const t = (key: string, values?: TranslationValues) => {
@@ -162,7 +166,7 @@ export const LanguageProvider = ({
       setLanguage,
       t,
     };
-  }, [isLanguageLoaded, language]);
+  }, [isLanguageLoaded, language, setLanguage]);
 
   return (
     <LanguageContext.Provider value={value}>

@@ -5,6 +5,7 @@ import "../global.css";
 import { HeroUINativeProvider } from "heroui-native";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 import { LanguageProvider } from "@/contexts/language-context";
+import { ChatLanguageProvider } from "@/contexts/chat-language-context";
 import { PurchasesProvider } from "@/contexts/purchases-context";
 import ConvexProvider from "@/providers/ConvexProvider";
 import SplashScreenProvider from "@/providers/SplashScreenProvider";
@@ -35,6 +36,7 @@ export default function Layout() {
       <KeyboardProvider>
         <ConvexProvider>
           <LanguageProvider>
+            <ChatLanguageProvider>
             <AppThemeProvider>
               <SplashScreenProvider>
                 <PurchasesProvider>
@@ -44,6 +46,7 @@ export default function Layout() {
                 </PurchasesProvider>
               </SplashScreenProvider>
             </AppThemeProvider>
+            </ChatLanguageProvider>
           </LanguageProvider>
         </ConvexProvider>
       </KeyboardProvider>

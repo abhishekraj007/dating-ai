@@ -8,10 +8,9 @@ import { toast } from "sonner";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { getSiteUrl } from "@/lib/site";
+import { useLanguagePreferences } from "@/hooks/use-language-preferences";
+import type { AppLanguage } from "@dating-ai/backend";
 
-const LANGUAGE_STORAGE_KEY = "feelai.languagePreference";
-
-type LanguagePreference = "auto" | "en";
 type NotificationStatus = NotificationPermission | "unsupported";
 
 function getUserIdentity(
@@ -53,15 +52,24 @@ export function useAccountScreen() {
     api.features.appConfig.queries.getPublicAppConfig,
   );
   const { resolvedTheme, setTheme, theme } = useTheme();
+  const {
+    appLanguage,
+    chatLanguage,
+    appLanguageLabel,
+    chatLanguageLabel,
+    isLoaded: isLanguageLoaded,
+    setAppLanguage,
+    setChatLanguage,
+    supportedLanguages,
+  } = useLanguagePreferences();
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
   const [isPremiumOpen, setIsPremiumOpen] = useState(false);
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+  const [isAppLanguageOpen, setIsAppLanguageOpen] = useState(false);
+  const [isChatLanguageOpen, setIsChatLanguageOpen] = useState(false);
   const [isAccountDetailsOpen, setIsAccountDetailsOpen] = useState(false);
   const [isRateDialogOpen, setIsRateDialogOpen] = useState(false);
-  const [languagePreference, setLanguagePreference] =
-    useState<LanguagePreference>("auto");
   const [notificationStatus, setNotificationStatus] =
     useState<NotificationStatus>("unsupported");
   const [selectedRating, setSelectedRating] = useState(0);
@@ -72,7 +80,8 @@ export function useAccountScreen() {
     isAuthLoading ||
     isSessionPending ||
     userData === undefined ||
-    publicConfig === undefined;
+    publicConfig === undefined ||
+    !isLanguageLoaded;
   const credits = userData?.profile?.credits ?? 0;
   const isPremium = Boolean(userData?.profile?.isPremium);
   const themePreference =
@@ -83,7 +92,6 @@ export function useAccountScreen() {
       : themePreference === "light"
         ? "Light"
         : "Dark";
-  const languageLabel = languagePreference === "auto" ? "Auto" : "English";
   const notificationLabel =
     notificationStatus === "granted"
       ? "Enabled"
@@ -103,15 +111,6 @@ export function useAccountScreen() {
     if (typeof window === "undefined") {
       return;
     }
-
-    const storedPreference = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    const nextPreference = storedPreference === "en" ? "en" : "auto";
-
-    setLanguagePreference(nextPreference);
-
-    const browserLanguage = navigator.language?.split("-")[0] ?? "en";
-    document.documentElement.lang =
-      nextPreference === "auto" ? browserLanguage : nextPreference;
 
     if (!("Notification" in window)) {
       setNotificationStatus("unsupported");
@@ -164,22 +163,14 @@ export function useAccountScreen() {
     toast.success(`Theme updated to ${nextTheme}.`);
   };
 
-  const handleLanguageChange = (nextPreference: LanguagePreference) => {
-    setLanguagePreference(nextPreference);
+  const handleAppLanguageChange = async (nextLanguage: AppLanguage) => {
+    await setAppLanguage(nextLanguage);
+    toast.success("App language updated.");
+  };
 
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(LANGUAGE_STORAGE_KEY, nextPreference);
-
-      const browserLanguage = navigator.language?.split("-")[0] ?? "en";
-      document.documentElement.lang =
-        nextPreference === "auto" ? browserLanguage : nextPreference;
-    }
-
-    toast.success(
-      nextPreference === "auto"
-        ? "Language preference set to automatic."
-        : "Language preference set to English.",
-    );
+  const handleChatLanguageChange = async (nextLanguage: AppLanguage) => {
+    await setChatLanguage(nextLanguage);
+    toast.success("Chat language updated.");
   };
 
   const requestNotifications = async () => {
@@ -257,8 +248,13 @@ export function useAccountScreen() {
   };
 
   return {
+    appLanguage,
+    appLanguageLabel,
+    chatLanguage,
+    chatLanguageLabel,
     credits,
-    handleLanguageChange,
+    handleAppLanguageChange,
+    handleChatLanguageChange,
     handleShare,
     handleSignOut,
     handleSubmitRating,
@@ -266,16 +262,15 @@ export function useAccountScreen() {
     identity,
     isAccountDetailsOpen,
     isAppearanceOpen,
+    isAppLanguageOpen,
+    isChatLanguageOpen,
     isCreditsOpen,
-    isLanguageOpen,
     isLoading,
     isNotificationsOpen,
     isPremium,
     isPremiumOpen,
     isRateDialogOpen,
     isSigningOut,
-    languageLabel,
-    languagePreference,
     notificationLabel,
     notificationStatus,
     openHelpCenter: () => openResolvedUrl(helpCenterUrl),
@@ -289,12 +284,14 @@ export function useAccountScreen() {
     sendTestNotification,
     setIsAccountDetailsOpen,
     setIsAppearanceOpen,
+    setIsAppLanguageOpen,
+    setIsChatLanguageOpen,
     setIsCreditsOpen,
-    setIsLanguageOpen,
     setIsNotificationsOpen,
     setIsPremiumOpen,
     setIsRateDialogOpen,
     setSelectedRating,
+    supportedLanguages,
     themeLabel,
     themePreference,
   };

@@ -9,7 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
 import { SplashScreen } from "@/components/splash-screen";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-// import { useSyncOnboardingPreferences } from "@/hooks/useSyncOnboardingPreferences";
+import { useSyncOnboardingPreferences } from "@/hooks/useSyncOnboardingPreferences";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 
 export const unstable_settings = {
@@ -39,8 +39,7 @@ export default function RootLayout() {
   // Register for push notifications when user is authenticated
   usePushNotifications(userData?.userMetadata._id);
 
-  // Sync onboarding preferences after login (if any stored)
-  // useSyncOnboardingPreferences();
+  useSyncOnboardingPreferences();
 
   const hasResolvedAuthenticatedUser = Boolean(userData?.userMetadata);
   const hasCompletedOnboarding = Boolean(

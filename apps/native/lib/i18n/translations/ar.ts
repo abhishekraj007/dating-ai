@@ -48,6 +48,17 @@ export const ar: TranslationMap = {
   "welcome.subtitle":
     "تشعر بالوحدة؟ لست وحدك. تعرف على شخصيات تستمع إليك وتفهمك حقاً.",
   "welcome.cta": "ابدأ",
+  "onboarding.languages.title": "اختر لغاتك",
+  "onboarding.languages.subtitle":
+    "حدد مظهر التطبيق واللغة التي يتحدث بها شركاؤك من الذكاء الاصطناعي.",
+  "onboarding.languages.appTitle": "لغة التطبيق",
+  "onboarding.languages.appDescription":
+    "تتحكم في القوائم والأزرار ونصوص التطبيق الأخرى.",
+  "onboarding.languages.chatTitle": "لغة الدردشة",
+  "onboarding.languages.chatDescription":
+    "تتحكم في اللغة التي يرد بها رفاقك من الذكاء الاصطناعي.",
+
+
   "onboarding.gender.title": "بمن أنت مهتم؟",
   "onboarding.gender.female": "إناث",
   "onboarding.gender.male": "ذكور",
@@ -93,6 +104,9 @@ export const ar: TranslationMap = {
   "account.actions.deleting": "جارٍ الحذف...",
   "account.sheet.title": "اختر لغة التطبيق",
   "account.sheet.subtitle": "اختر لغتك الأم. اللغة الافتراضية هي الإنجليزية.",
+  "account.sheet.chatTitle": "اختر لغة الدردشة",
+  "account.sheet.chatSubtitle":
+    "اختر اللغة التي يجب أن يستخدمها رفاقك من الذكاء الاصطناعي في المحادثات.",
   "account.section.quickActions": "إجراءات سريعة",
   "account.section.support": "الدعم",
   "account.section.supportDescription":
@@ -103,7 +117,8 @@ export const ar: TranslationMap = {
   "account.item.appearance": "المظهر",
   "account.item.settings": "الإعدادات",
   "account.item.notifications": "الإشعارات",
-  "account.item.language": "اللغة",
+  "account.item.language": "لغة التطبيق",
+  "account.item.chatLanguage": "لغة الدردشة",
   "account.item.account": "الحساب",
   "account.item.accountDescription": "تسجيل الخروج وإدارة حذف الحساب.",
   "account.item.signOutDescription": "تسجيل الخروج من هذا الجهاز.",

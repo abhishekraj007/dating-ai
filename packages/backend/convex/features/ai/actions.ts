@@ -199,6 +199,11 @@ export const generateResponse = internalAction({
       return null;
     }
 
+    const chatLanguage = await ctx.runQuery(
+      internal.features.ai.internalQueries.getUserChatLanguageInternal,
+      { userId: convUserId! },
+    );
+
     // Determine NSFW eligibility based on app config and request platform.
     // Missing config is treated as disabled until an allowed platform is set.
     const appConfig = await ctx.runQuery(
@@ -234,7 +239,12 @@ export const generateResponse = internalAction({
 
     for (const provider of providers) {
       try {
-        const agent = createAIProfileAgent(profile, provider, nsfwEnabled);
+        const agent = createAIProfileAgent(
+          profile,
+          provider,
+          nsfwEnabled,
+          chatLanguage,
+        );
         result = await agent.streamText(
           ctx,
           { threadId: convThreadId!, userId: convUserId! },

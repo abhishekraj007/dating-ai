@@ -16,9 +16,11 @@ import {
   Dot,
   DotIcon,
   Hand,
+  MessageCircle,
   MoreVertical,
   Trash2,
 } from "lucide-react-native";
+import { LanguageSheet } from "@/components/language/language-sheet";
 import {
   ChatForm,
   MessageBubble,
@@ -98,6 +100,8 @@ export default function ChatScreen() {
     setIsTopicsSheetOpen,
     isSuggestionsSheetOpen,
     setIsSuggestionsSheetOpen,
+    isChatLanguageOpen,
+    setIsChatLanguageOpen,
 
     // Computed values
     interactiveQuizQuestionId,
@@ -118,6 +122,7 @@ export default function ChatScreen() {
     handleSuggestionSelect,
     handleRetryFailedResponse,
     handleClearChat,
+    handleOpenChatLanguage,
     handleOpenCreditsModal,
   } = useChatScreen();
 
@@ -226,15 +231,24 @@ export default function ChatScreen() {
                   placement="bottom"
                   align="end"
                   className="rounded-xl p-2"
-                  width={180}
+                  width={200}
                 >
+                  <Pressable
+                    onPress={handleOpenChatLanguage}
+                    className="flex-row items-center gap-3 px-3 py-3 rounded-lg active:bg-surface"
+                  >
+                    <MessageCircle size={20} color={foregroundColor} />
+                    <Text className="text-foreground text-base font-medium">
+                      {t("account.item.chatLanguage")}
+                    </Text>
+                  </Pressable>
                   <Pressable
                     onPress={handleClearChat}
                     className="flex-row items-center gap-3 px-3 py-3 rounded-lg active:bg-surface"
                   >
                     <Trash2 size={20} color="#ef4444" />
                     <Text className="text-red-500 text-base font-medium">
-                      Clear Chat
+                      {t("chat.clearTitle")}
                     </Text>
                   </Pressable>
                 </Popover.Content>
@@ -415,6 +429,12 @@ export default function ChatScreen() {
         isOpen={isSuggestionsSheetOpen}
         onClose={() => setIsSuggestionsSheetOpen(false)}
         onSelectSuggestion={handleSuggestionSelect}
+      />
+
+      <LanguageSheet
+        variant="chat"
+        isOpen={isChatLanguageOpen}
+        onOpenChange={setIsChatLanguageOpen}
       />
     </SafeAreaView>
   );

@@ -32,14 +32,16 @@ export default function AccountScreen() {
   const { clearAppCache, isClearingCache } = useClearAppCache();
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
   const [isNotificationSheetOpen, setIsNotificationSheetOpen] = useState(false);
-  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+  const [isAppLanguageOpen, setIsAppLanguageOpen] = useState(false);
+  const [isChatLanguageOpen, setIsChatLanguageOpen] = useState(false);
   const [isAccountActionsOpen, setIsAccountActionsOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const { sections } = useAccountSections({
     onOpenAppearance: () => setIsAppearanceOpen(true),
     onOpenNotifications: () => setIsNotificationSheetOpen(true),
-    onOpenLanguage: () => setIsLanguageOpen(true),
+    onOpenAppLanguage: () => setIsAppLanguageOpen(true),
+    onOpenChatLanguage: () => setIsChatLanguageOpen(true),
     onOpenAccountActions: () => setIsAccountActionsOpen(true),
     isAuthenticated,
   });
@@ -210,8 +212,14 @@ export default function AccountScreen() {
           />
         ) : null}
         <LanguageSheet
-          isOpen={isLanguageOpen}
-          onOpenChange={setIsLanguageOpen}
+          variant="app"
+          isOpen={isAppLanguageOpen}
+          onOpenChange={setIsAppLanguageOpen}
+        />
+        <LanguageSheet
+          variant="chat"
+          isOpen={isChatLanguageOpen}
+          onOpenChange={setIsChatLanguageOpen}
         />
         {isAuthenticated ? (
           <AccountActionsSheet

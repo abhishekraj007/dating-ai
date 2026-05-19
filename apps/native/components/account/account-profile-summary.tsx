@@ -7,7 +7,9 @@ import {
   useThemeColor,
 } from "heroui-native";
 import { Crown, Coins } from "lucide-react-native";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { PremiumButton } from "@/components/ui/premium-button";
+import { premiumColors } from "@/lib/theme/premium-colors";
 import { useTranslation } from "@/hooks/use-translation";
 
 type AccountProfileSummaryProps = {
@@ -74,19 +76,24 @@ export const AccountProfileSummary = ({
           </Button>
 
           {!isPremium && (
-            <Button
-              variant="primary"
-              className="flex-1"
+            <PremiumButton
+              label={t("account.profile.getPremium")}
               onPress={onShowSubscription}
-            >
-              <Crown size={14} color="white" />
-              <Text className="text-white font-medium">
-                {t("account.profile.getPremium")}
-              </Text>
-            </Button>
+              size="compact"
+              style={styles.premiumButton}
+              startContent={
+                <Crown size={14} color={premiumColors.foreground} />
+              }
+            />
           )}
         </View>
       </View>
     </Surface>
   );
 };
+
+const styles = StyleSheet.create({
+  premiumButton: {
+    flex: 1,
+  },
+});

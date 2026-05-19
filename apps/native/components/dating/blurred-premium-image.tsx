@@ -1,8 +1,9 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Image, type ImageProps } from "expo-image";
 import { useState } from "react";
-import { Button, Avatar, Dialog } from "heroui-native";
+import { Avatar, Dialog } from "heroui-native";
 import { X, Lock } from "lucide-react-native";
+import { PremiumButton } from "@/components/ui/premium-button";
 import { usePurchases } from "@/contexts/purchases-context";
 import { useConvexAuth } from "convex/react";
 import { useRouter } from "expo-router";
@@ -62,7 +63,7 @@ export function BlurredPremiumImage({
           blurRadius={60}
           cachePolicy="disk"
         />
-        <View style={[styles.overlay, { borderRadius }]}>
+        <View style={[styles.overlay, { width, height, borderRadius }]}>
           <View style={styles.lockBadge}>
             <Lock size={16} color="#fff" />
           </View>
@@ -74,7 +75,7 @@ export function BlurredPremiumImage({
 
       <Dialog isOpen={showUnlockModal} onOpenChange={setShowUnlockModal}>
         <Dialog.Portal
-          style={[StyleSheet.absoluteFillObject, styles.dialogPortal]}
+          style={[StyleSheet.absoluteFill, styles.dialogPortal]}
         >
           <Dialog.Overlay className="bg-black/70" />
           <Dialog.Content className="w-[90%] max-w-[360px] self-center bg-[#1a1a1a] rounded-3xl overflow-hidden p-0">
@@ -106,14 +107,11 @@ export function BlurredPremiumImage({
                 {t("premium.unlockDescription", { name: profileName })}
               </Dialog.Description>
 
-              <Button
-                variant="primary"
-                size="lg"
+              <PremiumButton
+                label={t("premium.unlockUnlimited")}
                 onPress={handleUnlock}
-                className="w-full mt-4 bg-gradient-to-r from-green-500 to-green-800"
-              >
-                <Button.Label>{t("premium.unlockUnlimited")}</Button.Label>
-              </Button>
+                style={styles.modalPremiumButton}
+              />
             </View>
           </Dialog.Content>
         </Dialog.Portal>
@@ -137,7 +135,9 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    left: 0,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.1)",
@@ -211,5 +211,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 8,
     lineHeight: 22,
+  },
+  modalPremiumButton: {
+    marginTop: 16,
   },
 });

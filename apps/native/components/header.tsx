@@ -7,6 +7,8 @@ import { useQuery } from "convex-helpers/react/cache";
 import { usePurchases } from "@/contexts/purchases-context";
 import { api } from "@dating-ai/backend";
 import { AppLogo } from "./app-logo";
+import { PremiumButton } from "@/components/ui/premium-button";
+import { premiumColors } from "@/lib/theme/premium-colors";
 import { useTranslation } from "@/hooks/use-translation";
 
 interface HeaderProps {
@@ -63,15 +65,14 @@ export const Header = ({
         {isAuthenticated ? (
           <>
             {!hidePaywall && !isPremium && (
-              <Button
-                variant="tertiary"
-                size="sm"
-                isIconOnly
-                className="rounded-full bg-pink-500"
+              <PremiumButton
+                variant="icon"
+                label={t("account.profile.getPremium")}
                 onPress={presentPaywall}
-              >
-                <Crown size={16} color={foregroundColor} />
-              </Button>
+                startContent={
+                  <Crown size={16} color={premiumColors.foreground} />
+                }
+              />
             )}
 
             {!hideCredits && (

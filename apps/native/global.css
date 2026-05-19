@@ -10,6 +10,19 @@
   --font-normal: "Inter_400Regular";
   --font-medium: "Inter_500Medium";
   --font-semibold: "Inter_600SemiBold";
+
+  /* Premium button — sync with lib/theme/premium-colors.ts */
+  --color-premium-50: #fff4c2;
+  --color-premium-100: #fff8dc;
+  --color-premium-200: #f5d547;
+  --color-premium-300: #f0c814;
+  --color-premium-400: #e6b800;
+  --color-premium-500: #dba400;
+  --color-premium-600: #c99400;
+  --color-premium-700: #b8860b;
+  --color-premium-800: #8b6914;
+  --color-premium-foreground: #1a1200;
+  --color-premium-foreground-muted: #4a4030;
 }
 
 @variant light {

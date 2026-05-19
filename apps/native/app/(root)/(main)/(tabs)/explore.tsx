@@ -10,8 +10,10 @@ import { Text } from "@/components/ui/text";
 import { Header } from "@/components";
 import { FlashList } from "@shopify/flash-list";
 import { useCallback, useEffect } from "react";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function ExploreScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const foregroundColor = useThemeColor("foreground");
   const { height } = Dimensions.get("window");
@@ -131,7 +133,7 @@ export default function ExploreScreen() {
         edges={["top"]}
       >
         <Header
-          title="Explore"
+          title={t("tabs.explore")}
           showSettings={false}
           hidePaywall
           hideCredits

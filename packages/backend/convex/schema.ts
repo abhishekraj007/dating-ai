@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { appLanguageValidator } from "./lib/languages";
 
 export default defineSchema({
   profile: defineTable({
@@ -32,20 +33,8 @@ export default defineSchema({
   // User preferences for AI profile matching (from onboarding)
   userPreferences: defineTable({
     userId: v.string(), // Better Auth user ID
-    appLanguage: v.optional(
-      v.union(
-        v.literal("en"),
-        v.literal("es"),
-        v.literal("fr"),
-        v.literal("de"),
-        v.literal("pt"),
-        v.literal("hi"),
-        v.literal("ja"),
-        v.literal("ko"),
-        v.literal("zh"),
-        v.literal("ar"),
-      ),
-    ),
+    appLanguage: v.optional(appLanguageValidator),
+    chatLanguage: v.optional(appLanguageValidator),
     // Gender preference
     genderPreference: v.union(
       v.literal("female"),

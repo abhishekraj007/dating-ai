@@ -1,5 +1,4 @@
-import { useAppTheme } from "@/contexts/app-theme-context";
-import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
+import type { NativeStackNavigationOptions } from "expo-router/build/react-navigation/native-stack";
 import { useThemeColor } from "heroui-native";
 import { useMemo } from "react";
 import { Platform } from "react-native";
@@ -7,7 +6,6 @@ import { Platform } from "react-native";
 export const useNavigationOptions = () => {
   const background = useThemeColor("background");
   const foreground = useThemeColor("foreground");
-  const { isDark } = useAppTheme();
 
   // const { colors } = useTheme();
   return useMemo(() => {
