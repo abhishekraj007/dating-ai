@@ -169,11 +169,6 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
         Purchases.PRODUCT_CATEGORY.NON_SUBSCRIPTION,
       );
 
-      console.log(
-        "revenuecat-> Fetched products:",
-        JSON.stringify(products, null, 2),
-      );
-
       setCreditPackages(products);
 
       return products;
