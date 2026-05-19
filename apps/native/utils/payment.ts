@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
 
-const isDevelopment = process.env.NODE_ENV === "development";
+export const isDevelopment = process.env.NODE_ENV === "development";
 const simulateProd = process.env.EXPO_PUBLIC_SIMULATE_PROD === "true";
 
 console.log("Payment config - simulateProd:", simulateProd);

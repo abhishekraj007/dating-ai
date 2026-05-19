@@ -12,7 +12,7 @@ import { SUPPORTED_LANGUAGES } from "@/lib/i18n/types";
 import type { AppLanguage } from "@/lib/i18n/types";
 
 function getLanguageLabel(code: AppLanguage) {
-  return SUPPORTED_LANGUAGES.find((l) => l.code === code)?.label ?? code;
+  return SUPPORTED_LANGUAGES?.find((l) => l.code === code)?.label ?? code;
 }
 
 type SelectorRowProps = {

@@ -8,13 +8,19 @@ import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { useConvexAuth } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend";
-import { getAPIKey } from "@/utils/payment";
+import { getAPIKey, isDevelopment } from "@/utils/payment";
 
 const DEFAULT_CREDIT_PRODUCT_IDS: Array<string> = [
   "feelchat.rc_credit_1999",
   "feelchat.rc_credit_3900",
   "feelchat.rc_credit_4999",
   "feelchat.rc_credit_8999",
+];
+
+const TEST_CREDIT_PRODUCT_IDS: Array<string> = [
+  "credits_1000",
+  "credits_2500",
+  "credits_5000",
 ];
 
 type RuntimeAppConfig = {
@@ -58,8 +64,10 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
   ) as RuntimeAppConfig | undefined;
 
   const configuredCreditProductIds = appConfig?.revenueCatCreditProductIds;
-  const creditProductIds =
-    configuredCreditProductIds && configuredCreditProductIds.length > 0
+
+  const creditProductIds = __DEV__
+    ? TEST_CREDIT_PRODUCT_IDS
+    : configuredCreditProductIds && configuredCreditProductIds.length > 0
       ? configuredCreditProductIds
       : DEFAULT_CREDIT_PRODUCT_IDS;
   const creditProductIdKey = creditProductIds.join("|");
@@ -111,8 +119,6 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
     try {
       const apiKey = getAPIKey();
 
-      console.log("revenuecat-> Configuring SDK anonymously");
-
       // Configure RevenueCat without a user ID (creates anonymous ID)
 
       Purchases.setLogLevel(Purchases.LOG_LEVEL.ERROR);
@@ -161,6 +167,11 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
       const products = await Purchases.getProducts(
         productIds,
         Purchases.PRODUCT_CATEGORY.NON_SUBSCRIPTION,
+      );
+
+      console.log(
+        "revenuecat-> Fetched products:",
+        JSON.stringify(products, null, 2),
       );
 
       setCreditPackages(products);
