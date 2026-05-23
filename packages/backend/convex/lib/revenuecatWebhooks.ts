@@ -21,6 +21,28 @@ import { getCreditAmountFromProductId } from "../features/appConfig/shared";
  * - PRODUCT_CHANGE: User changed subscription tier
  */
 
+type RevenueCatSubscriberAttribute =
+  | {
+      value?: unknown;
+    }
+  | string
+  | null
+  | undefined;
+
+type ResolvedRevenueCatUser = {
+  userId: string;
+  source: string;
+};
+
+const REVENUECAT_ANONYMOUS_ID_PREFIX = "$RCAnonymousID:";
+
+const REVENUECAT_AUTH_USER_ATTRIBUTE_KEYS = [
+  "authUserId",
+  "betterAuthUserId",
+  "appUserId",
+  "userId",
+];
+
 /**
  * RevenueCat webhook event structure
  */
@@ -28,10 +50,11 @@ interface RevenueCatEvent {
   api_version: string;
   event: {
     type: string;
-    app_user_id: string;
-    original_app_user_id: string;
-    product_id: string;
-    period_type: "TRIAL" | "INTRO" | "NORMAL";
+    app_user_id?: string;
+    original_app_user_id?: string;
+    aliases?: string[];
+    product_id?: string;
+    period_type?: "TRIAL" | "INTRO" | "NORMAL" | null;
     purchased_at_ms: number;
     expiration_at_ms?: number;
     store: "APP_STORE" | "PLAY_STORE" | "STRIPE" | "PROMOTIONAL";
@@ -45,7 +68,9 @@ interface RevenueCatEvent {
     country_code?: string;
     price?: number;
     currency?: string;
-    subscriber_attributes?: Record<string, any>;
+    subscriber_attributes?: Record<string, RevenueCatSubscriberAttribute>;
+    transferred_from?: string[];
+    transferred_to?: string[];
     takehome_percentage?: number;
     offer_code?: string;
     cancel_reason?:
@@ -91,7 +116,7 @@ function getProductKey(productId: string): string | undefined {
  * Determine if product is a subscription
  */
 function isSubscriptionProduct(event: RevenueCatEvent["event"]): boolean {
-  const productId = event.product_id.toLowerCase();
+  const productId = event.product_id?.toLowerCase() ?? "";
 
   return (
     event.entitlement_id === "premium" ||
@@ -104,6 +129,117 @@ function isSubscriptionProduct(event: RevenueCatEvent["event"]): boolean {
   );
 }
 
+function getRevenueCatPlatformSubscriptionId(
+  event: RevenueCatEvent["event"],
+): string | null {
+  return (
+    event.original_transaction_id ||
+    event.transaction_id ||
+    event.product_id ||
+    null
+  );
+}
+
+function isRevenueCatAnonymousId(userId: string | null | undefined): boolean {
+  return !userId || userId.startsWith(REVENUECAT_ANONYMOUS_ID_PREFIX);
+}
+
+function getSubscriberAttributeValue(
+  attributes: RevenueCatEvent["event"]["subscriber_attributes"],
+  key: string,
+): string | undefined {
+  const attribute = attributes?.[key];
+
+  if (typeof attribute === "string") {
+    return attribute.trim() || undefined;
+  }
+
+  if (!attribute || typeof attribute !== "object") {
+    return undefined;
+  }
+
+  const value = attribute.value;
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : undefined;
+}
+
+function getRevenueCatUserCandidates(
+  event: RevenueCatEvent["event"],
+): Array<{ userId: string; source: string }> {
+  const candidates: Array<{ userId: string; source: string }> = [];
+
+  const addCandidate = (userId: string | null | undefined, source: string) => {
+    const trimmedUserId = userId?.trim();
+
+    if (!trimmedUserId) {
+      return;
+    }
+
+    if (candidates.some((candidate) => candidate.userId === trimmedUserId)) {
+      return;
+    }
+
+    candidates.push({ userId: trimmedUserId, source });
+  };
+
+  for (const transferredUserId of event.transferred_to ?? []) {
+    addCandidate(transferredUserId, "transferred_to");
+  }
+
+  addCandidate(event.app_user_id, "app_user_id");
+  addCandidate(event.original_app_user_id, "original_app_user_id");
+
+  for (const alias of event.aliases ?? []) {
+    addCandidate(alias, "aliases");
+  }
+
+  for (const key of REVENUECAT_AUTH_USER_ATTRIBUTE_KEYS) {
+    addCandidate(
+      getSubscriberAttributeValue(event.subscriber_attributes, key),
+      `subscriber_attributes.${key}`,
+    );
+  }
+
+  return candidates;
+}
+
+async function resolveRevenueCatWebhookUser(
+  ctx: ActionCtx,
+  event: RevenueCatEvent["event"],
+): Promise<ResolvedRevenueCatUser | null> {
+  const identifiedCandidate = getRevenueCatUserCandidates(event).find(
+    (candidate) => !isRevenueCatAnonymousId(candidate.userId),
+  );
+
+  if (identifiedCandidate) {
+    return identifiedCandidate;
+  }
+
+  const platformSubscriptionId = getRevenueCatPlatformSubscriptionId(event);
+  const existingSubscription = platformSubscriptionId
+    ? await ctx.runQuery(
+        internal.features.subscriptions.queries
+          .getSubscriptionByPlatformSubscriptionId,
+        {
+          platformSubscriptionId,
+        },
+      )
+    : null;
+
+  if (
+    existingSubscription &&
+    !isRevenueCatAnonymousId(existingSubscription.userId)
+  ) {
+    return {
+      userId: existingSubscription.userId,
+      source: "existing_subscription",
+    };
+  }
+
+  return null;
+}
+
 /**
  * Main webhook handler
  */
@@ -112,13 +248,10 @@ export const handleRevenueCatWebhook = httpAction(async (ctx, request) => {
     // Verify webhook signature (optional but recommended)
     const authHeader = request.headers.get("Authorization");
     const expectedAuth = process.env.REVENUECAT_WEBHOOK_SECRET;
-    console.log(
-      "[REVENUECAT WEBHOOK SECRETS] Received webhook with auth header:",
-      {
-        authHeader,
-        expectedAuth,
-      },
-    );
+    console.log("[REVENUECAT WEBHOOK] Received webhook", {
+      hasAuthHeader: Boolean(authHeader),
+      hasExpectedAuth: Boolean(expectedAuth),
+    });
 
     if (expectedAuth && authHeader !== expectedAuth) {
       console.error("[REVENUECAT WEBHOOK] Invalid authorization");
@@ -129,16 +262,33 @@ export const handleRevenueCatWebhook = httpAction(async (ctx, request) => {
     const event = body.event;
 
     console.log("[REVENUECAT WEBHOOK] Event type:", event.type);
-    console.log("[REVENUECAT WEBHOOK] Product ID:", event.product_id);
+    console.log("[REVENUECAT WEBHOOK] Product ID:", event.product_id ?? "none");
     console.log("[REVENUECAT WEBHOOK] User ID:", event.app_user_id);
 
-    // Extract user ID (RevenueCat app_user_id should match our betterAuth user ID)
-    const userId = event.app_user_id;
+    const resolvedUser = await resolveRevenueCatWebhookUser(ctx, event);
 
-    if (!userId) {
-      console.error("[REVENUECAT WEBHOOK] No app_user_id in event");
-      return new Response("Missing user ID", { status: 400 });
+    if (!resolvedUser) {
+      console.warn(
+        "[REVENUECAT WEBHOOK] Skipping event without an identified app user ID",
+        {
+          eventType: event.type,
+          productId: event.product_id,
+          appUserId: event.app_user_id,
+          originalAppUserId: event.original_app_user_id,
+          aliases: event.aliases ?? [],
+          transferredTo: event.transferred_to ?? [],
+          platformSubscriptionId: getRevenueCatPlatformSubscriptionId(event),
+        },
+      );
+      return new Response("OK", { status: 200 });
     }
+
+    const userId = resolvedUser.userId;
+
+    console.log("[REVENUECAT WEBHOOK] Resolved user ID", {
+      userId,
+      source: resolvedUser.source,
+    });
 
     // Route to appropriate handler based on event type
     switch (event.type) {
@@ -172,6 +322,10 @@ export const handleRevenueCatWebhook = httpAction(async (ctx, request) => {
 
       case "PRODUCT_CHANGE":
         await handleProductChange(ctx, event, userId);
+        break;
+
+      case "TRANSFER":
+        await handleTransfer(ctx, event, userId);
         break;
 
       default:
@@ -409,6 +563,59 @@ async function handleProductChange(
 }
 
 /**
+ * Handle transfer events created by restore/alias flows
+ */
+async function handleTransfer(
+  ctx: ActionCtx,
+  event: RevenueCatEvent["event"],
+  userId: string,
+) {
+  console.log(
+    "[REVENUECAT] Processing transfer",
+    JSON.stringify(event, null, 2),
+  );
+
+  if (!isSubscriptionProduct(event)) {
+    console.log("[REVENUECAT] Transfer does not include premium access");
+    return;
+  }
+
+  if (event.product_id) {
+    await createOrUpdateSubscription(ctx, event, userId, "active");
+  } else {
+    console.log("[REVENUECAT] Transfer missing product_id, skipping upsert");
+  }
+
+  await ctx.runMutation(
+    internal.features.premium.mutations.syncPremiumFromSubscription,
+    {
+      userId,
+      hasActiveSubscription: true,
+    },
+  );
+
+  for (const previousUserId of event.transferred_from ?? []) {
+    if (isRevenueCatAnonymousId(previousUserId) || previousUserId === userId) {
+      continue;
+    }
+
+    await ctx.runMutation(
+      internal.features.premium.mutations.syncPremiumFromSubscription,
+      {
+        userId: previousUserId,
+        hasActiveSubscription: false,
+      },
+    );
+  }
+
+  console.log("[REVENUECAT] Transfer processed", {
+    userId,
+    transferredFrom: event.transferred_from ?? [],
+    transferredTo: event.transferred_to ?? [],
+  });
+}
+
+/**
  * Create or update subscription record
  */
 async function createOrUpdateSubscription(
@@ -417,6 +624,16 @@ async function createOrUpdateSubscription(
   userId: string,
   status: "active" | "canceled" | "expired" | "past_due",
 ): Promise<SubscriptionUpsertResult> {
+  if (!event.product_id) {
+    throw new Error("RevenueCat event missing product_id");
+  }
+
+  const platformSubscriptionId = getRevenueCatPlatformSubscriptionId(event);
+
+  if (!platformSubscriptionId) {
+    throw new Error("RevenueCat event missing subscription identifier");
+  }
+
   const productType = getProductKey(event.product_id);
 
   console.log("createOrUpdateSubscription", {
@@ -431,14 +648,18 @@ async function createOrUpdateSubscription(
     {
       userId,
       platform: "revenuecat" as const,
-      platformCustomerId: event.original_app_user_id,
-      platformSubscriptionId:
-        event.original_transaction_id ||
-        event.transaction_id ||
-        event.product_id,
+      platformCustomerId: event.original_app_user_id ?? userId,
+      platformSubscriptionId,
       platformProductId: event.product_id,
-      customerEmail: event.subscriber_attributes?.email?.value || "",
-      customerName: event.subscriber_attributes?.name?.value,
+      customerEmail:
+        getSubscriberAttributeValue(event.subscriber_attributes, "$email") ??
+        getSubscriberAttributeValue(event.subscriber_attributes, "email") ??
+        "",
+      customerName:
+        getSubscriberAttributeValue(
+          event.subscriber_attributes,
+          "$displayName",
+        ) ?? getSubscriberAttributeValue(event.subscriber_attributes, "name"),
       status,
       productType,
       currentPeriodStart: event.purchased_at_ms,
@@ -459,6 +680,12 @@ async function handleCreditPurchase(
   userId: string,
 ) {
   const productId = event.product_id;
+
+  if (!productId) {
+    console.log("[REVENUECAT] Credit purchase missing product_id");
+    return;
+  }
+
   const appConfig = await ctx.runQuery(
     api.features.appConfig.queries.getPublicAppConfig,
     {},
@@ -487,6 +714,7 @@ async function handleCreditPurchase(
   // Check for duplicate processing (idempotency)
   const orderId =
     event.transaction_id || event.original_transaction_id || productId;
+
   const existingOrder = await ctx.runQuery(
     internal.features.subscriptions.queries.getOrderByPlatformOrderId,
     {

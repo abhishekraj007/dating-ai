@@ -4,7 +4,7 @@ import { ScrollView, Text, View, Pressable } from "react-native";
 import { Coins, Check, Sparkles, Zap } from "lucide-react-native";
 import { usePurchases } from "@/contexts/purchases-context";
 import { useRouter } from "expo-router";
-import Purchases, { PurchasesStoreProduct } from "react-native-purchases";
+import { PurchasesStoreProduct } from "react-native-purchases";
 import Animated, {
   FadeInDown,
   FadeInUp,
@@ -20,7 +20,7 @@ export default function BuyCreditsScreen() {
   const accentForeground = useThemeColor("accent-foreground");
 
   const router = useRouter();
-  const { creditPackages, isLoading } = usePurchases();
+  const { creditPackages, isLoading, purchaseStoreProduct } = usePurchases();
   const [selectedProduct, setSelectedProduct] =
     useState<PurchasesStoreProduct>();
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -60,8 +60,11 @@ export default function BuyCreditsScreen() {
 
     try {
       setIsPurchasing(true);
-      await Purchases.purchaseStoreProduct(selectedProduct);
-      router.back();
+      const didPurchase = await purchaseStoreProduct(selectedProduct);
+
+      if (didPurchase) {
+        router.back();
+      }
     } catch (error) {
       console.log("Purchase error:", error);
     } finally {
