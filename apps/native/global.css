@@ -29,12 +29,14 @@
   /* button theme */
   --accent: oklch(0.65 0.25 123);
   --divider: oklch(0.88 0 0);
+  --backdrop: oklch(0% 0 0 / 20%);
 }
 
 @variant dark {
   --accent: oklch(0.65 0.25 123);
   --background: oklch(0.15 0 0);
   --divider: oklch(0.32 0 0);
+  --backdrop: oklch(0% 0 0 / 20%);
 }
 
 @source '../../node_modules/heroui-native/lib';
