@@ -64,6 +64,18 @@ function sanitizeAgentMessage<T extends { text?: string; parts?: Array<any> }>(
   };
 }
 
+type WebVisibleProfile = {
+  visibleOn?: Array<"web" | "ios" | "android">;
+};
+
+function isVisibleOnWeb(profile: WebVisibleProfile) {
+  if (!profile.visibleOn || profile.visibleOn.length === 0) {
+    return true;
+  }
+
+  return profile.visibleOn.includes("web");
+}
+
 /**
  * Get all active AI profiles with optional gender filter.
  * Returns profiles with signed image URLs.
@@ -170,13 +182,7 @@ export const getPublicProfiles = query({
     const profiles = await profilesQuery.order("desc").take(limit ?? 24);
 
     return profiles
-      .filter((profile) => {
-        if (!profile.visibleOn || profile.visibleOn.length === 0) {
-          return true;
-        }
-
-        return profile.visibleOn.includes("web");
-      })
+      .filter(isVisibleOnWeb)
       .map((profile) => {
         const taglineSource =
           profile.bio ??
@@ -201,6 +207,42 @@ export const getPublicProfiles = query({
           occupation: profile.occupation ?? null,
           zodiacSign: profile.zodiacSign ?? null,
         };
+      });
+  },
+});
+
+export const getPublicSitemapProfiles = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      username: v.string(),
+      gender: v.union(v.literal("female"), v.literal("male")),
+      lastModified: v.number(),
+    }),
+  ),
+  handler: async (ctx) => {
+    const profiles = await ctx.db
+      .query("aiProfiles")
+      .withIndex("by_status_and_gender", (q) => q.eq("status", "active"))
+      .order("desc")
+      .collect();
+
+    return profiles
+      .filter(isVisibleOnWeb)
+      .flatMap((profile) => {
+        const username = normalizePublicProfileUsername(profile.username ?? "");
+
+        if (isReservedPublicProfileUsername(username)) {
+          return [];
+        }
+
+        return [
+          {
+            username,
+            gender: profile.gender,
+            lastModified: profile.createdAt ?? profile._creationTime,
+          },
+        ];
       });
   },
 });

@@ -23,6 +23,7 @@ import {
 } from "@/hooks/use-discover-preferences";
 import {
   PUBLIC_SEGMENTS,
+  type PublicSegment,
   genderPreferenceFromSegment,
   segmentFromPathname,
 } from "@/lib/public-segments";
@@ -81,7 +82,9 @@ export function PublicFilterBar() {
     pathname === "/" ? preferredSegment : segmentFromPathname(pathname);
 
   const handleSegmentClick = (segment: string) => {
-    const nextGenderPreference = genderPreferenceFromSegment(segment as any);
+    const nextGenderPreference = genderPreferenceFromSegment(
+      segment as PublicSegment,
+    );
 
     if (nextGenderPreference) {
       void setGenderPreference(nextGenderPreference);
@@ -254,7 +257,7 @@ export function PublicFilterBar() {
           </Button>
         ) : null}
 
-        {/* <div className="ml-auto hidden rounded-full border border-border/70 bg-card/50 p-1 shadow-sm md:block">
+        <div className="ml-auto hidden rounded-full border border-border/70 bg-card/50 p-1 shadow-sm md:block">
           <div
             className={cn(
               "grid gap-1",
@@ -288,7 +291,7 @@ export function PublicFilterBar() {
               );
             })}
           </div>
-        </div> */}
+        </div>
       </div>
 
       {hasActiveFilters ? (

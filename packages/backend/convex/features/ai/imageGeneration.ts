@@ -111,7 +111,11 @@ async function generateWithFal(args: {
 
   if (args.model === "gpt-image-2" && hasReference) {
     body.image_urls = args.referenceImageUrls;
-    body.image_size = "auto";
+    // Force a fresh frame instead of "auto". With "auto" the edit endpoint
+    // matches the reference image's framing and head crop, which causes
+    // every showcase slot to mirror the avatar's pose. Mapping from the
+    // requested aspect ratio lets the prompt drive composition.
+    body.image_size = mapAspectRatioToFalSize(args.aspectRatio);
   } else if (args.model === "gpt-image-2") {
     body.image_size = mapAspectRatioToFalSize(args.aspectRatio);
   }
@@ -183,8 +187,16 @@ const IMAGE_MODEL_CHAIN: ImageModelConfig[] = [
 // amplify it. Telling the model to preserve freckles caused the showcase
 // images to render noticeably heavier freckling than the reference photo.
 // "Skin tone" alone is sufficient to keep the ethnicity / complexion stable.
+//
+// IMPORTANT: this prefix is intentionally identity-only. Previously it also
+// said "preserve body type exactly" and "only change outfit, pose, setting" -
+// which models treat as an instruction to keep the head crop, head angle,
+// silhouette, and even the clothing close to the reference. That made every
+// showcase slot mirror the avatar. We now lock only facial identity and
+// explicitly free pose / framing / outfit / setting, so per-slot prompts can
+// actually drive variation.
 const REFERENCE_IMAGE_CONSISTENCY_PREFIX =
-  "The person in the reference image is the same person in this image. Preserve their face shape, skin tone, eye color, eyebrow shape, hair color, and overall body type exactly. Only change outfit, pose, setting, and lighting as described below.";
+  "The person in the reference image is the same person in this image. Preserve only their facial identity: face shape, skin tone, eye color, eyebrow shape, hair color and texture. Their pose, head angle, body framing, outfit, setting, and lighting must follow the description below and intentionally differ from the reference image.";
 
 function extractImageUrl(output: unknown): string | null {
   if (typeof output === "string") {

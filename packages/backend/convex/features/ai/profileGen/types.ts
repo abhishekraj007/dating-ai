@@ -144,6 +144,7 @@ export type SceneVignette = {
   action?: string;
   settingDetail?: string;
   prop?: string;
+  outfit?: string;
   wardrobeAccent?: string;
   emotionalBeat?: string;
   timeOfDay?: string;

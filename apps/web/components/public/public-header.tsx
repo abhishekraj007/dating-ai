@@ -3,33 +3,35 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useConvexAuth } from "convex/react";
-import { Menu, Sparkles } from "lucide-react";
 import { PublicBillingActions } from "@/components/public/public-billing-actions";
 import { PublicHeaderAccountMenu } from "@/components/public/public-header-account-menu";
 import { Button } from "@/components/ui/button";
 import {
   PUBLIC_SEGMENTS,
+  type PublicSegment,
   genderPreferenceFromSegment,
   segmentFromPathname,
 } from "@/lib/public-segments";
 import { cn } from "@/lib/utils";
-import { useSidebar } from "@/components/public/sidebar-context";
 import { useDiscoverPreferences } from "@/hooks/use-discover-preferences";
 import Image from "next/image";
 
 export function PublicHeader() {
   const pathname = usePathname();
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const isSegmentRoute = pathname === "/" || pathname.startsWith("/ai-");
+  const isSegmentRoute =
+    pathname === "/" ||
+    Object.values(PUBLIC_SEGMENTS).some((segment) => pathname === segment.href);
   const isChatRoute = pathname.startsWith("/chat");
   const showSegmentSwitch = isSegmentRoute && !isChatRoute;
   const { preferredSegment, setGenderPreference } = useDiscoverPreferences();
   const activeSegment =
     pathname === "/" ? preferredSegment : segmentFromPathname(pathname);
-  const { open } = useSidebar();
 
   const handleSegmentClick = (segment: string) => {
-    const nextGenderPreference = genderPreferenceFromSegment(segment as any);
+    const nextGenderPreference = genderPreferenceFromSegment(
+      segment as PublicSegment,
+    );
 
     if (nextGenderPreference) {
       void setGenderPreference(nextGenderPreference);

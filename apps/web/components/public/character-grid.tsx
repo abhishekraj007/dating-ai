@@ -7,9 +7,11 @@ import {
   CharacterCard,
   type PublicProfileCard,
 } from "@/components/public/character-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { PublicSegment } from "@/lib/public-segments";
+import type {
+  DiscoverGenderPreference,
+  PublicSegment,
+} from "@/lib/public-segments";
 import {
   genderPreferenceFromSegment,
   segmentFromGenderPreference,
@@ -19,6 +21,7 @@ import { Sparkles, Users } from "lucide-react";
 
 type CharacterGridProps = {
   segment: PublicSegment;
+  initialProfiles?: PublicProfileCard[];
   variant?: "home" | "category";
 };
 
@@ -46,40 +49,53 @@ function CharacterGridSkeleton({ count = 8 }: { count?: number }) {
   );
 }
 
-export function CharacterGrid({
-  segment,
-  variant = "category",
-}: CharacterGridProps) {
+function AnimeComingSoonState() {
+  return (
+    <div className="flex min-h-[50vh] flex-col items-center justify-center py-12">
+      <div className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
+        <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5"></div>
+        <Sparkles className="h-10 w-10 text-primary" strokeWidth={1.5} />
+      </div>
+      <h3 className="mb-2 text-xl font-semibold tracking-tight text-foreground">
+        Your anime adventure awaits
+      </h3>
+      <p className="max-w-md text-center text-sm text-muted-foreground">
+        Find unique anime personalities for you to connect with. They&apos;ll
+        be ready to chat and go on adventures with you soon!
+      </p>
+    </div>
+  );
+}
+
+function EmptyProfilesState() {
+  return (
+    <div className="flex min-h-[50vh] flex-col items-center justify-center px-8 py-10">
+      <div className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
+        <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5"></div>
+        <Users className="h-10 w-10 text-primary" strokeWidth={1.5} />
+      </div>
+      <h3 className="mb-2 text-md font-semibold tracking-tight text-foreground">
+        Could not find any profiles
+      </h3>
+      <p className="max-w-md text-center text-sm text-muted-foreground md:text-sm">
+        Check back shortly to start discovering new connections.
+      </p>
+    </div>
+  );
+}
+
+function PublicProfileGrid({
+  genderPreference,
+  initialProfiles,
+  resolvedSegment,
+}: {
+  genderPreference: DiscoverGenderPreference;
+  initialProfiles: PublicProfileCard[];
+  resolvedSegment: PublicSegment;
+}) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const { effectivePreferences } = useDiscoverPreferences();
 
-  const resolvedSegment =
-    variant === "home"
-      ? segmentFromGenderPreference(effectivePreferences.genderPreference)
-      : segment;
-
-  if (resolvedSegment === "anime") {
-    return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center py-12">
-        <div className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
-          <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5"></div>
-          <Sparkles className="h-10 w-10 text-primary" strokeWidth={1.5} />
-        </div>
-        <h3 className="mb-2 text-xl font-semibold tracking-tight text-foreground">
-          Your anime adventure awaits
-        </h3>
-        <p className="max-w-md text-center text-sm text-muted-foreground">
-          Find unique anime personalities for you to connect with. They'll be
-          ready to chat and go on adventures with you soon!
-        </p>
-      </div>
-    );
-  }
-
-  const genderPreference =
-    variant === "home"
-      ? effectivePreferences.genderPreference
-      : (genderPreferenceFromSegment(resolvedSegment) ?? "female");
   const { results, status, isLoading, loadMore } = usePaginatedQuery(
     api.features.ai.queries.getPublicProfilesPaginated,
     {
@@ -115,27 +131,16 @@ export function CharacterGrid({
     };
   }, [loadMore, status]);
 
-  const profiles = (results ?? []) as PublicProfileCard[];
+  const clientProfiles = (results ?? []) as PublicProfileCard[];
+  const profiles =
+    clientProfiles.length > 0 || !isLoading ? clientProfiles : initialProfiles;
 
   if (isLoading && profiles.length === 0) {
     return <CharacterGridSkeleton count={10} />;
   }
 
   if (profiles.length === 0) {
-    return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center py-10 px-8">
-        <div className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
-          <div className="absolute inset-0 animate-pulse rounded-full bg-primary/5"></div>
-          <Users className="h-10 w-10 text-primary" strokeWidth={1.5} />
-        </div>
-        <h3 className="mb-2 text-md font-semibold tracking-tight text-foreground">
-          Could not find any profiles
-        </h3>
-        <p className="max-w-md text-center text-sm md:text-sm text-muted-foreground">
-          Check back shortly to start discovering new connections.
-        </p>
-      </div>
-    );
+    return <EmptyProfilesState />;
   }
 
   return (
@@ -158,5 +163,35 @@ export function CharacterGrid({
         <div ref={loadMoreRef} className="h-px w-full" aria-hidden="true" />
       ) : null}
     </div>
+  );
+}
+
+export function CharacterGrid({
+  initialProfiles = [],
+  segment,
+  variant = "category",
+}: CharacterGridProps) {
+  const { effectivePreferences } = useDiscoverPreferences();
+
+  const resolvedSegment =
+    variant === "home"
+      ? segmentFromGenderPreference(effectivePreferences.genderPreference)
+      : segment;
+
+  if (resolvedSegment === "anime") {
+    return <AnimeComingSoonState />;
+  }
+
+  const genderPreference =
+    variant === "home"
+      ? effectivePreferences.genderPreference
+      : (genderPreferenceFromSegment(resolvedSegment) ?? "female");
+
+  return (
+    <PublicProfileGrid
+      genderPreference={genderPreference}
+      initialProfiles={initialProfiles}
+      resolvedSegment={resolvedSegment}
+    />
   );
 }

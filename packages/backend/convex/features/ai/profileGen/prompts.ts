@@ -1,4 +1,4 @@
-import { AVATAR_SHOT_STYLES, INLINE_NEGATIVES } from "../profileGenerationData";
+import { AVATAR_SHOT_STYLES } from "../profileGenerationData";
 import type {
   AppearanceProfile,
   ProfileCandidate,
@@ -81,7 +81,6 @@ export function buildImagePromptCore(input: ImagePromptInput): string {
   // features). `withReferenceClause` is preserved on the input type for
   // backward compat but is now a no-op.
 
-  // prompt += ` ${INLINE_NEGATIVES}`;
   return prompt;
 }
 
@@ -93,7 +92,7 @@ export function buildAvatarPrompt(
   const shot = randomItem(AVATAR_SHOT_STYLES);
   return buildImagePromptCore({
     subjectDescriptor,
-    action: `the kind of everyday profile photo someone would actually use - ${candidate.occupation.toLowerCase()}, relaxed and real`,
+    action: `relaxed and real`,
     setting: shot.setting,
     composition: shot.composition,
     lighting: shot.lighting,
@@ -112,7 +111,8 @@ export function buildAvatarPrompt(
  *   - `settingDetail`   is appended to `plan.setting`
  *   - `timeOfDay`       overrides `plan.timeOfDay`
  *   - `prop`            overrides `plan.accentProp`
- *   - `wardrobeAccent`  is appended as extra context
+ *   - `outfit`          becomes the slot's complete outfit
+ *   - `wardrobeAccent`  refines the slot outfit
  *   - `emotionalBeat`   is appended as extra context
  *
  * This design means a failed vignette call (all fields undefined) degrades
@@ -134,12 +134,27 @@ export function buildShowcasePromptFromPlan(
     : plan.setting;
   const timeOfDay = vignette?.timeOfDay?.trim() || plan.timeOfDay;
   const prop = vignette?.prop?.trim() || plan.accentProp;
+  const generatedOutfit = vignette?.outfit?.trim();
   const wardrobeAccent = vignette?.wardrobeAccent?.trim();
   const emotionalBeat = vignette?.emotionalBeat?.trim();
   const suggestion = promptSuggestion?.trim();
 
-  return buildImagePromptCore({
-    subjectDescriptor,
+  // Inject the AI-authored per-slot outfit directly into the subject line.
+  // Code no longer owns a fixed outfit catalog; the vignette model sees the
+  // avatar outfit and all slots at once, then generates complete outfits that
+  // differ from the avatar and from each other. If vignette generation is
+  // unavailable (retry / provider outage), the fallback is still a generative
+  // instruction rather than a static outfit string.
+  const outfit =
+    generatedOutfit ||
+    `a completely new ${plan.category.replace("_", " ")} outfit, different from ${appearance.outfit}, with original garments, colors, materials, and accessories chosen for ${combinedSetting} at ${timeOfDay}`;
+  const outfitClause = wardrobeAccent
+    ? `wearing ${outfit} (with ${wardrobeAccent})`
+    : `wearing ${outfit}`;
+  const subjectWithOutfit = `${subjectDescriptor}, ${outfitClause}`;
+
+  const core = buildImagePromptCore({
+    subjectDescriptor: subjectWithOutfit,
     action,
     setting: combinedSetting,
     composition: plan.composition,
@@ -154,10 +169,15 @@ export function buildShowcasePromptFromPlan(
       plan.season ? `season: ${plan.season}` : null,
       timeOfDay ? `time: ${timeOfDay}` : null,
       prop ? `holding or carrying ${prop}` : null,
-      wardrobeAccent ? `wardrobe detail: ${wardrobeAccent}` : null,
       emotionalBeat ? `emotional beat: ${emotionalBeat}` : null,
       suggestion ? `Include: ${suggestion}` : null,
     ],
     withReferenceClause: true,
   });
+
+  // Explicit pose directive: without this the edit model tends to inherit
+  // the reference image's head angle and framing. The identity prefix in
+  // `imageGeneration.ts` already frees pose globally; this reinforces it
+  // per slot with scene-natural variation.
+  return `${core} Pose, head angle, body language, and framing must be distinct from the reference image and feel natural for this scene.`;
 }

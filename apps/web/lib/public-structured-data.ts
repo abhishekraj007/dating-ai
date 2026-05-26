@@ -1,14 +1,66 @@
 import { getSegmentConfig, type PublicSegment } from "@/lib/public-segments";
+import { buildPublicProfileHref } from "@/lib/public-profile-routes";
+
+type PublicProfileListItem = {
+  name: string;
+  username?: string | null;
+  avatarUrl?: string | null;
+  tagline?: string | null;
+};
 
 type PublicProfileStructuredData = {
   name: string;
   age?: number | null;
   bio?: string | null;
+  interests?: string[] | null;
   occupation?: string | null;
   image?: string | null;
 };
 
-export function buildHomeStructuredData(siteUrl: string) {
+function buildProfileItemListStructuredData(
+  siteUrl: string,
+  segment: PublicSegment,
+  profiles: PublicProfileListItem[],
+) {
+  if (profiles.length === 0) {
+    return null;
+  }
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name:
+      segment === "guys"
+        ? "Featured AI boyfriend profiles"
+        : "Featured AI girlfriend profiles",
+    itemListElement: profiles.flatMap((profile, index) => {
+      const href = buildPublicProfileHref(segment, profile.username);
+
+      return href
+        ? [
+            {
+              "@type": "ListItem",
+              position: index + 1,
+              url: `${siteUrl}${href}`,
+              name: profile.name,
+              image: profile.avatarUrl ?? undefined,
+              description: profile.tagline ?? undefined,
+            },
+          ]
+        : [];
+    }),
+  };
+}
+
+export function buildHomeStructuredData(
+  siteUrl: string,
+  profiles: PublicProfileListItem[] = [],
+) {
+  const profileItemList = buildProfileItemListStructuredData(
+    siteUrl,
+    "girls",
+    profiles,
+  );
   return [
     {
       "@context": "https://schema.org",
@@ -66,10 +118,18 @@ export function buildHomeStructuredData(siteUrl: string) {
         },
         {
           "@type": "Question",
-          name: "Is FeelAI server-rendered for SEO?",
+          name: "Can I browse AI companion profiles before signing in?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes. The public homepage is rendered on the server so search engines can index companion cards, SEO copy, and structured data.",
+            text: "Yes. FeelAI shows public AI companion profiles before sign-in so visitors can browse featured personalities and choose who they want to chat with.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "How do I find the right AI companion on FeelAI?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Start with public AI companion profiles, then use filters to find personalities and interests that match the conversation you want.",
           },
         },
         {
@@ -82,15 +142,22 @@ export function buildHomeStructuredData(siteUrl: string) {
         },
       ],
     },
-  ];
+    profileItemList,
+  ].filter(Boolean);
 }
 
 export function buildCategoryStructuredData(
   siteUrl: string,
   segment: PublicSegment,
+  profiles: PublicProfileListItem[] = [],
 ) {
   const config = getSegmentConfig(segment);
   const categoryUrl = `${siteUrl}${config.href}`;
+  const profileItemList = buildProfileItemListStructuredData(
+    siteUrl,
+    segment,
+    profiles,
+  );
 
   return [
     {
@@ -99,6 +166,7 @@ export function buildCategoryStructuredData(
       name: `FeelAI ${config.metaTitle}`,
       url: categoryUrl,
       description: config.metaDescription,
+      abstract: config.heroDescription,
       isPartOf: siteUrl,
     },
     {
@@ -119,7 +187,8 @@ export function buildCategoryStructuredData(
         },
       ],
     },
-  ];
+    profileItemList,
+  ].filter(Boolean);
 }
 
 export function buildPublicProfileStructuredData(
@@ -144,10 +213,22 @@ export function buildPublicProfileStructuredData(
       "@context": "https://schema.org",
       "@type": "Person",
       name: profile.name,
-      description: profile.bio ?? undefined,
+      description: profile.bio
+        ? `${profile.bio} This is an AI companion profile on FeelAI.`
+        : `${profile.name} is an AI companion profile on FeelAI.`,
+      disambiguatingDescription: "AI companion profile",
       image: profile.image ?? undefined,
       jobTitle: profile.occupation ?? undefined,
-      additionalName: profile.age ? String(profile.age) : undefined,
+      knowsAbout: profile.interests ?? undefined,
+      additionalProperty: profile.age
+        ? [
+            {
+              "@type": "PropertyValue",
+              name: "Profile age",
+              value: profile.age,
+            },
+          ]
+        : undefined,
     },
     {
       "@context": "https://schema.org",

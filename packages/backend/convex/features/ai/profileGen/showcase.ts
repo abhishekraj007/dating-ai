@@ -170,7 +170,8 @@ function enforceBoldFlirtyFloor(
     i >= 0 && needed > 0 && available.length > 0;
     i -= 1
   ) {
-    if (replacements[i].boldness === "casual") {
+    const current = replacements[i];
+    if (current?.boldness === "casual") {
       const next = available.shift();
       if (!next) break;
       replacements[i] = next;

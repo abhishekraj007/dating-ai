@@ -33,6 +33,7 @@ import {
 } from "./profileGen/candidate";
 import {
   buildCanonicalSubjectDescriptor,
+  buildShowcaseSubjectDescriptor,
   sampleAppearanceProfile,
 } from "./profileGen/appearance";
 import {
@@ -306,11 +307,15 @@ export const runSystemProfileGeneration = internalAction({
         return { success: true, jobId, paused: true };
       }
 
+      const showcaseSubjectDescriptor = isReferenceMode
+        ? subjectDescriptor
+        : buildShowcaseSubjectDescriptor(candidate, appearance);
+
       const { createdProfileId } = await runShowcaseAndPersistStage(ctx, {
         jobId,
         candidate,
         appearance,
-        subjectDescriptor,
+        subjectDescriptor: showcaseSubjectDescriptor,
         avatarImageKey,
         selectedGender,
         attempts,
@@ -455,11 +460,19 @@ export const continueShowcaseAndPersistAction = internalAction({
     const stepModels = (job.progress?.stepModels ?? []) as StepModelEntry[];
 
     try {
+      const previewIsReferenceMode = Boolean(job.preview.isReferenceMode);
+      const showcaseSubjectDescriptor = previewIsReferenceMode
+        ? job.preview.subjectDescriptor
+        : buildShowcaseSubjectDescriptor(
+            job.preview.candidate,
+            job.preview.appearance,
+          );
+
       const { createdProfileId } = await runShowcaseAndPersistStage(ctx, {
         jobId: args.jobId,
         candidate: job.preview.candidate,
         appearance: job.preview.appearance,
-        subjectDescriptor: job.preview.subjectDescriptor,
+        subjectDescriptor: showcaseSubjectDescriptor,
         avatarImageKey: job.preview.avatarImageKey,
         selectedGender: job.selectedGender ?? job.preview.candidate.gender,
         attempts: job.attempts ?? 1,

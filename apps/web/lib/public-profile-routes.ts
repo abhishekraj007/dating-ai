@@ -2,6 +2,11 @@ import type { PublicSegment } from "@/lib/public-segments";
 
 const RESERVED_PUBLIC_PROFILE_SLUGS = new Set([
   "_next",
+  "ai-boyfriend",
+  "ai-companion",
+  "ai-dating-app",
+  "ai-girlfriend",
+  "ai-roleplay-chat",
   "api",
   "anime",
   "chat",
