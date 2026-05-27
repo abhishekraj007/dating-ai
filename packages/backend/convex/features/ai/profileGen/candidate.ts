@@ -321,17 +321,17 @@ export function buildCandidate(
 
   const bioTemplates = [
     `${interestA.toLowerCase()} addict, ${occupation.toLowerCase()} by day. currently obsessed with ${interestB.toLowerCase()} and finding the best ${interestC.toLowerCase()} spots in the city.`,
-    `split my time between ${interestA.toLowerCase()} and ${interestB.toLowerCase()}. ${appearance.quirk}. looking for someone who doesn't take themselves too seriously.`,
-    `${occupation.toLowerCase()} who can't stop talking about ${interestA.toLowerCase()}. weekends are for ${interestB.toLowerCase()} and ${interestC.toLowerCase()}. ${appearance.quirk}.`,
-    `moved to this ${appearance.cityArchetype} for the ${interestA.toLowerCase()} scene, stayed for the people. ${interestB.toLowerCase()} on my days off. ${appearance.quirk}.`,
+    `split my time between ${interestA.toLowerCase()} and ${interestB.toLowerCase()}. looking for someone who doesn't take themselves too seriously.`,
+    `${occupation.toLowerCase()} who can't stop talking about ${interestA.toLowerCase()}. weekends are for ${interestB.toLowerCase()} and ${interestC.toLowerCase()}.`,
+    `moved to this ${appearance.cityArchetype} for the ${interestA.toLowerCase()} scene, stayed for the people. ${interestB.toLowerCase()} on my days off.`,
     `probably ${interestA.toLowerCase()} right now. or ${interestB.toLowerCase()}. ${occupation.toLowerCase()} life is busy but i always make time for ${interestC.toLowerCase()}.`,
-    `my friends describe me as the ${interestA.toLowerCase()} person. ${appearance.quirk}. also really into ${interestB.toLowerCase()} lately.`,
+    `my friends describe me as the ${interestA.toLowerCase()} person. also really into ${interestB.toLowerCase()} lately.`,
     `${occupation.toLowerCase()} in a ${appearance.cityArchetype}. ${interestA.toLowerCase()} keeps me sane, ${interestB.toLowerCase()} keeps me happy. let's talk about ${interestC.toLowerCase()}.`,
     `two truths and a lie: i'm a ${occupation.toLowerCase()}, i'm obsessed with ${interestA.toLowerCase()}, and i hate ${interestB.toLowerCase()}. (it's the last one)`,
-    `here for good ${interestA.toLowerCase()} recs and better conversations. ${appearance.quirk}. part-time ${interestB.toLowerCase()} enthusiast.`,
-    `not your typical ${occupation.toLowerCase()}. i'd rather be doing ${interestA.toLowerCase()} or ${interestB.toLowerCase()} than anything else. ${appearance.quirk}.`,
-    `${interestA.toLowerCase()} > everything. currently in my ${interestB.toLowerCase()} era. ${occupation.toLowerCase()} paying the bills. ${appearance.quirk}.`,
-    `${appearance.quirk}. when i'm not working as a ${occupation.toLowerCase()}, you'll find me deep into ${interestA.toLowerCase()} or attempting ${interestB.toLowerCase()}.`,
+    `here for good ${interestA.toLowerCase()} recs and better conversations. part-time ${interestB.toLowerCase()} enthusiast.`,
+    `not your typical ${occupation.toLowerCase()}. i'd rather be doing ${interestA.toLowerCase()} or ${interestB.toLowerCase()} than anything else.`,
+    `${interestA.toLowerCase()} > everything. currently in my ${interestB.toLowerCase()} era. ${occupation.toLowerCase()} paying the bills.`,
+    `when i'm not working as a ${occupation.toLowerCase()}, you'll find me deep into ${interestA.toLowerCase()} or attempting ${interestB.toLowerCase()}.`,
   ];
 
   const bio = randomItem(bioTemplates);

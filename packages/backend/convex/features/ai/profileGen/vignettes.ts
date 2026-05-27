@@ -130,7 +130,7 @@ Hard rules:
 - The subject's face, skin tone, hair, and body are fixed by a reference image - DO NOT describe those. Only change outfit, pose, setting, props, and light.
 - "action" must be one short sentence (<= 240 chars).
 - "settingDetail" should be a concrete, grounded location detail (neighborhood name, shop style, a visible landmark, a specific object). Keep plausible for the city and archetype.
-- "prop" should be a small, scene-appropriate object. If the baseline_prop already fits perfectly, you may echo it, but prefer something more specific.
+- "prop" should be a small, scene-appropriate object. If the baseline_prop already fits perfectly, you may echo it, but prefer something more specific. Avoid overused dating-app props (vintage film cameras, polaroids, generic iced coffee) unless the scene truly demands it.
 - "outfit" is required. Generate a complete outfit from scratch for this slot: garment types + color/material + styling detail. Do not choose from a memorized list; invent a coherent look for this specific person and scene.
 - Outfit diversity rules: never repeat the avatar outfit ("${appearance.outfit}"), never repeat the same dominant color, same main garment type, same silhouette, or same occasion across slots. Each slot should feel like a different day, mood, and setting.
 - "wardrobeAccent" is optional and should only add a small refinement on top of "outfit" (e.g. "in dusty olive linen", "with gold hoop earrings"). Never face/body.

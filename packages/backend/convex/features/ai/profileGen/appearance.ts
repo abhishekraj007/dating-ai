@@ -13,8 +13,6 @@ import {
   EYE_SHAPES,
   VIBES,
   CITY_ARCHETYPES,
-  QUIRKS,
-  EXPRESSIONS,
   LOCATIONS_BY_ARCHETYPE,
 } from "../profileGenerationData";
 import type {
@@ -75,8 +73,6 @@ export function sampleAppearanceProfile(
     signatureStyle,
     vibe: overrides?.vibe || randomItem(VIBES),
     cityArchetype: randomItem(CITY_ARCHETYPES),
-    quirk: randomItem(QUIRKS),
-    expression: overrides?.expression || randomItem(EXPRESSIONS),
   };
 }
 

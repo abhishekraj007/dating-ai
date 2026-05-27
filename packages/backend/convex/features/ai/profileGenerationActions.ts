@@ -53,6 +53,7 @@ import {
   weightedGender,
 } from "./profileGen/textUtils";
 import { generateShowcasePrompts } from "./profileGen/showcase";
+import { normalizeImageGenerationModel } from "./profileGen/imageModelOptions";
 
 export const runSystemProfileGeneration = internalAction({
   args: {
@@ -72,7 +73,6 @@ export const runSystemProfileGeneration = internalAction({
         build: v.optional(v.string()),
         outfit: v.optional(v.string()),
         vibe: v.optional(v.string()),
-        expression: v.optional(v.string()),
       }),
     ),
     referenceSubjectDescriptor: v.optional(v.string()),
@@ -83,6 +83,7 @@ export const runSystemProfileGeneration = internalAction({
     // value; manual passes the admin-selected value; reference mode passes
     // the vision model's enum pick.
     ethnicity: v.optional(v.string()),
+    imageModel: v.optional(v.string()),
     // When true, pause after the avatar is generated and write a
     // `preview` snapshot to the job row. Admin then approves to run
     // showcase + persist via `continueShowcaseAndPersist`. Cron path
@@ -96,6 +97,7 @@ export const runSystemProfileGeneration = internalAction({
     // The enum membership is re-validated inside the candidate LLM path
     // (via `coerceEthnicity`), so we only normalize whitespace here.
     const normalizedEthnicity = normalizePreferenceText(args.ethnicity);
+    const imageModel = normalizeImageGenerationModel(args.imageModel);
     const normalizedPreferences: GenerationPreferences = {
       preferredOccupation: normalizePreferenceText(args.preferredOccupation),
       preferredInterests: normalizeInterestPreferences(args.preferredInterests),
@@ -117,6 +119,7 @@ export const runSystemProfileGeneration = internalAction({
           ethnicity: normalizedEthnicity,
           referenceSubjectDescriptor: args.referenceSubjectDescriptor,
           referenceImageUrl: args.referenceImageUrl,
+          imageModel,
           appearanceOverrides: args.appearanceOverrides,
         },
       )) as string);
@@ -249,7 +252,7 @@ export const runSystemProfileGeneration = internalAction({
       stepModels = upsertStepModel(
         stepModels,
         "avatar_generation",
-        imageGenerationModelName(IS_DEV),
+        imageGenerationModelName(IS_DEV, imageModel),
       );
       await updateJobProgress(
         ctx,
@@ -271,6 +274,7 @@ export const runSystemProfileGeneration = internalAction({
         subjectDescriptor,
         isReferenceMode,
         referenceImageUrl: args.referenceImageUrl ?? null,
+        imageModel,
       });
       completedSteps = [...completedSteps, "avatar_generation"];
 
@@ -321,6 +325,7 @@ export const runSystemProfileGeneration = internalAction({
         attempts,
         initialCompletedSteps: completedSteps,
         initialStepModels: stepModels,
+        imageModel,
       });
 
       return { success: true, jobId, createdProfileId };
@@ -395,6 +400,7 @@ export const regenerateAvatarAction = internalAction({
         isReferenceMode: job.preview.isReferenceMode,
         referenceImageUrl: job.referenceImageUrl ?? null,
         overridePrompt: normalizePreferenceText(args.editedPrompt),
+        imageModel: job.imageModel ?? undefined,
       });
 
       await ctx.runMutation(
@@ -478,6 +484,7 @@ export const continueShowcaseAndPersistAction = internalAction({
         attempts: job.attempts ?? 1,
         initialCompletedSteps: completedSteps,
         initialStepModels: stepModels,
+        imageModel: job.imageModel ?? undefined,
       });
 
       return { success: true, createdProfileId };
@@ -626,8 +633,6 @@ function buildAdminShowcaseInputs(profile: AdminShowcaseProfile): {
     signatureStyle: "premium dating profile style",
     vibe: "confident",
     cityArchetype: location,
-    quirk: "natural candid energy",
-    expression: "relaxed smile",
   };
 
   const subjectDescriptor =
@@ -729,7 +734,6 @@ export const analyzeReferencePhoto = action({
     suggestedAge: v.number(),
     suggestedOccupation: v.optional(v.string()),
     suggestedVibe: v.optional(v.string()),
-    suggestedExpression: v.optional(v.string()),
     suggestedLocation: v.optional(v.string()),
     // One of `ETHNICITIES`, or undefined if the vision model couldn't
     // determine it from the reference photo. Passed as a preference into
@@ -769,7 +773,6 @@ Also extract these fields from the photo:
 - "age": estimated age as a number (18-35 range)
 - "occupation": a plausible occupation that matches the person's style (optional)
 - "vibe": overall aesthetic vibe in 1-3 words (e.g. "warm bohemian", "cool minimalist")
-- "expression": the person's expression in 1-2 words
 - "ethnicity": one of the following exact values based ONLY on clearly visible visual cues: ${ETHNICITIES.join(", ")}. Treat this as the most specific stored value: prefer a specific option (e.g. "Indian" or "Japanese") over the broader "Asian" bucket when clearly discernible. Use "Asian" only when the person appears broadly Asian but no more specific option is justified. If the background is ambiguous or unclear, set this to null. Do NOT stereotype or assume — only infer from obvious cues.
 - "suggestedLocation": a plausible real city in "City, CC" format where someone of this apparent ethnic background and style would realistically live (e.g. "Tokyo, JP", "Lagos, NG", "São Paulo, BR", "Berlin, DE"). Pick a real major city. If ethnicity is null/ambiguous, pick a cosmopolitan city that suits the overall aesthetic. Use ISO 3166-1 alpha-2 country codes.
 
@@ -780,7 +783,6 @@ Return a JSON object with these fields:
   "age": number,
   "occupation": "string or null",
   "vibe": "string or null",
-  "expression": "string or null",
   "ethnicity": "one of [${ETHNICITIES.join(", ")}] or null",
   "suggestedLocation": "City, CC or null"
 }
@@ -860,8 +862,6 @@ Return ONLY valid JSON, no markdown fences.`;
       suggestedOccupation:
         typeof parsed.occupation === "string" ? parsed.occupation : undefined,
       suggestedVibe: typeof parsed.vibe === "string" ? parsed.vibe : undefined,
-      suggestedExpression:
-        typeof parsed.expression === "string" ? parsed.expression : undefined,
       suggestedLocation: sanitizeShortString(parsed.suggestedLocation, 60),
       ethnicity,
       referenceImageUrl,

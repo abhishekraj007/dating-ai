@@ -303,6 +303,7 @@ export default defineSchema({
     culturalBackground: v.optional(v.string()),
     referenceSubjectDescriptor: v.optional(v.string()),
     referenceImageUrl: v.optional(v.string()),
+    imageModel: v.optional(v.string()),
     appearanceOverrides: v.optional(
       v.object({
         skinTone: v.optional(v.string()),
@@ -374,8 +375,8 @@ export default defineSchema({
           signatureStyle: v.string(),
           vibe: v.string(),
           cityArchetype: v.string(),
-          quirk: v.string(),
-          expression: v.string(),
+          quirk: v.optional(v.string()),
+          expression: v.optional(v.string()),
         }),
         subjectDescriptor: v.string(),
         isReferenceMode: v.boolean(),

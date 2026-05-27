@@ -82,8 +82,6 @@ export type AppearanceProfile = {
   signatureStyle: string;
   vibe: string;
   cityArchetype: string;
-  quirk: string;
-  expression: string;
 };
 
 export type AppearanceOverrides = {
@@ -94,7 +92,6 @@ export type AppearanceOverrides = {
   build?: string;
   outfit?: string;
   vibe?: string;
-  expression?: string;
 };
 
 export type ShowcaseSlotPrompt = {

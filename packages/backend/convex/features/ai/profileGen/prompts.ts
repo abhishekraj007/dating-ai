@@ -97,7 +97,6 @@ export function buildAvatarPrompt(
     composition: shot.composition,
     lighting: shot.lighting,
     style: shot.style,
-    expression: appearance.expression,
     vibe: appearance.vibe,
     cityArchetype: appearance.cityArchetype,
     withReferenceClause: false,

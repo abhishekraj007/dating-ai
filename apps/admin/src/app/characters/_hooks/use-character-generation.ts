@@ -16,6 +16,7 @@ type GenerationInput = {
   preferredGender?: "female" | "male";
   preferredOccupation?: string;
   preferredInterests?: string[];
+  imageModel?: string;
   appearanceOverrides?: {
     skinTone?: string;
     hairColor?: string;
@@ -24,7 +25,6 @@ type GenerationInput = {
     build?: string;
     outfit?: string;
     vibe?: string;
-    expression?: string;
   };
   referenceSubjectDescriptor?: string;
   referenceImageUrl?: string;
@@ -53,8 +53,12 @@ type ProfileGenerationOptions = {
     outfitsFemale: string[];
     outfitsMale: string[];
     vibes: string[];
-    expressions: string[];
   };
+  imageModels?: Array<{
+    value: string;
+    label: string;
+    requiresReference: boolean;
+  }>;
 };
 
 type GenerationJob = {
@@ -144,6 +148,7 @@ export function useCharacterGeneration() {
         referenceImageUrl: input?.referenceImageUrl,
         preferredLocation: input?.preferredLocation?.trim() || undefined,
         ethnicity: input?.ethnicity?.trim() || undefined,
+        imageModel: input?.imageModel?.trim() || undefined,
       })) as { queued?: boolean; jobId?: string } | undefined;
       toast.success("Generating avatar — review when ready");
       return result?.jobId ?? null;

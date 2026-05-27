@@ -220,6 +220,7 @@ export default function CharactersPage() {
             occupationOptions={generationOptions?.occupations ?? []}
             interestOptions={generationOptions?.interests ?? []}
             appearanceOptions={generationOptions?.appearance}
+            imageModelOptions={generationOptions?.imageModels}
             isAnalyzingPhoto={isAnalyzingPhoto}
             onAnalyzePhoto={analyzePhoto}
           />

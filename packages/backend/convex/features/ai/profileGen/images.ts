@@ -68,6 +68,7 @@ export async function createAndStoreGeneratedImage(
   referenceImageUrl: string | null,
   keyPrefix: string,
   applyReferenceConsistencyPrefix = true,
+  preferredImageModel?: string,
 ): Promise<string> {
   let lastError: Error | null = null;
 
@@ -81,6 +82,7 @@ export async function createAndStoreGeneratedImage(
       aspectRatio: "3:4",
       referenceImageUrls: referenceImageUrl ? [referenceImageUrl] : [],
       applyReferenceConsistencyPrefix,
+      preferredModel: preferredImageModel,
       isDev: IS_DEV,
       devWidth: 768,
       devHeight: 1024,
@@ -120,3 +122,7 @@ export async function createAndStoreGeneratedImage(
 }
 
 export { imageGenerationModelName } from "../imageGeneration";
+export {
+  IMAGE_GENERATION_MODEL_OPTIONS,
+  normalizeImageGenerationModel,
+} from "./imageModelOptions";
