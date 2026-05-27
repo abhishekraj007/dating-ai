@@ -36,6 +36,7 @@ function sanitizeStructuredMessage(
     if (parsed?.type === "video_response" && typeof parsed === "object") {
       const sanitized = { ...parsed };
       delete sanitized.videoUrl;
+      delete sanitized.posterUrl;
       return JSON.stringify(sanitized);
     }
   } catch {
@@ -944,6 +945,51 @@ export const getChatVideoUrl = query({
 
     try {
       const signedUrl = await r2.getUrl(videoKey);
+      return signedUrl;
+    } catch {
+      return null;
+    }
+  },
+});
+
+/**
+ * Get a fresh signed URL for a chat video poster using its permanent posterKey.
+ */
+export const getChatVideoPosterUrl = query({
+  args: {
+    posterKey: v.string(),
+  },
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx, { posterKey }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      return null;
+    }
+
+    const keyParts = posterKey.split("/");
+    if (
+      keyParts[0] !== "chatVideoPosters" ||
+      keyParts.length < 4 ||
+      keyParts[1] !== user._id
+    ) {
+      return null;
+    }
+
+    const chatVideo = await ctx.db
+      .query("chatVideos")
+      .withIndex("by_poster_key", (q) => q.eq("posterKey", posterKey))
+      .first();
+
+    if (
+      !chatVideo ||
+      chatVideo.userId !== user._id ||
+      chatVideo.status !== "completed"
+    ) {
+      return null;
+    }
+
+    try {
+      const signedUrl = await r2.getUrl(posterKey);
       return signedUrl;
     } catch {
       return null;

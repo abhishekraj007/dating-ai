@@ -14,6 +14,8 @@ import type * as crons from "../crons.js";
 import type * as features_ai_actions from "../features/ai/actions.js";
 import type * as features_ai_agent from "../features/ai/agent.js";
 import type * as features_ai_aiProviders from "../features/ai/aiProviders.js";
+import type * as features_ai_chatMediaGeneration from "../features/ai/chatMediaGeneration.js";
+import type * as features_ai_chatMediaValidators from "../features/ai/chatMediaValidators.js";
 import type * as features_ai_discoverQuery from "../features/ai/discoverQuery.js";
 import type * as features_ai_genz_profiles_data from "../features/ai/genz_profiles_data.js";
 import type * as features_ai_genz_profiles_male from "../features/ai/genz_profiles_male.js";
@@ -100,6 +102,8 @@ declare const fullApi: ApiFromModules<{
   "features/ai/actions": typeof features_ai_actions;
   "features/ai/agent": typeof features_ai_agent;
   "features/ai/aiProviders": typeof features_ai_aiProviders;
+  "features/ai/chatMediaGeneration": typeof features_ai_chatMediaGeneration;
+  "features/ai/chatMediaValidators": typeof features_ai_chatMediaValidators;
   "features/ai/discoverQuery": typeof features_ai_discoverQuery;
   "features/ai/genz_profiles_data": typeof features_ai_genz_profiles_data;
   "features/ai/genz_profiles_male": typeof features_ai_genz_profiles_male;

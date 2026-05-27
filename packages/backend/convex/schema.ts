@@ -295,9 +295,11 @@ export default defineSchema({
         clothing: v.optional(v.string()),
         scene: v.optional(v.string()),
         description: v.optional(v.string()),
+        duration: v.optional(v.number()),
       }),
     ),
     videoKey: v.optional(v.string()),
+    posterKey: v.optional(v.string()),
     status: v.union(
       v.literal("pending"),
       v.literal("processing"),
@@ -311,7 +313,8 @@ export default defineSchema({
     .index("by_conversation", ["conversationId"])
     .index("by_user", ["userId"])
     .index("by_status", ["status"])
-    .index("by_video_key", ["videoKey"]),
+    .index("by_video_key", ["videoKey"])
+    .index("by_poster_key", ["posterKey"]),
 
   // System AI profile generation jobs (manual + cron)
   profileGenerationJobs: defineTable({

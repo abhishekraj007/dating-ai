@@ -66,12 +66,15 @@ const SCENE_OPTIONS = [
   "Studio portrait",
 ];
 
+export type MediaRequestType = "photo" | "video";
+
 export interface MediaRequestOptions {
-  mediaType: "photo" | "video";
+  mediaType: MediaRequestType;
   hairstyle?: string;
   clothing?: string;
   scene?: string;
   description?: string;
+  duration?: number;
 }
 
 export type ImageRequestOptions = Omit<MediaRequestOptions, "mediaType">;
@@ -85,6 +88,9 @@ interface ImageRequestSheetProps {
   credits?: number;
 }
 
+const DEFAULT_VIDEO_DURATION = 5;
+const VIDEO_DURATION_OPTIONS = [5, 10, 15] as const;
+
 interface ImageRequestSheetContentProps {
   mediaType: "photo" | "video";
   onChangeMediaType: (value: "photo" | "video") => void;
@@ -96,6 +102,8 @@ interface ImageRequestSheetContentProps {
   onSelectClothing: (value: string | null) => void;
   selectedScene: string | null;
   onSelectScene: (value: string | null) => void;
+  videoDuration: number;
+  onVideoDurationChange: (value: number) => void;
   resetKey: number;
   onExtraDetailsChange: (value: string, hasDetails: boolean) => void;
 }
@@ -111,6 +119,8 @@ function ImageRequestSheetContent({
   onSelectClothing,
   selectedScene,
   onSelectScene,
+  videoDuration,
+  onVideoDurationChange,
   resetKey,
   onExtraDetailsChange,
 }: ImageRequestSheetContentProps) {
@@ -188,9 +198,7 @@ function ImageRequestSheetContent({
 
       <Tabs
         value={mediaType}
-        onValueChange={(value) =>
-          onChangeMediaType(value as "photo" | "video")
-        }
+        onValueChange={(value) => onChangeMediaType(value as "photo" | "video")}
         variant="primary"
         className="mb-4"
       >
@@ -239,6 +247,27 @@ function ImageRequestSheetContent({
           }}
         />
       </TextField>
+
+      {mediaType === "video" ? (
+        <View className="mb-4">
+          <Label className="mb-2">{t("imageRequest.duration")}</Label>
+          <View className="flex-row flex-wrap gap-2">
+            {VIDEO_DURATION_OPTIONS.map((option) => (
+              <Chip
+                key={option}
+                size="md"
+                variant={videoDuration === option ? "primary" : "secondary"}
+                color={videoDuration === option ? "accent" : "default"}
+                onPress={() => onVideoDurationChange(option)}
+              >
+                <Chip.Label>
+                  {t("imageRequest.durationSeconds", { count: option })}
+                </Chip.Label>
+              </Chip>
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       <Tabs value={activeTab} onValueChange={onChangeTab} variant="secondary">
         <Tabs.List className="mb-2">
@@ -344,6 +373,7 @@ export function ImageRequestSheet({
   );
   const [selectedClothing, setSelectedClothing] = useState<string | null>(null);
   const [selectedScene, setSelectedScene] = useState<string | null>(null);
+  const [videoDuration, setVideoDuration] = useState(DEFAULT_VIDEO_DURATION);
   const [hasExtraDetails, setHasExtraDetails] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const extraDetailsRef = useRef("");
@@ -367,6 +397,7 @@ export function ImageRequestSheet({
     setSelectedHairstyle(null);
     setSelectedClothing(null);
     setSelectedScene(null);
+    setVideoDuration(DEFAULT_VIDEO_DURATION);
     setHasExtraDetails(false);
     hasExtraDetailsRef.current = false;
     extraDetailsRef.current = "";
@@ -381,6 +412,7 @@ export function ImageRequestSheet({
       clothing: selectedClothing ?? undefined,
       scene: selectedScene ?? undefined,
       description: extraDetailsRef.current.trim() || undefined,
+      duration: mediaType === "video" ? videoDuration : undefined,
     });
     resetForm();
   };
@@ -467,6 +499,8 @@ export function ImageRequestSheet({
         onSelectClothing={setSelectedClothing}
         selectedScene={selectedScene}
         onSelectScene={setSelectedScene}
+        videoDuration={videoDuration}
+        onVideoDurationChange={setVideoDuration}
         resetKey={resetKey}
         onExtraDetailsChange={handleExtraDetailsChange}
       />

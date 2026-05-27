@@ -6,8 +6,20 @@ import { internal, api, components } from "../../_generated/api";
 import { createAIProfileAgent, getAvailableAgentProviders } from "./agent";
 import { r2 } from "../../uploads";
 import { saveMessage } from "@convex-dev/agent";
-import { generateImageWithFallback } from "./imageGeneration";
 import { generateVideoWithFallback } from "./videoGeneration";
+import {
+  buildImagePrompt,
+  buildVideoFramePrompt,
+  buildVideoPrompt,
+  buildChatImageKey,
+  buildChatVideoKey,
+  buildChatVideoPosterKey,
+  fetchRemoteImageAsset,
+  generateChatReferenceImage,
+  isNsfwEnabledForPlatform,
+  storeRemoteVideoAsset,
+  toChatProfileDetails,
+} from "./chatMediaGeneration";
 import { IS_DEV } from "./profileGen/constants";
 
 type ChatErrorCode = "rate_limited" | "generation_failed";
@@ -471,100 +483,6 @@ export const generateResponse = internalAction({
 });
 
 /**
- * Build a prompt for image generation based on the AI profile and style options.
- */
-function buildImagePrompt(
-  profile: { name: string; gender?: string; ethnicity?: string; age?: number },
-  styleOptions: {
-    hairstyle?: string;
-    clothing?: string;
-    scene?: string;
-    description?: string;
-  },
-): string {
-  const baseDescription = [
-    `A realistic photo`,
-    profile.gender ?? "woman",
-    profile.ethnicity ? `of ${profile.ethnicity} ethnicity` : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const styleDescription = [
-    styleOptions.hairstyle && `with ${styleOptions.hairstyle.toLowerCase()}`,
-    styleOptions.clothing && `wearing ${styleOptions.clothing.toLowerCase()}`,
-    styleOptions.scene && `in a ${styleOptions.scene.toLowerCase()} setting`,
-  ]
-    .filter(Boolean)
-    .join(", ");
-
-  const additionalContext = styleOptions.description
-    ? `. ${styleOptions.description}`
-    : "";
-
-  const qualityTags =
-    "preserve the same identity and facial features as the reference image, high quality, natural lighting, iPhone photo style, casual pose, authentic, candid";
-
-  return `${baseDescription}${styleDescription ? `, ${styleDescription}` : ""}${additionalContext}. ${qualityTags}`;
-}
-
-function buildVideoPrompt(
-  profile: { name: string; gender?: string; ethnicity?: string; age?: number },
-  styleOptions: {
-    hairstyle?: string;
-    clothing?: string;
-    scene?: string;
-    description?: string;
-  },
-): string {
-  const baseDescription = [
-    `A realistic vertical video of`,
-    profile.gender ?? "a woman",
-    profile.ethnicity ? `of ${profile.ethnicity} ethnicity` : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const styleDescription = [
-    styleOptions.hairstyle && `with ${styleOptions.hairstyle.toLowerCase()}`,
-    styleOptions.clothing && `wearing ${styleOptions.clothing.toLowerCase()}`,
-    styleOptions.scene && `in a ${styleOptions.scene.toLowerCase()} setting`,
-  ]
-    .filter(Boolean)
-    .join(", ");
-
-  const additionalContext = styleOptions.description
-    ? `. ${styleOptions.description}`
-    : "";
-
-  const qualityTags =
-    "preserve the same identity and facial features as the reference image, natural movement, cinematic lighting, authentic, candid, smooth motion";
-
-  return `${baseDescription}${styleDescription ? `, ${styleDescription}` : ""}${additionalContext}. ${qualityTags}`;
-}
-
-/**
- * Get a signed URL for the profile's avatar image.
- * Used as reference image for consistent character generation.
- */
-async function getProfileAvatarUrl(
-  avatarImageKey: string | undefined,
-): Promise<string | null> {
-  if (!avatarImageKey || avatarImageKey === "default-avatar") {
-    return null;
-  }
-
-  // Get signed URL from R2
-  try {
-    const url = await r2.getUrl(avatarImageKey);
-    return url;
-  } catch (error) {
-    console.error("Failed to get avatar URL:", error);
-    return null;
-  }
-}
-
-/**
  * Generate a custom chat image.
  * Uses Nekos API in development (fast, free) and Replicate Flux in production.
  * In production, uses the profile's avatar as reference for character consistency.
@@ -622,77 +540,41 @@ export const generateChatImage = internalAction({
     try {
       console.log("Generating image, isDev:", IS_DEV);
 
-      const prompt = buildImagePrompt(
-        {
-          name: profile.name,
-          gender: profile.gender,
-          age: profile.age,
-        },
-        request.styleOptions ?? {},
-      );
+      const styleOptions = request.styleOptions ?? {};
+      const profileDetails = toChatProfileDetails(profile);
+      const prompt = buildImagePrompt(profileDetails, styleOptions);
 
       console.log("Generating image with prompt:", prompt);
-
-      const referenceImageUrl = await getProfileAvatarUrl(
-        profile.avatarImageKey,
+      console.log(
+        "Using reference image:",
+        profile.avatarImageKey ? "yes" : "no",
       );
 
-      console.log("Using reference image:", referenceImageUrl ? "yes" : "no");
+      const nsfwEnabled = await isNsfwEnabledForPlatform(ctx, request.platform);
 
-      const appConfig = await ctx.runQuery(
-        api.features.appConfig.queries.getPublicAppConfig,
-        {},
-      );
-      const nsfwEnabledPlatforms = appConfig?.nsfwEnabledPlatforms ?? [];
-      const nsfwEnabled =
-        request.platform !== undefined &&
-        nsfwEnabledPlatforms.includes(request.platform);
-
-      const imageResult = await generateImageWithFallback({
+      const imageResult = await generateChatReferenceImage({
         prompt,
-        aspectRatio: "9:16",
-        referenceImageUrls: referenceImageUrl ? [referenceImageUrl] : [],
-        primaryFalModel: "qwen-image-2-edit",
+        avatarImageKey: profile.avatarImageKey,
         enableSafety: !nsfwEnabled,
-        isDev: IS_DEV,
-        devWidth: 512,
-        devHeight: 768,
       });
 
       if (!imageResult.success) {
         throw new Error(imageResult.error);
       }
 
-      const imageUrl = imageResult.imageUrl;
       console.log("Image generated with model:", imageResult.model);
-      console.log("Image URL:", imageUrl);
+      console.log("Image URL:", imageResult.imageUrl);
 
-      // Download the image and upload to R2
-      const imageResponse = await fetch(imageUrl);
-      if (!imageResponse.ok) {
-        throw new Error(
-          `Failed to fetch generated image: ${imageResponse.status}`,
-        );
-      }
-
-      const imageBlob = await imageResponse.blob();
-      const imageBuffer = await imageBlob.arrayBuffer();
-
-      // Determine file extension based on content type
-      const contentType =
-        imageResponse.headers.get("content-type") || "image/webp";
-      const ext = contentType.includes("png")
-        ? "png"
-        : contentType.includes("jpeg") || contentType.includes("jpg")
-          ? "jpg"
-          : "webp";
-
-      // Generate a unique key for R2 storage
-      const imageKey = `chatImages/${request.userId}/${request.aiProfileId}/${requestId}.${ext}`;
-
-      // Upload to R2 directly from the action
-      const imageUint8Array = new Uint8Array(imageBuffer);
-      await r2.store(ctx, imageUint8Array, imageKey);
+      const { data, extension } = await fetchRemoteImageAsset(
+        imageResult.imageUrl,
+      );
+      const imageKey = buildChatImageKey(
+        request.userId,
+        request.aiProfileId,
+        requestId,
+        extension,
+      );
+      await r2.store(ctx, data, imageKey);
 
       // Update request status to completed
       await ctx.runMutation(
@@ -778,33 +660,49 @@ export const generateChatVideo = internalAction({
     try {
       console.log("Generating video, isDev:", IS_DEV);
 
-      const prompt = buildVideoPrompt(
-        {
-          name: profile.name,
-          gender: profile.gender,
-          age: profile.age,
-        },
-        request.styleOptions ?? {},
+      const styleOptions = request.styleOptions ?? {};
+      const profileDetails = toChatProfileDetails(profile);
+      const framePrompt = buildVideoFramePrompt(profileDetails, styleOptions);
+      const videoPrompt = buildVideoPrompt(profileDetails, styleOptions);
+
+      console.log("Generating video frame with prompt:", framePrompt);
+      console.log(
+        "Using avatar for frame generation:",
+        profile.avatarImageKey ? "yes" : "no",
       );
 
-      console.log("Generating video with prompt:", prompt);
+      const nsfwEnabled = await isNsfwEnabledForPlatform(ctx, request.platform);
 
-      const referenceImageUrl = await getProfileAvatarUrl(
-        profile.avatarImageKey,
-      );
+      const frameResult = await generateChatReferenceImage({
+        prompt: framePrompt,
+        avatarImageKey: profile.avatarImageKey,
+        enableSafety: !nsfwEnabled,
+      });
 
-      const appConfig = await ctx.runQuery(
-        api.features.appConfig.queries.getPublicAppConfig,
-        {},
+      if (!frameResult.success) {
+        throw new Error(frameResult.error);
+      }
+
+      console.log("Video frame generated with model:", frameResult.model);
+      console.log("Frame URL:", frameResult.imageUrl);
+
+      const { data: posterData, extension: posterExtension } =
+        await fetchRemoteImageAsset(frameResult.imageUrl);
+      const posterKey = buildChatVideoPosterKey(
+        request.userId,
+        request.aiProfileId,
+        requestId,
+        posterExtension,
       );
-      const nsfwEnabledPlatforms = appConfig?.nsfwEnabledPlatforms ?? [];
-      const nsfwEnabled =
-        request.platform !== undefined &&
-        nsfwEnabledPlatforms.includes(request.platform);
+      await r2.store(ctx, posterData, posterKey);
+
+      console.log("Video poster saved:", posterKey);
+      console.log("Generating video with prompt:", videoPrompt);
 
       const videoResult = await generateVideoWithFallback({
-        prompt,
-        referenceImageUrl,
+        prompt: videoPrompt,
+        referenceImageUrl: frameResult.imageUrl,
+        duration: styleOptions.duration,
         enableSafety: !nsfwEnabled,
         isDev: IS_DEV,
       });
@@ -813,22 +711,15 @@ export const generateChatVideo = internalAction({
         throw new Error(videoResult.error);
       }
 
-      const videoUrl = videoResult.videoUrl;
       console.log("Video generated with model:", videoResult.model);
-      console.log("Video URL:", videoUrl);
+      console.log("Video URL:", videoResult.videoUrl);
 
-      const videoResponse = await fetch(videoUrl);
-      if (!videoResponse.ok) {
-        throw new Error(
-          `Failed to fetch generated video: ${videoResponse.status}`,
-        );
-      }
-
-      const videoBlob = await videoResponse.blob();
-      const videoBuffer = await videoBlob.arrayBuffer();
-      const videoKey = `chatVideos/${request.userId}/${request.aiProfileId}/${requestId}.mp4`;
-      const videoUint8Array = new Uint8Array(videoBuffer);
-      await r2.store(ctx, videoUint8Array, videoKey);
+      const videoKey = buildChatVideoKey(
+        request.userId,
+        request.aiProfileId,
+        requestId,
+      );
+      await storeRemoteVideoAsset(ctx, videoResult.videoUrl, videoKey);
 
       await ctx.runMutation(
         internal.features.ai.mutations.updateChatVideoRequest,
@@ -836,6 +727,7 @@ export const generateChatVideo = internalAction({
           requestId,
           status: "completed",
           videoKey,
+          posterKey,
         },
       );
 

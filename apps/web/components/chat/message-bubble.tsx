@@ -33,6 +33,8 @@ type StructuredPayload = {
   imageKey?: string;
   videoUrl?: string;
   videoKey?: string;
+  posterUrl?: string;
+  posterKey?: string;
   question?: string;
   options?: string[];
   explanation?: string;
@@ -67,6 +69,8 @@ function parseContent(content: string) {
       kind: "video" as const,
       videoUrl: structured.videoUrl,
       videoKey: structured.videoKey,
+      posterUrl: structured.posterUrl,
+      posterKey: structured.posterKey,
       text: structured.prompt,
     };
   }
@@ -207,10 +211,13 @@ export function MessageBubble({
           isUser ? "items-end" : "items-start",
         )}
       >
-        {parsed.kind === "video" && (parsed.videoUrl || parsed.videoKey) ? (
+        {parsed.kind === "video" &&
+        (parsed.videoUrl || parsed.videoKey || parsed.posterKey) ? (
           <ChatVideoBubble
             videoKey={parsed.videoKey}
             videoUrl={parsed.videoUrl}
+            posterKey={parsed.posterKey}
+            posterUrl={parsed.posterUrl}
             isPremium={viewerIsPremium}
             profileName={profileName}
             profileAvatar={avatarUrl}

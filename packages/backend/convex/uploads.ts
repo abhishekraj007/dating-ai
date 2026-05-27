@@ -156,6 +156,11 @@ export const { generateUploadUrl, syncMetadata, onSyncMetadata } = r2.clientApi(
         return;
       }
 
+      // --- Routing: chat video poster keys ------------------------------
+      if (args.key.startsWith("chatVideoPosters/")) {
+        return;
+      }
+
       // --- Routing: user-owned uploads ----------------------------------
       // Format: {userId}/{uuid}
       const userId = args.key.split("/")[0];

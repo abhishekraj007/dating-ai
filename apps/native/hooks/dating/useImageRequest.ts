@@ -1,18 +1,13 @@
 import { useMutation } from "convex/react";
 import { api } from "@dating-ai/backend";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
+import type {
+  ImageRequestOptions,
+  MediaRequestOptions,
+  MediaRequestType,
+} from "@/components/dating/image-request-sheet";
 
-export type MediaRequestType = "photo" | "video";
-
-export interface MediaRequestOptions {
-  mediaType: MediaRequestType;
-  hairstyle?: string;
-  clothing?: string;
-  scene?: string;
-  description?: string;
-}
-
-export type ImageRequestOptions = Omit<MediaRequestOptions, "mediaType">;
+export type { ImageRequestOptions, MediaRequestOptions, MediaRequestType };
 
 function buildMediaPrompt(
   mediaType: MediaRequestType,
@@ -63,6 +58,8 @@ export function useRequestChatMedia() {
     const normalizedStyleOptions = {
       ...styleOptions,
       description: normalizedDescription || undefined,
+      duration:
+        mediaType === "video" ? (styleOptions.duration ?? 5) : undefined,
     };
     const prompt = buildMediaPrompt(mediaType, normalizedStyleOptions);
 

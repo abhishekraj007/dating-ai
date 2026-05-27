@@ -10,6 +10,10 @@ import {
 import { components } from "../../_generated/api";
 import { authComponent } from "../../lib/betterAuth";
 import {
+  chatImageStyleOptionsValidator,
+  chatVideoStyleOptionsValidator,
+} from "./chatMediaValidators";
+import {
   calculateRelationshipLevel,
   calculateCompatibilityScore,
   createAIProfileAgent,
@@ -798,6 +802,22 @@ export const adminDeleteProfile = mutation({
           }
         }
 
+        if (video.posterKey) {
+          try {
+            await r2.deleteObject(ctx, video.posterKey);
+          } catch (error) {
+            console.error(
+              "[adminDeleteProfile] Failed to delete chat video poster from R2:",
+              {
+                profileId,
+                conversationId: conversation._id,
+                posterKey: video.posterKey,
+                error,
+              },
+            );
+          }
+        }
+
         await ctx.db.delete(video._id);
       }
 
@@ -945,14 +965,7 @@ export const createChatImageRequestInternal = internalMutation({
       v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
     ),
     prompt: v.string(),
-    styleOptions: v.optional(
-      v.object({
-        hairstyle: v.optional(v.string()),
-        clothing: v.optional(v.string()),
-        scene: v.optional(v.string()),
-        description: v.optional(v.string()),
-      }),
-    ),
+    styleOptions: chatImageStyleOptionsValidator,
   },
   returns: v.union(v.id("chatImages"), v.null()),
   handler: async (
@@ -1004,14 +1017,7 @@ export const createChatImageRequestInternal = internalMutation({
       aiProfileId,
       platform,
       prompt,
-      styleOptions: styleOptions
-        ? {
-            hairstyle: styleOptions.hairstyle,
-            clothing: styleOptions.clothing,
-            scene: styleOptions.scene,
-            description: styleOptions.description,
-          }
-        : undefined,
+      styleOptions,
       status: "pending",
       creditsCharged: imageCost,
     });
@@ -1040,14 +1046,7 @@ export const requestChatImage = mutation({
     platform: v.optional(
       v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
     ),
-    styleOptions: v.optional(
-      v.object({
-        hairstyle: v.optional(v.string()),
-        clothing: v.optional(v.string()),
-        scene: v.optional(v.string()),
-        description: v.optional(v.string()),
-      }),
-    ),
+    styleOptions: chatImageStyleOptionsValidator,
   },
   returns: v.id("chatImages"),
   handler: async (ctx, { conversationId, prompt, platform, styleOptions }) => {
@@ -1250,14 +1249,7 @@ export const createChatVideoRequestInternal = internalMutation({
       v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
     ),
     prompt: v.string(),
-    styleOptions: v.optional(
-      v.object({
-        hairstyle: v.optional(v.string()),
-        clothing: v.optional(v.string()),
-        scene: v.optional(v.string()),
-        description: v.optional(v.string()),
-      }),
-    ),
+    styleOptions: chatVideoStyleOptionsValidator,
   },
   returns: v.union(v.id("chatVideos"), v.null()),
   handler: async (
@@ -1306,14 +1298,7 @@ export const createChatVideoRequestInternal = internalMutation({
       aiProfileId,
       platform,
       prompt,
-      styleOptions: styleOptions
-        ? {
-            hairstyle: styleOptions.hairstyle,
-            clothing: styleOptions.clothing,
-            scene: styleOptions.scene,
-            description: styleOptions.description,
-          }
-        : undefined,
+      styleOptions,
       status: "pending",
       creditsCharged: videoCost,
     });
@@ -1341,14 +1326,7 @@ export const requestChatVideo = mutation({
     platform: v.optional(
       v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
     ),
-    styleOptions: v.optional(
-      v.object({
-        hairstyle: v.optional(v.string()),
-        clothing: v.optional(v.string()),
-        scene: v.optional(v.string()),
-        description: v.optional(v.string()),
-      }),
-    ),
+    styleOptions: chatVideoStyleOptionsValidator,
   },
   returns: v.id("chatVideos"),
   handler: async (ctx, { conversationId, prompt, platform, styleOptions }) => {
@@ -1451,6 +1429,7 @@ export const updateChatVideoRequest = internalMutation({
       v.literal("failed"),
     ),
     videoKey: v.optional(v.string()),
+    posterKey: v.optional(v.string()),
     replicateJobId: v.optional(v.string()),
     errorMessage: v.optional(v.string()),
   },
@@ -1462,6 +1441,7 @@ export const updateChatVideoRequest = internalMutation({
 
     const patch: Record<string, unknown> = { status: updates.status };
     if (updates.videoKey) patch.videoKey = updates.videoKey;
+    if (updates.posterKey) patch.posterKey = updates.posterKey;
     if (updates.replicateJobId) patch.replicateJobId = updates.replicateJobId;
     if (updates.errorMessage) patch.errorMessage = updates.errorMessage;
 
@@ -1481,6 +1461,7 @@ export const updateChatVideoRequest = internalMutation({
               content: JSON.stringify({
                 type: "video_response",
                 videoKey: updates.videoKey,
+                posterKey: updates.posterKey ?? request.posterKey,
                 prompt: request.prompt,
               }),
             },
@@ -1683,6 +1664,18 @@ export const clearChat = mutation({
           console.error(
             "[clearChat] Failed to delete R2 object:",
             video.videoKey,
+            error,
+          );
+        }
+      }
+
+      if (video.posterKey) {
+        try {
+          await r2.deleteObject(ctx, video.posterKey);
+        } catch (error) {
+          console.error(
+            "[clearChat] Failed to delete R2 object:",
+            video.posterKey,
             error,
           );
         }

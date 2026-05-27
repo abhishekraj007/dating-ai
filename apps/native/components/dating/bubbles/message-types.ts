@@ -72,6 +72,8 @@ export interface VideoResponseData {
   type: "video_response";
   videoUrl?: string;
   videoKey?: string;
+  posterUrl?: string;
+  posterKey?: string;
   prompt?: string;
 }
 

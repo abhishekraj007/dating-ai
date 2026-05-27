@@ -53,12 +53,19 @@ export function VideoResponseBubble({
 }: ResponseProps) {
   const { isPremium, isLoading: isCreditsLoading } = useCredits();
 
-  const freshUrl = useQuery(
+  const freshVideoUrl = useQuery(
     api.features.ai.queries.getChatVideoUrl,
-    data.videoKey ? { videoKey: data.videoKey } : "skip",
+    isPremium && data.videoKey ? { videoKey: data.videoKey } : "skip",
   );
 
-  const videoUrl = freshUrl ?? data.videoUrl;
+  const freshPosterUrl = useQuery(
+    api.features.ai.queries.getChatVideoPosterUrl,
+    data.posterKey ? { posterKey: data.posterKey } : "skip",
+  );
+
+  const videoUrl = freshVideoUrl ?? data.videoUrl;
+  const posterUrl = freshPosterUrl ?? data.posterUrl;
+  const previewSize = { width: 250, height: 350 };
 
   return (
     <AIBubbleWrapper
@@ -68,22 +75,27 @@ export function VideoResponseBubble({
     >
       <View className="bg-surface rounded-2xl rounded-tl-sm overflow-hidden">
         {isCreditsLoading ? (
-          <Skeleton style={{ width: 250, height: 350 }} />
-        ) : !videoUrl ? (
-          <Skeleton style={{ width: 250, height: 350 }} />
+          <Skeleton style={previewSize} />
         ) : !isPremium ? (
-          <BlurredPremiumImage
-            imageUrl={videoUrl}
-            width={250}
-            height={350}
-            profileName={profileName}
-            profileAvatar={avatarUrl}
-            borderRadius={0}
-          />
+          posterUrl ? (
+            <BlurredPremiumImage
+              imageUrl={posterUrl}
+              width={previewSize.width}
+              height={previewSize.height}
+              profileName={profileName}
+              profileAvatar={avatarUrl}
+              borderRadius={0}
+            />
+          ) : (
+            <Skeleton style={previewSize} />
+          )
+        ) : !videoUrl && !posterUrl ? (
+          <Skeleton style={previewSize} />
         ) : (
           <InlineVideoPreview
             videoUrl={videoUrl}
-            style={{ width: 250, height: 350 }}
+            posterUrl={posterUrl}
+            style={previewSize}
           />
         )}
       </View>

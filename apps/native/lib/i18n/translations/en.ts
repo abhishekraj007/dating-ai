@@ -328,13 +328,15 @@ export const en: TranslationMap = {
   "imageRequest.hairstyle": "Hairstyle",
   "imageRequest.clothing": "Clothing",
   "imageRequest.scene": "Scene",
+  "imageRequest.duration": "Duration",
+  "imageRequest.durationSeconds": "{{count}} sec",
   "imageRequest.extraDetailsLabel": "Extra details",
   "imageRequest.extraDetailsPlaceholder":
     "Enter what kind of pic you want to see...",
   "imageRequest.videoExtraDetailsPlaceholder":
     "Enter what kind of video you want to see...",
-  "imageRequest.generatePhoto": "Send a Photo",
-  "imageRequest.generateVideo": "Send a Video",
+  "imageRequest.generatePhoto": "Request a Photo",
+  "imageRequest.generateVideo": "Request a Video",
   "imageRequest.insufficientCredits":
     "Insufficient credits. You need at least {{count}} credits.",
 

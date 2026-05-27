@@ -9,6 +9,21 @@ const P_VIDEO_MODEL = "prunaai/p-video" as const;
 const DEV_DUMMY_VIDEO_URL =
   "https://samplelib.com/preview/mp4/sample-5s.mp4";
 
+const DEFAULT_VIDEO_DURATION = 5;
+const MIN_VIDEO_DURATION = 1;
+const MAX_VIDEO_DURATION = 10;
+
+function clampVideoDuration(duration?: number): number {
+  if (duration === undefined) {
+    return DEFAULT_VIDEO_DURATION;
+  }
+
+  return Math.min(
+    MAX_VIDEO_DURATION,
+    Math.max(MIN_VIDEO_DURATION, Math.round(duration)),
+  );
+}
+
 export type VideoGenerationResult =
   | {
     success: true;
@@ -74,6 +89,7 @@ function extractVideoUrl(output: unknown): string | null {
 export async function generateVideoWithFallback(args: {
   prompt: string;
   referenceImageUrl?: string | null;
+  duration?: number;
   enableSafety?: boolean;
   isDev: boolean;
 }): Promise<VideoGenerationResult> {
@@ -92,21 +108,27 @@ export async function generateVideoWithFallback(args: {
     };
   }
 
+  if (!args.referenceImageUrl) {
+    return {
+      success: false,
+      error: "Reference frame image is required for video generation",
+    };
+  }
+
+  const duration = clampVideoDuration(args.duration);
+
   const input: Record<string, unknown> = {
     prompt: args.prompt,
-    duration: 5,
+    image: args.referenceImageUrl,
+    duration,
     resolution: "720p",
     fps: 24,
     aspect_ratio: "9:16",
     draft: false,
-    save_audio: true,
+    save_audio: false,
     prompt_upsampling: true,
     disable_safety_filter: args.enableSafety === false,
   };
-
-  if (args.referenceImageUrl) {
-    input.image = args.referenceImageUrl;
-  }
 
   try {
     const output = await replicate.run(P_VIDEO_MODEL, { input });

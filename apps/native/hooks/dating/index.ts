@@ -30,7 +30,7 @@ export type {
   ImageRequestOptions,
   MediaRequestOptions,
   MediaRequestType,
-} from "./useImageRequest";
+} from "@/components/dating/image-request-sheet";
 export { useCredits, CREDIT_COSTS } from "./useCredits";
 export type { CreditAction } from "./useCredits";
 export {

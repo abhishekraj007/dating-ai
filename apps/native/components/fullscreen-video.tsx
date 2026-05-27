@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Dimensions,
   Modal,
@@ -10,6 +10,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { useEventListener } from "expo";
+import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Pause, Play, Volume2, VolumeX, X } from "lucide-react-native";
@@ -22,6 +23,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
+import { Spinner } from "heroui-native";
+import { useVideoMutePreference } from "@/hooks/use-video-mute-preference";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -101,20 +104,59 @@ function CenterPlaybackButton({
   );
 }
 
+interface VideoPosterFrameProps {
+  posterUrl?: string;
+  isLoading: boolean;
+  children?: ReactNode;
+}
+
+function VideoPosterFrame({
+  posterUrl,
+  isLoading,
+  children,
+}: VideoPosterFrameProps) {
+  return (
+    <>
+      {posterUrl ? (
+        <Image
+          source={{ uri: posterUrl }}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={150}
+        />
+      ) : (
+        <View style={[StyleSheet.absoluteFill, styles.posterFallback]} />
+      )}
+
+      {isLoading ? (
+        <View style={styles.loadingOverlay} pointerEvents="none">
+          <Spinner size="md" color="#ffffff" />
+        </View>
+      ) : null}
+
+      {children}
+    </>
+  );
+}
+
 interface FullscreenVideoProps {
   videoUrl: string;
+  posterUrl?: string;
   visible: boolean;
   onClose: () => void;
 }
 
 export function FullscreenVideo({
   videoUrl,
+  posterUrl,
   visible,
   onClose,
 }: FullscreenVideoProps) {
   const insets = useSafeAreaInsets();
-  const [isMuted, setIsMuted] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const { isMuted, toggleMuted } = useVideoMutePreference();
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const { controlsVisible, showControls, animatedStyle } = useAutoHideControls();
 
   const translateX = useSharedValue(0);
@@ -123,12 +165,29 @@ export function FullscreenVideo({
 
   const player = useVideoPlayer(videoUrl, (instance) => {
     instance.loop = true;
-    instance.play();
   });
 
   useEventListener(player, "playingChange", ({ isPlaying: playing }) => {
     setIsPlaying(playing);
   });
+
+  useEventListener(player, "statusChange", ({ status }) => {
+    if (status === "readyToPlay") {
+      setIsVideoReady(true);
+      player.play();
+    }
+  });
+
+  useEffect(() => {
+    player.muted = isMuted;
+  }, [isMuted, player]);
+
+  useEffect(() => {
+    if (!visible) {
+      setIsVideoReady(false);
+      setIsPlaying(false);
+    }
+  }, [visible]);
 
   const finishClose = useCallback(() => {
     player.pause();
@@ -144,12 +203,10 @@ export function FullscreenVideo({
     });
   }, [dismissOpacity, finishClose]);
 
-  const toggleMute = useCallback(() => {
+  const toggleMute = () => {
     showControls();
-    const nextMuted = !isMuted;
-    player.muted = nextMuted;
-    setIsMuted(nextMuted);
-  }, [isMuted, player, showControls]);
+    toggleMuted();
+  };
 
   const togglePlayback = useCallback(() => {
     showControls();
@@ -223,12 +280,22 @@ export function FullscreenVideo({
       <View style={styles.fullscreenRoot}>
         <GestureDetector gesture={composedGesture}>
           <Animated.View style={[styles.fullscreenContent, containerAnimatedStyle]}>
-            <VideoView
-              player={player}
-              style={styles.fullscreenVideo}
-              contentFit="contain"
-              nativeControls={false}
-            />
+            <View style={styles.mediaContainer}>
+              <VideoPosterFrame
+                posterUrl={posterUrl}
+                isLoading={!isVideoReady}
+              />
+
+              <VideoView
+                player={player}
+                style={[
+                  styles.fullscreenVideo,
+                  !isVideoReady && styles.hiddenVideo,
+                ]}
+                contentFit="contain"
+                nativeControls={false}
+              />
+            </View>
 
             <Animated.View
               style={[styles.topControls, { top: insets.top + 8 }, animatedStyle]}
@@ -263,7 +330,7 @@ export function FullscreenVideo({
               isPlaying={isPlaying}
               onPress={togglePlayback}
               animatedStyle={animatedStyle}
-              visible={controlsVisible}
+              visible={controlsVisible && isVideoReady}
             />
           </Animated.View>
         </GestureDetector>
@@ -273,19 +340,27 @@ export function FullscreenVideo({
 }
 
 interface InlineVideoPreviewProps {
-  videoUrl: string;
+  videoUrl?: string;
+  posterUrl?: string;
   style?: StyleProp<ViewStyle>;
 }
 
-export function InlineVideoPreview({
+function InlineVideoPreviewLoaded({
   videoUrl,
+  posterUrl,
   style,
-}: InlineVideoPreviewProps) {
+}: Required<Pick<InlineVideoPreviewProps, "videoUrl">> &
+  Omit<InlineVideoPreviewProps, "videoUrl">) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
 
   const player = useVideoPlayer(videoUrl, (instance) => {
     instance.loop = true;
     instance.muted = true;
+  });
+
+  useEventListener(player, "statusChange", ({ status }) => {
+    setIsVideoReady(status === "readyToPlay");
   });
 
   const openFullscreen = useCallback(() => {
@@ -296,32 +371,63 @@ export function InlineVideoPreview({
   return (
     <>
       <Pressable onPress={openFullscreen} style={[styles.inlineContainer, style]}>
+        <VideoPosterFrame posterUrl={posterUrl} isLoading={!isVideoReady} />
+
         <VideoView
           player={player}
-          style={StyleSheet.absoluteFill}
+          style={[
+            StyleSheet.absoluteFill,
+            !isVideoReady && styles.hiddenVideo,
+          ]}
           contentFit="cover"
           nativeControls={false}
         />
-        <View style={styles.inlineOverlay} pointerEvents="none">
-          <View style={styles.inlinePlayButton}>
-            <Play
-              size={28}
-              color="#fff"
-              fill="#fff"
-              style={styles.playIconOffset}
-            />
+
+        {isVideoReady ? (
+          <View style={styles.inlineOverlay} pointerEvents="none">
+            <View style={styles.inlinePlayButton}>
+              <Play
+                size={28}
+                color="#fff"
+                fill="#fff"
+                style={styles.playIconOffset}
+              />
+            </View>
           </View>
-        </View>
+        ) : null}
       </Pressable>
 
       {isFullscreen ? (
         <FullscreenVideo
           videoUrl={videoUrl}
+          posterUrl={posterUrl}
           visible={isFullscreen}
           onClose={() => setIsFullscreen(false)}
         />
       ) : null}
     </>
+  );
+}
+
+export function InlineVideoPreview({
+  videoUrl,
+  posterUrl,
+  style,
+}: InlineVideoPreviewProps) {
+  if (!videoUrl) {
+    return (
+      <View style={[styles.inlineContainer, style]}>
+        <VideoPosterFrame posterUrl={posterUrl} isLoading />
+      </View>
+    );
+  }
+
+  return (
+    <InlineVideoPreviewLoaded
+      videoUrl={videoUrl}
+      posterUrl={posterUrl}
+      style={style}
+    />
   );
 }
 
@@ -333,8 +439,12 @@ const styles = StyleSheet.create({
   fullscreenContent: {
     flex: 1,
   },
-  fullscreenVideo: {
+  mediaContainer: {
     flex: 1,
+    position: "relative",
+  },
+  fullscreenVideo: {
+    ...StyleSheet.absoluteFillObject,
   },
   topControls: {
     position: "absolute",
@@ -370,6 +480,20 @@ const styles = StyleSheet.create({
   },
   inlineContainer: {
     overflow: "hidden",
+    backgroundColor: "#000",
+  },
+  posterFallback: {
+    backgroundColor: "#111",
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.25)",
+    zIndex: 2,
+  },
+  hiddenVideo: {
+    opacity: 0,
   },
   inlineOverlay: {
     ...StyleSheet.absoluteFillObject,
