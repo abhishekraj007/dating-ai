@@ -355,6 +355,9 @@ export const en: TranslationMap = {
   "quiz.letsPlay": "Let's play a quiz!",
   "quiz.endQuiz": "End quiz",
 
+  "media.recordingVideo": "Recording your video...",
+  "media.takingPhoto": "Taking your photo...",
+
   "signIn.failed": "Failed to sign in",
   "signUp.failed": "Failed to sign up",
   "signUp.createAccount": "Create Account",

@@ -50,6 +50,46 @@ export const getChatVideoRequestInternal = internalQuery({
   },
 });
 
+export const getInFlightChatMediaInternal = internalQuery({
+  args: {
+    conversationId: v.id("aiConversations"),
+  },
+  handler: async (ctx, { conversationId }) => {
+    const [pendingImages, processingImages, pendingVideos, processingVideos] =
+      await Promise.all([
+        ctx.db
+          .query("chatImages")
+          .withIndex("by_conversation_and_status", (q) =>
+            q.eq("conversationId", conversationId).eq("status", "pending"),
+          )
+          .collect(),
+        ctx.db
+          .query("chatImages")
+          .withIndex("by_conversation_and_status", (q) =>
+            q.eq("conversationId", conversationId).eq("status", "processing"),
+          )
+          .collect(),
+        ctx.db
+          .query("chatVideos")
+          .withIndex("by_conversation_and_status", (q) =>
+            q.eq("conversationId", conversationId).eq("status", "pending"),
+          )
+          .collect(),
+        ctx.db
+          .query("chatVideos")
+          .withIndex("by_conversation_and_status", (q) =>
+            q.eq("conversationId", conversationId).eq("status", "processing"),
+          )
+          .collect(),
+      ]);
+
+    return {
+      images: [...pendingImages, ...processingImages],
+      videos: [...pendingVideos, ...processingVideos],
+    };
+  },
+});
+
 /**
  * Internal query to resolve the user's preferred chat language.
  */

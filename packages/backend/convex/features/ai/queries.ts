@@ -17,6 +17,11 @@ import {
   normalizePublicProfileUsername,
 } from "./publicProfileUsernames";
 import { activeProfilesDiscoverQuery } from "./discoverQuery";
+import {
+  buildMediaFailedContent,
+  buildMediaProcessingContent,
+  buildMediaResponseContent,
+} from "./chatMediaPlaceholders";
 
 function sanitizeStructuredMessage(
   value: string | undefined,
@@ -853,6 +858,134 @@ export const getSystemProfiles = query({
         };
       }),
     );
+  },
+});
+
+/**
+ * Authoritative media delivery state for a conversation.
+ * Used by chat UI to replace hallucinated agent JSON with real request data.
+ */
+export const listConversationMediaDeliveries = query({
+  args: {
+    conversationId: v.id("aiConversations"),
+  },
+  returns: v.array(
+    v.object({
+      requestId: v.string(),
+      responseMessageId: v.optional(v.string()),
+      createdAt: v.number(),
+      content: v.string(),
+    }),
+  ),
+  handler: async (ctx, { conversationId }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    const conversation = await ctx.db.get(conversationId);
+    if (!conversation || conversation.userId !== user._id) {
+      throw new Error("Conversation not found");
+    }
+
+    const deliveries: {
+      requestId: string;
+      responseMessageId?: string;
+      createdAt: number;
+      content: string;
+    }[] = [];
+
+    const images = await ctx.db
+      .query("chatImages")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", conversationId))
+      .collect();
+
+    for (const image of images) {
+      if (image.status === "completed" && image.imageKey) {
+        deliveries.push({
+          requestId: image._id,
+          responseMessageId: image.responseMessageId,
+          createdAt: image._creationTime,
+          content: buildMediaResponseContent("image", {
+            requestId: image._id,
+            prompt: image.prompt,
+            imageKey: image.imageKey,
+          }),
+        });
+        continue;
+      }
+
+      if (image.status === "failed") {
+        deliveries.push({
+          requestId: image._id,
+          responseMessageId: image.responseMessageId,
+          createdAt: image._creationTime,
+          content: buildMediaFailedContent(
+            "image",
+            image._id,
+            "Oops, I couldn't take that photo right now. My camera seems to be acting up! Can you ask me something else instead?",
+          ),
+        });
+        continue;
+      }
+
+      if (image.status === "pending" || image.status === "processing") {
+        deliveries.push({
+          requestId: image._id,
+          responseMessageId: image.responseMessageId,
+          createdAt: image._creationTime,
+          content: buildMediaProcessingContent("image", image._id, image.prompt),
+        });
+      }
+    }
+
+    const videos = await ctx.db
+      .query("chatVideos")
+      .withIndex("by_conversation", (q) => q.eq("conversationId", conversationId))
+      .collect();
+
+    for (const video of videos) {
+      if (video.status === "completed" && video.videoKey) {
+        deliveries.push({
+          requestId: video._id,
+          responseMessageId: video.responseMessageId,
+          createdAt: video._creationTime,
+          content: buildMediaResponseContent("video", {
+            requestId: video._id,
+            prompt: video.prompt,
+            videoKey: video.videoKey,
+            posterKey: video.posterKey,
+          }),
+        });
+        continue;
+      }
+
+      if (video.status === "failed") {
+        deliveries.push({
+          requestId: video._id,
+          responseMessageId: video.responseMessageId,
+          createdAt: video._creationTime,
+          content: buildMediaFailedContent(
+            "video",
+            video._id,
+            "Sorry, I couldn't record that video right now. My camera seems to be acting up! Can you ask me something else instead?",
+          ),
+        });
+        continue;
+      }
+
+      if (video.status === "pending" || video.status === "processing") {
+        deliveries.push({
+          requestId: video._id,
+          responseMessageId: video.responseMessageId,
+          createdAt: video._creationTime,
+          content: buildMediaProcessingContent("video", video._id, video.prompt),
+        });
+      }
+    }
+
+    deliveries.sort((a, b) => a.createdAt - b.createdAt);
+    return deliveries;
   },
 });
 

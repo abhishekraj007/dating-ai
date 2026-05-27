@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Dimensions,
   Modal,
@@ -97,7 +103,12 @@ function CenterPlaybackButton({
         {isPlaying ? (
           <Pause size={32} color="#fff" fill="#fff" />
         ) : (
-          <Play size={32} color="#fff" fill="#fff" style={styles.playIconOffset} />
+          <Play
+            size={32}
+            color="#fff"
+            fill="#fff"
+            style={styles.playIconOffset}
+          />
         )}
       </Pressable>
     </Animated.View>
@@ -157,7 +168,8 @@ export function FullscreenVideo({
   const { isMuted, toggleMuted } = useVideoMutePreference();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
-  const { controlsVisible, showControls, animatedStyle } = useAutoHideControls();
+  const { controlsVisible, showControls, animatedStyle } =
+    useAutoHideControls();
 
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -235,14 +247,12 @@ export function FullscreenVideo({
         event.translationY > Math.abs(event.translationX);
 
       if (swipedRight || swipedDown) {
-        translateX.value = withTiming(
-          swipedRight ? screenWidth : 0,
-          { duration: 180 },
-        );
-        translateY.value = withTiming(
-          swipedDown ? screenHeight : 0,
-          { duration: 180 },
-        );
+        translateX.value = withTiming(swipedRight ? screenWidth : 0, {
+          duration: 180,
+        });
+        translateY.value = withTiming(swipedDown ? screenHeight : 0, {
+          duration: 180,
+        });
         dismissOpacity.value = withTiming(0, { duration: 180 }, () => {
           scheduleOnRN(finishClose);
         });
@@ -279,7 +289,9 @@ export function FullscreenVideo({
       <StatusBar barStyle="light-content" backgroundColor="black" />
       <View style={styles.fullscreenRoot}>
         <GestureDetector gesture={composedGesture}>
-          <Animated.View style={[styles.fullscreenContent, containerAnimatedStyle]}>
+          <Animated.View
+            style={[styles.fullscreenContent, containerAnimatedStyle]}
+          >
             <View style={styles.mediaContainer}>
               <VideoPosterFrame
                 posterUrl={posterUrl}
@@ -298,7 +310,11 @@ export function FullscreenVideo({
             </View>
 
             <Animated.View
-              style={[styles.topControls, { top: insets.top + 8 }, animatedStyle]}
+              style={[
+                styles.topControls,
+                { top: insets.top + 8 },
+                animatedStyle,
+              ]}
               pointerEvents={controlsVisible ? "box-none" : "none"}
             >
               <Pressable
@@ -370,10 +386,13 @@ function InlineVideoPreviewLoaded({
 
   return (
     <>
-      <Pressable onPress={openFullscreen} style={[styles.inlineContainer, style]}>
+      <Pressable
+        onPress={openFullscreen}
+        style={[styles.inlineContainer, style]}
+      >
         <VideoPosterFrame posterUrl={posterUrl} isLoading={!isVideoReady} />
 
-        <VideoView
+        {/* <VideoView
           player={player}
           style={[
             StyleSheet.absoluteFill,
@@ -381,7 +400,7 @@ function InlineVideoPreviewLoaded({
           ]}
           contentFit="cover"
           nativeControls={false}
-        />
+        /> */}
 
         {isVideoReady ? (
           <View style={styles.inlineOverlay} pointerEvents="none">

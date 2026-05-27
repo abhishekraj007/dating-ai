@@ -82,7 +82,7 @@ export function useChatScreen() {
     hasMore,
     loadMore,
     isAITyping,
-  } = useMessages(threadId);
+  } = useMessages(threadId, id as Id<"aiConversations">);
 
   const { sendMessage, sendMessageWithOptimistic, retryMessage, stopResponse } =
     useSendMessage();

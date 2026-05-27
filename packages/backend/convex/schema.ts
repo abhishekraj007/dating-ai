@@ -265,6 +265,7 @@ export default defineSchema({
       }),
     ),
     imageKey: v.optional(v.string()), // R2 key when complete
+    responseMessageId: v.optional(v.string()),
     status: v.union(
       v.literal("pending"),
       v.literal("processing"),
@@ -276,6 +277,7 @@ export default defineSchema({
     creditsCharged: v.number(),
   })
     .index("by_conversation", ["conversationId"])
+    .index("by_conversation_and_status", ["conversationId", "status"])
     .index("by_user", ["userId"])
     .index("by_status", ["status"])
     .index("by_image_key", ["imageKey"]),
@@ -300,6 +302,7 @@ export default defineSchema({
     ),
     videoKey: v.optional(v.string()),
     posterKey: v.optional(v.string()),
+    responseMessageId: v.optional(v.string()),
     status: v.union(
       v.literal("pending"),
       v.literal("processing"),
@@ -311,6 +314,7 @@ export default defineSchema({
     creditsCharged: v.number(),
   })
     .index("by_conversation", ["conversationId"])
+    .index("by_conversation_and_status", ["conversationId", "status"])
     .index("by_user", ["userId"])
     .index("by_status", ["status"])
     .index("by_video_key", ["videoKey"])

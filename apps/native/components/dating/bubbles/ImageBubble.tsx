@@ -4,14 +4,17 @@ import { useQuery } from "convex/react";
 import { api } from "@dating-ai/backend";
 import { AIBubbleWrapper } from "./AIBubbleWrapper";
 import { useMarkdownStyles } from "./useMarkdownStyles";
-import { Skeleton } from "heroui-native";
 import { ZoomableImage } from "@/components/zoomable-image";
 import { BlurredPremiumImage } from "../blurred-premium-image";
 import { useCredits } from "@/hooks/dating/useCredits";
+import { useTranslation } from "@/hooks/use-translation";
+import { MediaPlaceholder } from "./MediaPlaceholder";
 import type {
   AIBubbleProps,
   ImageRequestData,
   ImageResponseData,
+  ImageProcessingData,
+  ImageFailedData,
 } from "./message-types";
 
 interface RequestProps extends AIBubbleProps {
@@ -44,6 +47,63 @@ export function ImageRequestBubble({
   );
 }
 
+interface ProcessingProps extends AIBubbleProps {
+  data: ImageProcessingData;
+}
+
+export function ImageProcessingBubble({
+  avatarUrl,
+  profileName,
+  time,
+}: ProcessingProps) {
+  const { t } = useTranslation();
+  const markdownStyles = useMarkdownStyles();
+  const previewSize = { width: 250, height: 350 };
+
+  return (
+    <AIBubbleWrapper
+      avatarUrl={avatarUrl}
+      profileName={profileName}
+      time={time}
+    >
+      <View className="bg-surface rounded-2xl rounded-tl-sm overflow-hidden">
+        <MediaPlaceholder {...previewSize} showSpinner />
+        <View className="px-4 py-3">
+          <Markdown style={markdownStyles}>{t("media.takingPhoto")}</Markdown>
+        </View>
+      </View>
+    </AIBubbleWrapper>
+  );
+}
+
+interface FailedProps extends AIBubbleProps {
+  data: ImageFailedData;
+}
+
+export function ImageFailedBubble({
+  data,
+  avatarUrl,
+  profileName,
+  time,
+}: FailedProps) {
+  const markdownStyles = useMarkdownStyles();
+
+  return (
+    <AIBubbleWrapper
+      avatarUrl={avatarUrl}
+      profileName={profileName}
+      time={time}
+    >
+      <View className="bg-surface rounded-2xl rounded-tl-sm px-4 py-3">
+        <Markdown style={markdownStyles}>
+          {data.message ||
+            "Oops, I couldn't take that photo right now. My camera seems to be acting up!"}
+        </Markdown>
+      </View>
+    </AIBubbleWrapper>
+  );
+}
+
 interface ResponseProps extends AIBubbleProps {
   data: ImageResponseData;
 }
@@ -66,6 +126,7 @@ export function ImageResponseBubble({
   );
 
   const imageUrl = freshUrl ?? data.imageUrl;
+  const previewSize = { width: 250, height: 350 };
 
   return (
     <AIBubbleWrapper
@@ -75,14 +136,14 @@ export function ImageResponseBubble({
     >
       <View className="bg-surface rounded-2xl rounded-tl-sm overflow-hidden">
         {isCreditsLoading ? (
-          <Skeleton style={{ width: 250, height: 350 }} />
+          <MediaPlaceholder {...previewSize} showSpinner />
         ) : !imageUrl ? (
-          <Skeleton style={{ width: 250, height: 350 }} />
+          <MediaPlaceholder {...previewSize} showSpinner />
         ) : !isPremium ? (
           <BlurredPremiumImage
             imageUrl={imageUrl}
-            width={250}
-            height={350}
+            width={previewSize.width}
+            height={previewSize.height}
             profileName={profileName}
             profileAvatar={avatarUrl}
             borderRadius={0}
@@ -90,7 +151,7 @@ export function ImageResponseBubble({
         ) : (
           <ZoomableImage
             source={{ uri: imageUrl }}
-            style={{ width: 250, height: 350 }}
+            style={previewSize}
             contentFit="cover"
             transition={200}
             cachePolicy="disk"

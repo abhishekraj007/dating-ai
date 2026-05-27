@@ -20,6 +20,7 @@ import {
   storeRemoteVideoAsset,
   toChatProfileDetails,
 } from "./chatMediaGeneration";
+import { buildInFlightMediaContext } from "./chatMediaPlaceholders";
 import { IS_DEV } from "./profileGen/constants";
 
 type ChatErrorCode = "rate_limited" | "generation_failed";
@@ -76,6 +77,26 @@ function isPromptCancelled(
   return (
     conversation?.cancelledPromptMessageIds?.includes(promptMessageId) ?? false
   );
+}
+
+type MediaToolName = "generateImage" | "generateVideo";
+
+function getRequestedMediaTool(
+  promptContent: string | undefined,
+): MediaToolName | null {
+  if (!promptContent) {
+    return null;
+  }
+
+  const normalized = promptContent.toLowerCase();
+  if (/\b(video|vid|clip|reel|record)\b/.test(normalized)) {
+    return "generateVideo";
+  }
+  if (/\b(selfie|photo|picture|pic|image|shot|snap)\b/.test(normalized)) {
+    return "generateImage";
+  }
+
+  return null;
 }
 
 async function failPendingAssistantMessages(
@@ -150,6 +171,7 @@ export const generateResponse = internalAction({
     threadId: v.optional(v.string()),
     userId: v.optional(v.string()),
     aiProfileId: v.optional(v.id("aiProfiles")),
+    promptContent: v.optional(v.string()),
     platform: v.optional(
       v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
     ),
@@ -163,6 +185,7 @@ export const generateResponse = internalAction({
       threadId,
       userId,
       aiProfileId,
+      promptContent,
       platform,
     },
   ) => {
@@ -217,6 +240,15 @@ export const generateResponse = internalAction({
       { userId: convUserId! },
     );
 
+    const inFlightMedia = await ctx.runQuery(
+      internal.features.ai.internalQueries.getInFlightChatMediaInternal,
+      { conversationId },
+    );
+    const inFlightMediaContext = buildInFlightMediaContext(
+      inFlightMedia.images,
+      inFlightMedia.videos,
+    );
+
     // Determine NSFW eligibility based on app config and request platform.
     // Missing config is treated as disabled until an allowed platform is set.
     const appConfig = await ctx.runQuery(
@@ -257,6 +289,7 @@ export const generateResponse = internalAction({
           provider,
           nsfwEnabled,
           chatLanguage,
+          inFlightMediaContext,
         );
         result = await agent.streamText(
           ctx,
@@ -347,6 +380,7 @@ export const generateResponse = internalAction({
 
     // Get the order of the current response to only process new tool calls
     const currentOrder = result.order;
+    const requestedMediaTool = getRequestedMediaTool(promptContent);
     console.log("Current response order:", currentOrder);
 
     for (const message of messagesResult.page) {
@@ -367,7 +401,8 @@ export const generateResponse = internalAction({
           if (
             contentPart.type === "tool-call" &&
             "toolName" in contentPart &&
-            contentPart.toolName === "generateVideo"
+            contentPart.toolName === "generateVideo" &&
+            (!requestedMediaTool || requestedMediaTool === "generateVideo")
           ) {
             console.log("Found generateVideo tool call:", contentPart);
 
@@ -387,6 +422,7 @@ export const generateResponse = internalAction({
                   aiProfileId: profileId!,
                   platform,
                   prompt: args.description || "A video",
+                  promptMessageId,
                   styleOptions: {
                     hairstyle: args.hairstyle,
                     clothing: args.clothing,
@@ -419,7 +455,8 @@ export const generateResponse = internalAction({
           if (
             contentPart.type === "tool-call" &&
             "toolName" in contentPart &&
-            contentPart.toolName === "generateImage"
+            contentPart.toolName === "generateImage" &&
+            (!requestedMediaTool || requestedMediaTool === "generateImage")
           ) {
             console.log("Found generateImage tool call:", contentPart);
 
@@ -440,6 +477,7 @@ export const generateResponse = internalAction({
                   aiProfileId: profileId!,
                   platform,
                   prompt: args.description || "A selfie",
+                  promptMessageId,
                   styleOptions: {
                     hairstyle: args.hairstyle,
                     clothing: args.clothing,

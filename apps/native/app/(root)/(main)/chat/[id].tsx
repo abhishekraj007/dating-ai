@@ -39,6 +39,18 @@ import { useTranslation } from "@/hooks/use-translation";
 const BOTTOM_SHADOW_SIZE = 20;
 const CHAT_MAINTAIN_VISIBLE_CONTENT_POSITION = {};
 
+function getMessageContentType(content: unknown) {
+  if (typeof content !== "string") {
+    return "text";
+  }
+
+  return content.match(/"type":"([^"]+)"/)?.[1] ?? "text";
+}
+
+function getMessageRenderKey(item: { _id: string; content?: string }) {
+  return `${item._id}:${getMessageContentType(item.content)}`;
+}
+
 export default function ChatScreen() {
   const { t } = useTranslation();
   const foregroundColor = useThemeColor("foreground");
@@ -132,7 +144,7 @@ export default function ChatScreen() {
     handleOpenCreditsModal,
   } = useChatScreen();
 
-  // console.log("messages", messages);
+  console.log("messages", messages);
 
   const renderMessage = ({ item }: { item: any }) => {
     const isUser = item.role === "user";
@@ -157,10 +169,7 @@ export default function ChatScreen() {
       />
     );
   };
-  const listBottomPadding = Math.max(
-    16,
-    chatFormHeight - composerHeight + 16,
-  );
+  const listBottomPadding = Math.max(16, chatFormHeight - composerHeight + 16);
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
@@ -284,7 +293,8 @@ export default function ChatScreen() {
                   ref={listRef}
                   data={messages}
                   renderItem={renderMessage}
-                  keyExtractor={(item) => item._id}
+                  keyExtractor={getMessageRenderKey}
+                  getItemType={(item) => getMessageContentType(item.content)}
                   contentContainerStyle={{
                     paddingTop: 16,
                     paddingBottom: listBottomPadding,

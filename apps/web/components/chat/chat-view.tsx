@@ -114,7 +114,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
   );
 
   const { messages, isLoading, isLoadingMore, hasMore, loadMore, isAITyping } =
-    useMessages(threadId);
+    useMessages(threadId, conversationId as Id<"aiConversations">);
 
   const { sendMessage } = useSendMessage();
   const { clearChat } = useClearChat();

@@ -647,6 +647,7 @@ export function createAIProfileAgent(
   provider: AgentProvider = AI_AGENT_PROVIDER,
   nsfwEnabled: boolean = true,
   chatLanguage: AppLanguage = DEFAULT_LANGUAGE,
+  inFlightMediaContext = "",
 ) {
   const languageModel = getAgentLanguageModel(provider);
   if (!languageModel) {
@@ -672,7 +673,9 @@ export function createAIProfileAgent(
     name: profile.name,
     languageModel,
     textEmbeddingModel: embeddingModel,
-    instructions: buildPersonalityPrompt(profile, nsfwEnabled, chatLanguage),
+    instructions:
+      buildPersonalityPrompt(profile, nsfwEnabled, chatLanguage) +
+      inFlightMediaContext,
     tools: {
       generateImage: generateImageTool,
       generateVideo: generateVideoTool,

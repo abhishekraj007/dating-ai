@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Camera, LogOut, Trash2 } from "lucide-react";
+import { Camera, Loader2, LogOut, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChatImageBubble } from "@/components/chat/chat-image-bubble";
 import { ChatVideoBubble } from "@/components/chat/chat-video-bubble";
 import { ChatMarkdown } from "@/components/chat/chat-markdown";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MessageBubbleProps {
   content: string;
@@ -39,6 +40,7 @@ type StructuredPayload = {
   options?: string[];
   explanation?: string;
   isCorrect?: boolean;
+  requestId?: string;
 };
 
 function parseStructuredContent(content: string): StructuredPayload | null {
@@ -75,12 +77,44 @@ function parseContent(content: string) {
     };
   }
 
+  if (structured.type === "video_processing") {
+    return {
+      kind: "video_processing" as const,
+      text: "Recording a video...",
+    };
+  }
+
+  if (structured.type === "video_failed") {
+    return {
+      kind: "media_failed" as const,
+      text:
+        structured.message ||
+        "Sorry, I couldn't record that video right now. My camera seems to be acting up!",
+    };
+  }
+
   if (structured.type === "image_response") {
     return {
       kind: "image" as const,
       imageUrl: structured.imageUrl,
       imageKey: structured.imageKey,
       text: structured.caption || structured.prompt,
+    };
+  }
+
+  if (structured.type === "image_processing") {
+    return {
+      kind: "image_processing" as const,
+      text: "Taking a photo...",
+    };
+  }
+
+  if (structured.type === "image_failed") {
+    return {
+      kind: "media_failed" as const,
+      text:
+        structured.message ||
+        "Oops, I couldn't take that photo right now. My camera seems to be acting up!",
     };
   }
 
@@ -237,6 +271,30 @@ export function MessageBubble({
             viewerEmail={viewerEmail}
             viewerAuthUserId={viewerAuthUserId}
           />
+        ) : parsed.kind === "video_processing" ? (
+          <div className="relative overflow-hidden rounded-3xl ring-1 ring-black/10 dark:ring-white/10">
+            <Skeleton className="h-[280px] w-[250px] rounded-3xl animate-pulse" />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+              <Loader2 className="h-8 w-8 animate-spin text-white" />
+            </div>
+            <p className="px-4 py-3 text-sm text-muted-foreground">
+              {parsed.text}
+            </p>
+          </div>
+        ) : parsed.kind === "image_processing" ? (
+          <div className="relative overflow-hidden rounded-3xl ring-1 ring-black/10 dark:ring-white/10">
+            <Skeleton className="h-[280px] w-[250px] rounded-3xl animate-pulse" />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+              <Loader2 className="h-8 w-8 animate-spin text-white" />
+            </div>
+            <p className="px-4 py-3 text-sm text-muted-foreground">
+              {parsed.text}
+            </p>
+          </div>
+        ) : parsed.kind === "media_failed" ? (
+          <div className="rounded-3xl rounded-bl-lg bg-destructive/10 px-4 py-2.5 text-sm text-destructive shadow-sm">
+            {renderTextContent(parsed.text, isUser)}
+          </div>
         ) : parsed.kind === "video_request" ? (
           <div
             className={cn(

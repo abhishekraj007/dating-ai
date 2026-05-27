@@ -16,6 +16,8 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
+const DEV_IMAGE_GENERATION_DELAY_MS = 10_000;
+
 type ReplicateModelId = `${string}/${string}` | `${string}/${string}:${string}`;
 
 type ImageModelAttempt = {
@@ -430,10 +432,14 @@ export async function generateImageWithFallback(args: {
 }): Promise<ImageGenerationResult> {
   if (args.isDev) {
     try {
-      const randomId = Math.floor(Math.random() * 1000);
+      await new Promise((resolve) =>
+        setTimeout(resolve, DEV_IMAGE_GENERATION_DELAY_MS),
+      );
+
+      const seed = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       return {
         success: true,
-        imageUrl: `https://picsum.photos/id/${randomId}/${args.devWidth}/${args.devHeight}`,
+        imageUrl: `https://picsum.photos/seed/${encodeURIComponent(seed)}/${args.devWidth}/${args.devHeight}`,
         model: "picsum.photos (dev)",
       };
     } catch (error) {

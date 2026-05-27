@@ -9,6 +9,8 @@ const P_VIDEO_MODEL = "prunaai/p-video" as const;
 const DEV_DUMMY_VIDEO_URL =
   "https://samplelib.com/preview/mp4/sample-5s.mp4";
 
+const DEV_VIDEO_GENERATION_DELAY_MS = 30_000;
+
 const DEFAULT_VIDEO_DURATION = 5;
 const MIN_VIDEO_DURATION = 1;
 const MAX_VIDEO_DURATION = 10;
@@ -94,6 +96,8 @@ export async function generateVideoWithFallback(args: {
   isDev: boolean;
 }): Promise<VideoGenerationResult> {
   if (args.isDev) {
+    await new Promise((resolve) => setTimeout(resolve, DEV_VIDEO_GENERATION_DELAY_MS));
+
     return {
       success: true,
       videoUrl: DEV_DUMMY_VIDEO_URL,

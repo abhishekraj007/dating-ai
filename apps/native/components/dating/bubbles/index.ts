@@ -3,8 +3,8 @@ export { AIBubbleWrapper } from "./AIBubbleWrapper";
 export { QuizQuestionBubble } from "./QuizQuestionBubble";
 export { QuizResultBubble } from "./QuizResultBubble";
 export { QuizStartBubble } from "./QuizStartBubble";
-export { ImageRequestBubble, ImageResponseBubble } from "./ImageBubble";
-export { VideoRequestBubble, VideoResponseBubble } from "./VideoBubble";
+export { ImageRequestBubble, ImageResponseBubble, ImageProcessingBubble, ImageFailedBubble } from "./ImageBubble";
+export { VideoRequestBubble, VideoResponseBubble, VideoProcessingBubble, VideoFailedBubble } from "./VideoBubble";
 export { ChatErrorBubble } from "./ChatErrorBubble";
 export { CreditsRequiredBubble } from "./CreditsRequiredBubble";
 export {
