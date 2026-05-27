@@ -84,6 +84,7 @@ export const runSystemProfileGeneration = internalAction({
     // the vision model's enum pick.
     ethnicity: v.optional(v.string()),
     imageModel: v.optional(v.string()),
+    isTrending: v.optional(v.boolean()),
     // When true, pause after the avatar is generated and write a
     // `preview` snapshot to the job row. Admin then approves to run
     // showcase + persist via `continueShowcaseAndPersist`. Cron path
@@ -120,6 +121,7 @@ export const runSystemProfileGeneration = internalAction({
           referenceSubjectDescriptor: args.referenceSubjectDescriptor,
           referenceImageUrl: args.referenceImageUrl,
           imageModel,
+          isTrending: args.isTrending,
           appearanceOverrides: args.appearanceOverrides,
         },
       )) as string);
@@ -326,6 +328,7 @@ export const runSystemProfileGeneration = internalAction({
         initialCompletedSteps: completedSteps,
         initialStepModels: stepModels,
         imageModel,
+        isTrending: args.isTrending ?? false,
       });
 
       return { success: true, jobId, createdProfileId };
@@ -485,6 +488,7 @@ export const continueShowcaseAndPersistAction = internalAction({
         initialCompletedSteps: completedSteps,
         initialStepModels: stepModels,
         imageModel: job.imageModel ?? undefined,
+        isTrending: job.isTrending ?? false,
       });
 
       return { success: true, createdProfileId };

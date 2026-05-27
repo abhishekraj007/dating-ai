@@ -75,6 +75,14 @@ export function CharacterCard({
                   new
                 </Badge>
               ) : null}
+              {profile.isTrending ? (
+                <Badge
+                  variant="outline"
+                  className="h-6 border-amber-500/40 px-2 text-[11px] text-amber-600 dark:text-amber-400"
+                >
+                  Trending
+                </Badge>
+              ) : null}
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>{profile.gender === "female" ? "♀" : "♂"}</span>

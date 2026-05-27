@@ -193,6 +193,9 @@ export default defineSchema({
     // pre-migration rows don't have it and user-created profiles may opt
     // not to declare one.
     ethnicity: v.optional(v.string()),
+    // When true, profile is prioritized first in discover feeds (trending
+    // bucket, newest first), then non-trending profiles by creation time.
+    isTrending: v.optional(v.boolean()),
     createdAt: v.optional(v.number()), // Creation timestamp (legacy)
     createdByUserId: v.optional(v.string()), // Better Auth user ID if user-created
     // Communication style for AI responses
@@ -209,6 +212,12 @@ export default defineSchema({
     .index("by_gender", ["gender"])
     .index("by_user", ["createdByUserId"])
     .index("by_status_and_gender", ["status", "gender"])
+    .index("by_status_gender_trending_created", [
+      "status",
+      "gender",
+      "isTrending",
+    ])
+    .index("by_status_trending_created", ["status", "isTrending"])
     .index("by_username", ["username"])
     .index("by_system_created_at", ["isUserCreated", "createdAt"])
     .index("by_system_status_created_at", [
@@ -304,6 +313,7 @@ export default defineSchema({
     referenceSubjectDescriptor: v.optional(v.string()),
     referenceImageUrl: v.optional(v.string()),
     imageModel: v.optional(v.string()),
+    isTrending: v.optional(v.boolean()),
     appearanceOverrides: v.optional(
       v.object({
         skinTone: v.optional(v.string()),

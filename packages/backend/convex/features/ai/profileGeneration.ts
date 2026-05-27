@@ -84,6 +84,7 @@ export const createProfileGenerationJobInternal = internalMutation({
     referenceSubjectDescriptor: v.optional(v.string()),
     referenceImageUrl: v.optional(v.string()),
     imageModel: v.optional(v.string()),
+    isTrending: v.optional(v.boolean()),
     appearanceOverrides: v.optional(
       v.object({
         skinTone: v.optional(v.string()),
@@ -111,6 +112,7 @@ export const createProfileGenerationJobInternal = internalMutation({
       referenceSubjectDescriptor: args.referenceSubjectDescriptor,
       referenceImageUrl: args.referenceImageUrl,
       imageModel: args.imageModel,
+      isTrending: args.isTrending,
       appearanceOverrides: args.appearanceOverrides,
       createdAt: now,
       updatedAt: now,
@@ -436,6 +438,7 @@ export const createSystemProfileInternal = internalMutation({
     }),
     avatarImageKey: v.string(),
     profileImageKeys: v.array(v.string()),
+    isTrending: v.optional(v.boolean()),
   },
   returns: v.id("aiProfiles"),
   handler: async (ctx, args) => {
@@ -481,6 +484,7 @@ export const createSystemProfileInternal = internalMutation({
       language: "en",
       profileImageKeys: args.profileImageKeys,
       createdAt: Date.now(),
+      isTrending: args.isTrending ?? false,
     });
   },
 });
@@ -642,6 +646,7 @@ export const adminGenerateSystemProfile = mutation({
     // `features/ai/profileGenerationData.ts`).
     ethnicity: v.optional(v.string()),
     imageModel: v.optional(v.string()),
+    isTrending: v.optional(v.boolean()),
     // Defaults to true for the characters page preview flow. The dashboard
     // quick-generate button opts out by passing false.
     pauseForApproval: v.optional(v.boolean()),
@@ -681,6 +686,7 @@ export const adminGenerateSystemProfile = mutation({
             referenceSubjectDescriptor: args.referenceSubjectDescriptor,
             referenceImageUrl: args.referenceImageUrl,
             imageModel,
+            isTrending: args.isTrending,
             appearanceOverrides: args.appearanceOverrides,
           },
         )) as any)
@@ -701,6 +707,7 @@ export const adminGenerateSystemProfile = mutation({
         preferredLocation: args.preferredLocation,
         ethnicity: args.ethnicity,
         imageModel,
+        isTrending: args.isTrending,
         pauseForApproval,
         existingJobId,
       },
@@ -802,6 +809,7 @@ export const adminRegenerateAvatar = mutation({
 export const adminApproveAvatar = mutation({
   args: {
     jobId: v.id("profileGenerationJobs"),
+    isTrending: v.optional(v.boolean()),
     editedCandidate: v.optional(
       v.object({
         name: v.optional(v.string()),
@@ -850,6 +858,7 @@ export const adminApproveAvatar = mutation({
 
     await ctx.db.patch(args.jobId, {
       status: "processing",
+      isTrending: args.isTrending ?? job.isTrending ?? false,
       preview: {
         ...job.preview,
         candidate: {

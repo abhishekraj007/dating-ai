@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { AvatarPreviewPanel } from "./avatar-preview-panel";
 import { usePreviewApproval } from "../_hooks/use-preview-approval";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type InterestOption = {
   value: string;
@@ -71,6 +72,7 @@ type GenerateCharacterInput = {
   referenceImageUrl?: string;
   preferredLocation?: string;
   ethnicity?: string;
+  isTrending?: boolean;
 };
 
 type ImageModelOption = {
@@ -180,6 +182,7 @@ export function AddCharacterDialog({
   const [outfit, setOutfit] = useState(PLACEHOLDER);
   const [vibe, setVibe] = useState(PLACEHOLDER);
   const [imageModel, setImageModel] = useState(PLACEHOLDER);
+  const [isTrending, setIsTrending] = useState(false);
 
   // --- Reference tab state ---
   const [referencePreview, setReferencePreview] = useState<string | null>(null);
@@ -252,6 +255,7 @@ export function AddCharacterDialog({
     setOutfit(PLACEHOLDER);
     setVibe(PLACEHOLDER);
     setImageModel(PLACEHOLDER);
+    setIsTrending(false);
     setShowAppearance(false);
     // Reference state
     setReferencePreview(null);
@@ -325,9 +329,10 @@ export function AddCharacterDialog({
   };
 
   const buildGenerationInput = (
-    input: Omit<GenerateCharacterInput, "imageModel">,
+    input: Omit<GenerateCharacterInput, "imageModel" | "isTrending">,
   ): GenerateCharacterInput => ({
     ...input,
+    isTrending,
     imageModel:
       imageModel !== PLACEHOLDER && imageModel.trim().length > 0
         ? imageModel
@@ -510,7 +515,9 @@ export function AddCharacterDialog({
           <AvatarPreviewPanel
             job={previewJob}
             interestOptions={interestOptions}
-            onApprove={previewState.approve}
+            isTrending={isTrending}
+            onIsTrendingChange={setIsTrending}
+            onApprove={(edited) => previewState.approve(edited, isTrending)}
             onRegenerate={previewState.regenerate}
             onCancel={async () => {
               handleOpenChange(false);
@@ -570,6 +577,24 @@ export function AddCharacterDialog({
                 Applies to avatar and showcase images. Leave on default to use
                 the automatic fal.ai + Replicate fallback chain.
               </p>
+            </div>
+
+            <div className="space-y-2 px-4 pb-2">
+              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border/60 p-3">
+                <Checkbox
+                  checked={isTrending}
+                  onCheckedChange={(checked) =>
+                    setIsTrending(checked === true)
+                  }
+                />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Trending</p>
+                  <p className="text-xs text-muted-foreground">
+                    Show this character first in discover feeds until you turn
+                    it off.
+                  </p>
+                </div>
+              </label>
             </div>
 
             {/* =================== CUSTOM TAB =================== */}
