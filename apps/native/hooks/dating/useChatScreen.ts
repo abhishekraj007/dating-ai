@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { Alert, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { useConversation } from "./useConversations";
@@ -42,6 +43,7 @@ function getLatestCreditsRequiredMessageId(
 
 export function useChatScreen() {
   const { t } = useTranslation();
+  const { bottom: safeAreaBottom } = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   // Map Platform.OS to the supported platform values. macOS is treated as iOS.
@@ -58,6 +60,7 @@ export function useChatScreen() {
 
   // Keyboard composer state
   const [composerHeight, setComposerHeight] = useState(48);
+  const [chatFormHeight, setChatFormHeight] = useState(180);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [blurTrigger, setBlurTrigger] = useState(0);
   const isKeyboardOpen = keyboardHeight > 0;
@@ -196,6 +199,14 @@ export function useChatScreen() {
     conversationId: threadId ?? id,
     isLoading: isLoadingMessages,
   });
+
+  useEffect(() => {
+    if (keyboardHeight <= 0 || showScrollToBottom) {
+      return;
+    }
+
+    scrollToBottom(true);
+  }, [keyboardHeight, scrollToBottom, showScrollToBottom]);
 
   useEffect(() => {
     if (!pendingAssistantState) {
@@ -567,8 +578,8 @@ export function useChatScreen() {
     return lastQuizQuestionId;
   }, [messages]);
 
-  // Total bottom inset for messages
-  const totalBottomInset = composerHeight + 16;
+  // Native KeyboardAwareWrapper adds safe area on top of this inset.
+  const composerBottomInset = Math.max(0, chatFormHeight - safeAreaBottom);
 
   return {
     // Navigation
@@ -609,6 +620,9 @@ export function useChatScreen() {
     // Keyboard state
     composerHeight,
     setComposerHeight,
+    chatFormHeight,
+    setChatFormHeight,
+    composerBottomInset,
     keyboardHeight,
     setKeyboardHeight,
     blurTrigger,
@@ -638,7 +652,6 @@ export function useChatScreen() {
 
     // Computed values
     interactiveQuizQuestionId,
-    totalBottomInset,
 
     // Handlers
     handleSend,

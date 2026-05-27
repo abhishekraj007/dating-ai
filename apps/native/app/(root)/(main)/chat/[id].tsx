@@ -1,5 +1,6 @@
 import { View, Text, Pressable, useWindowDimensions } from "react-native";
 import { FlashList } from "@shopify/flash-list";
+import { KeyboardAwareWrapper } from "@launchhq/react-native-keyboard-composer";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Button,
@@ -80,6 +81,8 @@ export default function ChatScreen() {
     // Keyboard state
     composerHeight,
     setComposerHeight,
+    setChatFormHeight,
+    composerBottomInset,
     setKeyboardHeight,
     blurTrigger,
     isKeyboardOpen,
@@ -257,129 +260,135 @@ export default function ChatScreen() {
           </View>
         </View>
 
-        <View style={{ flex: 1 }}>
-          {/* Messages with bottom scroll shadow */}
+        <KeyboardAwareWrapper
+          style={{ flex: 1 }}
+          extraBottomInset={composerBottomInset}
+        >
           <View style={{ flex: 1 }}>
-            <ScrollShadow
-              size={BOTTOM_SHADOW_SIZE}
-              visibility="bottom"
-              LinearGradientComponent={LinearGradient}
-              style={{ flex: 1 }}
-            >
-              <FlashList
-                ref={listRef}
-                data={messages}
-                renderItem={renderMessage}
-                keyExtractor={(item) => item._id}
-                contentContainerStyle={{
-                  paddingTop: 16,
-                  paddingBottom: 16,
-                }}
-                showsVerticalScrollIndicator={false}
-                keyboardDismissMode="interactive"
-                keyboardShouldPersistTaps="handled"
-                onScroll={handleScroll}
-                onViewableItemsChanged={handleViewableItemsChanged}
-                viewabilityConfig={viewabilityConfig}
-                onScrollBeginDrag={dismissKeyboard}
-                scrollEventThrottle={16}
-                onStartReached={() => {
-                  if (!shouldLoadMore() || !hasMore || isLoadingMore) {
-                    return;
+            {/* Messages with bottom scroll shadow */}
+            <View style={{ flex: 1 }}>
+              <ScrollShadow
+                size={BOTTOM_SHADOW_SIZE}
+                visibility="bottom"
+                LinearGradientComponent={LinearGradient}
+                style={{ flex: 1 }}
+              >
+                <FlashList
+                  ref={listRef}
+                  data={messages}
+                  renderItem={renderMessage}
+                  keyExtractor={(item) => item._id}
+                  contentContainerStyle={{
+                    paddingTop: 16,
+                    paddingBottom: 16,
+                  }}
+                  showsVerticalScrollIndicator={false}
+                  keyboardDismissMode="interactive"
+                  keyboardShouldPersistTaps="handled"
+                  onScroll={handleScroll}
+                  onViewableItemsChanged={handleViewableItemsChanged}
+                  viewabilityConfig={viewabilityConfig}
+                  onScrollBeginDrag={dismissKeyboard}
+                  scrollEventThrottle={16}
+                  onStartReached={() => {
+                    if (!shouldLoadMore() || !hasMore || isLoadingMore) {
+                      return;
+                    }
+                    loadMore();
+                  }}
+                  onStartReachedThreshold={0.3}
+                  ListHeaderComponent={
+                    isLoadingMore ? (
+                      <View className="py-4 items-center">
+                        <Spinner size="sm" />
+                      </View>
+                    ) : null
                   }
-                  loadMore();
-                }}
-                onStartReachedThreshold={0.3}
-                ListHeaderComponent={
-                  isLoadingMore ? (
-                    <View className="py-4 items-center">
-                      <Spinner size="sm" />
-                    </View>
-                  ) : null
-                }
-                ListFooterComponent={
-                  showTypingIndicator ? (
-                    <View className="pt-2">
-                      <TypingIndicator
-                        avatarUrl={profile?.avatarUrl}
-                        profileName={profile?.name}
-                      />
-                    </View>
-                  ) : null
-                }
-                ListEmptyComponent={
-                  isLoadingConversation || isLoadingMessages ? (
-                    <View className="p-4 gap-4">
-                      <View className="flex-row gap-2">
-                        <Skeleton className="w-8 h-8 rounded-full" />
-                        <View className="gap-2">
-                          <Skeleton className="h-16 w-52 rounded-2xl rounded-tl-sm" />
-                          <Skeleton className="h-3 w-12" />
+                  ListFooterComponent={
+                    showTypingIndicator ? (
+                      <View className="pt-2">
+                        <TypingIndicator
+                          avatarUrl={profile?.avatarUrl}
+                          profileName={profile?.name}
+                        />
+                      </View>
+                    ) : null
+                  }
+                  ListEmptyComponent={
+                    isLoadingConversation || isLoadingMessages ? (
+                      <View className="p-4 gap-4">
+                        <View className="flex-row gap-2">
+                          <Skeleton className="w-8 h-8 rounded-full" />
+                          <View className="gap-2">
+                            <Skeleton className="h-16 w-52 rounded-2xl rounded-tl-sm" />
+                            <Skeleton className="h-3 w-12" />
+                          </View>
+                        </View>
+                        <View className="flex-row justify-end">
+                          <View className="gap-2 items-end">
+                            <Skeleton className="h-10 w-40 rounded-2xl rounded-br-sm" />
+                            <Skeleton className="h-3 w-10" />
+                          </View>
+                        </View>
+                        <View className="flex-row gap-2">
+                          <Skeleton className="w-8 h-8 rounded-full" />
+                          <View className="gap-2">
+                            <Skeleton className="h-24 w-64 rounded-2xl rounded-tl-sm" />
+                            <Skeleton className="h-3 w-12" />
+                          </View>
                         </View>
                       </View>
-                      <View className="flex-row justify-end">
-                        <View className="gap-2 items-end">
-                          <Skeleton className="h-10 w-40 rounded-2xl rounded-br-sm" />
-                          <Skeleton className="h-3 w-10" />
-                        </View>
-                      </View>
-                      <View className="flex-row gap-2">
-                        <Skeleton className="w-8 h-8 rounded-full" />
-                        <View className="gap-2">
-                          <Skeleton className="h-24 w-64 rounded-2xl rounded-tl-sm" />
-                          <Skeleton className="h-3 w-12" />
-                        </View>
-                      </View>
-                    </View>
-                  ) : !conversation ? (
-                    <View
-                      className="flex-1 items-center justify-center px-6 pt-20"
-                      style={{
-                        height: emptyHeight,
-                      }}
-                    >
-                      <Text className="text-foreground text-lg font-semibold mb-2">
-                        {t("chat.conversationNotFound")}
-                      </Text>
-                      <Button className="mt-4" onPress={() => router.back()}>
-                        <Button.Label>{t("common.goBack")}</Button.Label>
-                      </Button>
-                    </View>
-                  ) : (
-                    <View
-                      className="flex-1 items-center justify-center px-6 pt-20"
-                      style={{
-                        height: emptyHeight,
-                      }}
-                    >
-                      <Text className="text-foreground text-lg font-semibold">
-                        {t("chat.startConversation")}
-                      </Text>
-                      <Text className="text-muted text-center">
-                        {t("chat.sayHello", {
-                          name: profile?.name ?? t("chat.aiCompanion"),
-                        })}
-                      </Text>
-                      <Button
-                        variant="ghost"
-                        className="mt-4 rounded-full px-6"
-                        isDisabled={isSending || showTypingIndicator}
-                        onPress={() => handleSend("Hi")}
+                    ) : !conversation ? (
+                      <View
+                        className="flex-1 items-center justify-center px-6 pt-20"
+                        style={{
+                          height: emptyHeight,
+                        }}
                       >
-                        <Button.Label>
-                          <Hand color={foregroundColorMuted} />
-                        </Button.Label>
-                      </Button>
-                    </View>
-                  )
-                }
-              />
-            </ScrollShadow>
+                        <Text className="text-foreground text-lg font-semibold mb-2">
+                          {t("chat.conversationNotFound")}
+                        </Text>
+                        <Button className="mt-4" onPress={() => router.back()}>
+                          <Button.Label>{t("common.goBack")}</Button.Label>
+                        </Button>
+                      </View>
+                    ) : (
+                      <View
+                        className="flex-1 items-center justify-center px-6 pt-20"
+                        style={{
+                          height: emptyHeight,
+                        }}
+                      >
+                        <Text className="text-foreground text-lg font-semibold">
+                          {t("chat.startConversation")}
+                        </Text>
+                        <Text className="text-muted text-center">
+                          {t("chat.sayHello", {
+                            name: profile?.name ?? t("chat.aiCompanion"),
+                          })}
+                        </Text>
+                        <Button
+                          variant="ghost"
+                          className="mt-4 rounded-full px-6"
+                          isDisabled={isSending || showTypingIndicator}
+                          onPress={() => handleSend("Hi")}
+                        >
+                          <Button.Label>
+                            <Hand color={foregroundColorMuted} />
+                          </Button.Label>
+                        </Button>
+                      </View>
+                    )
+                  }
+                />
+              </ScrollShadow>
+            </View>
           </View>
 
           <ChatForm
             composerHeight={composerHeight}
             onComposerHeightChange={setComposerHeight}
+            onFormHeightChange={setChatFormHeight}
             onKeyboardHeightChange={setKeyboardHeight}
             blurTrigger={blurTrigger}
             isKeyboardOpen={isKeyboardOpen}
@@ -397,7 +406,7 @@ export default function ChatScreen() {
             onOpenTopicsSheet={handleOpenTopicsSheet}
             onOpenSuggestionsSheet={handleOpenSuggestionsSheet}
           />
-        </View>
+        </KeyboardAwareWrapper>
       </View>
 
       {/* Image Request Sheet */}

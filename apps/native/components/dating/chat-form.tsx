@@ -1,21 +1,45 @@
-import { ScrollView, StyleSheet, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  type LayoutChangeEvent,
+} from "react-native";
 import { KeyboardComposer } from "@launchhq/react-native-keyboard-composer";
-import { KeyboardStickyView } from "react-native-keyboard-controller";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Spinner, useThemeColor } from "heroui-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Camera,
-  ChevronDown,
   HelpCircle,
   Lightbulb,
   MessageSquare,
 } from "lucide-react-native";
 import { useTranslation } from "@/hooks/use-translation";
+import { useColorScheme } from "@/lib/use-color-scheme";
+
+function useComposerGradientColors(backgroundColor: string) {
+  const { isDarkColorScheme } = useColorScheme();
+
+  if (backgroundColor.startsWith("#")) {
+    return [
+      `${backgroundColor}00`,
+      `${backgroundColor}CC`,
+      backgroundColor,
+    ] as const;
+  }
+
+  return isDarkColorScheme
+    ? (["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.82)", "rgb(0, 0, 0)"] as const)
+    : ([
+        "rgba(255, 255, 255, 0)",
+        "rgba(255, 255, 255, 0.82)",
+        "rgb(255, 255, 255)",
+      ] as const);
+}
 
 interface ChatFormProps {
   composerHeight: number;
   onComposerHeightChange: (height: number) => void;
+  onFormHeightChange: (height: number) => void;
   onKeyboardHeightChange: (height: number) => void;
   blurTrigger: number;
   isKeyboardOpen: boolean;
@@ -37,6 +61,7 @@ interface ChatFormProps {
 export function ChatForm({
   composerHeight,
   onComposerHeightChange,
+  onFormHeightChange,
   onKeyboardHeightChange,
   blurTrigger,
   isKeyboardOpen,
@@ -55,45 +80,42 @@ export function ChatForm({
   onOpenSuggestionsSheet,
 }: ChatFormProps) {
   const { t } = useTranslation();
-  const { bottom } = useSafeAreaInsets();
-  const foregroundColor = useThemeColor("foreground");
+  // const { bottom: safeAreaBottom } = useSafeAreaInsets();
+  // const foregroundColor = useThemeColor("foreground");
   const foregroundColorMuted = useThemeColor("muted");
   const backgroundColor = useThemeColor("background");
+  const composerGradientColors = useComposerGradientColors(backgroundColor);
   const actionButtonColor = "";
 
+  const handleFormLayout = (event: LayoutChangeEvent) => {
+    onFormHeightChange(event.nativeEvent.layout.height);
+  };
+
   return (
-    <KeyboardStickyView>
-      <View>
-        {showScrollToBottom ? (
-          <View style={styles.scrollToBottomContainer}>
-            <Button
-              variant="secondary"
-              size="sm"
-              isIconOnly
-              onPress={onScrollToBottom}
-              className="rounded-full"
-              style={styles.scrollToBottomButton}
-            >
-              <ChevronDown size={18} color={foregroundColor} />
-            </Button>
-          </View>
-        ) : null}
-        <LinearGradient
-          colors={[
-            `${backgroundColor}00`,
-            `${backgroundColor}CC`,
-            backgroundColor,
-          ]}
-          locations={[0, 0.45, 1]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={[
-            styles.composerContainer,
-            {
-              paddingBottom: isKeyboardOpen ? 8 : Math.max(bottom, 8),
-            },
-          ]}
-        >
+    <View pointerEvents="box-none" onLayout={handleFormLayout}>
+      {/* {showScrollToBottom ? (
+        <View pointerEvents="box-none" style={styles.scrollToBottomContainer}>
+          <Button
+            variant="secondary"
+            size="sm"
+            isIconOnly
+            onPress={onScrollToBottom}
+            className="rounded-full"
+            style={styles.scrollToBottomButton}
+          >
+            <ChevronDown size={18} color={foregroundColor} />
+          </Button>
+        </View>
+      ) : null} */}
+      <LinearGradient
+        pointerEvents="box-none"
+        colors={composerGradientColors}
+        locations={[0, 0.35, 1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={[styles.composerGradient]}
+      >
+        <View pointerEvents="auto">
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -172,19 +194,19 @@ export function ChatForm({
               />
             </View>
           </View>
-        </LinearGradient>
-      </View>
-    </KeyboardStickyView>
+        </View>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  composerContainer: {
-    paddingTop: 8,
+  composerGradient: {
+    zIndex: -1,
+    paddingTop: 16,
   },
   scrollToBottomContainer: {
     position: "absolute",
-    top: -48,
     right: 8,
     zIndex: 10,
   },
