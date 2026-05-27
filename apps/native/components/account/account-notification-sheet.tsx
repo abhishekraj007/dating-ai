@@ -61,25 +61,25 @@ export const AccountNotificationSheet = ({
           : t("notifications.requestFailed");
       const isPermissionError = message === "Permission denied";
 
+      if (!isPermissionError) {
+        return;
+      }
+
       Alert.alert(
         t("alerts.error"),
-        isPermissionError
-          ? t("notifications.permissionDeniedDescription")
-          : message,
-        isPermissionError
-          ? [
-              {
-                text: t("alerts.cancel"),
-                style: "cancel",
-              },
-              {
-                text: t("nav.settings"),
-                onPress: () => {
-                  void Linking.openSettings();
-                },
-              },
-            ]
-          : [{ text: t("common.ok") }],
+        t("notifications.permissionDeniedDescription"),
+        [
+          {
+            text: t("alerts.cancel"),
+            style: "cancel",
+          },
+          {
+            text: t("nav.settings"),
+            onPress: () => {
+              void Linking.openSettings();
+            },
+          },
+        ],
       );
     }
   };

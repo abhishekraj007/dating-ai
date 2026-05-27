@@ -53,6 +53,16 @@ export const en: TranslationMap = {
     "Feeling alone? You're not the only one. Come meet characters who actually listen and understand you.",
   "welcome.cta": "Get Started",
 
+  "onboarding.languages.title": "Choose your languages",
+  "onboarding.languages.subtitle":
+    "Set how the app looks and how your AI matches talk to you.",
+  "onboarding.languages.appTitle": "App language",
+  "onboarding.languages.appDescription":
+    "Controls menus, buttons, and other app text.",
+  "onboarding.languages.chatTitle": "Chat language",
+  "onboarding.languages.chatDescription":
+    "Controls the language your AI companions reply in.",
+
   "onboarding.gender.title": "Who are you interested in?",
   "onboarding.gender.female": "Females",
   "onboarding.gender.male": "Males",
@@ -101,6 +111,9 @@ export const en: TranslationMap = {
   "account.sheet.title": "Choose app language",
   "account.sheet.subtitle":
     "Select your native language. English is the default.",
+  "account.sheet.chatTitle": "Choose chat language",
+  "account.sheet.chatSubtitle":
+    "Select the language your AI companions should use in conversations.",
 
   "account.section.quickActions": "Quick Actions",
   "account.section.support": "Support",
@@ -113,7 +126,8 @@ export const en: TranslationMap = {
   "account.item.appearance": "Appearance",
   "account.item.settings": "Settings",
   "account.item.notifications": "Notifications",
-  "account.item.language": "Language",
+  "account.item.language": "App language",
+  "account.item.chatLanguage": "Chat language",
   "account.item.account": "Account",
   "account.item.accountDescription": "Sign out and manage account deletion.",
   "account.item.signOutDescription": "Sign out of this device.",
@@ -322,8 +336,8 @@ export const en: TranslationMap = {
   "premium.tapToSeePhoto": "Tap to See Photo",
   "premium.getCloser": "Get closer to {{name}}",
   "premium.unlockDescription":
-    "{{name}} has sent you a photo. Get Premium and find out what hides beneath the blur.",
-  "premium.unlockUnlimited": "Unlock Unlimited Access",
+    "Get FeelChat Pro and find out what {{name}} made for you!",
+  "premium.unlockUnlimited": "Unlock Premium Content",
 
   "quiz.started": "Quiz started",
   "quiz.letsPlay": "Let's play a quiz!",

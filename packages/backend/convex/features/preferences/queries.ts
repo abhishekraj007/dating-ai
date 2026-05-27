@@ -3,19 +3,48 @@ import { paginationOptsValidator } from "convex/server";
 import { query, mutation } from "../../_generated/server";
 import { authComponent } from "../../lib/betterAuth";
 import { buildAiProfileAvatarUrl } from "../../lib/aiProfileAvatar";
+import {
+  appLanguageValidator,
+  type AppLanguage,
+} from "../../lib/languages";
+import type { MutationCtx, QueryCtx } from "../../_generated/server";
 
-const appLanguageValidator = v.union(
-  v.literal("en"),
-  v.literal("es"),
-  v.literal("fr"),
-  v.literal("de"),
-  v.literal("pt"),
-  v.literal("hi"),
-  v.literal("ja"),
-  v.literal("ko"),
-  v.literal("zh"),
-  v.literal("ar"),
-);
+async function getPreferencesForUser(
+  ctx: QueryCtx | MutationCtx,
+  userId: string,
+) {
+  return await ctx.db
+    .query("userPreferences")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .unique();
+}
+
+async function upsertLanguagePreferences(
+  ctx: MutationCtx,
+  userId: string,
+  patch: { appLanguage?: AppLanguage; chatLanguage?: AppLanguage },
+) {
+  const existingPreferences = await getPreferencesForUser(ctx, userId);
+
+  if (existingPreferences) {
+    await ctx.db.patch(existingPreferences._id, {
+      ...patch,
+      updatedAt: Date.now(),
+    });
+    return existingPreferences._id;
+  }
+
+  return await ctx.db.insert("userPreferences", {
+    userId,
+    ...patch,
+    genderPreference: "female",
+    ageMin: 18,
+    ageMax: 35,
+    zodiacPreferences: [],
+    interestPreferences: [],
+    updatedAt: Date.now(),
+  });
+}
 
 /**
  * Get user preferences for AI profile matching.
@@ -70,28 +99,64 @@ export const setUserAppLanguage = mutation({
       throw new Error("Unauthorized");
     }
 
-    const existingPreferences = await ctx.db
-      .query("userPreferences")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .unique();
+    return await upsertLanguagePreferences(ctx, user._id, { appLanguage });
+  },
+});
 
-    if (existingPreferences) {
-      await ctx.db.patch(existingPreferences._id, {
-        appLanguage,
-        updatedAt: Date.now(),
-      });
-      return existingPreferences._id;
+/**
+ * Get selected chat language for the authenticated user.
+ */
+export const getUserChatLanguage = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      return null;
     }
 
-    return await ctx.db.insert("userPreferences", {
-      userId: user._id,
-      appLanguage,
-      genderPreference: "female",
-      ageMin: 18,
-      ageMax: 35,
-      zodiacPreferences: [],
-      interestPreferences: [],
-      updatedAt: Date.now(),
+    const preferences = await getPreferencesForUser(ctx, user._id);
+    return preferences?.chatLanguage ?? null;
+  },
+});
+
+/**
+ * Save selected chat language for the authenticated user.
+ */
+export const setUserChatLanguage = mutation({
+  args: {
+    chatLanguage: appLanguageValidator,
+  },
+  handler: async (ctx, { chatLanguage }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    return await upsertLanguagePreferences(ctx, user._id, { chatLanguage });
+  },
+});
+
+/**
+ * Save app and/or chat language in a single write.
+ */
+export const setUserLanguages = mutation({
+  args: {
+    appLanguage: v.optional(appLanguageValidator),
+    chatLanguage: v.optional(appLanguageValidator),
+  },
+  handler: async (ctx, { appLanguage, chatLanguage }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    if (!appLanguage && !chatLanguage) {
+      throw new Error("At least one language must be provided");
+    }
+
+    return await upsertLanguagePreferences(ctx, user._id, {
+      ...(appLanguage ? { appLanguage } : {}),
+      ...(chatLanguage ? { chatLanguage } : {}),
     });
   },
 });

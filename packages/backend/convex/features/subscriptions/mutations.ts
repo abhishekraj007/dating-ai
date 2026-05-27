@@ -1,6 +1,12 @@
 import { v } from "convex/values";
 import { internalMutation } from "../../_generated/server";
 
+const REVENUECAT_ANONYMOUS_ID_PREFIX = "$RCAnonymousID:";
+
+function isRevenueCatAnonymousId(userId: string): boolean {
+  return userId.startsWith(REVENUECAT_ANONYMOUS_ID_PREFIX);
+}
+
 /**
  * Internal mutation to create or update subscription
  * userId is the Better Auth user's _id (stored as string in schema)
@@ -19,7 +25,7 @@ export const upsertSubscription = internalMutation({
       v.literal("canceled"),
       v.literal("expired"),
       v.literal("past_due"),
-      v.literal("trialing")
+      v.literal("trialing"),
     ),
     productType: v.optional(v.string()),
     currentPeriodStart: v.optional(v.number()),
@@ -38,14 +44,14 @@ export const upsertSubscription = internalMutation({
       "update subscription called with args: userId",
       args.userId,
       args.status,
-      args.customerEmail
+      args.customerEmail,
     );
 
     // Check if subscription already exists by subscription ID
     const existing = await ctx.db
       .query("subscriptions")
       .withIndex("by_platform_subscription_id", (q) =>
-        q.eq("platformSubscriptionId", args.platformSubscriptionId)
+        q.eq("platformSubscriptionId", args.platformSubscriptionId),
       )
       .unique();
 
@@ -56,6 +62,12 @@ export const upsertSubscription = internalMutation({
         args.currentPeriodStart !== undefined &&
         existing.currentPeriodStart !== undefined &&
         args.currentPeriodStart > existing.currentPeriodStart;
+      const nextUserId =
+        args.platform === "revenuecat" &&
+        isRevenueCatAnonymousId(args.userId) &&
+        !isRevenueCatAnonymousId(existing.userId)
+          ? existing.userId
+          : args.userId;
 
       console.log("Checking renewal:", {
         isRenewal,
@@ -64,7 +76,7 @@ export const upsertSubscription = internalMutation({
       });
 
       await ctx.db.patch(existing._id, {
-        userId: args.userId, // Update userId in case it changed
+        userId: nextUserId, // Update userId in case it changed
         status: args.status,
         platformProductId: args.platformProductId,
         productType: args.productType,
@@ -115,7 +127,7 @@ export const insertOrder = internalMutation({
       v.literal("paid"),
       v.literal("pending"),
       v.literal("failed"),
-      v.literal("refunded")
+      v.literal("refunded"),
     ),
   },
   returns: v.id("orders"),

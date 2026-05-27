@@ -40,9 +40,9 @@ function getChatErrorDetails(error: unknown): {
 
   const code =
     typedError.lastError?.statusCode === 429 ||
-    /rate.limit|temporarily rate-limited|retry shortly|statusCode\":429/i.test(
-      rawDetails,
-    )
+      /rate.limit|temporarily rate-limited|retry shortly|statusCode\":429/i.test(
+        rawDetails,
+      )
       ? "rate_limited"
       : "generation_failed";
 
@@ -199,6 +199,11 @@ export const generateResponse = internalAction({
       return null;
     }
 
+    const chatLanguage = await ctx.runQuery(
+      internal.features.ai.internalQueries.getUserChatLanguageInternal,
+      { userId: convUserId! },
+    );
+
     // Determine NSFW eligibility based on app config and request platform.
     // Missing config is treated as disabled until an allowed platform is set.
     const appConfig = await ctx.runQuery(
@@ -234,7 +239,12 @@ export const generateResponse = internalAction({
 
     for (const provider of providers) {
       try {
-        const agent = createAIProfileAgent(profile, provider, nsfwEnabled);
+        const agent = createAIProfileAgent(
+          profile,
+          provider,
+          nsfwEnabled,
+          chatLanguage,
+        );
         result = await agent.streamText(
           ctx,
           { threadId: convThreadId!, userId: convUserId! },
@@ -420,10 +430,9 @@ function buildImagePrompt(
   },
 ): string {
   const baseDescription = [
-    `A realistic selfie`,
+    `A realistic photo`,
     profile.gender ?? "woman",
     profile.ethnicity ? `of ${profile.ethnicity} ethnicity` : "",
-    `named ${profile.name}`,
   ]
     .filter(Boolean)
     .join(" ");
@@ -441,7 +450,7 @@ function buildImagePrompt(
     : "";
 
   const qualityTags =
-    "preserve the same identity and facial features as the reference image, high quality, natural lighting, iPhone selfie style, casual pose, authentic, candid";
+    "preserve the same identity and facial features as the reference image, high quality, natural lighting, iPhone photo style, casual pose, authentic, candid";
 
   return `${baseDescription}${styleDescription ? `, ${styleDescription}` : ""}${additionalContext}. ${qualityTags}`;
 }

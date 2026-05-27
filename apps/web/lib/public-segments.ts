@@ -19,24 +19,24 @@ type SegmentConfig = {
 
 const ALL_SEGMENTS: Record<PublicSegment, SegmentConfig> = {
   girls: {
-    label: "Women",
+    label: "Female",
     href: "/women",
-    heroTitle: "Meet AI Women built for immersive dating and chat.",
+    heroTitle: "Meet AI girlfriends built for immersive dating and chat.",
     heroDescription:
       "Explore AI girlfriends designed for flirting, companionship, roleplay, and always-on conversation.",
     sectionTitle: "Featured AI girlfriends",
-    metaTitle: "Women",
+    metaTitle: "AI Girlfriends",
     metaDescription:
       "Browse AI girlfriend profiles built for immersive dating, roleplay, and always-on companionship.",
   },
   guys: {
-    label: "Men",
+    label: "Male",
     href: "/men",
     heroTitle: "Discover AI Men built for companionship and dating.",
     heroDescription:
       "Browse AI boyfriend profiles created for emotional connection, flirty chat, and always-available companionship.",
     sectionTitle: "Featured AI boyfriends",
-    metaTitle: "Men",
+    metaTitle: "AI Boyfriends",
     metaDescription:
       "Explore AI boyfriend profiles for immersive dating chats, roleplay, and virtual companionship.",
   },
@@ -65,11 +65,18 @@ export function getSegmentConfig(segment: PublicSegment): SegmentConfig {
 }
 
 export function segmentFromPathname(pathname: string): PublicSegment {
-  if (pathname.startsWith("/ai-boyfriends")) {
+  if (
+    pathname.startsWith("/men") ||
+    pathname.startsWith("/ai-boyfriend") ||
+    pathname.startsWith("/ai-boyfriends")
+  ) {
     return "guys";
   }
 
-  if (ANIME_ENABLED && pathname.startsWith("/ai-anime")) {
+  if (
+    ANIME_ENABLED &&
+    (pathname.startsWith("/anime") || pathname.startsWith("/ai-anime"))
+  ) {
     return "anime";
   }
 

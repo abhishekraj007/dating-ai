@@ -161,9 +161,9 @@ export function useDiscoverPreferences() {
   const authenticatedPreferencesSource =
     isAuthenticated && convexPreferences
       ? {
-          ...convexPreferences,
-          ethnicityPreferences: localPreferences?.ethnicityPreferences ?? [],
-        }
+        ...convexPreferences,
+        ethnicityPreferences: localPreferences?.ethnicityPreferences ?? [],
+      }
       : (convexPreferences ?? localPreferences);
 
   const preferences = normalizePreferences(

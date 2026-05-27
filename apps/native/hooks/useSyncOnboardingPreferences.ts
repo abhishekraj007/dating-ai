@@ -4,7 +4,8 @@ import { useSegments } from "expo-router";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 import { DEFAULT_USER_PREFERENCES, useSavePreferences } from "@/hooks/dating";
-
+import { useTranslation } from "@/hooks/use-translation";
+import { useChatLanguage } from "@/hooks/use-chat-language";
 /**
  * Hook to sync onboarding preferences to backend after user logs in.
  * Only syncs when user comes FROM auth screens (not while on onboarding).
@@ -12,20 +13,20 @@ import { DEFAULT_USER_PREFERENCES, useSavePreferences } from "@/hooks/dating";
 export function useSyncOnboardingPreferences() {
   const { isAuthenticated } = useConvexAuth();
   const segments = useSegments();
-  const { genderPreference, reset } = useOnboardingStore();
+  const { genderPreference, appLanguage, chatLanguage, reset } =
+    useOnboardingStore();
+  const { language: currentAppLanguage } = useTranslation();
+  const { chatLanguage: currentChatLanguage } = useChatLanguage();
   const { savePreferences } = useSavePreferences();
   const markOnboardingComplete = useMutation(api.user.markOnboardingComplete);
+  const setUserLanguages = useMutation(
+    api.features.preferences.queries.setUserLanguages,
+  );
   const hasSynced = useRef(false);
 
-  // Check if user is on onboarding screens
   const isOnOnboarding = (segments as string[]).includes("(onboarding)");
 
   useEffect(() => {
-    // Only sync if:
-    // 1. User is authenticated
-    // 2. User is NOT currently on onboarding screens (came from auth)
-    // 3. We have gender preference stored
-    // 4. We haven't already synced this session
     if (
       !isAuthenticated ||
       isOnOnboarding ||
@@ -39,7 +40,11 @@ export function useSyncOnboardingPreferences() {
       try {
         hasSynced.current = true;
 
-        // Save preferences to backend
+        await setUserLanguages({
+          appLanguage: appLanguage ?? currentAppLanguage,
+          chatLanguage: chatLanguage ?? currentChatLanguage,
+        });
+
         await savePreferences({
           genderPreference,
           ageMin: DEFAULT_USER_PREFERENCES.ageMin,
@@ -48,24 +53,27 @@ export function useSyncOnboardingPreferences() {
           interestPreferences: [],
         });
 
-        // Mark onboarding as complete
         await markOnboardingComplete();
 
-        // Clear the store
         reset();
       } catch (error) {
         console.error("Failed to sync onboarding preferences:", error);
-        hasSynced.current = false; // Allow retry
+        hasSynced.current = false;
       }
     };
 
-    syncPreferences();
+    void syncPreferences();
   }, [
     isAuthenticated,
     isOnOnboarding,
     genderPreference,
+    appLanguage,
+    chatLanguage,
+    currentAppLanguage,
+    currentChatLanguage,
     savePreferences,
     markOnboardingComplete,
+    setUserLanguages,
     reset,
   ]);
 }

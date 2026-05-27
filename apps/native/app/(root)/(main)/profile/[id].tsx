@@ -285,7 +285,7 @@ export default function ProfileDetailScreen() {
               }}
             />
           )}
-          <Link.AppleZoomTarget>
+          <Link.AppleZoomTarget key={profile._id}>
             <ZoomableImage
               source={
                 profile.avatarUrl && !hasImageError
@@ -473,7 +473,7 @@ export default function ProfileDetailScreen() {
         {/* Compatibility indicator if conversation exists */}
         {conversation && (
           <View className="px-4 mt-6 items-center">
-            <Text className="text-foreground font-semibold mb-2">
+            <Text className="text-foreground font-semibold">
               {t("profile.compatibility")}
             </Text>
             <CompatibilityIndicator
@@ -491,7 +491,11 @@ export default function ProfileDetailScreen() {
         className="absolute left-0 right-0 px-4 pb-4 pt-2"
         style={{ bottom: insets.bottom }}
       >
-        <Button onPress={handleChat} isDisabled={isStartingChat}>
+        <Button
+          onPress={handleChat}
+          isDisabled={isStartingChat}
+          className="font-extrabold bg-gradient-to-r from-green-400 to-green-700"
+        >
           <Button.Label>
             {isStartingChat ? t("common.starting") : t("common.chat")}
           </Button.Label>

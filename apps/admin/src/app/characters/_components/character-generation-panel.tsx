@@ -22,6 +22,7 @@ type GenerateCharacterInput = {
   preferredGender?: "female" | "male";
   preferredOccupation?: string;
   preferredInterests?: string[];
+  imageModel?: string;
   appearanceOverrides?: {
     skinTone?: string;
     hairColor?: string;
@@ -30,7 +31,6 @@ type GenerateCharacterInput = {
     build?: string;
     outfit?: string;
     vibe?: string;
-    expression?: string;
   };
   referenceSubjectDescriptor?: string;
   referenceImageUrl?: string;
@@ -136,8 +136,12 @@ interface CharacterGenerationPanelProps {
     outfitsFemale: string[];
     outfitsMale: string[];
     vibes: string[];
-    expressions: string[];
   };
+  imageModelOptions?: Array<{
+    value: string;
+    label: string;
+    requiresReference: boolean;
+  }>;
   isAnalyzingPhoto: boolean;
   onAnalyzePhoto: (file: File) => Promise<{
     subjectDescriptor: string;
@@ -145,7 +149,6 @@ interface CharacterGenerationPanelProps {
     suggestedAge: number;
     suggestedOccupation?: string;
     suggestedVibe?: string;
-    suggestedExpression?: string;
     referenceImageUrl: string;
   } | null>;
 }
@@ -161,6 +164,7 @@ export function CharacterGenerationPanel({
   occupationOptions,
   interestOptions,
   appearanceOptions,
+  imageModelOptions,
   isAnalyzingPhoto,
   onAnalyzePhoto,
 }: CharacterGenerationPanelProps) {
@@ -458,6 +462,7 @@ export function CharacterGenerationPanel({
             occupationOptions={occupationOptions}
             interestOptions={interestOptions}
             appearanceOptions={appearanceOptions}
+            imageModelOptions={imageModelOptions}
             isAnalyzingPhoto={isAnalyzingPhoto}
             onAnalyzePhoto={onAnalyzePhoto}
           />

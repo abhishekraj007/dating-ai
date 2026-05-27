@@ -27,6 +27,9 @@ export default function CharactersPage() {
   const [profileFilter, setProfileFilter] = useState<
     "all" | "active" | "pending" | "new"
   >("all");
+  const [genderFilter, setGenderFilter] = useState<"all" | "female" | "male">(
+    "all",
+  );
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const userData = useQuery(
@@ -51,11 +54,17 @@ export default function CharactersPage() {
     setVisibleLimit(PAGE_SIZE);
   };
 
+  const updateGenderFilter = (nextFilter: "all" | "female" | "male") => {
+    setGenderFilter(nextFilter);
+    setVisibleLimit(PAGE_SIZE);
+  };
+
   const profiles = useQuery(
     api.features.ai.queries.getSystemProfiles,
     canQueryProfiles
       ? {
           search: debouncedSearch || undefined,
+          genderFilter: genderFilter === "all" ? undefined : genderFilter,
           statusFilter:
             profileFilter === "active" || profileFilter === "pending"
               ? profileFilter
@@ -211,6 +220,7 @@ export default function CharactersPage() {
             occupationOptions={generationOptions?.occupations ?? []}
             interestOptions={generationOptions?.interests ?? []}
             appearanceOptions={generationOptions?.appearance}
+            imageModelOptions={generationOptions?.imageModels}
             isAnalyzingPhoto={isAnalyzingPhoto}
             onAnalyzePhoto={analyzePhoto}
           />
@@ -224,35 +234,66 @@ export default function CharactersPage() {
                 onChange={(event) => setSearchQuery(event.target.value)}
               />
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                size="sm"
-                variant={profileFilter === "all" ? "default" : "outline"}
-                onClick={() => updateProfileFilter("all")}
-              >
-                All
-              </Button>
-              <Button
-                size="sm"
-                variant={profileFilter === "active" ? "default" : "outline"}
-                onClick={() => updateProfileFilter("active")}
-              >
-                Active
-              </Button>
-              <Button
-                size="sm"
-                variant={profileFilter === "pending" ? "default" : "outline"}
-                onClick={() => updateProfileFilter("pending")}
-              >
-                Pending
-              </Button>
-              <Button
-                size="sm"
-                variant={profileFilter === "new" ? "default" : "outline"}
-                onClick={() => updateProfileFilter("new")}
-              >
-                New (24h)
-              </Button>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Status
+                </span>
+                <Button
+                  size="sm"
+                  variant={profileFilter === "all" ? "default" : "outline"}
+                  onClick={() => updateProfileFilter("all")}
+                >
+                  All
+                </Button>
+                <Button
+                  size="sm"
+                  variant={profileFilter === "active" ? "default" : "outline"}
+                  onClick={() => updateProfileFilter("active")}
+                >
+                  Active
+                </Button>
+                <Button
+                  size="sm"
+                  variant={profileFilter === "pending" ? "default" : "outline"}
+                  onClick={() => updateProfileFilter("pending")}
+                >
+                  Pending
+                </Button>
+                <Button
+                  size="sm"
+                  variant={profileFilter === "new" ? "default" : "outline"}
+                  onClick={() => updateProfileFilter("new")}
+                >
+                  New (24h)
+                </Button>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Gender
+                </span>
+                <Button
+                  size="sm"
+                  variant={genderFilter === "all" ? "default" : "outline"}
+                  onClick={() => updateGenderFilter("all")}
+                >
+                  All
+                </Button>
+                <Button
+                  size="sm"
+                  variant={genderFilter === "female" ? "default" : "outline"}
+                  onClick={() => updateGenderFilter("female")}
+                >
+                  Female
+                </Button>
+                <Button
+                  size="sm"
+                  variant={genderFilter === "male" ? "default" : "outline"}
+                  onClick={() => updateGenderFilter("male")}
+                >
+                  Male
+                </Button>
+              </div>
             </div>
           </div>
 

@@ -114,7 +114,6 @@ Soft persona seed (use naturally, do not quote literally):
 - appearance: ${appearance.skinTone}, ${appearance.hair}, ${appearance.eyes}
 ${livesInLine}
 - overall style/aesthetic: ${appearance.vibe}
-- personal quirk to weave in subtly: ${appearance.quirk}
 ${nameHintLine}
 
 Hard requirements:
@@ -129,18 +128,18 @@ Hard requirements:
 - personalityTraits: 3-6 short adjectives
 - relationshipGoal: one short natural phrase
 - name must be a believable first + last name
-- username is optional; if provided, lowercase letters/numbers/underscores only${
-    allowedInterests.length > 0
+- username is optional; if provided, lowercase letters/numbers/underscores only${allowedInterests.length > 0
       ? `
 
 Allowed interests library (pick 4-7, verbatim):
 ${allowedInterests.join(", ")}`
       : ""
-  }
+    }
 
 Bio style rules (strict):
 - Do NOT begin the bio with the person's name, "Hey", "Looking for", or the occupation.
-- Must include one concrete, specific detail: a place, an object, a habit, a food, a book, a song - something tangible.
+- Can include one concrete but not necessarily niche, specific detail invented from this person's interests or occupation: a place, an object, a habit, a food, a book, a song - something tangible.
+- Do NOT use canned dating-app clichés: vintage film cameras, polaroids, espresso obsession, naming houseplants, playlist-making, Letterboxd reviews, competitive board games, etc.
 - Avoid these buzzwords entirely: ${BANNED_BIO_PHRASES.join(", ")}.
 - Short sentence fragments and lowercase are fine; avoid corporate-polished tone.
 - Do not describe physical appearance in the bio - that is handled elsewhere.

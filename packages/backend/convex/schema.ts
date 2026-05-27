@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { appLanguageValidator } from "./lib/languages";
 
 export default defineSchema({
   profile: defineTable({
@@ -32,20 +33,8 @@ export default defineSchema({
   // User preferences for AI profile matching (from onboarding)
   userPreferences: defineTable({
     userId: v.string(), // Better Auth user ID
-    appLanguage: v.optional(
-      v.union(
-        v.literal("en"),
-        v.literal("es"),
-        v.literal("fr"),
-        v.literal("de"),
-        v.literal("pt"),
-        v.literal("hi"),
-        v.literal("ja"),
-        v.literal("ko"),
-        v.literal("zh"),
-        v.literal("ar"),
-      ),
-    ),
+    appLanguage: v.optional(appLanguageValidator),
+    chatLanguage: v.optional(appLanguageValidator),
     // Gender preference
     genderPreference: v.union(
       v.literal("female"),
@@ -314,6 +303,7 @@ export default defineSchema({
     culturalBackground: v.optional(v.string()),
     referenceSubjectDescriptor: v.optional(v.string()),
     referenceImageUrl: v.optional(v.string()),
+    imageModel: v.optional(v.string()),
     appearanceOverrides: v.optional(
       v.object({
         skinTone: v.optional(v.string()),
@@ -385,8 +375,8 @@ export default defineSchema({
           signatureStyle: v.string(),
           vibe: v.string(),
           cityArchetype: v.string(),
-          quirk: v.string(),
-          expression: v.string(),
+          quirk: v.optional(v.string()),
+          expression: v.optional(v.string()),
         }),
         subjectDescriptor: v.string(),
         isReferenceMode: v.boolean(),

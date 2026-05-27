@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+import { useToast } from "heroui-native";
 import { useConvexAuth, useMutation } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import Constants from "expo-constants";
+import { useTranslation } from "@/hooks/use-translation";
 
 // Configure notification behavior
 Notifications.setNotificationHandler({
@@ -16,46 +18,126 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export function usePushNotifications(userId?: string) {
+type UsePushNotificationsOptions = {
+  userId?: string;
+  enabled?: boolean;
+};
+
+export function usePushNotifications({
+  userId,
+  enabled = true,
+}: UsePushNotificationsOptions) {
   const { isAuthenticated } = useConvexAuth();
+  const { t } = useTranslation();
+  const { toast } = useToast();
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const hasShownErrorToastRef = useRef(false);
 
   const recordToken = useMutation(
     api.pushNotifications.recordPushNotificationToken,
   );
 
   useEffect(() => {
-    if (!isAuthenticated || !userId) {
+    if (!enabled || !isAuthenticated || !userId) {
       return;
     }
+
+    let isMounted = true;
+
+    const reportFailure = (err: unknown) => {
+      const message = getNotificationErrorMessage(
+        err,
+        t("notifications.registerFailed"),
+        t("alerts.tryAgainMoment"),
+      );
+
+      console.error("Push notification registration failed:", err);
+
+      if (isMounted) {
+        setError(message);
+      }
+
+      if (!hasShownErrorToastRef.current) {
+        hasShownErrorToastRef.current = true;
+        toast.show({
+          id: "push-notifications-registration-error",
+          variant: "warning",
+          label: t("notifications.statusTitle"),
+          description: message,
+        });
+      }
+    };
 
     registerForPushNotificationsAsync()
       .then((token) => {
         if (token) {
-          setExpoPushToken(token);
+          hasShownErrorToastRef.current = false;
+
+          if (isMounted) {
+            setExpoPushToken(token);
+            setError(null);
+          }
+
           // Register token with backend
           recordToken({ token }).catch((err) => {
             if (err?.message === "Not authenticated") {
               return;
             }
-            console.error("Failed to record push token:", err);
-            setError(err.message);
+
+            reportFailure(err);
           });
         }
       })
       .catch((err) => {
-        console.error("Failed to get push token:", err);
-        setError(err.message);
+        reportFailure(err);
       });
-  }, [isAuthenticated, userId, recordToken]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [enabled, isAuthenticated, recordToken, t, toast, userId]);
 
   return { expoPushToken, error };
 }
 
-async function registerForPushNotificationsAsync(): Promise<string | null> {
-  let token: string | null = null;
+function getNotificationErrorMessage(
+  error: unknown,
+  fallbackMessage: string,
+  retryHint: string,
+) {
+  if (error instanceof Error) {
+    if (isNotificationNetworkError(error.message)) {
+      return `${fallbackMessage}. ${retryHint}`;
+    }
 
+    return error.message || fallbackMessage;
+  }
+
+  if (typeof error === "string" && error.trim().length > 0) {
+    if (isNotificationNetworkError(error)) {
+      return `${fallbackMessage}. ${retryHint}`;
+    }
+
+    return error;
+  }
+
+  return fallbackMessage;
+}
+
+function isNotificationNetworkError(message: string) {
+  const normalizedMessage = message.toLowerCase();
+
+  return (
+    normalizedMessage.includes("fetch failed") ||
+    normalizedMessage.includes("aborted") ||
+    normalizedMessage.includes("canceled") ||
+    normalizedMessage.includes("cancelled") ||
+    normalizedMessage.includes("network")
+  );
+}
+
+async function registerForPushNotificationsAsync(): Promise<string | null> {
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
@@ -78,24 +160,37 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
     return null;
   }
 
-  try {
-    const projectId =
-      Constants.easConfig?.projectId ??
-      Constants.expoConfig?.extra?.eas?.projectId;
+  const projectId =
+    Constants.easConfig?.projectId ??
+    Constants.expoConfig?.extra?.eas?.projectId;
 
-    if (!projectId) {
-      throw new Error(
-        "Missing EAS project ID. Run EAS project init for this app and rebuild the native app.",
-      );
-    }
-
-    const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId,
-    });
-    token = tokenData.data;
-  } catch (e) {
-    console.error("Error getting push token:", e);
+  if (!projectId) {
+    throw new Error(
+      "Missing EAS project ID. Run EAS project init for this app and rebuild the native app.",
+    );
   }
 
-  return token;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId,
+      });
+
+      return tokenData.data;
+    } catch (error) {
+      if (attempt === 1 || !shouldRetryNotificationTokenRequest(error)) {
+        throw error;
+      }
+    }
+  }
+
+  return null;
+}
+
+function shouldRetryNotificationTokenRequest(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return isNotificationNetworkError(error.message);
 }

@@ -5,9 +5,11 @@ import "../global.css";
 import { HeroUINativeProvider } from "heroui-native";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 import { LanguageProvider } from "@/contexts/language-context";
+import { ChatLanguageProvider } from "@/contexts/chat-language-context";
 import { PurchasesProvider } from "@/contexts/purchases-context";
 import ConvexProvider from "@/providers/ConvexProvider";
 import SplashScreenProvider from "@/providers/SplashScreenProvider";
+import { useExpoUpdatesBootstrap } from "@/hooks/use-expo-updates-bootstrap";
 import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
@@ -30,20 +32,24 @@ const heroUIConfig = {
 };
 /* ------------------------------- root layout ------------------------------ */
 export default function Layout() {
+  useExpoUpdatesBootstrap();
+
   return (
     <GestureHandlerRootView className="flex-1">
       <KeyboardProvider>
         <ConvexProvider>
           <LanguageProvider>
-            <AppThemeProvider>
-              <SplashScreenProvider>
-                <PurchasesProvider>
-                  <HeroUINativeProvider config={heroUIConfig}>
-                    <Slot />
-                  </HeroUINativeProvider>
-                </PurchasesProvider>
-              </SplashScreenProvider>
-            </AppThemeProvider>
+            <ChatLanguageProvider>
+              <AppThemeProvider>
+                <SplashScreenProvider>
+                  <PurchasesProvider>
+                    <HeroUINativeProvider config={heroUIConfig}>
+                      <Slot />
+                    </HeroUINativeProvider>
+                  </PurchasesProvider>
+                </SplashScreenProvider>
+              </AppThemeProvider>
+            </ChatLanguageProvider>
           </LanguageProvider>
         </ConvexProvider>
       </KeyboardProvider>

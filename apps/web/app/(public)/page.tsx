@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PublicPageContent } from "@/components/public/public-page-content";
 import { getSiteUrl } from "@/lib/site";
 import { buildHomeStructuredData } from "@/lib/public-structured-data";
+import { getInitialPublicProfiles } from "@/lib/public-profiles.server";
 
 export const revalidate = 60;
 export const dynamic = "force-dynamic";
@@ -10,29 +11,31 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = getSiteUrl();
 
   return {
-    title: "Chat with AI Characters - FeelAI",
-    description: "Explore AI Characters for stories, roleplay, and knowledge.",
+    title: "AI Dating App for Virtual Companions",
+    description:
+      "Discover AI girlfriends, AI boyfriends, and virtual companions for dating-style chat, roleplay, friendship, and immersive conversations.",
     alternates: {
       canonical: "/",
     },
     openGraph: {
-      title: "Chat with AI Characters - FeelAI",
+      title: "FeelAI - AI Dating App for Virtual Companions",
       description:
-        "Engage with AI Characters for creative storytelling and learning.",
+        "Browse AI companion profiles and start immersive dating-style chat with virtual companions.",
       url: siteUrl,
     },
     twitter: {
       card: "summary_large_image",
-      title: "Chat with AI Characters - FeelAI",
+      title: "FeelAI - AI Dating App for Virtual Companions",
       description:
-        "Chat with AI Characters designed for creativity, roleplay, and education.",
+        "Discover AI girlfriends, AI boyfriends, and virtual companions for dating-style chat and roleplay.",
     },
   };
 }
 
 export default async function HomePage() {
   const siteUrl = getSiteUrl();
-  const structuredData = buildHomeStructuredData(siteUrl);
+  const initialProfiles = await getInitialPublicProfiles("girls");
+  const structuredData = buildHomeStructuredData(siteUrl, initialProfiles);
 
   return (
     <>
@@ -40,7 +43,11 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <PublicPageContent segment="girls" variant="home" />
+      <PublicPageContent
+        initialProfiles={initialProfiles}
+        segment="girls"
+        variant="home"
+      />
     </>
   );
 }

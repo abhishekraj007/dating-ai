@@ -43,12 +43,19 @@ const sceneVignetteSchema = z.object({
       "A small, scene-appropriate prop the subject holds or carries.",
     )
     .optional(),
+  outfit: z
+    .string()
+    .min(12)
+    .max(220)
+    .describe(
+      "A complete, original, scene-appropriate outfit for this slot. Include garment types, color/material details, and one styling detail. Must not repeat the avatar outfit or any other slot outfit.",
+    ),
   wardrobeAccent: z
     .string()
     .min(3)
     .max(120)
     .describe(
-      "A single wardrobe detail: garment piece, color, or accessory. Only change outfit, never body or face.",
+      "A small optional refinement layered on top of the outfit: a color, fabric, pattern, or single accessory. Never face or body.",
     )
     .optional(),
   emotionalBeat: z
@@ -106,6 +113,7 @@ function buildVignetteBatchPrompt(
 
 The profile:
 - name: ${candidate.name}
+- gender: ${candidate.gender}
 - age: ${candidate.age}
 - occupation: ${candidate.occupation}
 - location: ${candidate.location}
@@ -113,6 +121,7 @@ The profile:
 - bio: ${candidate.bio}
 - city archetype: ${appearance.cityArchetype}
 - vibe / aesthetic: ${appearance.vibe}
+- avatar outfit to avoid: ${appearance.outfit}
 
 For EACH slot below, produce a bespoke vignette so the photo feels specific to THIS person - not a generic scene. Use the bio, occupation, and interests to anchor concrete details (real places, real objects, culturally coherent wardrobe, believable moments).
 
@@ -121,8 +130,10 @@ Hard rules:
 - The subject's face, skin tone, hair, and body are fixed by a reference image - DO NOT describe those. Only change outfit, pose, setting, props, and light.
 - "action" must be one short sentence (<= 240 chars).
 - "settingDetail" should be a concrete, grounded location detail (neighborhood name, shop style, a visible landmark, a specific object). Keep plausible for the city and archetype.
-- "prop" should be a small, scene-appropriate object. If the baseline_prop already fits perfectly, you may echo it, but prefer something more specific.
-- "wardrobeAccent" is ONE garment/color/accessory detail. Never full outfits. Never hair/body.
+- "prop" should be a small, scene-appropriate object. If the baseline_prop already fits perfectly, you may echo it, but prefer something more specific. Avoid overused dating-app props (vintage film cameras, polaroids, generic iced coffee) unless the scene truly demands it.
+- "outfit" is required. Generate a complete outfit from scratch for this slot: garment types + color/material + styling detail. Do not choose from a memorized list; invent a coherent look for this specific person and scene.
+- Outfit diversity rules: never repeat the avatar outfit ("${appearance.outfit}"), never repeat the same dominant color, same main garment type, same silhouette, or same occasion across slots. Each slot should feel like a different day, mood, and setting.
+- "wardrobeAccent" is optional and should only add a small refinement on top of "outfit" (e.g. "in dusty olive linen", "with gold hoop earrings"). Never face/body.
 - "emotionalBeat" is one short phrase: what the subject feels or is about to do.
 - If the slot must_be_daylight is true, your time_of_day MUST be a daylight hour.
 - Return EXACTLY ${plans.length} vignette(s), in the same order as the slots.
@@ -177,6 +188,7 @@ export async function generateShowcaseVignettes(
         action: entry.action,
         settingDetail: entry.settingDetail,
         prop: entry.prop,
+        outfit: entry.outfit,
         wardrobeAccent: entry.wardrobeAccent,
         emotionalBeat: entry.emotionalBeat,
         timeOfDay: entry.timeOfDay,

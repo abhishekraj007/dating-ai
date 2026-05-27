@@ -1,21 +1,16 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MessageCircle, Sparkles, SunMoon, X } from "lucide-react";
+import { Home, MessageCircle, SunMoon, X } from "lucide-react";
 import { OpenAuthModalButton } from "@/components/auth/open-auth-modal-button";
 import { PublicBillingActions } from "@/components/public/public-billing-actions";
 import { PublicHeaderAccountMenu } from "@/components/public/public-header-account-menu";
 import { ThemeToggle } from "@/components/public/theme-toggle";
 import { Button } from "@/components/ui/button";
-import {
-  PUBLIC_SEGMENTS,
-  genderPreferenceFromSegment,
-  segmentFromPathname,
-} from "@/lib/public-segments";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/public/sidebar-context";
-import { useDiscoverPreferences } from "@/hooks/use-discover-preferences";
 import { useConvexAuth } from "convex/react";
 import Image from "next/image";
 
@@ -53,20 +48,14 @@ const primaryItems = [
 
 export function PublicSidebar() {
   const pathname = usePathname();
-  const { preferredSegment, setGenderPreference } = useDiscoverPreferences();
-  const activeSegment =
-    pathname === "/" ? preferredSegment : segmentFromPathname(pathname);
   const { isOpen, close } = useSidebar();
+  const [mounted, setMounted] = useState(false);
 
   const { isAuthenticated, isLoading } = useConvexAuth();
 
-  const handleSegmentClick = (segment: string) => {
-    const nextGenderPreference = genderPreferenceFromSegment(segment as any);
-
-    if (nextGenderPreference) {
-      void setGenderPreference(nextGenderPreference);
-    }
-  };
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <>
@@ -171,7 +160,7 @@ export function PublicSidebar() {
             })}
           </div>
 
-          {!isLoading && isAuthenticated ? (
+          {mounted && !isLoading && isAuthenticated ? (
             <div className="mt-5">
               <PublicBillingActions variant="sidebar" />
             </div>
@@ -190,25 +179,23 @@ export function PublicSidebar() {
               <PublicHeaderAccountMenu placement="sidebar" />
             </div>
 
-            {!isLoading ? (
-              <div className="flex items-center justify-center gap-2 text-[10px] leading-none text-muted-foreground/75">
-                <Link
-                  href="/terms"
-                  className="transition-colors hover:text-foreground"
-                  onClick={close}
-                >
-                  Terms
-                </Link>
-                <span aria-hidden>•</span>
-                <Link
-                  href="/privacy"
-                  className="transition-colors hover:text-foreground"
-                  onClick={close}
-                >
-                  Privacy
-                </Link>
-              </div>
-            ) : null}
+            <div className="flex items-center justify-center gap-2 text-[10px] leading-none text-muted-foreground/75">
+              <Link
+                href="/terms"
+                className="transition-colors hover:text-foreground"
+                onClick={close}
+              >
+                Terms
+              </Link>
+              <span aria-hidden>•</span>
+              <Link
+                href="/privacy"
+                className="transition-colors hover:text-foreground"
+                onClick={close}
+              >
+                Privacy
+              </Link>
+            </div>
           </div>
         </div>
       </aside>

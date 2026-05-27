@@ -600,31 +600,6 @@ export const LOCATIONS_BY_ARCHETYPE: Record<string, string[]> = {
   ],
 };
 
-export const QUIRKS = [
-  "collects vintage film cameras",
-  "always has a book in her bag",
-  "obsessed with making the perfect espresso",
-  "makes playlists for every mood",
-  "names all her houseplants",
-  "a ridiculously competitive at board games",
-  "keeps a running list of favorite doors in the city",
-  "can recite the entire plot of a niche 90s movie",
-  "writes Letterboxd reviews no one asked for",
-  "a hoarder of weird-shaped coffee mugs",
-  "always brings homemade cookies to parties",
-  "keeps a small succulent on their desk named after a dinosaur",
-];
-
-export const EXPRESSIONS = [
-  "a warm inviting smile showing teeth",
-  "a soft laugh mid-motion, looking genuinely happy",
-  "a confident smile with direct eye contact",
-  "a playful smirk with slightly raised eyebrow",
-  "a radiant full smile with sparkling eyes",
-  "a flirty glance with a slight lip bite",
-  "a warm slight smile, eyes bright and engaged",
-];
-
 // --- Avatar shot style library ---
 
 export type AvatarShotStyle = {
@@ -743,7 +718,7 @@ export const SHOWCASE_ACCENT_PROPS: string[] = [
   "a small crossbody bag",
   "a worn leather notebook tucked under one arm",
   "an iced drink in a reusable tumbler",
-  "a film camera on a thin strap",
+  "a reusable water bottle clipped to a bag strap",
   "a paperback book with a folded corner",
   "a canvas tote with a baguette poking out",
   "a knit beanie held in one hand",

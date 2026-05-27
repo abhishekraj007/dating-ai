@@ -39,6 +39,7 @@ export async function runShowcaseAndPersistStage(
     attempts: number;
     initialCompletedSteps: JobProgressStep[];
     initialStepModels: StepModelEntry[];
+    imageModel?: string;
   },
 ): Promise<{ createdProfileId: string }> {
   const {
@@ -74,7 +75,7 @@ export async function runShowcaseAndPersistStage(
   stepModels = upsertStepModel(
     stepModels,
     "showcase_generation",
-    imageGenerationModelName(IS_DEV),
+    imageGenerationModelName(IS_DEV, params.imageModel),
   );
   await updateJobProgress(
     ctx,
@@ -103,6 +104,8 @@ export async function runShowcaseAndPersistStage(
       slot.prompt,
       avatarReferenceUrl,
       `aiProfiles/generated/${jobId}/showcase`,
+      true,
+      params.imageModel,
     );
     profileImageSlots[slotIndex] = key;
     completedCount += 1;
@@ -225,6 +228,7 @@ export async function generateAvatarForJob(
     isReferenceMode: boolean;
     referenceImageUrl?: string | null;
     overridePrompt?: string;
+    imageModel?: string;
   },
 ): Promise<{ avatarImageKey: string; avatarPrompt: string }> {
   const {
@@ -235,6 +239,7 @@ export async function generateAvatarForJob(
     isReferenceMode,
     referenceImageUrl,
     overridePrompt,
+    imageModel,
   } = params;
 
   const avatarPrompt =
@@ -249,6 +254,7 @@ export async function generateAvatarForJob(
     isReferenceMode ? (referenceImageUrl ?? null) : null,
     `aiProfiles/generated/${jobId}/avatar`,
     !isReferenceMode,
+    imageModel,
   );
 
   return { avatarImageKey, avatarPrompt };

@@ -26,6 +26,7 @@ import type * as features_ai_profileGen_blueprintSchema from "../features/ai/pro
 import type * as features_ai_profileGen_candidate from "../features/ai/profileGen/candidate.js";
 import type * as features_ai_profileGen_candidateLlm from "../features/ai/profileGen/candidateLlm.js";
 import type * as features_ai_profileGen_constants from "../features/ai/profileGen/constants.js";
+import type * as features_ai_profileGen_imageModelOptions from "../features/ai/profileGen/imageModelOptions.js";
 import type * as features_ai_profileGen_images from "../features/ai/profileGen/images.js";
 import type * as features_ai_profileGen_progress from "../features/ai/profileGen/progress.js";
 import type * as features_ai_profileGen_prompts from "../features/ai/profileGen/prompts.js";
@@ -70,6 +71,7 @@ import type * as lib_betterAuth_component from "../lib/betterAuth/component.js";
 import type * as lib_betterAuth_createAuth from "../lib/betterAuth/createAuth.js";
 import type * as lib_betterAuth_index from "../lib/betterAuth/index.js";
 import type * as lib_constants from "../lib/constants.js";
+import type * as lib_languages from "../lib/languages.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as lib_revenuecatWebhooks from "../lib/revenuecatWebhooks.js";
 import type * as lib_uploadValidation from "../lib/uploadValidation.js";
@@ -107,6 +109,7 @@ declare const fullApi: ApiFromModules<{
   "features/ai/profileGen/candidate": typeof features_ai_profileGen_candidate;
   "features/ai/profileGen/candidateLlm": typeof features_ai_profileGen_candidateLlm;
   "features/ai/profileGen/constants": typeof features_ai_profileGen_constants;
+  "features/ai/profileGen/imageModelOptions": typeof features_ai_profileGen_imageModelOptions;
   "features/ai/profileGen/images": typeof features_ai_profileGen_images;
   "features/ai/profileGen/progress": typeof features_ai_profileGen_progress;
   "features/ai/profileGen/prompts": typeof features_ai_profileGen_prompts;
@@ -151,6 +154,7 @@ declare const fullApi: ApiFromModules<{
   "lib/betterAuth/createAuth": typeof lib_betterAuth_createAuth;
   "lib/betterAuth/index": typeof lib_betterAuth_index;
   "lib/constants": typeof lib_constants;
+  "lib/languages": typeof lib_languages;
   "lib/rateLimit": typeof lib_rateLimit;
   "lib/revenuecatWebhooks": typeof lib_revenuecatWebhooks;
   "lib/uploadValidation": typeof lib_uploadValidation;

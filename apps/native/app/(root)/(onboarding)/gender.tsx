@@ -15,6 +15,7 @@ import {
   type GenderPreference,
 } from "@/stores/onboarding-store";
 import { useTranslation } from "@/hooks/use-translation";
+import { useChatLanguage } from "@/hooks/use-chat-language";
 
 const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = width - 48;
@@ -24,9 +25,15 @@ export default function GenderScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const { isAuthenticated } = useConvexAuth();
-  const { genderPreference, setGenderPreference, reset } = useOnboardingStore();
+  const { genderPreference, appLanguage, chatLanguage, setGenderPreference, reset } =
+    useOnboardingStore();
+  const { language: currentAppLanguage } = useTranslation();
+  const { chatLanguage: currentChatLanguage } = useChatLanguage();
   const { savePreferences } = useSavePreferences();
   const markOnboardingComplete = useMutation(api.user.markOnboardingComplete);
+  const setUserLanguages = useMutation(
+    api.features.preferences.queries.setUserLanguages,
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   const handleContinue = async () => {
@@ -41,6 +48,15 @@ export default function GenderScreen() {
     // User is logged in, save preferences and complete onboarding
     setIsSaving(true);
     try {
+      const resolvedAppLanguage = appLanguage ?? currentAppLanguage;
+      const resolvedChatLanguage =
+        chatLanguage ?? currentChatLanguage;
+
+      await setUserLanguages({
+        appLanguage: resolvedAppLanguage,
+        chatLanguage: resolvedChatLanguage,
+      });
+
       await savePreferences({
         genderPreference,
         ageMin: 18,

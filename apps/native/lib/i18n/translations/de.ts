@@ -49,6 +49,17 @@ export const de: TranslationMap = {
   "welcome.subtitle":
     "Fühlst du dich allein? Du bist nicht der Einzige. Triff Charaktere, die dir wirklich zuhören und dich verstehen.",
   "welcome.cta": "Loslegen",
+  "onboarding.languages.title": "Sprachen auswählen",
+  "onboarding.languages.subtitle":
+    "Lege fest, wie die App aussieht und in welcher Sprache deine KI-Matches sprechen.",
+  "onboarding.languages.appTitle": "App-Sprache",
+  "onboarding.languages.appDescription":
+    "Steuert Menüs, Schaltflächen und anderen App-Text.",
+  "onboarding.languages.chatTitle": "Chat-Sprache",
+  "onboarding.languages.chatDescription":
+    "Steuert die Sprache, in der deine KI-Begleiter antworten.",
+
+
   "onboarding.gender.title": "Wer interessiert dich?",
   "onboarding.gender.female": "Frauen",
   "onboarding.gender.male": "Männer",
@@ -95,6 +106,9 @@ export const de: TranslationMap = {
   "account.actions.deleting": "Löschen...",
   "account.sheet.title": "App-Sprache auswählen",
   "account.sheet.subtitle": "Wähle deine Muttersprache. Standard ist Englisch.",
+  "account.sheet.chatTitle": "Chat-Sprache wählen",
+  "account.sheet.chatSubtitle":
+    "Wähle die Sprache, in der deine KI-Begleiter in Gesprächen antworten sollen.",
   "account.section.quickActions": "Schnellaktionen",
   "account.section.support": "Support",
   "account.section.supportDescription":
@@ -106,7 +120,8 @@ export const de: TranslationMap = {
   "account.item.appearance": "Erscheinungsbild",
   "account.item.settings": "Einstellungen",
   "account.item.notifications": "Benachrichtigungen",
-  "account.item.language": "Sprache",
+  "account.item.language": "App-Sprache",
+  "account.item.chatLanguage": "Chat-Sprache",
   "account.item.account": "Konto",
   "account.item.accountDescription": "Abmelden und Kontolöschung verwalten.",
   "account.item.signOutDescription": "Von diesem Gerät abmelden.",

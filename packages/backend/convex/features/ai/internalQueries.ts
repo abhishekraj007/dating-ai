@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalQuery } from "../../_generated/server";
+import { resolveChatLanguage, type AppLanguage } from "../../lib/languages";
 
 /**
  * Internal query to get conversation without auth check.
@@ -37,5 +38,25 @@ export const getChatImageRequestInternal = internalQuery({
   },
   handler: async (ctx, { requestId }) => {
     return await ctx.db.get(requestId);
+  },
+});
+
+/**
+ * Internal query to resolve the user's preferred chat language.
+ */
+export const getUserChatLanguageInternal = internalQuery({
+  args: {
+    userId: v.string(),
+  },
+  handler: async (ctx, { userId }): Promise<AppLanguage> => {
+    const preferences = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .unique();
+
+    return resolveChatLanguage(
+      preferences?.chatLanguage,
+      preferences?.appLanguage,
+    );
   },
 });

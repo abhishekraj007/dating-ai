@@ -46,7 +46,6 @@ type AppearanceOverrides = {
   build?: string;
   outfit?: string;
   vibe?: string;
-  expression?: string;
 };
 
 type AppearanceOptions = {
@@ -60,18 +59,24 @@ type AppearanceOptions = {
   outfitsFemale: string[];
   outfitsMale: string[];
   vibes: string[];
-  expressions: string[];
 };
 
 type GenerateCharacterInput = {
   preferredGender?: "female" | "male";
   preferredOccupation?: string;
   preferredInterests?: string[];
+  imageModel?: string;
   appearanceOverrides?: AppearanceOverrides;
   referenceSubjectDescriptor?: string;
   referenceImageUrl?: string;
   preferredLocation?: string;
   ethnicity?: string;
+};
+
+type ImageModelOption = {
+  value: string;
+  label: string;
+  requiresReference: boolean;
 };
 
 type ReferenceAnalysis = {
@@ -80,7 +85,6 @@ type ReferenceAnalysis = {
   suggestedAge: number;
   suggestedOccupation?: string;
   suggestedVibe?: string;
-  suggestedExpression?: string;
   suggestedLocation?: string;
   ethnicity?: string;
   referenceImageUrl: string;
@@ -91,6 +95,7 @@ interface AddCharacterDialogProps {
   occupationOptions: InterestOption[];
   interestOptions: InterestOption[];
   appearanceOptions?: AppearanceOptions;
+  imageModelOptions?: ImageModelOption[];
   onGenerate: (input?: GenerateCharacterInput) => Promise<string | null>;
   isAnalyzingPhoto: boolean;
   onAnalyzePhoto: (file: File) => Promise<ReferenceAnalysis | null>;
@@ -134,6 +139,7 @@ export function AddCharacterDialog({
   occupationOptions,
   interestOptions,
   appearanceOptions,
+  imageModelOptions,
   onGenerate,
   isAnalyzingPhoto,
   onAnalyzePhoto,
@@ -173,7 +179,7 @@ export function AddCharacterDialog({
   const [build, setBuild] = useState(PLACEHOLDER);
   const [outfit, setOutfit] = useState(PLACEHOLDER);
   const [vibe, setVibe] = useState(PLACEHOLDER);
-  const [expression, setExpression] = useState(PLACEHOLDER);
+  const [imageModel, setImageModel] = useState(PLACEHOLDER);
 
   // --- Reference tab state ---
   const [referencePreview, setReferencePreview] = useState<string | null>(null);
@@ -245,7 +251,7 @@ export function AddCharacterDialog({
     setBuild(PLACEHOLDER);
     setOutfit(PLACEHOLDER);
     setVibe(PLACEHOLDER);
-    setExpression(PLACEHOLDER);
+    setImageModel(PLACEHOLDER);
     setShowAppearance(false);
     // Reference state
     setReferencePreview(null);
@@ -264,7 +270,6 @@ export function AddCharacterDialog({
     if (build !== PLACEHOLDER) overrides.build = build;
     if (outfit !== PLACEHOLDER) overrides.outfit = outfit;
     if (vibe !== PLACEHOLDER) overrides.vibe = vibe;
-    if (expression !== PLACEHOLDER) overrides.expression = expression;
     return Object.keys(overrides).length > 0 ? overrides : undefined;
   };
 
@@ -319,16 +324,28 @@ export function AddCharacterDialog({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const buildGenerationInput = (
+    input: Omit<GenerateCharacterInput, "imageModel">,
+  ): GenerateCharacterInput => ({
+    ...input,
+    imageModel:
+      imageModel !== PLACEHOLDER && imageModel.trim().length > 0
+        ? imageModel
+        : undefined,
+  });
+
   // --- Generate handlers ---
   const handleGenerateCustom = async () => {
     try {
-      const jobId = await onGenerate({
-        preferredGender: gender || undefined,
-        preferredOccupation: occupation || undefined,
-        preferredInterests:
-          selectedInterests.length > 0 ? selectedInterests : undefined,
-        appearanceOverrides: buildOverrides(),
-      });
+      const jobId = await onGenerate(
+        buildGenerationInput({
+          preferredGender: gender || undefined,
+          preferredOccupation: occupation || undefined,
+          preferredInterests:
+            selectedInterests.length > 0 ? selectedInterests : undefined,
+          appearanceOverrides: buildOverrides(),
+        }),
+      );
       if (jobId) {
         setActiveJobId(jobId);
       }
@@ -344,16 +361,18 @@ export function AddCharacterDialog({
         refLocation.trim() ||
         referenceAnalysis.suggestedLocation?.trim() ||
         undefined;
-      const jobId = await onGenerate({
-        preferredGender: referenceAnalysis.suggestedGender,
-        preferredOccupation:
-          refOccupation || referenceAnalysis.suggestedOccupation || undefined,
-        preferredInterests: refInterests.length > 0 ? refInterests : undefined,
-        referenceSubjectDescriptor: referenceAnalysis.subjectDescriptor,
-        referenceImageUrl: referenceAnalysis.referenceImageUrl,
-        preferredLocation: resolvedLocation,
-        ethnicity: referenceAnalysis.ethnicity?.trim() || undefined,
-      });
+      const jobId = await onGenerate(
+        buildGenerationInput({
+          preferredGender: referenceAnalysis.suggestedGender,
+          preferredOccupation:
+            refOccupation || referenceAnalysis.suggestedOccupation || undefined,
+          preferredInterests: refInterests.length > 0 ? refInterests : undefined,
+          referenceSubjectDescriptor: referenceAnalysis.subjectDescriptor,
+          referenceImageUrl: referenceAnalysis.referenceImageUrl,
+          preferredLocation: resolvedLocation,
+          ethnicity: referenceAnalysis.ethnicity?.trim() || undefined,
+        }),
+      );
       if (jobId) {
         setActiveJobId(jobId);
       }
@@ -413,7 +432,6 @@ export function AddCharacterDialog({
     build,
     outfit,
     vibe,
-    expression,
   ].filter((v) => v !== PLACEHOLDER).length;
 
   const canGenerateReference = referenceAnalysis !== null && !isAnalyzingPhoto;
@@ -523,6 +541,35 @@ export function AddCharacterDialog({
                 <ImagePlus className="mr-1.5 h-3.5 w-3.5" />
                 Reference
               </Button>
+            </div>
+
+            <div className="space-y-2 px-4 pb-2">
+              <p className="text-sm font-medium">Image Model</p>
+              <Select value={imageModel} onValueChange={setImageModel}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Default (automatic fallback)" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {[
+                    {
+                      value: PLACEHOLDER,
+                      label: "Default (automatic fallback)",
+                      requiresReference: false,
+                    },
+                    ...(imageModelOptions?.filter((option) => option.value) ??
+                      []),
+                  ].map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                      {option.requiresReference ? " (requires reference)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Applies to avatar and showcase images. Leave on default to use
+                the automatic fal.ai + Replicate fallback chain.
+              </p>
             </div>
 
             {/* =================== CUSTOM TAB =================== */}
@@ -683,12 +730,6 @@ export function AddCharacterDialog({
                             options={appearanceOptions.vibes}
                             value={vibe}
                             onChange={setVibe}
-                          />
-                          <AppearanceSelect
-                            label="Expression"
-                            options={appearanceOptions.expressions}
-                            value={expression}
-                            onChange={setExpression}
                           />
                         </div>
                       )}

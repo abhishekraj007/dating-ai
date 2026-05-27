@@ -48,6 +48,17 @@ export const ko: TranslationMap = {
   "welcome.subtitle":
     "외로우신가요? 당신만 그런 게 아닙니다. 진심으로 당신의 이야기를 듣고 이해해주는 캐릭터를 만나보세요.",
   "welcome.cta": "시작하기",
+  "onboarding.languages.title": "언어 선택",
+  "onboarding.languages.subtitle":
+    "앱 표시 방식과 AI 매치의 대화 언어를 설정하세요.",
+  "onboarding.languages.appTitle": "앱 언어",
+  "onboarding.languages.appDescription":
+    "메뉴, 버튼 및 기타 앱 텍스트를 제어합니다.",
+  "onboarding.languages.chatTitle": "채팅 언어",
+  "onboarding.languages.chatDescription":
+    "AI 동반자가 답장하는 언어를 제어합니다.",
+
+
   "onboarding.gender.title": "누구에게 관심이 있나요?",
   "onboarding.gender.female": "여성",
   "onboarding.gender.male": "남성",
@@ -93,6 +104,9 @@ export const ko: TranslationMap = {
   "account.actions.deleting": "삭제 중...",
   "account.sheet.title": "앱 언어 선택",
   "account.sheet.subtitle": "모국어를 선택하세요. 기본 언어는 영어입니다.",
+  "account.sheet.chatTitle": "채팅 언어 선택",
+  "account.sheet.chatSubtitle":
+    "AI 동반자가 대화에서 사용할 언어를 선택하세요.",
   "account.section.quickActions": "빠른 작업",
   "account.section.support": "지원",
   "account.section.supportDescription": "도움말, 문제 해결 및 연락 옵션.",
@@ -103,7 +117,8 @@ export const ko: TranslationMap = {
   "account.item.appearance": "외관",
   "account.item.settings": "설정",
   "account.item.notifications": "알림",
-  "account.item.language": "언어",
+  "account.item.language": "앱 언어",
+  "account.item.chatLanguage": "채팅 언어",
   "account.item.account": "계정",
   "account.item.accountDescription": "로그아웃 및 계정 삭제 관리.",
   "account.item.signOutDescription": "이 기기에서 로그아웃합니다.",

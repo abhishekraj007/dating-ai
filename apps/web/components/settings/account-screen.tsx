@@ -11,6 +11,7 @@ import {
   FileText,
   HelpCircle,
   Languages,
+  MessageCircle,
   LogOut,
   MailQuestion,
   Monitor,
@@ -208,8 +209,13 @@ function AccountScreenSkeleton() {
 
 export function AccountScreen() {
   const {
+    appLanguage,
+    appLanguageLabel,
+    chatLanguage,
+    chatLanguageLabel,
     credits,
-    handleLanguageChange,
+    handleAppLanguageChange,
+    handleChatLanguageChange,
     handleShare,
     handleSignOut,
     handleSubmitRating,
@@ -217,16 +223,15 @@ export function AccountScreen() {
     identity,
     isAccountDetailsOpen,
     isAppearanceOpen,
+    isAppLanguageOpen,
+    isChatLanguageOpen,
     isCreditsOpen,
-    isLanguageOpen,
     isLoading,
     isNotificationsOpen,
     isPremium,
     isPremiumOpen,
     isRateDialogOpen,
     isSigningOut,
-    languageLabel,
-    languagePreference,
     notificationLabel,
     notificationStatus,
     openHelpCenter,
@@ -240,12 +245,14 @@ export function AccountScreen() {
     sendTestNotification,
     setIsAccountDetailsOpen,
     setIsAppearanceOpen,
+    setIsAppLanguageOpen,
+    setIsChatLanguageOpen,
     setIsCreditsOpen,
-    setIsLanguageOpen,
     setIsNotificationsOpen,
     setIsPremiumOpen,
     setIsRateDialogOpen,
     setSelectedRating,
+    supportedLanguages,
     themeLabel,
     themePreference,
   } = useAccountScreen();
@@ -354,9 +361,15 @@ export function AccountScreen() {
             />
             <ActionRow
               icon={Languages}
-              label="Language"
-              onClick={() => setIsLanguageOpen(true)}
-              value={languageLabel}
+              label="App language"
+              onClick={() => setIsAppLanguageOpen(true)}
+              value={appLanguageLabel}
+            />
+            <ActionRow
+              icon={MessageCircle}
+              label="Chat language"
+              onClick={() => setIsChatLanguageOpen(true)}
+              value={chatLanguageLabel}
             />
             <ActionRow
               icon={Settings2}
@@ -485,34 +498,64 @@ export function AccountScreen() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isLanguageOpen} onOpenChange={setIsLanguageOpen}>
+      <Dialog open={isAppLanguageOpen} onOpenChange={setIsAppLanguageOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Language</DialogTitle>
+            <DialogTitle>App language</DialogTitle>
             <DialogDescription>
-              Pick how FeelAI should set your browser language preference on
-              web.
+              Choose the language used for menus, buttons, and other app text.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <Select
-              value={languagePreference}
+              value={appLanguage}
               onValueChange={(value) =>
-                handleLanguageChange(value as "auto" | "en")
+                void handleAppLanguageChange(value as typeof appLanguage)
               }
             >
               <SelectTrigger className="w-full rounded-[1.25rem]">
-                <SelectValue placeholder="Choose language" />
+                <SelectValue placeholder="Choose app language" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="auto">Auto</SelectItem>
-                <SelectItem value="en">English</SelectItem>
+                {supportedLanguages.map((language) => (
+                  <SelectItem key={language.code} value={language.code}>
+                    {language.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <p className="text-sm text-muted-foreground">
-              More languages can be layered on top of this preference without
-              changing your saved setting later.
-            </p>
+          </div>
+          <DialogFooter showCloseButton />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isChatLanguageOpen} onOpenChange={setIsChatLanguageOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Chat language</DialogTitle>
+            <DialogDescription>
+              Choose the language your AI companions should use in
+              conversations.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select
+              value={chatLanguage}
+              onValueChange={(value) =>
+                void handleChatLanguageChange(value as typeof chatLanguage)
+              }
+            >
+              <SelectTrigger className="w-full rounded-[1.25rem]">
+                <SelectValue placeholder="Choose chat language" />
+              </SelectTrigger>
+              <SelectContent>
+                {supportedLanguages.map((language) => (
+                  <SelectItem key={`chat-${language.code}`} value={language.code}>
+                    {language.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter showCloseButton />
         </DialogContent>

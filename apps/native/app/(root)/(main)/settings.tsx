@@ -6,6 +6,7 @@ import {
   Spinner,
   Surface,
   Switch,
+  useToast,
   useThemeColor,
 } from "heroui-native";
 import { useEffect, useState } from "react";
@@ -85,6 +86,7 @@ const availableThemes: ThemeOption[] = [
 
 export default function SettingsRoute() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const userData = useQuery(api.user.fetchUserAndProfile);
   const { currentTheme, toggleTheme, isLight, isDark, setTheme } =
@@ -117,18 +119,23 @@ export default function SettingsRoute() {
     try {
       if (enabled) {
         await enableNotifications();
-        Alert.alert(t("alerts.success"), t("notifications.permissionsGranted"));
+        toast.show({
+          id: "settings-notifications-enabled",
+          variant: "success",
+          label: t("alerts.success"),
+          description: t("notifications.permissionsGranted"),
+        });
         return;
       }
 
       await disableNotifications();
     } catch (error) {
-      Alert.alert(
-        t("alerts.error"),
-        error instanceof Error
-          ? error.message
-          : t("notifications.requestFailed"),
-      );
+      if (error instanceof Error && error.message === "Permission denied") {
+        Alert.alert(
+          t("alerts.error"),
+          t("notifications.permissionDeniedDescription"),
+        );
+      }
     }
   };
 

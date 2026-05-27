@@ -19,7 +19,6 @@ import {
   OUTFIT_STYLES_FEMALE,
   OUTFIT_STYLES_MALE,
   VIBES,
-  EXPRESSIONS,
   ETHNICITIES,
 } from "./profileGenerationData";
 import {
@@ -28,6 +27,7 @@ import {
   PROFILE_OCCUPATION_OPTIONS,
 } from "./profileGen/constants";
 import { assertAdmin } from "./profileGen/adminGuards";
+import { IMAGE_GENERATION_MODEL_OPTIONS, normalizeImageGenerationModel } from "./profileGen/imageModelOptions";
 import {
   isReservedPublicProfileUsername,
   normalizePublicProfileUsername,
@@ -83,6 +83,7 @@ export const createProfileGenerationJobInternal = internalMutation({
     ethnicity: v.optional(v.string()),
     referenceSubjectDescriptor: v.optional(v.string()),
     referenceImageUrl: v.optional(v.string()),
+    imageModel: v.optional(v.string()),
     appearanceOverrides: v.optional(
       v.object({
         skinTone: v.optional(v.string()),
@@ -92,7 +93,6 @@ export const createProfileGenerationJobInternal = internalMutation({
         build: v.optional(v.string()),
         outfit: v.optional(v.string()),
         vibe: v.optional(v.string()),
-        expression: v.optional(v.string()),
       }),
     ),
   },
@@ -110,6 +110,7 @@ export const createProfileGenerationJobInternal = internalMutation({
       ethnicity: args.ethnicity,
       referenceSubjectDescriptor: args.referenceSubjectDescriptor,
       referenceImageUrl: args.referenceImageUrl,
+      imageModel: args.imageModel,
       appearanceOverrides: args.appearanceOverrides,
       createdAt: now,
       updatedAt: now,
@@ -208,8 +209,8 @@ const previewAppearanceValidator = v.object({
   signatureStyle: v.string(),
   vibe: v.string(),
   cityArchetype: v.string(),
-  quirk: v.string(),
-  expression: v.string(),
+  quirk: v.optional(v.string()),
+  expression: v.optional(v.string()),
 });
 
 export const writePreviewAndPauseInternal = internalMutation({
@@ -632,7 +633,6 @@ export const adminGenerateSystemProfile = mutation({
         build: v.optional(v.string()),
         outfit: v.optional(v.string()),
         vibe: v.optional(v.string()),
-        expression: v.optional(v.string()),
       }),
     ),
     referenceSubjectDescriptor: v.optional(v.string()),
@@ -641,12 +641,22 @@ export const adminGenerateSystemProfile = mutation({
     // Preferred ethnicity (member of `ETHNICITIES` in
     // `features/ai/profileGenerationData.ts`).
     ethnicity: v.optional(v.string()),
+    imageModel: v.optional(v.string()),
     // Defaults to true for the characters page preview flow. The dashboard
     // quick-generate button opts out by passing false.
     pauseForApproval: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await assertAdmin(ctx);
+
+    let imageModel: string | undefined;
+    try {
+      imageModel = normalizeImageGenerationModel(args.imageModel);
+    } catch (error) {
+      throw new ConvexError(
+        error instanceof Error ? error.message : "Invalid image model",
+      );
+    }
 
     // Default: pause for admin approval. The characters page Sheet
     // subscribes to the returned `jobId` via `getProfileGenerationJobForAdmin`
@@ -670,6 +680,7 @@ export const adminGenerateSystemProfile = mutation({
             ethnicity: args.ethnicity,
             referenceSubjectDescriptor: args.referenceSubjectDescriptor,
             referenceImageUrl: args.referenceImageUrl,
+            imageModel,
             appearanceOverrides: args.appearanceOverrides,
           },
         )) as any)
@@ -689,6 +700,7 @@ export const adminGenerateSystemProfile = mutation({
         referenceImageUrl: args.referenceImageUrl,
         preferredLocation: args.preferredLocation,
         ethnicity: args.ethnicity,
+        imageModel,
         pauseForApproval,
         existingJobId,
       },
@@ -727,6 +739,7 @@ export const adminRetryProfileGeneration = mutation({
         preferredGender: job.selectedGender ?? job.preferredGender,
         preferredOccupation: job.preferredOccupation,
         preferredInterests: job.preferredInterests,
+        imageModel: job.imageModel,
       },
     );
 
@@ -1006,8 +1019,15 @@ export const getProfileGenerationOptions = query({
         outfitsFemale: OUTFIT_STYLES_FEMALE,
         outfitsMale: OUTFIT_STYLES_MALE,
         vibes: VIBES,
-        expressions: EXPRESSIONS,
       },
+      imageModels: [
+        {
+          value: "",
+          label: "Default (automatic fallback)",
+          requiresReference: false,
+        },
+        ...IMAGE_GENERATION_MODEL_OPTIONS,
+      ],
     };
   },
 });

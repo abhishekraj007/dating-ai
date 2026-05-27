@@ -49,6 +49,17 @@ export const fr: TranslationMap = {
   "welcome.subtitle":
     "Vous vous sentez seul ? Vous n'êtes pas le seul. Rencontrez des personnages qui vous écoutent et vous comprennent vraiment.",
   "welcome.cta": "Commencer",
+  "onboarding.languages.title": "Choisissez vos langues",
+  "onboarding.languages.subtitle":
+    "Définissez l'apparence de l'app et la langue de vos matchs IA.",
+  "onboarding.languages.appTitle": "Langue de l'app",
+  "onboarding.languages.appDescription":
+    "Contrôle les menus, boutons et textes de l'application.",
+  "onboarding.languages.chatTitle": "Langue du chat",
+  "onboarding.languages.chatDescription":
+    "Contrôle la langue dans laquelle vos compagnons IA répondent.",
+
+
   "onboarding.gender.title": "Qui vous intéresse ?",
   "onboarding.gender.female": "Femmes",
   "onboarding.gender.male": "Hommes",
@@ -97,6 +108,9 @@ export const fr: TranslationMap = {
   "account.sheet.title": "Choisir la langue de l'app",
   "account.sheet.subtitle":
     "Sélectionnez votre langue maternelle. L'anglais est la langue par défaut.",
+  "account.sheet.chatTitle": "Choisir la langue du chat",
+  "account.sheet.chatSubtitle":
+    "Sélectionnez la langue que vos compagnons IA utilisent dans les conversations.",
   "account.section.quickActions": "Actions rapides",
   "account.section.support": "Support",
   "account.section.supportDescription":
@@ -108,7 +122,8 @@ export const fr: TranslationMap = {
   "account.item.appearance": "Apparence",
   "account.item.settings": "Paramètres",
   "account.item.notifications": "Notifications",
-  "account.item.language": "Langue",
+  "account.item.language": "Langue de l'app",
+  "account.item.chatLanguage": "Langue du chat",
   "account.item.account": "Compte",
   "account.item.accountDescription":
     "Se déconnecter et gérer la suppression du compte.",

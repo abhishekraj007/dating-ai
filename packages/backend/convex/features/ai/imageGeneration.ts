@@ -1,4 +1,16 @@
 import Replicate from "replicate";
+import {
+  FAL_GPT_IMAGE_2_MODEL,
+  FAL_QWEN_IMAGE_EDIT_MODEL,
+} from "./profileGen/imageModelOptions";
+
+export {
+  FAL_GPT_IMAGE_2_MODEL,
+  FAL_QWEN_IMAGE_EDIT_MODEL,
+  IMAGE_GENERATION_MODEL_OPTIONS,
+  normalizeImageGenerationModel,
+} from "./profileGen/imageModelOptions";
+export type { ImageGenerationModelOption } from "./profileGen/imageModelOptions";
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -25,15 +37,15 @@ type FalPrimaryModel = "gpt-image-2" | "qwen-image-2-edit";
 
 export type ImageGenerationResult =
   | {
-      success: true;
-      imageUrl: string;
-      model: string;
-    }
+    success: true;
+    imageUrl: string;
+    model: string;
+  }
   | {
-      success: false;
-      error: string;
-      attempts: ImageModelAttempt[];
-    };
+    success: false;
+    error: string;
+    attempts: ImageModelAttempt[];
+  };
 
 // ---------------------------------------------------------------------------
 // fal.ai GPT-Image-2 (primary model)
@@ -95,23 +107,27 @@ async function generateWithFal(args: {
   const body: Record<string, unknown> =
     args.model === "qwen-image-2-edit"
       ? {
-          prompt: args.prompt,
-          output_format: "webp",
-          num_images: 1,
-          image_urls: args.referenceImageUrls,
-          enable_safety_checker: Boolean(args.enableSafety),
-        }
+        prompt: args.prompt,
+        output_format: "webp",
+        num_images: 1,
+        image_urls: args.referenceImageUrls,
+        enable_safety_checker: Boolean(args.enableSafety),
+      }
       : {
-          prompt: args.prompt,
-          quality: "medium",
-          output_format: "webp",
-          num_images: 1,
-          image_size: "portrait_4_3",
-        };
+        prompt: args.prompt,
+        quality: "low",
+        output_format: "webp",
+        num_images: 1,
+        image_size: "portrait_4_3",
+      };
 
   if (args.model === "gpt-image-2" && hasReference) {
     body.image_urls = args.referenceImageUrls;
-    body.image_size = "auto";
+    // Force a fresh frame instead of "auto". With "auto" the edit endpoint
+    // matches the reference image's framing and head crop, which causes
+    // every showcase slot to mirror the avatar's pose. Mapping from the
+    // requested aspect ratio lets the prompt drive composition.
+    body.image_size = mapAspectRatioToFalSize(args.aspectRatio);
   } else if (args.model === "gpt-image-2") {
     body.image_size = mapAspectRatioToFalSize(args.aspectRatio);
   }
@@ -183,8 +199,16 @@ const IMAGE_MODEL_CHAIN: ImageModelConfig[] = [
 // amplify it. Telling the model to preserve freckles caused the showcase
 // images to render noticeably heavier freckling than the reference photo.
 // "Skin tone" alone is sufficient to keep the ethnicity / complexion stable.
+//
+// IMPORTANT: this prefix is intentionally identity-only. Previously it also
+// said "preserve body type exactly" and "only change outfit, pose, setting" -
+// which models treat as an instruction to keep the head crop, head angle,
+// silhouette, and even the clothing close to the reference. That made every
+// showcase slot mirror the avatar. We now lock only facial identity and
+// explicitly free pose / framing / outfit / setting, so per-slot prompts can
+// actually drive variation.
 const REFERENCE_IMAGE_CONSISTENCY_PREFIX =
-  "The person in the reference image is the same person in this image. Preserve their face shape, skin tone, eye color, eyebrow shape, hair color, and overall body type exactly. Only change outfit, pose, setting, and lighting as described below.";
+  "The person in the reference image is the same person in this image. Preserve only their facial identity: face shape, skin tone, eye color, eyebrow shape, hair color and texture. Their pose, head angle, body framing, outfit, setting, and lighting must follow the description below and intentionally differ from the reference image.";
 
 function extractImageUrl(output: unknown): string | null {
   if (typeof output === "string") {
@@ -241,16 +265,155 @@ function extractImageUrl(output: unknown): string | null {
 // Public API
 // ---------------------------------------------------------------------------
 
-const FAL_MODEL_NAME = "openai/gpt-image-2 (fal.ai)";
-const FAL_QWEN_IMAGE_EDIT_MODEL_NAME = "fal-ai/qwen-image-2/edit (fal.ai)";
-
-export function imageGenerationModelName(isDev: boolean): string {
+export function imageGenerationModelName(
+  isDev: boolean,
+  preferredModel?: string,
+): string {
   if (isDev) return "picsum.photos (dev)";
   const falAvailable = Boolean(process.env.FAL_KEY);
   const replicateChain = IMAGE_MODEL_CHAIN.map((m) => m.id).join(" -> ");
-  return falAvailable
-    ? `${FAL_MODEL_NAME} -> ${replicateChain}`
+  const defaultChain = falAvailable
+    ? `${FAL_GPT_IMAGE_2_MODEL} -> ${replicateChain}`
     : replicateChain;
+  if (preferredModel) {
+    return `${preferredModel} -> ${defaultChain}`;
+  }
+  return defaultChain;
+}
+
+type FalGenerationAttempt = {
+  kind: "fal";
+  model: FalPrimaryModel;
+  name: string;
+};
+
+type ReplicateGenerationAttempt = {
+  kind: "replicate";
+  config: ImageModelConfig;
+};
+
+type ImageGenerationAttempt = FalGenerationAttempt | ReplicateGenerationAttempt;
+
+function falModelName(model: FalPrimaryModel): string {
+  return model === "qwen-image-2-edit"
+    ? FAL_QWEN_IMAGE_EDIT_MODEL
+    : FAL_GPT_IMAGE_2_MODEL;
+}
+
+function falModelFromName(modelName: string): FalPrimaryModel | null {
+  if (modelName === FAL_GPT_IMAGE_2_MODEL) {
+    return "gpt-image-2";
+  }
+  if (modelName === FAL_QWEN_IMAGE_EDIT_MODEL) {
+    return "qwen-image-2-edit";
+  }
+  return null;
+}
+
+function buildImageGenerationAttempts(args: {
+  preferredModel?: string;
+  primaryFalModel?: FalPrimaryModel;
+}): ImageGenerationAttempt[] {
+  const attempts: ImageGenerationAttempt[] = [];
+  const seen = new Set<string>();
+
+  const addFal = (model: FalPrimaryModel) => {
+    const name = falModelName(model);
+    if (seen.has(name)) {
+      return;
+    }
+    seen.add(name);
+    attempts.push({ kind: "fal", model, name });
+  };
+
+  const addReplicate = (config: ImageModelConfig) => {
+    if (seen.has(config.id)) {
+      return;
+    }
+    seen.add(config.id);
+    attempts.push({ kind: "replicate", config });
+  };
+
+  const preferredFalModel = args.preferredModel
+    ? falModelFromName(args.preferredModel)
+    : null;
+  if (preferredFalModel) {
+    addFal(preferredFalModel);
+  } else if (args.preferredModel) {
+    const replicateModel = IMAGE_MODEL_CHAIN.find(
+      (model) => model.id === args.preferredModel,
+    );
+    if (replicateModel) {
+      addReplicate(replicateModel);
+    }
+  }
+
+  if (process.env.FAL_KEY) {
+    const defaultFalModels: FalPrimaryModel[] =
+      args.primaryFalModel === "qwen-image-2-edit"
+        ? ["qwen-image-2-edit", "gpt-image-2"]
+        : ["gpt-image-2"];
+    for (const model of defaultFalModels) {
+      addFal(model);
+    }
+  }
+
+  for (const model of IMAGE_MODEL_CHAIN) {
+    addReplicate(model);
+  }
+
+  return attempts;
+}
+
+async function runImageGenerationAttempt(
+  attempt: ImageGenerationAttempt,
+  args: {
+    prompt: string;
+    aspectRatio: string;
+    referenceImageUrls: string[];
+    enableSafety?: boolean;
+  },
+): Promise<{ imageUrl: string; model: string }> {
+  if (attempt.kind === "fal") {
+    if (
+      attempt.model === "qwen-image-2-edit" &&
+      args.referenceImageUrls.length === 0
+    ) {
+      throw new Error("Skipped because this model requires a reference image");
+    }
+
+    const result = await generateWithFal({
+      prompt: args.prompt,
+      aspectRatio: args.aspectRatio,
+      referenceImageUrls: args.referenceImageUrls,
+      model: attempt.model,
+      enableSafety: args.enableSafety,
+    });
+    if (!result) {
+      throw new Error("Provider returned no image URL");
+    }
+    return { imageUrl: result.imageUrl, model: attempt.name };
+  }
+
+  if (
+    args.referenceImageUrls.length === 0 &&
+    !attempt.config.supportsGenerationWithoutReference
+  ) {
+    throw new Error("Skipped because this model requires a reference image");
+  }
+
+  const output = await replicate.run(attempt.config.id, {
+    input: attempt.config.buildInput({
+      prompt: args.prompt,
+      aspectRatio: args.aspectRatio,
+      referenceImageUrls: args.referenceImageUrls,
+    }),
+  });
+  const imageUrl = extractImageUrl(output);
+  if (!imageUrl) {
+    throw new Error("No image URL returned from provider");
+  }
+  return { imageUrl, model: attempt.config.id };
 }
 
 export async function generateImageWithFallback(args: {
@@ -259,6 +422,7 @@ export async function generateImageWithFallback(args: {
   referenceImageUrls?: string[];
   applyReferenceConsistencyPrefix?: boolean;
   primaryFalModel?: FalPrimaryModel;
+  preferredModel?: string;
   enableSafety?: boolean;
   isDev: boolean;
   devWidth: number;
@@ -293,88 +457,42 @@ export async function generateImageWithFallback(args: {
     referenceImageUrls.length > 0 && applyReferenceConsistencyPrefix
       ? `${REFERENCE_IMAGE_CONSISTENCY_PREFIX} ${args.prompt}`
       : args.prompt;
+
   const attempts: ImageModelAttempt[] = [];
+  const generationAttempts = buildImageGenerationAttempts({
+    preferredModel: args.preferredModel,
+    primaryFalModel: args.primaryFalModel,
+  });
 
-  // --- Primary: fal.ai GPT-Image-2 ---
-  if (process.env.FAL_KEY) {
-    const falModels: FalPrimaryModel[] =
-      args.primaryFalModel === "qwen-image-2-edit"
-        ? ["qwen-image-2-edit", "gpt-image-2"]
-        : ["gpt-image-2"];
+  for (const generationAttempt of generationAttempts) {
+    const modelName =
+      generationAttempt.kind === "fal"
+        ? generationAttempt.name
+        : generationAttempt.config.id;
 
-    for (const falModel of falModels) {
-      const modelName =
-        falModel === "qwen-image-2-edit"
-          ? FAL_QWEN_IMAGE_EDIT_MODEL_NAME
-          : FAL_MODEL_NAME;
-
-      if (falModel === "qwen-image-2-edit" && referenceImageUrls.length === 0) {
-        attempts.push({
-          model: modelName,
-          error: "Skipped because this model requires a reference image",
-        });
-        continue;
-      }
-
-      try {
-        const result = await generateWithFal({
-          prompt,
-          aspectRatio: args.aspectRatio,
-          referenceImageUrls,
-          model: falModel,
-          enableSafety: args.enableSafety,
-        });
-        if (result) {
-          return {
-            success: true,
-            imageUrl: result.imageUrl,
-            model: modelName,
-          };
-        }
-      } catch (error) {
-        attempts.push({
-          model: modelName,
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
-      }
-    }
-  }
-
-  // --- Fallback: Replicate model chain ---
-  for (const model of IMAGE_MODEL_CHAIN) {
-    if (
-      referenceImageUrls.length === 0 &&
-      !model.supportsGenerationWithoutReference
-    ) {
+    if (generationAttempt.kind === "fal" && !process.env.FAL_KEY) {
       attempts.push({
-        model: model.id,
-        error: "Skipped because this model requires a reference image",
+        model: modelName,
+        error: "FAL_KEY is not configured",
       });
       continue;
     }
 
     try {
-      const output = await replicate.run(model.id, {
-        input: model.buildInput({
-          prompt,
-          aspectRatio: args.aspectRatio,
-          referenceImageUrls,
-        }),
+      const result = await runImageGenerationAttempt(generationAttempt, {
+        prompt,
+        aspectRatio: args.aspectRatio,
+        referenceImageUrls,
+        enableSafety: args.enableSafety,
       });
-      const imageUrl = extractImageUrl(output);
-
-      if (!imageUrl) {
-        throw new Error("No image URL returned from provider");
-      }
-
       return {
         success: true,
-        imageUrl,
-        model: model.id,
+        imageUrl: result.imageUrl,
+        model: result.model,
       };
     } catch (error) {
       attempts.push({
-        model: model.id,
+        model: modelName,
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }

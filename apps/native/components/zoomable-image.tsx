@@ -59,10 +59,9 @@ export function ZoomableImage({
   disabled = false,
 }: ZoomableImageProps) {
   const [isViewerVisible, setIsViewerVisible] = useState(false);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const isZoomedRef = useRef(false); // Ref to track zoom state for PanResponder
   const insets = useSafeAreaInsets();
   const zoomableRef = useRef<ZoomableRef>(null);
+  const isZoomed = useSharedValue(false);
 
   // For swipe-to-close gesture
   const translateY = useSharedValue(0);
@@ -71,24 +70,24 @@ export function ZoomableImage({
   const handlePress = useCallback(() => {
     if (!disabled) {
       // Reset values before showing
+      zoomableRef.current?.reset();
       translateY.value = 0;
       opacity.value = 0;
-      setIsZoomed(false);
-      isZoomedRef.current = false;
+      isZoomed.value = false;
       setIsViewerVisible(true);
       // Fade in after modal is visible
       requestAnimationFrame(() => {
         opacity.value = withTiming(1, { duration: 200 });
       });
     }
-  }, [disabled, translateY, opacity]);
+  }, [disabled, isZoomed, opacity, translateY]);
 
   // Immediate close (called after animation completes)
   const closeModal = useCallback(() => {
+    zoomableRef.current?.reset();
     setIsViewerVisible(false);
-    setIsZoomed(false);
-    isZoomedRef.current = false;
-  }, []);
+    isZoomed.value = false;
+  }, [isZoomed]);
 
   // Animated close (for close button)
   const handleClose = useCallback(() => {
@@ -97,10 +96,12 @@ export function ZoomableImage({
     });
   }, [opacity, closeModal]);
 
-  const updateZoomState = useCallback((zoomed: boolean) => {
-    setIsZoomed(zoomed);
-    isZoomedRef.current = zoomed;
-  }, []);
+  const updateZoomState = useCallback(
+    (zoomed: boolean) => {
+      isZoomed.value = zoomed;
+    },
+    [isZoomed],
+  );
 
   // Extract URI from source for the image viewer
   const getImageUri = (): string => {
@@ -118,13 +119,13 @@ export function ZoomableImage({
   // Swipe-to-close gesture (only when not zoomed)
   const panGesture = Gesture.Pan()
     .onUpdate((e) => {
-      if (!isZoomedRef.current) {
+      if (!isZoomed.value) {
         translateY.value = e.translationY;
         opacity.value = Math.max(0.5, 1 - Math.abs(e.translationY) / 400);
       }
     })
     .onEnd((e) => {
-      if (!isZoomedRef.current && Math.abs(e.translationY) > 100) {
+      if (!isZoomed.value && Math.abs(e.translationY) > 100) {
         // Close if swiped far enough (up or down)
         opacity.value = withTiming(0, { duration: 150 });
         translateY.value = withTiming(
@@ -150,7 +151,7 @@ export function ZoomableImage({
   }));
 
   return (
-    <>
+    <View collapsable={false}>
       <Pressable
         onPress={handlePress}
         style={containerStyle}
@@ -243,7 +244,7 @@ export function ZoomableImage({
           </GestureDetector>
         </Modal>
       ) : null}
-    </>
+    </View>
   );
 }
 

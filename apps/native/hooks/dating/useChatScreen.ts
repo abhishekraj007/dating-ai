@@ -108,6 +108,7 @@ export function useChatScreen() {
   const [isTopicsSheetOpen, setIsTopicsSheetOpen] = useState(false);
   const [isSuggestionsSheetOpen, setIsSuggestionsSheetOpen] = useState(false);
   const [isActionsSheetOpen, setIsActionsSheetOpen] = useState(false);
+  const [isChatLanguageOpen, setIsChatLanguageOpen] = useState(false);
 
   const [isSending, setIsSending] = useState(false);
   const [pendingAssistantState, setPendingAssistantState] = useState<{
@@ -489,6 +490,11 @@ export function useChatScreen() {
     ],
   );
 
+  const handleOpenChatLanguage = useCallback(() => {
+    popoverRef.current?.close();
+    setIsChatLanguageOpen(true);
+  }, []);
+
   const handleClearChat = useCallback(() => {
     popoverRef.current?.close();
     Alert.alert(
@@ -627,6 +633,8 @@ export function useChatScreen() {
     setIsSuggestionsSheetOpen,
     isActionsSheetOpen,
     setIsActionsSheetOpen,
+    isChatLanguageOpen,
+    setIsChatLanguageOpen,
 
     // Computed values
     interactiveQuizQuestionId,
@@ -648,6 +656,7 @@ export function useChatScreen() {
     handleSuggestionSelect,
     handleRetryFailedResponse,
     handleClearChat,
+    handleOpenChatLanguage,
     handleOpenCreditsModal,
   };
 }

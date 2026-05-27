@@ -54,8 +54,7 @@
       [
         "expo-video",
         {
-          "supportsBackgroundPlayback": true,
-          "supportsPictureInPicture": true
+          "supportsPictureInPicture": false
         }
       ]
     ],
@@ -66,7 +65,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "30076408-2843-4f4f-9288-b94bd6ff262e"
+        "projectId": "2f515bb6-3e22-4c74-a7aa-9e026b636b05"
       }
     },
     "owner": "abhishekrajemail",
@@ -74,7 +73,10 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/30076408-2843-4f4f-9288-b94bd6ff262e"
+      "url": "https://u.expo.dev/2f515bb6-3e22-4c74-a7aa-9e026b636b05",
+      "requestHeaders": {
+        "expo-channel-name": "production"
+      }
     }
   }
 }

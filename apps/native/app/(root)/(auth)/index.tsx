@@ -181,6 +181,7 @@ export default function Landing() {
       </View>
 
       <LanguageSheet
+        variant="app"
         isOpen={isLanguageSheetOpen}
         onOpenChange={setIsLanguageSheetOpen}
       />

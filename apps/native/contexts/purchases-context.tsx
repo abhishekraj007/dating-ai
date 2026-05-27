@@ -8,13 +8,19 @@ import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { useConvexAuth } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend";
-import { getAPIKey } from "@/utils/payment";
+import { getAPIKey, isDevelopment } from "@/utils/payment";
 
 const DEFAULT_CREDIT_PRODUCT_IDS: Array<string> = [
   "feelchat.rc_credit_1999",
   "feelchat.rc_credit_3900",
   "feelchat.rc_credit_4999",
   "feelchat.rc_credit_8999",
+];
+
+const TEST_CREDIT_PRODUCT_IDS: Array<string> = [
+  "credits_1000",
+  "credits_2500",
+  "credits_5000",
 ];
 
 type RuntimeAppConfig = {
@@ -28,7 +34,8 @@ interface PurchasesContextType {
   creditPackages: PurchasesStoreProduct[];
   isLoading: boolean;
   purchasePackage: (pkg: PurchasesPackage) => Promise<boolean>;
-  restorePurchases: () => Promise<void>;
+  purchaseStoreProduct: (product: PurchasesStoreProduct) => Promise<boolean>;
+  restorePurchases: () => Promise<boolean>;
   presentPaywall: () => Promise<void>;
 }
 
@@ -56,10 +63,21 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
   const appConfig = useQuery(
     api.features.appConfig.queries.getPublicAppConfig,
   ) as RuntimeAppConfig | undefined;
+  const authenticatedUserId = isAuthenticated
+    ? userAndProfile?.userMetadata?._id
+    : undefined;
+  const authenticatedUserEmail = isAuthenticated
+    ? userAndProfile?.userMetadata?.email
+    : undefined;
+  const authenticatedUserName = isAuthenticated
+    ? userAndProfile?.userMetadata?.name
+    : undefined;
 
   const configuredCreditProductIds = appConfig?.revenueCatCreditProductIds;
-  const creditProductIds =
-    configuredCreditProductIds && configuredCreditProductIds.length > 0
+
+  const creditProductIds = __DEV__
+    ? TEST_CREDIT_PRODUCT_IDS
+    : configuredCreditProductIds && configuredCreditProductIds.length > 0
       ? configuredCreditProductIds
       : DEFAULT_CREDIT_PRODUCT_IDS;
   const creditProductIdKey = creditProductIds.join("|");
@@ -82,19 +100,9 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
     }
 
     const loginToRevenueCat = async () => {
-      if (
-        isAuthenticated &&
-        userAndProfile?.userMetadata?._id &&
-        isInitialized
-      ) {
+      if (authenticatedUserId) {
         try {
-          const userId = userAndProfile.userMetadata._id;
-          console.log("revenuecat-> Logging in user:", userId);
-
-          const { customerInfo: info } = await Purchases.logIn(userId);
-          setCustomerInfo(info);
-
-          console.log("revenuecat-> User logged in successfully");
+          await identifyRevenueCatUser("auth effect");
         } catch (error) {
           console.error("Error logging in to RevenueCat:", error);
         }
@@ -105,13 +113,11 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
     void getSubscriptions();
 
     void getProducts(creditProductIds);
-  }, [isAuthenticated, userAndProfile, isInitialized, creditProductIdKey]);
+  }, [authenticatedUserId, isInitialized, creditProductIdKey]);
 
   const initializePurchases = async () => {
     try {
       const apiKey = getAPIKey();
-
-      console.log("revenuecat-> Configuring SDK anonymously");
 
       // Configure RevenueCat without a user ID (creates anonymous ID)
 
@@ -172,8 +178,56 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const syncRevenueCatAttributes = async (userId: string) => {
+    await Purchases.setAttributes({ authUserId: userId });
+
+    if (authenticatedUserEmail) {
+      await Purchases.setEmail(authenticatedUserEmail);
+    }
+
+    if (authenticatedUserName) {
+      await Purchases.setDisplayName(authenticatedUserName);
+    }
+  };
+
+  const identifyRevenueCatUser = async (source: string) => {
+    if (!authenticatedUserId) {
+      console.warn(
+        `[RevenueCat] Cannot ${source}: authenticated user is not ready`,
+      );
+      return false;
+    }
+
+    const isConfigured = await Purchases.isConfigured();
+
+    if (!isConfigured) {
+      console.warn(`[RevenueCat] Cannot ${source}: purchases is not ready`);
+      return false;
+    }
+
+    const currentAppUserId = await Purchases.getAppUserID();
+
+    if (currentAppUserId !== authenticatedUserId) {
+      console.log("revenuecat-> Logging in user:", authenticatedUserId);
+
+      const { customerInfo: info } = await Purchases.logIn(authenticatedUserId);
+      setCustomerInfo(info);
+
+      console.log("revenuecat-> User logged in successfully");
+    }
+
+    await syncRevenueCatAttributes(authenticatedUserId);
+    return true;
+  };
+
   const purchasePackage = async (pkg: PurchasesPackage): Promise<boolean> => {
     try {
+      const isIdentified = await identifyRevenueCatUser("purchase package");
+
+      if (!isIdentified) {
+        return false;
+      }
+
       const { customerInfo: info } = await Purchases.purchasePackage(pkg);
       setCustomerInfo(info);
       return true;
@@ -183,12 +237,40 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const restorePurchases = async () => {
+  const purchaseStoreProduct = async (
+    product: PurchasesStoreProduct,
+  ): Promise<boolean> => {
     try {
+      const isIdentified = await identifyRevenueCatUser("purchase product");
+
+      if (!isIdentified) {
+        return false;
+      }
+
+      const { customerInfo: info } =
+        await Purchases.purchaseStoreProduct(product);
+      setCustomerInfo(info);
+      return true;
+    } catch (error) {
+      console.error("Error purchasing product:", error);
+      return false;
+    }
+  };
+
+  const restorePurchases = async (): Promise<boolean> => {
+    try {
+      const isIdentified = await identifyRevenueCatUser("restore purchases");
+
+      if (!isIdentified) {
+        return false;
+      }
+
       const info = await Purchases.restorePurchases();
       setCustomerInfo(info);
+      return Object.keys(info.entitlements.active).length > 0;
     } catch (error) {
       console.error("Error restoring purchases:", error);
+      return false;
     }
   };
 
@@ -196,18 +278,34 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("[RevenueCat] Presenting paywall...");
 
+      const isIdentified = await identifyRevenueCatUser("present paywall");
+
+      if (!isIdentified) {
+        return;
+      }
+
       // Present RevenueCat's native paywall UI
       const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall();
 
       console.log("[RevenueCat] Paywall result:", paywallResult);
 
       switch (paywallResult) {
-        case PAYWALL_RESULT.PURCHASED:
         case PAYWALL_RESULT.RESTORED:
+          console.log(
+            "[RevenueCat] Purchase restored, refreshing customer info...",
+          );
+          const restoredInfo = await Purchases.getCustomerInfo();
+          setCustomerInfo(restoredInfo);
+          console.log("[RevenueCat] Restored customer info:", {
+            activeEntitlements: Object.keys(restoredInfo.entitlements.active),
+            allEntitlements: Object.keys(restoredInfo.entitlements.all),
+          });
+          break;
+
+        case PAYWALL_RESULT.PURCHASED:
           console.log(
             "[RevenueCat] Purchase successful, refreshing customer info...",
           );
-          // Refresh customer info after successful purchase
           const info = await Purchases.getCustomerInfo();
           setCustomerInfo(info);
           console.log("[RevenueCat] Customer info:", {
@@ -254,6 +352,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
         creditPackages,
         isLoading,
         purchasePackage,
+        purchaseStoreProduct,
         restorePurchases,
         presentPaywall,
       }}

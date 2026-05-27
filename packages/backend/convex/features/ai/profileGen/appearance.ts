@@ -11,12 +11,8 @@ import {
   STYLE_SIGNATURES_MALE,
   EYE_COLORS,
   EYE_SHAPES,
-  SKIN_TONES,
-  SKIN_CUES,
   VIBES,
   CITY_ARCHETYPES,
-  QUIRKS,
-  EXPRESSIONS,
   LOCATIONS_BY_ARCHETYPE,
 } from "../profileGenerationData";
 import type {
@@ -77,8 +73,6 @@ export function sampleAppearanceProfile(
     signatureStyle,
     vibe: overrides?.vibe || randomItem(VIBES),
     cityArchetype: randomItem(CITY_ARCHETYPES),
-    quirk: randomItem(QUIRKS),
-    expression: overrides?.expression || randomItem(EXPRESSIONS),
   };
 }
 
@@ -111,6 +105,29 @@ export function buildCanonicalSubjectDescriptor(
     appearance.eyes,
     appearance.build,
     `wearing ${appearance.outfit}`,
+    appearance.signatureStyle,
+  ]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
+/**
+ * Showcase variant of the subject descriptor. Differs from canonical by
+ * omitting `wearing ${appearance.outfit}` so each showcase slot can supply
+ * its own scene-appropriate outfit via the per-slot plan. Without this,
+ * every slot's prompt would re-state the same baseline outfit and visually
+ * mirror the avatar's dress regardless of the scene.
+ */
+export function buildShowcaseSubjectDescriptor(
+  candidate: Pick<ProfileCandidate, "gender" | "age">,
+  appearance: AppearanceProfile,
+): string {
+  return [
+    genderNoun(candidate.gender),
+    appearance.hair,
+    appearance.eyes,
+    appearance.build,
     appearance.signatureStyle,
   ]
     .map((part) => part.trim())

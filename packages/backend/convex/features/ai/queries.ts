@@ -64,6 +64,18 @@ function sanitizeAgentMessage<T extends { text?: string; parts?: Array<any> }>(
   };
 }
 
+type WebVisibleProfile = {
+  visibleOn?: Array<"web" | "ios" | "android">;
+};
+
+function isVisibleOnWeb(profile: WebVisibleProfile) {
+  if (!profile.visibleOn || profile.visibleOn.length === 0) {
+    return true;
+  }
+
+  return profile.visibleOn.includes("web");
+}
+
 /**
  * Get all active AI profiles with optional gender filter.
  * Returns profiles with signed image URLs.
@@ -170,13 +182,7 @@ export const getPublicProfiles = query({
     const profiles = await profilesQuery.order("desc").take(limit ?? 24);
 
     return profiles
-      .filter((profile) => {
-        if (!profile.visibleOn || profile.visibleOn.length === 0) {
-          return true;
-        }
-
-        return profile.visibleOn.includes("web");
-      })
+      .filter(isVisibleOnWeb)
       .map((profile) => {
         const taglineSource =
           profile.bio ??
@@ -201,6 +207,42 @@ export const getPublicProfiles = query({
           occupation: profile.occupation ?? null,
           zodiacSign: profile.zodiacSign ?? null,
         };
+      });
+  },
+});
+
+export const getPublicSitemapProfiles = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      username: v.string(),
+      gender: v.union(v.literal("female"), v.literal("male")),
+      lastModified: v.number(),
+    }),
+  ),
+  handler: async (ctx) => {
+    const profiles = await ctx.db
+      .query("aiProfiles")
+      .withIndex("by_status_and_gender", (q) => q.eq("status", "active"))
+      .order("desc")
+      .collect();
+
+    return profiles
+      .filter(isVisibleOnWeb)
+      .flatMap((profile) => {
+        const username = normalizePublicProfileUsername(profile.username ?? "");
+
+        if (isReservedPublicProfileUsername(username)) {
+          return [];
+        }
+
+        return [
+          {
+            username,
+            gender: profile.gender,
+            lastModified: profile.createdAt ?? profile._creationTime,
+          },
+        ];
       });
   },
 });
@@ -703,6 +745,7 @@ export const listThreadMessages = query({
  */
 export const getSystemProfiles = query({
   args: {
+    genderFilter: v.optional(v.union(v.literal("female"), v.literal("male"))),
     search: v.optional(v.string()),
     statusFilter: v.optional(
       v.union(v.literal("active"), v.literal("pending"), v.literal("archived")),
@@ -731,23 +774,48 @@ export const getSystemProfiles = query({
     const recentCutoff = Date.now() - 24 * 60 * 60 * 1000;
     const scanLimit = Math.max(limit * (hasSearch ? 8 : 2), 160);
 
-    const profiles = args.statusFilter
-      ? await ctx.db
-          .query("aiProfiles")
-          .withIndex("by_system_status_created_at", (q) =>
-            q.eq("isUserCreated", false).eq("status", args.statusFilter!),
-          )
-          .order("desc")
-          .take(scanLimit)
-      : await ctx.db
-          .query("aiProfiles")
-          .withIndex("by_system_created_at", (q) =>
-            q.eq("isUserCreated", false),
-          )
-          .order("desc")
-          .take(scanLimit);
+    const profiles =
+      args.statusFilter && args.genderFilter
+        ? await ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_and_gender", (q) =>
+              q
+                .eq("status", args.statusFilter!)
+                .eq("gender", args.genderFilter!),
+            )
+            .order("desc")
+            .take(scanLimit)
+        : args.statusFilter
+          ? await ctx.db
+              .query("aiProfiles")
+              .withIndex("by_system_status_created_at", (q) =>
+                q.eq("isUserCreated", false).eq("status", args.statusFilter!),
+              )
+              .order("desc")
+              .take(scanLimit)
+          : args.genderFilter
+            ? await ctx.db
+                .query("aiProfiles")
+                .withIndex("by_gender", (q) =>
+                  q.eq("gender", args.genderFilter!),
+                )
+                .order("desc")
+                .take(scanLimit)
+            : await ctx.db
+                .query("aiProfiles")
+                .withIndex("by_system_created_at", (q) =>
+                  q.eq("isUserCreated", false),
+                )
+                .order("desc")
+                .take(scanLimit);
 
     const filteredProfiles = profiles.filter((profile) => {
+      if (profile.isUserCreated) return false;
+
+      if (args.genderFilter && profile.gender !== args.genderFilter) {
+        return false;
+      }
+
       if (args.recentOnly) {
         const createdAt = profile.createdAt ?? profile._creationTime;
         if (createdAt < recentCutoff) return false;

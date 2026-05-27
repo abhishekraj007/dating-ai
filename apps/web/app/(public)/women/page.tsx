@@ -3,6 +3,7 @@ import { PublicPageContent } from "@/components/public/public-page-content";
 import { getSiteUrl } from "@/lib/site";
 import { getSegmentConfig } from "@/lib/public-segments";
 import { buildCategoryStructuredData } from "@/lib/public-structured-data";
+import { getInitialPublicProfiles } from "@/lib/public-profiles.server";
 
 export const revalidate = 60;
 export const dynamic = "force-dynamic";
@@ -30,18 +31,25 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function AIGirlfriendPage() {
+export default async function AIGirlfriendPage() {
   const siteUrl = getSiteUrl();
+  const initialProfiles = await getInitialPublicProfiles("girls");
 
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(buildCategoryStructuredData(siteUrl, "girls")),
+          __html: JSON.stringify(
+            buildCategoryStructuredData(siteUrl, "girls", initialProfiles),
+          ),
         }}
       />
-      <PublicPageContent segment="girls" variant="category" />
+      <PublicPageContent
+        initialProfiles={initialProfiles}
+        segment="girls"
+        variant="category"
+      />
     </>
   );
 }

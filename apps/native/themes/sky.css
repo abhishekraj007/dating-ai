@@ -16,6 +16,7 @@
       /* Overlay: Used for floating/overlay components (dialogs, popovers, modals, menus) */
       --overlay: hsl(210 30% 96%);
       --overlay-foreground: hsl(210 35% 18%);
+      --backdrop: oklch(0% 0 0 / 20%);
 
       --muted: hsl(210 18% 45%);
 
@@ -77,6 +78,7 @@
       /* Overlay: Used for floating/overlay components (dialogs, popovers, modals, menus) */
       --overlay: hsl(210 20% 16%);
       --overlay-foreground: hsl(210 10% 85%);
+      --backdrop: oklch(0% 0 0 / 20%);
 
       --muted: hsl(210 12% 38%);
 

@@ -37,7 +37,7 @@ export function CharacterCard({
       <div className="relative aspect-[3/4] overflow-hidden">
         {profile.avatarUrl ? (
           <Image
-            alt={profile.name}
+            alt={`${profile.name} AI companion profile`}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             fill
             priority={priority}
@@ -68,11 +68,8 @@ export function CharacterCard({
               ) : null} */}
             </h3>
             <p className="relative z-20 line-clamp-1 md:line-clamp-2 text-sm leading-5 text-white/78">
-              {profile.occupation}
+              {profile.occupation ?? profile.tagline}
             </p>
-            {/* <p className="relative z-20 line-clamp-1 md:line-clamp-2 text-sm leading-5 text-white/78">
-              {profile.tagline}
-            </p> */}
           </div>
         </div>
       </div>

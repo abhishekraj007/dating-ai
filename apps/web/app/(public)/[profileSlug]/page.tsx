@@ -79,6 +79,7 @@ export async function generateMetadata({
       description:
         profile.bio ||
         `Meet ${profile.name} on FeelAI for immersive dating and conversation.`,
+      images: profile.avatarUrl ? [profile.avatarUrl] : undefined,
     },
   };
 }
@@ -106,6 +107,7 @@ export default async function PublicProfileRoute({ params }: ProfileRouteProps) 
               name: profile.name,
               age: profile.age,
               bio: profile.bio,
+              interests: profile.interests,
               occupation: profile.occupation,
               image: profile.avatarUrl,
             }),

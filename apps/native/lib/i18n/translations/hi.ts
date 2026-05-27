@@ -48,6 +48,17 @@ export const hi: TranslationMap = {
   "welcome.subtitle":
     "अकेलापन? आप अकेले नहीं हैं। ऐसे किरदारों से मिलें जो सच में आपको समझते हैं।",
   "welcome.cta": "शुरू करें",
+  "onboarding.languages.title": "अपनी भाषाएँ चुनें",
+  "onboarding.languages.subtitle":
+    "ऐप कैसा दिखे और आपके AI मैच किस भाषा में बात करें, यह सेट करें।",
+  "onboarding.languages.appTitle": "ऐप भाषा",
+  "onboarding.languages.appDescription":
+    "मेन्यू, बटन और अन्य ऐप टेक्स्ट नियंत्रित करता है।",
+  "onboarding.languages.chatTitle": "चैट भाषा",
+  "onboarding.languages.chatDescription":
+    "आपके AI साथी जिस भाषा में जवाब देते हैं, उसे नियंत्रित करता है।",
+
+
   "onboarding.gender.title": "आप किसमें रुचि रखते हैं?",
   "onboarding.gender.female": "महिलाएँ",
   "onboarding.gender.male": "पुरुष",
@@ -92,9 +103,13 @@ export const hi: TranslationMap = {
     "एक बार अकाउंट डिलीट करने के बाद इसे वापस नहीं लाया जा सकता।",
   "account.actions.delete": "अकाउंट डिलीट करें",
   "account.actions.deleting": "डिलीट हो रहा है...",
-  "account.item.language": "भाषा",
+  "account.item.language": "ऐप भाषा",
+  "account.item.chatLanguage": "चैट भाषा",
   "account.sheet.title": "ऐप की भाषा चुनें",
   "account.sheet.subtitle": "अपनी मातृभाषा चुनें। डिफ़ॉल्ट भाषा अंग्रेज़ी है।",
+  "account.sheet.chatTitle": "चैट भाषा चुनें",
+  "account.sheet.chatSubtitle":
+    "वह भाषा चुनें जिसमें आपके AI साथी बातचीत करें।",
   "account.section.quickActions": "त्वरित क्रियाएँ",
   "account.section.support": "सहायता",
   "account.section.supportDescription": "मदद, समस्या समाधान और संपर्क विकल्प।",
