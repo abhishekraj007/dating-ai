@@ -76,6 +76,14 @@ const VISIBILITY_PLATFORMS = [
   { value: "android" as const, label: "Android" },
 ];
 
+const SHOWCASE_IMAGE_MODEL_DEFAULT = "__default__";
+
+type ImageModelOption = {
+  value: string;
+  label: string;
+  requiresReference: boolean;
+};
+
 interface EditCharacterSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -88,6 +96,9 @@ interface EditCharacterSheetProps {
   onNewInterestChange: (value: string) => void;
   showcasePromptSuggestion: string;
   onShowcasePromptSuggestionChange: (value: string) => void;
+  showcaseImageModel: string;
+  onShowcaseImageModelChange: (value: string) => void;
+  imageModelOptions?: ImageModelOption[];
   onAddInterest: () => void;
   onRemoveInterest: (interest: string) => void;
   isSaving: boolean;
@@ -121,6 +132,9 @@ export function EditCharacterSheet({
   onNewInterestChange,
   showcasePromptSuggestion,
   onShowcasePromptSuggestionChange,
+  showcaseImageModel,
+  onShowcaseImageModelChange,
+  imageModelOptions,
   onAddInterest,
   onRemoveInterest,
   isSaving,
@@ -599,37 +613,72 @@ export function EditCharacterSheet({
                   deletingKey={deletingImageKey}
                   headerAction={
                     isReadOnly ? undefined : (
-                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-                        <Input
-                          value={showcasePromptSuggestion}
-                          onChange={(event) =>
-                            onShowcasePromptSuggestionChange(event.target.value)
-                          }
-                          maxLength={140}
-                          placeholder="Optional prompt hint"
-                          disabled={
-                            isGeneratingShowcaseImage || isUploadingGallery
-                          }
-                          className="h-8 min-w-0 sm:w-56"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={onGenerateShowcaseImage}
-                          disabled={
-                            isGeneratingShowcaseImage ||
-                            isUploadingGallery ||
-                            !canAddShowcaseImage
-                          }
+                      <div className="flex w-full flex-col gap-2 sm:w-auto">
+                        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
+                          <Input
+                            value={showcasePromptSuggestion}
+                            onChange={(event) =>
+                              onShowcasePromptSuggestionChange(
+                                event.target.value,
+                              )
+                            }
+                            maxLength={140}
+                            placeholder="Optional prompt hint"
+                            disabled={
+                              isGeneratingShowcaseImage || isUploadingGallery
+                            }
+                            className="h-8 min-w-0 sm:w-56"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={onGenerateShowcaseImage}
+                            disabled={
+                              isGeneratingShowcaseImage ||
+                              isUploadingGallery ||
+                              !canAddShowcaseImage
+                            }
+                          >
+                            {isGeneratingShowcaseImage ? (
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <WandSparkles className="mr-1.5 h-3.5 w-3.5" />
+                            )}
+                            Generate
+                          </Button>
+                        </div>
+                        <Select
+                          value={showcaseImageModel}
+                          onValueChange={onShowcaseImageModelChange}
                         >
-                          {isGeneratingShowcaseImage ? (
-                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <WandSparkles className="mr-1.5 h-3.5 w-3.5" />
-                          )}
-                          Generate
-                        </Button>
+                          <SelectTrigger
+                            className="h-8 w-full text-xs sm:w-56"
+                            disabled={
+                              isGeneratingShowcaseImage || isUploadingGallery
+                            }
+                          >
+                            <SelectValue placeholder="Default image model" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60">
+                            <SelectItem value={SHOWCASE_IMAGE_MODEL_DEFAULT}>
+                              Default (automatic fallback)
+                            </SelectItem>
+                            {(imageModelOptions ?? [])
+                              .filter((option) => option.value)
+                              .map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                  {option.requiresReference
+                                    ? " (requires reference)"
+                                    : ""}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     )
                   }

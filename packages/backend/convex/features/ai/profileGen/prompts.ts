@@ -107,7 +107,7 @@ export function buildAvatarPrompt(
  * Builds a showcase prompt from a sampled `ShowcaseSlotPlan`. When a
  * `SceneVignette` is supplied, its fields override matching plan fields:
  *   - `action`          overrides `plan.action`
- *   - `settingDetail`   is appended to `plan.setting`
+ *   - `settingDetail`   is the main location (no fixed baseline setting)
  *   - `timeOfDay`       overrides `plan.timeOfDay`
  *   - `prop`            overrides `plan.accentProp`
  *   - `outfit`          becomes the slot's complete outfit
@@ -120,7 +120,7 @@ export function buildAvatarPrompt(
  */
 export function buildShowcasePromptFromPlan(
   plan: ShowcaseSlotPlan,
-  _candidate: ProfileCandidate,
+  candidate: ProfileCandidate,
   appearance: AppearanceProfile,
   subjectDescriptor: string,
   vignette: SceneVignette | null = null,
@@ -128,9 +128,13 @@ export function buildShowcasePromptFromPlan(
 ): string {
   const action = vignette?.action?.trim() || plan.action;
   const settingDetail = vignette?.settingDetail?.trim();
+  const baselineSetting = plan.setting.trim();
   const combinedSetting = settingDetail
-    ? `${plan.setting}, specifically ${settingDetail}`
-    : plan.setting;
+    ? baselineSetting
+      ? `${baselineSetting}, specifically ${settingDetail}`
+      : settingDetail
+    : baselineSetting ||
+      `a ${plan.category.replace(/_/g, " ")} setting in ${candidate.location} that fits their interests`;
   const timeOfDay = vignette?.timeOfDay?.trim() || plan.timeOfDay;
   const prop = vignette?.prop?.trim() || plan.accentProp;
   const generatedOutfit = vignette?.outfit?.trim();

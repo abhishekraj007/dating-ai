@@ -670,6 +670,7 @@ export const adminGenerateMoreShowcaseImage = action({
   args: {
     profileId: v.id("aiProfiles"),
     promptSuggestion: v.optional(v.string()),
+    imageModel: v.optional(v.string()),
   },
   returns: v.object({
     imageKey: v.string(),
@@ -682,6 +683,7 @@ export const adminGenerateMoreShowcaseImage = action({
     )) as AdminShowcaseProfile;
     const promptSuggestion =
       compactProfileText(args.promptSuggestion, 140) || undefined;
+    const imageModel = normalizeImageGenerationModel(args.imageModel);
 
     if (!profile.avatarImageKey) {
       throw new Error("Profile needs an avatar reference first");
@@ -697,6 +699,8 @@ export const adminGenerateMoreShowcaseImage = action({
       prompt,
       referenceImageUrl,
       `aiProfiles/${profile._id}/generated-showcase`,
+      true,
+      imageModel,
     );
 
     await ctx.runMutation(

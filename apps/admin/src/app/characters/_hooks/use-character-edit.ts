@@ -79,6 +79,8 @@ const initialFormData: CharacterFormData = {
   },
 };
 
+const SHOWCASE_IMAGE_MODEL_DEFAULT = "__default__";
+
 export function useCharacterEdit(profiles: AIProfile[] | undefined) {
   const updateProfile = useMutation(
     api.features.ai.mutations.adminUpdateProfile,
@@ -119,6 +121,9 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
   const [formData, setFormData] = useState<CharacterFormData>(initialFormData);
   const [newInterest, setNewInterest] = useState("");
   const [showcasePromptSuggestion, setShowcasePromptSuggestion] = useState("");
+  const [showcaseImageModel, setShowcaseImageModel] = useState(
+    SHOWCASE_IMAGE_MODEL_DEFAULT,
+  );
   const [mode, setMode] = useState<"view" | "edit">("view");
 
   const openProfile = (profile: AIProfile, nextMode: "view" | "edit") => {
@@ -150,6 +155,7 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     });
     setIsSheetOpen(true);
     setShowcasePromptSuggestion("");
+    setShowcaseImageModel(SHOWCASE_IMAGE_MODEL_DEFAULT);
   };
 
   const handleView = (profile: AIProfile) => openProfile(profile, "view");
@@ -160,6 +166,7 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     setSelectedProfileId(null);
     setNewInterest("");
     setShowcasePromptSuggestion("");
+    setShowcaseImageModel(SHOWCASE_IMAGE_MODEL_DEFAULT);
     setMode("view");
   };
 
@@ -296,6 +303,10 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
       await generateShowcaseImage({
         profileId: selectedProfile._id,
         promptSuggestion: showcasePromptSuggestion.trim() || undefined,
+        imageModel:
+          showcaseImageModel !== SHOWCASE_IMAGE_MODEL_DEFAULT
+            ? showcaseImageModel
+            : undefined,
       });
       toast.success("Showcase image generated");
       setShowcasePromptSuggestion("");
@@ -402,6 +413,7 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     formData,
     newInterest,
     showcasePromptSuggestion,
+    showcaseImageModel,
     mode,
     // Refs
     avatarInputRef,
@@ -410,6 +422,7 @@ export function useCharacterEdit(profiles: AIProfile[] | undefined) {
     setFormData,
     setNewInterest,
     setShowcasePromptSuggestion,
+    setShowcaseImageModel,
     setIsSheetOpen,
     setMode,
     // Handlers
