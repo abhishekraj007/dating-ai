@@ -1,5 +1,6 @@
 import { View, Text } from "react-native";
 import { Avatar } from "heroui-native";
+import { CachedAvatarImage } from "@/components/cached-avatar-image";
 import type { AIBubbleProps } from "./message-types";
 
 interface Props extends AIBubbleProps {
@@ -24,7 +25,7 @@ export function AIBubbleWrapper({
     <View className="flex-row mb-3 px-4">
       <Avatar alt="" size="sm" className="mr-2">
         {avatarUrl ? (
-          <Avatar.Image source={{ uri: avatarUrl }} />
+          <CachedAvatarImage uri={avatarUrl} />
         ) : (
           <Avatar.Fallback>{profileName?.[0] ?? "AI"}</Avatar.Fallback>
         )}

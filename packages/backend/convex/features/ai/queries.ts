@@ -33,6 +33,11 @@ function sanitizeStructuredMessage(
       delete sanitized.imageUrl;
       return JSON.stringify(sanitized);
     }
+    if (parsed?.type === "video_response" && typeof parsed === "object") {
+      const sanitized = { ...parsed };
+      delete sanitized.videoUrl;
+      return JSON.stringify(sanitized);
+    }
   } catch {
     // Plain text content should be returned unchanged.
   }
@@ -894,6 +899,51 @@ export const getChatImageUrl = query({
 
     try {
       const signedUrl = await r2.getUrl(imageKey);
+      return signedUrl;
+    } catch {
+      return null;
+    }
+  },
+});
+
+/**
+ * Get a fresh signed URL for a chat video using its permanent videoKey.
+ */
+export const getChatVideoUrl = query({
+  args: {
+    videoKey: v.string(),
+  },
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx, { videoKey }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      return null;
+    }
+
+    const keyParts = videoKey.split("/");
+    if (
+      keyParts[0] !== "chatVideos" ||
+      keyParts.length < 4 ||
+      keyParts[1] !== user._id
+    ) {
+      return null;
+    }
+
+    const chatVideo = await ctx.db
+      .query("chatVideos")
+      .withIndex("by_video_key", (q) => q.eq("videoKey", videoKey))
+      .first();
+
+    if (
+      !chatVideo ||
+      chatVideo.userId !== user._id ||
+      chatVideo.status !== "completed"
+    ) {
+      return null;
+    }
+
+    try {
+      const signedUrl = await r2.getUrl(videoKey);
       return signedUrl;
     } catch {
       return null;

@@ -25,8 +25,12 @@ export {
   useUpdateAIProfile,
   useArchiveAIProfile,
 } from "./useUserCreatedProfiles";
-export { useRequestChatImage } from "./useImageRequest";
-export type { ImageRequestOptions } from "./useImageRequest";
+export { useRequestChatImage, useRequestChatMedia } from "./useImageRequest";
+export type {
+  ImageRequestOptions,
+  MediaRequestOptions,
+  MediaRequestType,
+} from "./useImageRequest";
 export { useCredits, CREDIT_COSTS } from "./useCredits";
 export type { CreditAction } from "./useCredits";
 export {

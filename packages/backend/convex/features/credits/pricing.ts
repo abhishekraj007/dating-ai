@@ -11,6 +11,7 @@ export const CREDITS_PRICING = {
   
   // Image generation
   CUSTOM_SELFIE: 5,
+  CUSTOM_VIDEO: 200,
   AI_CHARACTER_CREATION: 10, // For generating profile images
   
   // Free tier limits

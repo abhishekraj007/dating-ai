@@ -50,6 +50,8 @@ function getStructuredMessagePayload(value: string): string | null {
       parsed.type === "quiz_answer_result" ||
       parsed.type === "image_request" ||
       parsed.type === "image_response" ||
+      parsed.type === "video_request" ||
+      parsed.type === "video_response" ||
       parsed.type === "chat_error" ||
       parsed.type === "credits_required"
     ) {

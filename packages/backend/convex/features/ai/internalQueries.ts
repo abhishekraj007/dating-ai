@@ -41,6 +41,15 @@ export const getChatImageRequestInternal = internalQuery({
   },
 });
 
+export const getChatVideoRequestInternal = internalQuery({
+  args: {
+    requestId: v.id("chatVideos"),
+  },
+  handler: async (ctx, { requestId }) => {
+    return await ctx.db.get(requestId);
+  },
+});
+
 /**
  * Internal query to resolve the user's preferred chat language.
  */

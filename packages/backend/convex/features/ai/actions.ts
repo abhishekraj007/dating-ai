@@ -7,6 +7,7 @@ import { createAIProfileAgent, getAvailableAgentProviders } from "./agent";
 import { r2 } from "../../uploads";
 import { saveMessage } from "@convex-dev/agent";
 import { generateImageWithFallback } from "./imageGeneration";
+import { generateVideoWithFallback } from "./videoGeneration";
 import { IS_DEV } from "./profileGen/constants";
 
 type ChatErrorCode = "rate_limited" | "generation_failed";
@@ -354,6 +355,58 @@ export const generateResponse = internalAction({
           if (
             contentPart.type === "tool-call" &&
             "toolName" in contentPart &&
+            contentPart.toolName === "generateVideo"
+          ) {
+            console.log("Found generateVideo tool call:", contentPart);
+
+            const args = ("args" in contentPart ? contentPart.args : {}) as {
+              description?: string;
+              hairstyle?: string;
+              clothing?: string;
+              scene?: string;
+            };
+
+            try {
+              const requestId = await ctx.runMutation(
+                internal.features.ai.mutations.createChatVideoRequestInternal,
+                {
+                  conversationId,
+                  userId: convUserId!,
+                  aiProfileId: profileId!,
+                  platform,
+                  prompt: args.description || "A video",
+                  styleOptions: {
+                    hairstyle: args.hairstyle,
+                    clothing: args.clothing,
+                    scene: args.scene,
+                    description: args.description,
+                  },
+                },
+              );
+              if (!requestId) {
+                await ctx.runMutation(
+                  internal.features.ai.mutations.finalizePendingPromptState,
+                  { conversationId, promptMessageId },
+                );
+                return null;
+              }
+              console.log("Video request created successfully");
+              await ctx.runMutation(
+                internal.features.ai.mutations.finalizePendingPromptState,
+                { conversationId, promptMessageId },
+              );
+              return null;
+            } catch (error) {
+              console.error(
+                "Failed to create video request from agent:",
+                error,
+              );
+            }
+          }
+
+          if (
+            contentPart.type === "tool-call" &&
+            "toolName" in contentPart &&
             contentPart.toolName === "generateImage"
           ) {
             console.log("Found generateImage tool call:", contentPart);
@@ -451,6 +504,41 @@ function buildImagePrompt(
 
   const qualityTags =
     "preserve the same identity and facial features as the reference image, high quality, natural lighting, iPhone photo style, casual pose, authentic, candid";
+
+  return `${baseDescription}${styleDescription ? `, ${styleDescription}` : ""}${additionalContext}. ${qualityTags}`;
+}
+
+function buildVideoPrompt(
+  profile: { name: string; gender?: string; ethnicity?: string; age?: number },
+  styleOptions: {
+    hairstyle?: string;
+    clothing?: string;
+    scene?: string;
+    description?: string;
+  },
+): string {
+  const baseDescription = [
+    `A realistic vertical video of`,
+    profile.gender ?? "a woman",
+    profile.ethnicity ? `of ${profile.ethnicity} ethnicity` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const styleDescription = [
+    styleOptions.hairstyle && `with ${styleOptions.hairstyle.toLowerCase()}`,
+    styleOptions.clothing && `wearing ${styleOptions.clothing.toLowerCase()}`,
+    styleOptions.scene && `in a ${styleOptions.scene.toLowerCase()} setting`,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const additionalContext = styleOptions.description
+    ? `. ${styleOptions.description}`
+    : "";
+
+  const qualityTags =
+    "preserve the same identity and facial features as the reference image, natural movement, cinematic lighting, authentic, candid, smooth motion";
 
   return `${baseDescription}${styleDescription ? `, ${styleDescription}` : ""}${additionalContext}. ${qualityTags}`;
 }
@@ -624,6 +712,141 @@ export const generateChatImage = internalAction({
 
       await ctx.runMutation(
         internal.features.ai.mutations.updateChatImageRequest,
+        {
+          requestId,
+          status: "failed",
+          errorMessage:
+            error instanceof Error ? error.message : "Unknown error occurred",
+        },
+      );
+
+      return { success: false, error: String(error) };
+    }
+  },
+});
+
+/**
+ * Generate a custom chat video.
+ */
+export const generateChatVideo = internalAction({
+  args: {
+    requestId: v.id("chatVideos"),
+  },
+  handler: async (
+    ctx,
+    { requestId },
+  ): Promise<
+    | { success: true; videoKey: string }
+    | { success: false; error: string }
+    | null
+  > => {
+    await ctx.runMutation(
+      internal.features.ai.mutations.updateChatVideoRequest,
+      {
+        requestId,
+        status: "processing",
+      },
+    );
+
+    const request = await ctx.runQuery(
+      internal.features.ai.internalQueries.getChatVideoRequestInternal,
+      { requestId },
+    );
+
+    if (!request) {
+      console.error("Chat video request not found:", requestId);
+      return null;
+    }
+
+    const profile = await ctx.runQuery(
+      internal.features.ai.internalQueries.getProfileInternal,
+      { profileId: request.aiProfileId },
+    );
+
+    if (!profile) {
+      await ctx.runMutation(
+        internal.features.ai.mutations.updateChatVideoRequest,
+        {
+          requestId,
+          status: "failed",
+          errorMessage: "Profile not found",
+        },
+      );
+      return null;
+    }
+
+    try {
+      console.log("Generating video, isDev:", IS_DEV);
+
+      const prompt = buildVideoPrompt(
+        {
+          name: profile.name,
+          gender: profile.gender,
+          age: profile.age,
+        },
+        request.styleOptions ?? {},
+      );
+
+      console.log("Generating video with prompt:", prompt);
+
+      const referenceImageUrl = await getProfileAvatarUrl(
+        profile.avatarImageKey,
+      );
+
+      const appConfig = await ctx.runQuery(
+        api.features.appConfig.queries.getPublicAppConfig,
+        {},
+      );
+      const nsfwEnabledPlatforms = appConfig?.nsfwEnabledPlatforms ?? [];
+      const nsfwEnabled =
+        request.platform !== undefined &&
+        nsfwEnabledPlatforms.includes(request.platform);
+
+      const videoResult = await generateVideoWithFallback({
+        prompt,
+        referenceImageUrl,
+        enableSafety: !nsfwEnabled,
+        isDev: IS_DEV,
+      });
+
+      if (!videoResult.success) {
+        throw new Error(videoResult.error);
+      }
+
+      const videoUrl = videoResult.videoUrl;
+      console.log("Video generated with model:", videoResult.model);
+      console.log("Video URL:", videoUrl);
+
+      const videoResponse = await fetch(videoUrl);
+      if (!videoResponse.ok) {
+        throw new Error(
+          `Failed to fetch generated video: ${videoResponse.status}`,
+        );
+      }
+
+      const videoBlob = await videoResponse.blob();
+      const videoBuffer = await videoBlob.arrayBuffer();
+      const videoKey = `chatVideos/${request.userId}/${request.aiProfileId}/${requestId}.mp4`;
+      const videoUint8Array = new Uint8Array(videoBuffer);
+      await r2.store(ctx, videoUint8Array, videoKey);
+
+      await ctx.runMutation(
+        internal.features.ai.mutations.updateChatVideoRequest,
+        {
+          requestId,
+          status: "completed",
+          videoKey,
+        },
+      );
+
+      console.log("Video generated and saved successfully:", videoKey);
+
+      return { success: true, videoKey };
+    } catch (error) {
+      console.error("Video generation failed:", error);
+
+      await ctx.runMutation(
+        internal.features.ai.mutations.updateChatVideoRequest,
         {
           requestId,
           status: "failed",

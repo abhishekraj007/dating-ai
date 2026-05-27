@@ -3,7 +3,11 @@ import { Camera } from "lucide-react-native";
 import Markdown from "react-native-markdown-display";
 import { AIBubbleWrapper } from "./AIBubbleWrapper";
 import { useMarkdownStyles } from "./useMarkdownStyles";
-import type { AIBubbleProps, ImageRequestData } from "./message-types";
+import type {
+  AIBubbleProps,
+  ImageRequestData,
+  VideoRequestData,
+} from "./message-types";
 
 function shouldRenderAsMarkdown(content: string) {
   return /(^|\n)(#{1,6}\s|[-*+]\s|\d+\.\s|>|```)|`[^`]+`|\*\*[^*]+\*\*|__[^_]+__|\[[^\]]+\]\([^\)]+\)/m.test(
@@ -91,6 +95,33 @@ export function UserImageRequestBubble({
           <View className="bg-pink-500 rounded-2xl rounded-br-sm px-4 py-3 flex-row items-center">
             <Text className="text-white">
               {data.message || "Send me a selfie"}
+            </Text>
+          </View>
+          <Text className="text-muted text-xs text-right mt-1">{time}</Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+interface UserVideoRequestProps {
+  data: VideoRequestData;
+  time: string;
+  onLongPress?: () => void;
+}
+
+export function UserVideoRequestBubble({
+  data,
+  time,
+  onLongPress,
+}: UserVideoRequestProps) {
+  return (
+    <Pressable onLongPress={onLongPress} delayLongPress={500}>
+      <View className="flex-row justify-end mb-3 px-4">
+        <View className="max-w-[80%]">
+          <View className="bg-pink-500 rounded-2xl rounded-br-sm px-4 py-3 flex-row items-center">
+            <Text className="text-white">
+              {data.message || "Send me a video"}
             </Text>
           </View>
           <Text className="text-muted text-xs text-right mt-1">{time}</Text>

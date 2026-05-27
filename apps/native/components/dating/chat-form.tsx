@@ -7,6 +7,7 @@ import {
 import { KeyboardComposer } from "@launchhq/react-native-keyboard-composer";
 import { Button, Spinner, useThemeColor } from "heroui-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Camera,
   HelpCircle,
@@ -15,6 +16,9 @@ import {
 } from "lucide-react-native";
 import { useTranslation } from "@/hooks/use-translation";
 import { useColorScheme } from "@/lib/use-color-scheme";
+
+const KEYBOARD_COMPOSER_GAP = 10;
+const MIN_BOTTOM_PADDING = 16;
 
 function useComposerGradientColors(backgroundColor: string) {
   const { isDarkColorScheme } = useColorScheme();
@@ -80,19 +84,26 @@ export function ChatForm({
   onOpenSuggestionsSheet,
 }: ChatFormProps) {
   const { t } = useTranslation();
-  // const { bottom: safeAreaBottom } = useSafeAreaInsets();
+  const { bottom: safeAreaBottom } = useSafeAreaInsets();
   // const foregroundColor = useThemeColor("foreground");
   const foregroundColorMuted = useThemeColor("muted");
   const backgroundColor = useThemeColor("background");
   const composerGradientColors = useComposerGradientColors(backgroundColor);
   const actionButtonColor = "";
+  const bottomOverlayInset = isKeyboardOpen
+    ? KEYBOARD_COMPOSER_GAP
+    : Math.max(safeAreaBottom, MIN_BOTTOM_PADDING);
 
   const handleFormLayout = (event: LayoutChangeEvent) => {
     onFormHeightChange(event.nativeEvent.layout.height);
   };
 
   return (
-    <View pointerEvents="box-none" onLayout={handleFormLayout}>
+    <View
+      pointerEvents="box-none"
+      onLayout={handleFormLayout}
+      style={[styles.container, { bottom: -bottomOverlayInset }]}
+    >
       {/* {showScrollToBottom ? (
         <View pointerEvents="box-none" style={styles.scrollToBottomContainer}>
           <Button
@@ -113,7 +124,10 @@ export function ChatForm({
         locations={[0, 0.35, 1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={[styles.composerGradient]}
+        style={[
+          styles.composerGradient,
+          { paddingBottom: bottomOverlayInset },
+        ]}
       >
         <View pointerEvents="auto">
           <ScrollView
@@ -201,8 +215,15 @@ export function ChatForm({
 }
 
 const styles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 20,
+    elevation: 20,
+  },
   composerGradient: {
-    zIndex: -1,
     paddingTop: 16,
   },
   scrollToBottomContainer: {

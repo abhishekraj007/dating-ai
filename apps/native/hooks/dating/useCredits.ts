@@ -4,6 +4,7 @@ import { useQuery } from "convex-helpers/react/cache";
 export const CREDIT_COSTS = {
   TEXT_MESSAGE: 1,
   IMAGE_REQUEST: 5,
+  VIDEO_REQUEST: 200,
 } as const;
 
 export type CreditAction = keyof typeof CREDIT_COSTS;

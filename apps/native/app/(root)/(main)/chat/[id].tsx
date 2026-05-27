@@ -10,6 +10,7 @@ import {
   Popover,
   ScrollShadow,
 } from "heroui-native";
+import { CachedAvatarImage } from "@/components/cached-avatar-image";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   ChevronLeft,
@@ -36,6 +37,7 @@ import { useThemeColor } from "heroui-native";
 import { useTranslation } from "@/hooks/use-translation";
 
 const BOTTOM_SHADOW_SIZE = 20;
+const CHAT_MAINTAIN_VISIBLE_CONTENT_POSITION = {};
 
 export default function ChatScreen() {
   const { t } = useTranslation();
@@ -80,6 +82,7 @@ export default function ChatScreen() {
 
     // Keyboard state
     composerHeight,
+    chatFormHeight,
     setComposerHeight,
     setChatFormHeight,
     composerBottomInset,
@@ -154,6 +157,10 @@ export default function ChatScreen() {
       />
     );
   };
+  const listBottomPadding = Math.max(
+    16,
+    chatFormHeight - composerHeight + 16,
+  );
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
@@ -190,7 +197,7 @@ export default function ChatScreen() {
               >
                 <Avatar size="sm" alt={profile?.name ?? "AI"}>
                   {profile?.avatarUrl ? (
-                    <Avatar.Image source={{ uri: profile.avatarUrl }} />
+                    <CachedAvatarImage uri={profile.avatarUrl} />
                   ) : (
                     <Avatar.Fallback>
                       {profile?.name?.[0] ?? "AI"}
@@ -280,7 +287,7 @@ export default function ChatScreen() {
                   keyExtractor={(item) => item._id}
                   contentContainerStyle={{
                     paddingTop: 16,
-                    paddingBottom: 16,
+                    paddingBottom: listBottomPadding,
                   }}
                   showsVerticalScrollIndicator={false}
                   keyboardDismissMode="interactive"
@@ -288,6 +295,9 @@ export default function ChatScreen() {
                   onScroll={handleScroll}
                   onViewableItemsChanged={handleViewableItemsChanged}
                   viewabilityConfig={viewabilityConfig}
+                  maintainVisibleContentPosition={
+                    CHAT_MAINTAIN_VISIBLE_CONTENT_POSITION
+                  }
                   onScrollBeginDrag={dismissKeyboard}
                   scrollEventThrottle={16}
                   onStartReached={() => {

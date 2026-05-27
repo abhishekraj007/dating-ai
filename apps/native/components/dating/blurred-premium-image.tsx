@@ -8,6 +8,7 @@ import { usePurchases } from "@/contexts/purchases-context";
 import { useConvexAuth } from "convex/react";
 import { useRouter } from "expo-router";
 import { useTranslation } from "@/hooks/use-translation";
+import { CachedAvatarImage } from "@/components/cached-avatar-image";
 
 interface BlurredPremiumImageProps {
   imageUrl: NonNullable<ImageProps["source"]>;
@@ -94,7 +95,7 @@ export function BlurredPremiumImage({
             <View style={styles.modalBody}>
               <Avatar size="lg" alt={profileName}>
                 {profileAvatar ? (
-                  <Avatar.Image source={{ uri: profileAvatar }} />
+                  <CachedAvatarImage uri={profileAvatar} />
                 ) : (
                   <Avatar.Fallback>{profileName[0] ?? "A"}</Avatar.Fallback>
                 )}

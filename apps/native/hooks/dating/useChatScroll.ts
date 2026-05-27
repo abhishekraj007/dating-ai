@@ -59,18 +59,21 @@ export function useChatScroll({
   const isInitializedRef = useRef(false);
   const prevConversationIdRef = useRef<string | undefined>(undefined);
   const prevMessagesLengthRef = useRef(0);
+  const prevFirstMessageIdRef = useRef<string | undefined>(undefined);
   const isNearBottomRef = useRef(true);
   const pendingScrollToBottomRef = useRef<{ animated: boolean } | null>(null);
   const showScrollToBottomRef = useRef(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
   const messagesLength = messages.length;
+  const firstMessageId = messages[0]?._id;
 
   // Reset when conversation changes
   if (conversationId !== prevConversationIdRef.current) {
     isInitializedRef.current = false;
     prevConversationIdRef.current = conversationId;
     prevMessagesLengthRef.current = 0;
+    prevFirstMessageIdRef.current = undefined;
     isNearBottomRef.current = true;
     pendingScrollToBottomRef.current = null;
     showScrollToBottomRef.current = false;
@@ -96,6 +99,7 @@ export function useChatScroll({
 
     isInitializedRef.current = true;
     prevMessagesLengthRef.current = messagesLength;
+    prevFirstMessageIdRef.current = firstMessageId;
     isNearBottomRef.current = true;
     updateShowScrollToBottom(false);
     const timer = setTimeout(() => {
@@ -106,30 +110,46 @@ export function useChatScroll({
     conversationId,
     isLoading,
     listRef,
+    firstMessageId,
     messagesLength,
     updateShowScrollToBottom,
   ]);
 
   // --- Core auto-scroll logic ---
-  // This only forces a bottom jump when the user intentionally sends a
-  // message while scrolled up.
+  // Keep the latest exchange pinned only when the user is already near the
+  // bottom or has just sent a message. Loading older messages at the top
+  // should not trigger this path.
   useEffect(() => {
     if (!isInitializedRef.current) return;
 
     const prevLen = prevMessagesLengthRef.current;
+    const prevFirstMessageId = prevFirstMessageIdRef.current;
     const curLen = messagesLength;
     prevMessagesLengthRef.current = curLen;
+    prevFirstMessageIdRef.current = firstMessageId;
 
     if (curLen <= prevLen) return;
 
+    const didPrependOlderMessages =
+      prevFirstMessageId !== undefined &&
+      firstMessageId !== undefined &&
+      firstMessageId !== prevFirstMessageId;
+
+    if (didPrependOlderMessages) {
+      return;
+    }
+
     const pendingScroll = pendingScrollToBottomRef.current;
-    if (!pendingScroll) return;
+    const shouldAutoScroll = pendingScroll || isNearBottomRef.current;
+    if (!shouldAutoScroll) return;
 
     pendingScrollToBottomRef.current = null;
-    listRef.current?.scrollToEnd?.({ animated: pendingScroll.animated });
+    listRef.current?.scrollToEnd?.({
+      animated: pendingScroll?.animated ?? true,
+    });
     isNearBottomRef.current = true;
     updateShowScrollToBottom(false);
-  }, [messagesLength, listRef, updateShowScrollToBottom]);
+  }, [firstMessageId, messagesLength, listRef, updateShowScrollToBottom]);
 
   // Track scroll position continuously
   const handleScroll = useCallback(
@@ -164,27 +184,11 @@ export function useChatScroll({
   }, [isLoading]);
 
   const handleViewableItemsChanged = useCallback(
-    ({
-      viewableItems,
-    }: {
-      viewableItems: ViewToken<any>[];
-      changed: ViewToken<any>[];
-    }) => {
+    (_info: { viewableItems: ViewToken<any>[]; changed: ViewToken<any>[] }) => {
       if (messagesLength === 0) {
         isNearBottomRef.current = true;
         updateShowScrollToBottom(false);
-        return;
       }
-
-      const lastMessageIndex = messagesLength - 1;
-      const isLastMessageVisible = viewableItems.some(
-        (token) =>
-          token.index === lastMessageIndex &&
-          token.isViewable !== false,
-      );
-
-      isNearBottomRef.current = isLastMessageVisible;
-      updateShowScrollToBottom(!isLastMessageVisible);
     },
     [messagesLength, updateShowScrollToBottom],
   );

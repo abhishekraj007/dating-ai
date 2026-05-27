@@ -11,6 +11,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { PremiumButton } from "@/components/ui/premium-button";
 import { premiumColors } from "@/lib/theme/premium-colors";
 import { useTranslation } from "@/hooks/use-translation";
+import { CachedAvatarImage } from "@/components/cached-avatar-image";
 
 type AccountProfileSummaryProps = {
   name: string;
@@ -39,7 +40,7 @@ export const AccountProfileSummary = ({
     <Surface className="p-4 gap-4">
       <View className="flex-row items-center gap-3">
         <Avatar alt={name} size="md">
-          {avatarUrl ? <Avatar.Image source={{ uri: avatarUrl }} /> : null}
+          {avatarUrl ? <CachedAvatarImage uri={avatarUrl} /> : null}
           <Avatar.Fallback>{name[0] ?? "U"}</Avatar.Fallback>
         </Avatar>
 

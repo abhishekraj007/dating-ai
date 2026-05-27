@@ -54,9 +54,30 @@ export interface ChatErrorData {
   message?: string;
 }
 
+export interface VideoRequestData {
+  type: "video_request";
+  description?: string;
+  message?: string;
+  prompt?: string;
+  requestId?: string;
+  styleOptions?: {
+    hairstyle?: string;
+    clothing?: string;
+    scene?: string;
+    description?: string;
+  };
+}
+
+export interface VideoResponseData {
+  type: "video_response";
+  videoUrl?: string;
+  videoKey?: string;
+  prompt?: string;
+}
+
 export interface CreditsRequiredData {
   type: "credits_required";
-  action?: "image_request" | string;
+  action?: "image_request" | "video_request" | string;
   requiredCredits?: number;
   currentCredits?: number;
   message?: string;
@@ -69,6 +90,8 @@ export type StructuredContent =
   | QuizEndData
   | ImageRequestData
   | ImageResponseData
+  | VideoRequestData
+  | VideoResponseData
   | ChatErrorData
   | CreditsRequiredData
   | { type: string; message?: string };

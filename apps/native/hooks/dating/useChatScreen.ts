@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { Alert, Platform } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { useConversation } from "./useConversations";
@@ -10,13 +9,14 @@ import {
   useDeleteMessage,
   useClearChat,
 } from "./useMessages";
-import { useRequestChatImage } from "./useImageRequest";
-import type { ImageRequestOptions } from "./useImageRequest";
+import { useRequestChatMedia } from "./useImageRequest";
+import type { MediaRequestOptions } from "./useImageRequest";
 import { useChatScroll } from "./useChatScroll";
 import { useCredits } from "./useCredits";
 import { useTranslation } from "@/hooks/use-translation";
 
 const AI_RESPONSE_WAIT_TIMEOUT_MS = 15000;
+const INITIAL_CHAT_FORM_HEIGHT = 112;
 const openedCreditsRequiredMessageIds = new Set<string>();
 
 function getLatestCreditsRequiredMessageId(
@@ -43,7 +43,6 @@ function getLatestCreditsRequiredMessageId(
 
 export function useChatScreen() {
   const { t } = useTranslation();
-  const { bottom: safeAreaBottom } = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   // Map Platform.OS to the supported platform values. macOS is treated as iOS.
@@ -60,7 +59,9 @@ export function useChatScreen() {
 
   // Keyboard composer state
   const [composerHeight, setComposerHeight] = useState(48);
-  const [chatFormHeight, setChatFormHeight] = useState(180);
+  const [chatFormHeight, setChatFormHeight] = useState(
+    INITIAL_CHAT_FORM_HEIGHT,
+  );
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [blurTrigger, setBlurTrigger] = useState(0);
   const isKeyboardOpen = keyboardHeight > 0;
@@ -95,7 +96,7 @@ export function useChatScreen() {
   // Image request state
   const [isImageSheetOpen, setIsImageSheetOpen] = useState(false);
   const [isRequestingImage, setIsRequestingImage] = useState(false);
-  const { requestImage } = useRequestChatImage();
+  const { requestMedia } = useRequestChatMedia();
   const { deleteMessage } = useDeleteMessage();
   const { clearChat } = useClearChat();
   const [isClearing, setIsClearing] = useState(false);
@@ -184,6 +185,12 @@ export function useChatScreen() {
     setIsImageSheetOpen(false);
     router.push("/buy-credits");
   }, [router]);
+
+  const handleChatFormHeightChange = useCallback((height: number) => {
+    setChatFormHeight((currentHeight) =>
+      Math.abs(currentHeight - height) < 1 ? currentHeight : height,
+    );
+  }, []);
 
   // Chat scroll behavior
   const {
@@ -362,30 +369,34 @@ export function useChatScreen() {
   }, [clearPendingAssistantState, id, showTypingIndicator, stopResponse, t]);
 
   const handleImageRequest = useCallback(
-    async (options: ImageRequestOptions) => {
+    async (options: MediaRequestOptions) => {
       if (!id) return;
 
-      // Client-side credit check for image requests (5 credits)
-      if (!hasEnoughCredits("IMAGE_REQUEST")) {
+      const creditAction =
+        options.mediaType === "video" ? "VIDEO_REQUEST" : "IMAGE_REQUEST";
+
+      if (!hasEnoughCredits(creditAction)) {
         handleOpenCreditsModal();
         return;
       }
 
       setIsRequestingImage(true);
       try {
-        await requestImage(id, options, platform);
+        await requestMedia(id, options, platform);
         setIsImageSheetOpen(false);
-      } catch (error: any) {
-        if (error.message && error.message.includes("Insufficient credits")) {
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : String(error);
+        if (message.includes("Insufficient credits")) {
           handleOpenCreditsModal();
         } else {
-          console.error("Failed to request image:", error);
+          console.error("Failed to request media:", error);
         }
       } finally {
         setIsRequestingImage(false);
       }
     },
-    [id, requestImage, hasEnoughCredits, handleOpenCreditsModal, platform],
+    [id, requestMedia, hasEnoughCredits, handleOpenCreditsModal, platform],
   );
 
   const handleOpenImageSheet = () => {
@@ -578,8 +589,9 @@ export function useChatScreen() {
     return lastQuizQuestionId;
   }, [messages]);
 
-  // Native KeyboardAwareWrapper adds safe area on top of this inset.
-  const composerBottomInset = Math.max(0, chatFormHeight - safeAreaBottom);
+  // KeyboardAwareWrapper handles the text composer; FlashList padding reserves
+  // the extra action row/gradient space above it.
+  const composerBottomInset = Math.max(0, composerHeight);
 
   return {
     // Navigation
@@ -621,7 +633,7 @@ export function useChatScreen() {
     composerHeight,
     setComposerHeight,
     chatFormHeight,
-    setChatFormHeight,
+    setChatFormHeight: handleChatFormHeightChange,
     composerBottomInset,
     keyboardHeight,
     setKeyboardHeight,

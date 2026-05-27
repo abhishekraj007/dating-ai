@@ -5,6 +5,8 @@ import {
   type QuizAnswerResultData,
   type ImageRequestData,
   type ImageResponseData,
+  type VideoRequestData,
+  type VideoResponseData,
   type ChatErrorData,
   type CreditsRequiredData,
 } from "./bubbles";
@@ -14,10 +16,12 @@ import { QuizStartBubble } from "./bubbles/QuizStartBubble";
 import { ChatErrorBubble } from "./bubbles/ChatErrorBubble";
 import { CreditsRequiredBubble } from "./bubbles/CreditsRequiredBubble";
 import { ImageRequestBubble, ImageResponseBubble } from "./bubbles/ImageBubble";
+import { VideoRequestBubble, VideoResponseBubble } from "./bubbles/VideoBubble";
 import {
   AITextBubble,
   UserTextBubble,
   UserImageRequestBubble,
+  UserVideoRequestBubble,
 } from "./bubbles/TextBubble";
 
 interface MessageBubbleProps {
@@ -59,6 +63,15 @@ export const MessageBubble = ({
 
   // User messages
   if (isUser) {
+    if (structuredContent?.type === "video_request") {
+      return (
+        <UserVideoRequestBubble
+          data={structuredContent as VideoRequestData}
+          time={time}
+          onLongPress={onLongPress}
+        />
+      );
+    }
     if (structuredContent?.type === "image_request") {
       return (
         <UserImageRequestBubble
@@ -108,6 +121,22 @@ export const MessageBubble = ({
         return (
           <AITextBubble
             content={structuredContent.message || content}
+            {...bubbleProps}
+          />
+        );
+
+      case "video_request":
+        return (
+          <VideoRequestBubble
+            data={structuredContent as VideoRequestData}
+            {...bubbleProps}
+          />
+        );
+
+      case "video_response":
+        return (
+          <VideoResponseBubble
+            data={structuredContent as VideoResponseData}
             {...bubbleProps}
           />
         );

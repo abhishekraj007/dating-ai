@@ -3,6 +3,7 @@ import { Camera, LogOut, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChatImageBubble } from "@/components/chat/chat-image-bubble";
+import { ChatVideoBubble } from "@/components/chat/chat-video-bubble";
 import { ChatMarkdown } from "@/components/chat/chat-markdown";
 
 interface MessageBubbleProps {
@@ -30,6 +31,8 @@ type StructuredPayload = {
   caption?: string;
   imageUrl?: string;
   imageKey?: string;
+  videoUrl?: string;
+  videoKey?: string;
   question?: string;
   options?: string[];
   explanation?: string;
@@ -59,6 +62,15 @@ function parseContent(content: string) {
     return { kind: "text" as const, text: content };
   }
 
+  if (structured.type === "video_response") {
+    return {
+      kind: "video" as const,
+      videoUrl: structured.videoUrl,
+      videoKey: structured.videoKey,
+      text: structured.prompt,
+    };
+  }
+
   if (structured.type === "image_response") {
     return {
       kind: "image" as const,
@@ -72,6 +84,13 @@ function parseContent(content: string) {
     return {
       kind: "error" as const,
       text: structured.message || "Something went wrong",
+    };
+  }
+
+  if (structured.type === "video_request") {
+    return {
+      kind: "video_request" as const,
+      text: structured.message || structured.prompt || "Send me a video",
     };
   }
 
@@ -188,7 +207,18 @@ export function MessageBubble({
           isUser ? "items-end" : "items-start",
         )}
       >
-        {parsed.kind === "image" && (parsed.imageUrl || parsed.imageKey) ? (
+        {parsed.kind === "video" && (parsed.videoUrl || parsed.videoKey) ? (
+          <ChatVideoBubble
+            videoKey={parsed.videoKey}
+            videoUrl={parsed.videoUrl}
+            isPremium={viewerIsPremium}
+            profileName={profileName}
+            profileAvatar={avatarUrl}
+            viewerName={viewerName}
+            viewerEmail={viewerEmail}
+            viewerAuthUserId={viewerAuthUserId}
+          />
+        ) : parsed.kind === "image" && (parsed.imageUrl || parsed.imageKey) ? (
           <ChatImageBubble
             imageKey={parsed.imageKey}
             imageUrl={parsed.imageUrl}
@@ -200,6 +230,17 @@ export function MessageBubble({
             viewerEmail={viewerEmail}
             viewerAuthUserId={viewerAuthUserId}
           />
+        ) : parsed.kind === "video_request" ? (
+          <div
+            className={cn(
+              "flex items-center gap-2 rounded-3xl px-4 py-3 text-sm shadow-[0_10px_24px_-20px_rgba(0,0,0,0.55)]",
+              isUser
+                ? "rounded-br-lg bg-primary text-primary-foreground"
+                : "rounded-bl-lg bg-muted text-foreground ring-1 ring-black/6 dark:ring-white/6",
+            )}
+          >
+            <span>{renderTextContent(parsed.text, isUser)}</span>
+          </div>
         ) : parsed.kind === "image_request" ? (
           <div
             className={cn(

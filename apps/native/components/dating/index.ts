@@ -11,7 +11,7 @@ export { PhotoUploadSlot } from "./photo-upload-slot";
 export { GenderTabs } from "./gender-tabs";
 export { InterestChip } from "./interest-chip";
 export { ImageRequestSheet } from "./image-request-sheet";
-export type { ImageRequestOptions } from "./image-request-sheet";
+export type { ImageRequestOptions, MediaRequestOptions } from "./image-request-sheet";
 export { MessageActionsSheet } from "./message-actions-sheet";
 export { TopicsSheet, CONVERSATION_TOPICS } from "./topics-sheet";
 export type { TopicId } from "./topics-sheet";

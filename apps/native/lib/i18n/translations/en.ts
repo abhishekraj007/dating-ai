@@ -29,6 +29,8 @@ export const en: TranslationMap = {
   "chats.startConversation": "Start a conversation",
   "chats.sentPhoto": "Sent a photo",
   "chats.requestedPhoto": "Requested a photo",
+  "chats.sentVideo": "Sent a video",
+  "chats.requestedVideo": "Requested a video",
   "chats.startedQuiz": "Started a quiz",
   "chats.quizCompleted": "Quiz completed",
   "chats.quizAnswer": "Quiz answer",
@@ -315,18 +317,26 @@ export const en: TranslationMap = {
   "uploads.empty": "No files uploaded yet",
 
   "imageRequest.title": "Request Photo",
+  "imageRequest.videoTitle": "Request Video",
+  "imageRequest.photoTab": "Photo",
+  "imageRequest.videoTab": "Video",
   "imageRequest.credits": "{{count}} credits",
   "imageRequest.subtitle":
     "Customize the photo you want to receive. Each selection is optional.",
+  "imageRequest.videoSubtitle":
+    "Customize the video you want to receive. Each selection is optional.",
   "imageRequest.hairstyle": "Hairstyle",
   "imageRequest.clothing": "Clothing",
   "imageRequest.scene": "Scene",
   "imageRequest.extraDetailsLabel": "Extra details",
   "imageRequest.extraDetailsPlaceholder":
     "Enter what kind of pic you want to see...",
+  "imageRequest.videoExtraDetailsPlaceholder":
+    "Enter what kind of video you want to see...",
   "imageRequest.generatePhoto": "Send a Photo",
+  "imageRequest.generateVideo": "Send a Video",
   "imageRequest.insufficientCredits":
-    "Insufficient credits. You need at least 5 credits.",
+    "Insufficient credits. You need at least {{count}} credits.",
 
   "match.title": "It's a Match!",
   "match.subtitle": "You and {{name}} like each other\nWhat's your next move?",

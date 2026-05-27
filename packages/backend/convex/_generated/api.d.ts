@@ -45,6 +45,7 @@ import type * as features_ai_queries from "../features/ai/queries.js";
 import type * as features_ai_r2Helpers from "../features/ai/r2Helpers.js";
 import type * as features_ai_seed from "../features/ai/seed.js";
 import type * as features_ai_seed_genz from "../features/ai/seed_genz.js";
+import type * as features_ai_videoGeneration from "../features/ai/videoGeneration.js";
 import type * as features_appConfig_guards from "../features/appConfig/guards.js";
 import type * as features_appConfig_index from "../features/appConfig/index.js";
 import type * as features_appConfig_mutations from "../features/appConfig/mutations.js";
@@ -130,6 +131,7 @@ declare const fullApi: ApiFromModules<{
   "features/ai/r2Helpers": typeof features_ai_r2Helpers;
   "features/ai/seed": typeof features_ai_seed;
   "features/ai/seed_genz": typeof features_ai_seed_genz;
+  "features/ai/videoGeneration": typeof features_ai_videoGeneration;
   "features/appConfig/guards": typeof features_appConfig_guards;
   "features/appConfig/index": typeof features_appConfig_index;
   "features/appConfig/mutations": typeof features_appConfig_mutations;

@@ -280,6 +280,39 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_image_key", ["imageKey"]),
 
+  // Chat video generation requests
+  chatVideos: defineTable({
+    conversationId: v.id("aiConversations"),
+    userId: v.string(),
+    aiProfileId: v.id("aiProfiles"),
+    platform: v.optional(
+      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    ),
+    prompt: v.string(),
+    styleOptions: v.optional(
+      v.object({
+        hairstyle: v.optional(v.string()),
+        clothing: v.optional(v.string()),
+        scene: v.optional(v.string()),
+        description: v.optional(v.string()),
+      }),
+    ),
+    videoKey: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    replicateJobId: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+    creditsCharged: v.number(),
+  })
+    .index("by_conversation", ["conversationId"])
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_video_key", ["videoKey"]),
+
   // System AI profile generation jobs (manual + cron)
   profileGenerationJobs: defineTable({
     source: v.union(v.literal("manual"), v.literal("cron")),
