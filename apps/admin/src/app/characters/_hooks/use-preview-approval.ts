@@ -92,12 +92,13 @@ export function usePreviewApproval(jobId: string | null) {
     }
   };
 
-  const approve = async (edited?: EditedCandidate) => {
+  const approve = async (edited?: EditedCandidate, isTrending?: boolean) => {
     if (!jobId) return;
     try {
       await approveAvatar({
         jobId,
         editedCandidate: edited,
+        isTrending,
       });
       toast.success("Approved — generating showcase images");
     } catch (error) {

@@ -30,6 +30,7 @@ type GenerationInput = {
   referenceImageUrl?: string;
   preferredLocation?: string;
   ethnicity?: string;
+  isTrending?: boolean;
 };
 
 type ProfileGenerationOption = {
@@ -149,6 +150,7 @@ export function useCharacterGeneration() {
         preferredLocation: input?.preferredLocation?.trim() || undefined,
         ethnicity: input?.ethnicity?.trim() || undefined,
         imageModel: input?.imageModel?.trim() || undefined,
+        isTrending: input?.isTrending,
       })) as { queued?: boolean; jobId?: string } | undefined;
       toast.success("Generating avatar — review when ready");
       return result?.jobId ?? null;

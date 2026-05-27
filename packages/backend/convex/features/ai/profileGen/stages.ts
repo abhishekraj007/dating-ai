@@ -40,6 +40,7 @@ export async function runShowcaseAndPersistStage(
     initialCompletedSteps: JobProgressStep[];
     initialStepModels: StepModelEntry[];
     imageModel?: string;
+    isTrending?: boolean;
   },
 ): Promise<{ createdProfileId: string }> {
   const {
@@ -187,6 +188,7 @@ export async function runShowcaseAndPersistStage(
       ...candidate,
       avatarImageKey,
       profileImageKeys,
+      isTrending: params.isTrending ?? false,
     },
   )) as string;
   completedSteps = [...completedSteps, "profile_persist"];

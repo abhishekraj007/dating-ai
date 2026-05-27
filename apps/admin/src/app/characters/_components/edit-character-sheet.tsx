@@ -422,6 +422,29 @@ export function EditCharacterSheet({
               </Select>
             </div>
 
+            {/* Trending */}
+            <div className="space-y-2">
+              <Label>Trending</Label>
+              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border/60 p-3">
+                <Checkbox
+                  checked={formData.isTrending}
+                  disabled={isReadOnly}
+                  onCheckedChange={(checked) =>
+                    onFormChange({
+                      ...formData,
+                      isTrending: checked === true,
+                    })
+                  }
+                />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Show in trending feed</p>
+                  <p className="text-xs text-muted-foreground">
+                    Trending characters appear first in discover feeds.
+                  </p>
+                </div>
+              </label>
+            </div>
+
             {/* Visibility */}
             <div className="space-y-2">
               <Label>Visible On</Label>

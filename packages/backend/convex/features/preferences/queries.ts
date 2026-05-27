@@ -8,6 +8,7 @@ import {
   type AppLanguage,
 } from "../../lib/languages";
 import type { MutationCtx, QueryCtx } from "../../_generated/server";
+import { activeProfilesDiscoverQuery } from "../ai/discoverQuery";
 
 async function getPreferencesForUser(
   ctx: QueryCtx | MutationCtx,
@@ -313,20 +314,11 @@ export const getForYouProfiles = query({
 
     // Query profiles based on gender preference
     const scanLimit = Math.max(limit * 6, 120);
-    const allProfiles =
-      genderPreference !== "both"
-        ? await ctx.db
-            .query("aiProfiles")
-            .withIndex("by_status_and_gender", (q) =>
-              q.eq("status", "active").eq("gender", genderPreference),
-            )
-            .order("desc")
-            .take(scanLimit)
-        : await ctx.db
-            .query("aiProfiles")
-            .withIndex("by_status_and_gender", (q) => q.eq("status", "active"))
-            .order("desc")
-            .take(scanLimit);
+    const allProfiles = await activeProfilesDiscoverQuery(
+      ctx,
+      genderPreference,
+    )
+      .take(scanLimit);
 
     // Filter profiles
     const filteredProfiles = allProfiles.filter((profile) => {
@@ -814,18 +806,7 @@ export const getForYouProfilesPaginated = query({
     zodiacPreferences = requestedZodiacPreferences ?? zodiacPreferences;
     interestPreferences = requestedInterestPreferences ?? interestPreferences;
 
-    const dbQuery =
-      genderPreference !== "both"
-        ? ctx.db
-            .query("aiProfiles")
-            .withIndex("by_status_and_gender", (q) =>
-              q.eq("status", "active").eq("gender", genderPreference),
-            )
-            .order("desc")
-        : ctx.db
-            .query("aiProfiles")
-            .withIndex("by_status_and_gender", (q) => q.eq("status", "active"))
-            .order("desc");
+    const dbQuery = activeProfilesDiscoverQuery(ctx, genderPreference);
 
     const result = await dbQuery.paginate(paginationOpts);
 

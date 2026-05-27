@@ -16,6 +16,7 @@ import {
   isReservedPublicProfileUsername,
   normalizePublicProfileUsername,
 } from "./publicProfileUsernames";
+import { activeProfilesDiscoverQuery } from "./discoverQuery";
 
 function sanitizeStructuredMessage(
   value: string | undefined,
@@ -170,16 +171,9 @@ export const getPublicProfiles = query({
     }),
   ),
   handler: async (ctx, { gender, limit }) => {
-    const profilesQuery = ctx.db
-      .query("aiProfiles")
-      .withIndex("by_status_and_gender", (q) => {
-        if (gender) {
-          return q.eq("status", "active").eq("gender", gender);
-        }
-        return q.eq("status", "active");
-      });
-
-    const profiles = await profilesQuery.order("desc").take(limit ?? 24);
+    const profiles = await activeProfilesDiscoverQuery(ctx, gender).take(
+      limit ?? 24,
+    );
 
     return profiles
       .filter(isVisibleOnWeb)
@@ -276,15 +270,10 @@ export const getPublicProfilesPaginated = query({
         (ETHNICITIES as readonly string[]).includes(ethnicity),
     );
 
-    const profilesQuery = ctx.db
-      .query("aiProfiles")
-      .withIndex("by_status_and_gender", (q) => {
-        if (genderPreference && genderPreference !== "both") {
-          return q.eq("status", "active").eq("gender", genderPreference);
-        }
-        return q.eq("status", "active");
-      })
-      .order("desc");
+    const profilesQuery = activeProfilesDiscoverQuery(
+      ctx,
+      genderPreference ?? "both",
+    );
 
     const result = await profilesQuery.paginate(paginationOpts);
 

@@ -557,6 +557,7 @@ export const adminUpdateProfile = mutation({
         v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
       ),
     ),
+    isTrending: v.optional(v.boolean()),
     communicationStyle: v.optional(
       v.object({
         tone: v.optional(v.string()),

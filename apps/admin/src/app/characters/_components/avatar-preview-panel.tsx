@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, RefreshCw, Check, X, Pencil, ZoomIn } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ImageLightbox } from "@/components/image-lightbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -18,6 +19,8 @@ import {
 type Props = {
   job: PreviewJob;
   interestOptions: { value: string; label: string; emoji?: string }[];
+  isTrending: boolean;
+  onIsTrendingChange: (value: boolean) => void;
   onApprove: (edited?: EditedCandidate) => Promise<void>;
   onRegenerate: (editedPrompt?: string) => Promise<void>;
   onCancel: () => Promise<void>;
@@ -31,6 +34,8 @@ type Props = {
 export function AvatarPreviewPanel({
   job,
   interestOptions,
+  isTrending,
+  onIsTrendingChange,
   onApprove,
   onRegenerate,
   onCancel,
@@ -338,6 +343,19 @@ export function AvatarPreviewPanel({
           </div>
         </div>
       </div>
+
+      <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border/60 p-3">
+        <Checkbox
+          checked={isTrending}
+          onCheckedChange={(checked) => onIsTrendingChange(checked === true)}
+        />
+        <div className="space-y-1">
+          <p className="text-sm font-medium">Trending</p>
+          <p className="text-xs text-muted-foreground">
+            Prioritize this character in discover feeds after approval.
+          </p>
+        </div>
+      </label>
 
       {/* Read-only summary */}
       <div className="rounded-md border border-border/40 bg-muted/30 p-3 text-[11px] text-muted-foreground space-y-1">
