@@ -319,6 +319,10 @@ export const pt: TranslationMap = {
   "quiz.started": "Quiz iniciado",
   "quiz.letsPlay": "Vamos jogar um quiz!",
   "quiz.endQuiz": "Encerrar quiz",
+
+  "media.recordingVideo": "Gravando um vídeo...",
+  "media.takingPhoto": "Tirando uma foto...",
+
   "signIn.failed": "Falha ao entrar",
   "signUp.failed": "Falha ao cadastrar",
   "signUp.createAccount": "Criar conta",

@@ -58,7 +58,7 @@ export function ImageProcessingBubble({
 }: ProcessingProps) {
   const { t } = useTranslation();
   const markdownStyles = useMarkdownStyles();
-  const previewSize = { width: 250, height: 350 };
+  const previewSize = { width: 250, height: 300 };
 
   return (
     <AIBubbleWrapper

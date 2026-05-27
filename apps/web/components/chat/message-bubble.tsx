@@ -273,7 +273,7 @@ export function MessageBubble({
           />
         ) : parsed.kind === "video_processing" ? (
           <div className="relative overflow-hidden rounded-3xl ring-1 ring-black/10 dark:ring-white/10">
-            <Skeleton className="h-[280px] w-[250px] rounded-3xl animate-pulse" />
+            <Skeleton className="h-[300px] w-[250px] rounded-3xl animate-pulse" />
             <div className="absolute inset-0 flex items-center justify-center bg-black/25">
               <Loader2 className="h-8 w-8 animate-spin text-white" />
             </div>
@@ -283,7 +283,7 @@ export function MessageBubble({
           </div>
         ) : parsed.kind === "image_processing" ? (
           <div className="relative overflow-hidden rounded-3xl ring-1 ring-black/10 dark:ring-white/10">
-            <Skeleton className="h-[280px] w-[250px] rounded-3xl animate-pulse" />
+            <Skeleton className="h-[300px] w-[250px] rounded-3xl animate-pulse" />
             <div className="absolute inset-0 flex items-center justify-center bg-black/25">
               <Loader2 className="h-8 w-8 animate-spin text-white" />
             </div>

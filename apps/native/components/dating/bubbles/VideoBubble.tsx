@@ -55,7 +55,7 @@ export function VideoProcessingBubble({
 }: ProcessingProps) {
   const { t } = useTranslation();
   const markdownStyles = useMarkdownStyles();
-  const previewSize = { width: 250, height: 350 };
+  const previewSize = { width: 250, height: 300 };
 
   return (
     <AIBubbleWrapper
@@ -66,7 +66,9 @@ export function VideoProcessingBubble({
       <View className="bg-surface rounded-2xl rounded-tl-sm overflow-hidden">
         <MediaPlaceholder {...previewSize} showSpinner />
         <View className="px-4 py-3">
-          <Markdown style={markdownStyles}>{t("media.recordingVideo")}</Markdown>
+          <Markdown style={markdownStyles}>
+            {t("media.recordingVideo")}
+          </Markdown>
         </View>
       </View>
     </AIBubbleWrapper>
