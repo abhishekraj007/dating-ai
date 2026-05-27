@@ -106,12 +106,14 @@ export default function CharactersPage() {
     formData,
     newInterest,
     showcasePromptSuggestion,
+    showcaseImageModel,
     mode,
     avatarInputRef,
     galleryInputRef,
     setFormData,
     setNewInterest,
     setShowcasePromptSuggestion,
+    setShowcaseImageModel,
     setIsSheetOpen,
     setMode,
     handleView,
@@ -414,6 +416,9 @@ export default function CharactersPage() {
             onNewInterestChange={setNewInterest}
             showcasePromptSuggestion={showcasePromptSuggestion}
             onShowcasePromptSuggestionChange={setShowcasePromptSuggestion}
+            showcaseImageModel={showcaseImageModel}
+            onShowcaseImageModelChange={setShowcaseImageModel}
+            imageModelOptions={generationOptions?.imageModels}
             onAddInterest={handleAddInterest}
             onRemoveInterest={handleRemoveInterest}
             isSaving={isSaving}

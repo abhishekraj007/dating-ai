@@ -691,16 +691,19 @@ export type SceneBoldness = "casual" | "flirty" | "bold";
  * A scene is a *family* of visually-related photos. Every textual axis
  * (action / setting / composition / lighting / style) is an array of 2-4
  * alternatives that are sampled at plan time, so two profiles landing on the
- * same scene still produce different prompts. On top of this baseline we
- * inject a rotating accent prop, season, time-of-day, and an optional
- * per-slot LLM vignette.
+ * same scene still produce different prompts. Settings are intentionally NOT
+ * fixed here — the per-slot vignette LLM invents grounded locations from the
+ * profile's interests, bio, and city. On top of this baseline we inject a
+ * rotating accent prop, season, time-of-day, and an optional per-slot LLM
+ * vignette.
  */
 export type ShowcaseScene = {
   id: string;
   category: ShowcaseSceneCategory;
   boldness: SceneBoldness;
   buildActions: Array<(candidate: { interests: string[] }) => string>;
-  settings: string[];
+  /** When omitted, the vignette LLM invents the setting from interests. */
+  settings?: string[];
   compositions: string[];
   lightings: string[];
   styles: string[];
@@ -763,11 +766,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       (c) =>
         `caught mid-${(c.interests[0] ?? "hobby").toLowerCase()}, looking genuinely engaged rather than posed`,
     ],
-    settings: [
-      "in an authentic lifestyle setting that matches the hobby, uncluttered but lived-in",
-      "in a small dedicated corner of a home set up for the hobby, with the tools of it visible",
-      "in a neighborhood spot that suits the hobby - low-key, not staged",
-    ],
     compositions: [
       "three-quarter candid framing, subject engaged in the activity rather than posing",
       "medium shot with hands and tools in frame, face relaxed and in focus",
@@ -795,11 +793,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
         "standing near a railing with one hand resting on it, gaze toward the skyline",
       () =>
         "taking a small unhurried pause on a bench, arms relaxed, eyes soft",
-    ],
-    settings: [
-      "on a city rooftop with distant skyline softly out of focus",
-      "in an urban park with mid-rise buildings rising through trees behind",
-      "on a pedestrian bridge with a river and skyline softly compressed behind",
     ],
     compositions: [
       "full-body or three-quarter framing, subject slightly off-center",
@@ -830,11 +823,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () =>
         "tucked into a corner booth, glass raised slightly, warm-lit expression",
     ],
-    settings: [
-      "inside a cozy low-lit bar or bistro with warm string-lights",
-      "in a small wine bar with exposed brick and a soft backlit shelf of bottles",
-      "inside an intimate jazz-adjacent bar with tinted sconces and dark wood",
-    ],
     compositions: [
       "chest-up candid framing, slight tilt, background softly blurred",
       "three-quarter seated framing, drink and hands visible in lower third",
@@ -861,11 +849,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () => "pausing on an old-town corner to check a paper map or phone",
       () =>
         "mid-step on a narrow lane, small tote over one shoulder, unhurried",
-    ],
-    settings: [
-      "a narrow old-town street with warm-toned stone walls and soft shop lights",
-      "a tree-lined side street in a historic quarter, painted shutters closed behind",
-      "a small plaza with a stone fountain and handful of locals softly out of focus",
     ],
     compositions: [
       "full-body travel candid, environment clearly visible",
@@ -896,11 +879,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () =>
         "sharing a private joke with one friend, the other glimpsed at the edge of frame",
     ],
-    settings: [
-      "an outdoor cafe terrace, natural and social",
-      "a casual living-room gathering, low couches and soft lamp light",
-      "a sunny backyard or stoop hangout with drinks on a small table",
-    ],
     compositions: [
       "three-quarter framing, subject clearly the focus while friends remain soft and blurred",
       "medium group candid, subject center-weighted and sharpest in the frame",
@@ -923,34 +901,35 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
     boldness: "bold",
     buildActions: [
       (c) => {
-        const interest = c.interests.find((i) =>
-          /gym|bouldering|climbing|yoga|running|cycling|skate|tennis|surfing|dance|salsa/i.test(
+        const climbInterest = c.interests.find((i) =>
+          /bouldering|rock climbing/i.test(i),
+        );
+        if (climbInterest) {
+          return `during ${climbInterest.toLowerCase()}, focused and mid-move`;
+        }
+        const fitnessInterest = c.interests.find((i) =>
+          /gym|yoga|running|cycling|skate|tennis|surfing|dance|salsa|pilates|barre|fitness/i.test(
             i,
           ),
         );
-        if (interest) {
-          return `in the middle of ${interest.toLowerCase()}, focused and mid-motion`;
+        if (fitnessInterest) {
+          return `during ${fitnessInterest.toLowerCase()}, focused and mid-motion`;
         }
-        return "in a fitness or climbing setting, mid-activity";
+        return "mid-workout, focused and in motion";
       },
       (c) => {
-        const interest = c.interests.find((i) =>
-          /gym|bouldering|climbing|yoga|running|cycling|skate|tennis|surfing|dance|salsa/i.test(
+        const fitnessInterest = c.interests.find((i) =>
+          /gym|yoga|running|cycling|skate|tennis|surfing|dance|salsa|pilates|barre|fitness|bouldering|rock climbing/i.test(
             i,
           ),
         );
-        if (interest) {
-          return `just paused between sets of ${interest.toLowerCase()}, breathing, a slight smile`;
+        if (fitnessInterest) {
+          return `just paused during ${fitnessInterest.toLowerCase()}, breathing, a slight smile`;
         }
-        return "in a fitness setting, pausing between sets, light sweat visible";
+        return "pausing between sets, light sweat visible, relaxed focus";
       },
       () =>
         "in athletic gear mid-movement, limbs blurred subtly, expression calm and focused",
-    ],
-    settings: [
-      "at a climbing gym with colorful wall holds softly out of focus",
-      "in a pilates or yoga studio with warm wood floors and large mirrors",
-      "at a track or outdoor basketball court, functional sport environment",
     ],
     compositions: [
       "three-quarter action framing, a hint of motion blur in limbs but face sharp",
@@ -990,11 +969,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
         "a mirror selfie on the way out the door, tote or jacket in hand, unhurried",
       () => "a low-angle mirror selfie, one hip shifted, relaxed expression",
     ],
-    settings: [
-      "in front of a full-length mirror in a bedroom or hallway, minimal clutter",
-      "in a clean tiled bathroom with soft overhead warm light",
-      "at a floor mirror leaning against the wall, plants in the edge of frame",
-    ],
     compositions: [
       "full-body mirror selfie, smartphone visible in one hand",
       "three-quarter mirror selfie, phone partially in frame, subject slightly angled",
@@ -1022,11 +996,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
         "reaching for a pastry on a small ceramic plate, hand and face both in frame",
       () =>
         "laughing softly at the table, both hands resting near a cortado and a small book",
-    ],
-    settings: [
-      "at a small cafe table with a warm wooden surface, simple ceramic cups",
-      "at a marble bistro counter with pastries and a small glass of water",
-      "at a corner table near a big window, city softly blurred outside",
     ],
     compositions: [
       "close candid three-quarter framing, hands and face in frame",
@@ -1056,11 +1025,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () =>
         "buttoning a shirt or cuff, caught in a small quiet moment of preparation",
     ],
-    settings: [
-      "in front of a vanity mirror with soft warm lamps",
-      "at a bedroom mirror with clothes softly visible on the bed behind",
-      "in a small hallway mirror scene, jacket half-on",
-    ],
     compositions: [
       "chest-up candid, gaze directed at the mirror rather than camera",
       "waist-up three-quarter framing, hands actively doing something",
@@ -1087,11 +1051,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
         "sitting cross-legged on a couch, a hot drink balanced nearby, paperback open in lap",
       () =>
         "stretched out by a window with a book face-down on the thigh, gaze drifting outside",
-    ],
-    settings: [
-      "on a couch with soft throws and a plant or two in view",
-      "in a reading nook by a window, a stack of books and a small lamp visible",
-      "on a rug on the floor with a mug and open notebook nearby",
     ],
     compositions: [
       "three-quarter lifestyle framing, cozy setting clearly visible",
@@ -1120,11 +1079,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
         "leaning against the open car door at a rest stop, horizon behind, relaxed pose",
       () =>
         "sitting on the hood at golden hour, legs crossed, small smile to the side",
-    ],
-    settings: [
-      "inside a car on a daytime road trip, softly blurred landscape out the window",
-      "at a scenic pullout on an open highway, car visible at the edge of frame",
-      "on a small rural road next to fields or low hills",
     ],
     compositions: [
       "chest-up candid from the driver-side angle",
@@ -1155,11 +1109,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () =>
         "mid-conversation at a rooftop gathering, face softly lit by bulb lights above",
     ],
-    settings: [
-      "on a rooftop with bokeh string lights and city rooftops softly visible behind",
-      "on a warehouse rooftop terrace, a small crowd softly out of focus behind",
-      "on a residential rooftop deck with plants and low furniture framing the subject",
-    ],
     compositions: [
       "chest-up candid, slightly elevated camera angle",
       "three-quarter framing with string lights as bokeh in negative space",
@@ -1187,11 +1136,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
         "standing in shallow water with jeans rolled, looking down the shoreline",
       () =>
         "on a rock near the water with legs tucked, hair catching the breeze",
-    ],
-    settings: [
-      "at a calm lake dock or quiet waterfront",
-      "on a rocky coastline with low waves",
-      "on a wooden pier extending into still water, distant horizon",
     ],
     compositions: [
       "full-body or three-quarter wide environmental shot",
@@ -1223,11 +1167,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () =>
         "walking between stalls with a loaf of bread sticking out of a canvas bag",
     ],
-    settings: [
-      "at a bustling outdoor farmers market with stalls softly blurred behind",
-      "at a neighborhood weekend market with flower stands in frame",
-      "at a covered market hall with dappled light and painted signage",
-    ],
     compositions: [
       "three-quarter candid, hands interacting with the environment",
       "medium candid, market stall occupying one side of the frame",
@@ -1256,11 +1195,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () =>
         "tuning an instrument or adjusting a lens, hands clearly doing the work",
     ],
-    settings: [
-      "at a home desk with tools of a craft (cameras, sketchpads, laptop, instrument)",
-      "in a small studio space with a pegboard of tools softly out of focus",
-      "at a second-hand wooden table with warm books and paper clutter",
-    ],
     compositions: [
       "three-quarter candid, workspace clearly in frame",
       "tighter medium shot, hands-and-face with tools in foreground",
@@ -1287,11 +1221,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () => "sitting on the floor with a pet in the lap, both calm and content",
       () =>
         "playing gently with a pet, face turned toward it, genuine amused smile",
-    ],
-    settings: [
-      "on a couch with a visible pet, soft throws and a plant nearby",
-      "on a sunny apartment floor with a rug, pet alert and close",
-      "by a window seat with the pet curled up next to the subject",
     ],
     compositions: [
       "chest-up candid, pet clearly visible in the frame",
@@ -1320,11 +1249,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () =>
         "at a small table in the bookstore with a pile of picks, half-smiling",
     ],
-    settings: [
-      "inside a small independent bookstore with tightly packed wooden shelves",
-      "in a used bookstore with warm yellowed light and handwritten signs",
-      "in a design or photo bookstore with large-format books on display tables",
-    ],
     compositions: [
       "three-quarter candid, bookshelves filling the background",
       "medium shot, subject in an aisle, corridor of books leading back",
@@ -1352,11 +1276,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
         "reading a small wall label next to an artwork, expression thoughtful",
       () => "crossing between rooms in a gallery, doorway framing the subject",
     ],
-    settings: [
-      "in a small contemporary art gallery with white walls and warm wood floors",
-      "in a museum hallway with soft directional lighting and one framed work visible",
-      "in a minimal exhibition space with a single sculpture softly blurred behind",
-    ],
     compositions: [
       "wide environmental portrait, architecture anchoring both sides",
       "medium three-quarter candid with an artwork visible in the frame",
@@ -1381,11 +1300,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () => "mid-cook at the stove, wooden spoon in hand, steam rising softly",
       () => "chopping vegetables on a wooden board, unhurried, small smile",
       () => "plating a simple dish at the counter, face calm and focused",
-    ],
-    settings: [
-      "in a small home kitchen with warm wood accents and a few herbs on the windowsill",
-      "at a marble counter with a cutting board and fresh produce around",
-      "at a galley kitchen with soft overhead light and a half-open window",
     ],
     compositions: [
       "three-quarter candid, hands and cooking surface clearly in frame",
@@ -1414,11 +1328,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
         "reading a paperback at a window seat on a train, landscape blurred past",
       () =>
         "listening to music on a train, a small journal on the table, gaze distant",
-    ],
-    settings: [
-      "at a train window seat with countryside softly streaking past",
-      "at an intercity train table with a coffee and a small book",
-      "at a metro window seat with city rooftops flickering by",
     ],
     compositions: [
       "waist-up candid, window filling the frame behind",
@@ -1449,11 +1358,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () =>
         "cross-legged on a blanket, paperback in lap, gaze off into the park",
     ],
-    settings: [
-      "on a grassy park lawn with blurred trees and other picnickers behind",
-      "in a quiet stretch of park next to a small pond",
-      "at the edge of a city park with skyline softly visible through the trees",
-    ],
     compositions: [
       "three-quarter environmental shot, blanket and food anchoring the lower third",
       "wider candid showing the whole picnic setup",
@@ -1481,11 +1385,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () =>
         "resting between rounds of practice, water bottle in hand, soft smile",
       () => "stretching at a ballet barre or yoga mat, calm and centered",
-    ],
-    settings: [
-      "in a dance studio with a full-wall mirror and warm wood floors",
-      "in a small boutique pilates or barre studio with natural light",
-      "in a loft-style movement studio with large windows",
     ],
     compositions: [
       "three-quarter action framing, motion blur subtle, face sharp",
@@ -1522,11 +1421,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
         "standing near a crosswalk under a warm streetlight, soft half-smile",
       () => "leaning on a brick wall in a lit alley, relaxed, eyes soft",
     ],
-    settings: [
-      "on a lit urban street at night with soft neon reflections in wet pavement",
-      "in a quiet downtown block with warm window light from a restaurant behind",
-      "under a warm streetlamp on a residential block, trees softly lit",
-    ],
     compositions: [
       "waist-up candid, streetlights as bokeh in negative space",
       "medium-wide environmental shot, subject centered on the pavement",
@@ -1553,11 +1447,6 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () => "pulling a record half out of its sleeve, eyes on the cover",
       () =>
         "at the listening station in a record shop, one headphone pressed to an ear",
-    ],
-    settings: [
-      "inside a small record shop with wooden crates and posters on the walls",
-      "at a used vinyl store with warm overhead light and tight aisles",
-      "in a hybrid book-and-record shop with eclectic decor",
     ],
     compositions: [
       "three-quarter candid, record crates filling the foreground",

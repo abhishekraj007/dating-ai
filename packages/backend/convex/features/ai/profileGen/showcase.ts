@@ -204,7 +204,9 @@ function sampleSlotPlan(
     sceneId: scene.id,
     category: scene.category,
     action,
-    setting: randomItem(scene.settings) ?? scene.settings[0] ?? "",
+    setting: scene.settings?.length
+      ? (randomItem(scene.settings) ?? scene.settings[0] ?? "")
+      : "",
     composition: randomItem(scene.compositions) ?? scene.compositions[0] ?? "",
     lighting: randomItem(scene.lightings) ?? scene.lightings[0] ?? "",
     style: randomItem(scene.styles) ?? scene.styles[0] ?? "",

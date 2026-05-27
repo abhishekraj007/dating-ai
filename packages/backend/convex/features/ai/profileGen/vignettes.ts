@@ -32,9 +32,8 @@ const sceneVignetteSchema = z.object({
     .min(5)
     .max(240)
     .describe(
-      "A concrete location detail (a neighborhood, shop name, landmark, specific object visible) appended to the baseline setting.",
-    )
-    .optional(),
+      "Required. The main concrete location for this slot: venue, neighborhood, landmark, or room detail grounded in the profile.",
+    ),
   prop: z
     .string()
     .min(3)
@@ -94,9 +93,9 @@ function buildVignetteBatchPrompt(
       return [
         `Slot ${index + 1}:`,
         `  sceneId: ${plan.sceneId}`,
-        `  category: ${plan.category}`,
+        `  scene_category: ${plan.category}`,
         `  baseline_action: ${plan.action}`,
-        `  baseline_setting: ${plan.setting}`,
+        `  baseline_setting: (none — invent the main location in settingDetail)`,
         `  composition: ${plan.composition}`,
         `  lighting: ${plan.lighting}`,
         `  season: ${plan.season}`,
@@ -129,7 +128,8 @@ Hard rules:
 - The vignette must stay photorealistic and contemporary.
 - The subject's face, skin tone, hair, and body are fixed by a reference image - DO NOT describe those. Only change outfit, pose, setting, props, and light.
 - "action" must be one short sentence (<= 240 chars).
-- "settingDetail" should be a concrete, grounded location detail (neighborhood name, shop style, a visible landmark, a specific object). Keep plausible for the city and archetype.
+- "settingDetail" is required for every slot and becomes the main location (there is no fixed baseline setting). Invent a concrete, grounded place from the scene category, interests, bio, occupation, and city archetype — neighborhood name, venue type, visible landmark, or specific room detail. Keep it plausible for ${candidate.location}. Vary settings across slots; do not repeat the same venue type twice in one batch.
+- Activity slots: match the person's actual interests (weight room, yoga studio, outdoor run, tennis court, dance studio, etc.). Only use climbing/bouldering gyms when "Bouldering" or "Rock Climbing" is listed. No chalk bags or carabiners unless bouldering/climbing is explicit.
 - "prop" should be a small, scene-appropriate object. If the baseline_prop already fits perfectly, you may echo it, but prefer something more specific. Avoid overused dating-app props (vintage film cameras, polaroids, generic iced coffee) unless the scene truly demands it.
 - "outfit" is required. Generate a complete outfit from scratch for this slot: garment types + color/material + styling detail. Do not choose from a memorized list; invent a coherent look for this specific person and scene.
 - Outfit diversity rules: never repeat the avatar outfit ("${appearance.outfit}"), never repeat the same dominant color, same main garment type, same silhouette, or same occasion across slots. Each slot should feel like a different day, mood, and setting.
