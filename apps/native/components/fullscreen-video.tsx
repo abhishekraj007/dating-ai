@@ -118,17 +118,24 @@ function CenterPlaybackButton({
 interface VideoPosterFrameProps {
   posterUrl?: string;
   isLoading: boolean;
+  /** Hide poster after load so letterboxed video bars stay black, not poster. */
+  hidePosterWhenReady?: boolean;
   children?: ReactNode;
 }
 
 function VideoPosterFrame({
   posterUrl,
   isLoading,
+  hidePosterWhenReady = false,
   children,
 }: VideoPosterFrameProps) {
+  const showPoster = Boolean(
+    posterUrl && (!hidePosterWhenReady || isLoading),
+  );
+
   return (
     <>
-      {posterUrl ? (
+      {showPoster ? (
         <Image
           source={{ uri: posterUrl }}
           style={StyleSheet.absoluteFill}
@@ -296,6 +303,7 @@ export function FullscreenVideo({
               <VideoPosterFrame
                 posterUrl={posterUrl}
                 isLoading={!isVideoReady}
+                hidePosterWhenReady
               />
 
               <VideoView
@@ -461,6 +469,7 @@ const styles = StyleSheet.create({
   mediaContainer: {
     flex: 1,
     position: "relative",
+    backgroundColor: "#000",
   },
   fullscreenVideo: {
     ...StyleSheet.absoluteFillObject,
@@ -502,7 +511,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   posterFallback: {
-    backgroundColor: "#111",
+    backgroundColor: "#000",
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
