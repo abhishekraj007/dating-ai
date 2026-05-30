@@ -89,7 +89,7 @@ interface ImageRequestSheetProps {
 }
 
 const DEFAULT_VIDEO_DURATION = 5;
-const VIDEO_DURATION_OPTIONS = [5, 10, 15] as const;
+const VIDEO_DURATION_OPTIONS = [5, 10] as const;
 
 interface ImageRequestSheetContentProps {
   mediaType: "photo" | "video";
@@ -457,7 +457,7 @@ export function ImageRequestSheet({
               <Spinner color={accentForegroundColor} size="sm" />
             ) : (
               <>
-                <Camera size={18} color={accentForegroundColor} />
+                {/* <Camera size={18} color={accentForegroundColor} /> */}
                 <Button.Label>
                   {hasEnoughCredits
                     ? mediaType === "video"

@@ -12,11 +12,11 @@ import {
 import { useRequestChatMedia } from "./useImageRequest";
 import type { MediaRequestOptions } from "./useImageRequest";
 import { useChatScroll } from "./useChatScroll";
+import { useChatKeyboardList } from "./useChatKeyboardList";
 import { useCredits } from "./useCredits";
 import { useTranslation } from "@/hooks/use-translation";
 
 const AI_RESPONSE_WAIT_TIMEOUT_MS = 15000;
-const INITIAL_CHAT_FORM_HEIGHT = 112;
 const openedCreditsRequiredMessageIds = new Set<string>();
 
 function getLatestCreditsRequiredMessageId(
@@ -54,14 +54,16 @@ export function useChatScreen() {
         : "ios";
   const [message, setMessage] = useState("");
   const [isStopRequested, setIsStopRequested] = useState(false);
-  const listRef = useRef<any>(null);
   const lastSubmittedInputRef = useRef("");
+  const {
+    listRef,
+    composerRef,
+    contentInsetEndAdjustment,
+    onComposerLayout,
+  } = useChatKeyboardList();
 
   // Keyboard composer state
   const [composerHeight, setComposerHeight] = useState(48);
-  const [chatFormHeight, setChatFormHeight] = useState(
-    INITIAL_CHAT_FORM_HEIGHT,
-  );
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [blurTrigger, setBlurTrigger] = useState(0);
   const isKeyboardOpen = keyboardHeight > 0;
@@ -186,34 +188,14 @@ export function useChatScreen() {
     router.push("/buy-credits");
   }, [router]);
 
-  const handleChatFormHeightChange = useCallback((height: number) => {
-    setChatFormHeight((currentHeight) =>
-      Math.abs(currentHeight - height) < 1 ? currentHeight : height,
-    );
-  }, []);
-
   // Chat scroll behavior
-  const {
-    shouldLoadMore,
-    handleScroll,
-    handleViewableItemsChanged,
-    viewabilityConfig,
-    scrollToBottom,
-    showScrollToBottom,
-  } = useChatScroll({
-    listRef,
-    messages,
-    conversationId: threadId ?? id,
-    isLoading: isLoadingMessages,
-  });
-
-  useEffect(() => {
-    if (keyboardHeight <= 0 || showScrollToBottom) {
-      return;
-    }
-
-    scrollToBottom(true);
-  }, [keyboardHeight, scrollToBottom, showScrollToBottom]);
+  const { shouldLoadMore, handleScroll, scrollToBottom, showScrollToBottom } =
+    useChatScroll({
+      listRef,
+      messages,
+      conversationId: threadId ?? id,
+      isLoading: isLoadingMessages,
+    });
 
   useEffect(() => {
     if (!pendingAssistantState) {
@@ -336,14 +318,11 @@ export function useChatScreen() {
       const content = text.trim();
 
       lastSubmittedInputRef.current = content;
-      dismissKeyboard();
       setMessage("");
       void sendConversationMessage(content, { optimistic: true });
-
-      // Scroll to bottom when user sends message
       scrollToBottom(true);
     },
-    [dismissKeyboard, id, isSending, sendConversationMessage, scrollToBottom],
+    [id, isSending, scrollToBottom, sendConversationMessage],
   );
 
   const handleStopResponse = useCallback(async () => {
@@ -589,10 +568,7 @@ export function useChatScreen() {
     return lastQuizQuestionId;
   }, [messages]);
 
-  // KeyboardAwareWrapper handles the text composer; FlashList padding reserves
-  // the extra action row/gradient space above it.
-  const composerBottomInset = Math.max(0, composerHeight);
-
+  // LegendList contentInsetEndAdjustment reserves space for the floating composer.
   return {
     // Navigation
     id,
@@ -600,6 +576,7 @@ export function useChatScreen() {
 
     // Refs
     listRef,
+    composerRef,
     popoverRef,
 
     // Conversation data
@@ -624,18 +601,14 @@ export function useChatScreen() {
 
     // Scroll handlers
     handleScroll,
-    handleViewableItemsChanged,
-    viewabilityConfig,
     scrollToBottom,
     showScrollToBottom,
+    contentInsetEndAdjustment,
+    onComposerLayout,
 
     // Keyboard state
     composerHeight,
     setComposerHeight,
-    chatFormHeight,
-    setChatFormHeight: handleChatFormHeightChange,
-    composerBottomInset,
-    keyboardHeight,
     setKeyboardHeight,
     blurTrigger,
     isKeyboardOpen,

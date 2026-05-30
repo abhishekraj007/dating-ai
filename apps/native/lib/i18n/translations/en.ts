@@ -196,7 +196,7 @@ export const en: TranslationMap = {
   "chat.sayHello": "Say hello to {{name}}!",
   "chat.aiCharacter": "AI Character",
   "chat.aiCompanion": "your AI companion",
-  "chat.selfie": "Selfie",
+  "chat.selfie": "Photo",
   "chat.selfieLabel": "AI Selfie",
   "chat.clearTitle": "Clear Chat",
   "chat.clearBody":

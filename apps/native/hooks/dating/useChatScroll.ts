@@ -1,54 +1,33 @@
 import { useRef, useCallback, useEffect, useState } from "react";
-import type {
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  ViewabilityConfig,
-} from "react-native";
-import type { ViewToken } from "@shopify/flash-list";
+import type { NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+
+interface ChatListScrollRef {
+  scrollToEnd?: (options?: { animated?: boolean }) => void | Promise<void>;
+  getState?: () => {
+    isNearEnd?: boolean;
+    isAtEnd?: boolean;
+    contentLength?: number;
+  };
+}
 
 interface UseChatScrollOptions {
-  /** The list ref to control scrolling */
-  listRef: React.RefObject<any>;
-  /** Messages array */
-  messages: Array<{ _id: string; [key: string]: any }>;
-  /** Conversation/chat ID */
+  listRef: React.RefObject<ChatListScrollRef | null>;
+  messages: Array<{ _id: string }>;
   conversationId: string | undefined;
-  /** Whether messages are still loading */
   isLoading: boolean;
 }
 
 interface UseChatScrollReturn {
-  /** Call this when onStartReached fires to check if loading should proceed */
   shouldLoadMore: () => boolean;
-  /** Handler for FlashList onScroll to track position */
   handleScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
-  /** Handler for FlashList item visibility changes */
-  handleViewableItemsChanged: (info: {
-    viewableItems: ViewToken<any>[];
-    changed: ViewToken<any>[];
-  }) => void;
-  /** Stable viewability configuration for latest-message detection */
-  viewabilityConfig: ViewabilityConfig;
-  /** Scroll to bottom (call when user sends message) */
   scrollToBottom: (animated?: boolean) => void;
-  /** Whether the floating scroll-to-bottom control should be visible */
   showScrollToBottom: boolean;
 }
 
-const NEAR_BOTTOM_THRESHOLD = 150;
-const INITIAL_SCROLL_DELAY_MS = 32;
-const CHAT_VIEWABILITY_CONFIG: ViewabilityConfig = {
-  itemVisiblePercentThreshold: 25,
-  minimumViewTime: 0,
-};
-
 /**
- * Hook to handle WhatsApp-like chat scroll behavior:
- * 1. First visit to conversation: scroll to bottom
- * 2. Returning to conversation: start at the latest message
- * 3. User sends message: scroll to bottom
- * 4. New AI message while near bottom: auto-scroll
- * 5. Loading older messages at the top: preserve visible position
+ * Tracks scroll-to-bottom visibility and guards pagination.
+ * Initial positioning and follow-new-message behavior are handled by
+ * LegendList's initialScrollAtEnd and maintainScrollAtEnd props.
  */
 export function useChatScroll({
   listRef,
@@ -58,23 +37,15 @@ export function useChatScroll({
 }: UseChatScrollOptions): UseChatScrollReturn {
   const isInitializedRef = useRef(false);
   const prevConversationIdRef = useRef<string | undefined>(undefined);
-  const prevMessagesLengthRef = useRef(0);
-  const prevFirstMessageIdRef = useRef<string | undefined>(undefined);
-  const isNearBottomRef = useRef(true);
   const pendingScrollToBottomRef = useRef<{ animated: boolean } | null>(null);
   const showScrollToBottomRef = useRef(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
   const messagesLength = messages.length;
-  const firstMessageId = messages[0]?._id;
 
-  // Reset when conversation changes
   if (conversationId !== prevConversationIdRef.current) {
     isInitializedRef.current = false;
     prevConversationIdRef.current = conversationId;
-    prevMessagesLengthRef.current = 0;
-    prevFirstMessageIdRef.current = undefined;
-    isNearBottomRef.current = true;
     pendingScrollToBottomRef.current = null;
     showScrollToBottomRef.current = false;
   }
@@ -92,112 +63,67 @@ export function useChatScroll({
     updateShowScrollToBottom(false);
   }, [conversationId, updateShowScrollToBottom]);
 
-  // Initialize the list at the latest message whenever a conversation opens.
   useEffect(() => {
-    if (isInitializedRef.current) return;
-    if (!conversationId || messagesLength === 0 || isLoading) return;
-
-    isInitializedRef.current = true;
-    prevMessagesLengthRef.current = messagesLength;
-    prevFirstMessageIdRef.current = firstMessageId;
-    isNearBottomRef.current = true;
-    updateShowScrollToBottom(false);
-    const timer = setTimeout(() => {
-      listRef.current?.scrollToEnd?.({ animated: false });
-    }, INITIAL_SCROLL_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [
-    conversationId,
-    isLoading,
-    listRef,
-    firstMessageId,
-    messagesLength,
-    updateShowScrollToBottom,
-  ]);
-
-  // --- Core auto-scroll logic ---
-  // Keep the latest exchange pinned only when the user is already near the
-  // bottom or has just sent a message. Loading older messages at the top
-  // should not trigger this path.
-  useEffect(() => {
-    if (!isInitializedRef.current) return;
-
-    const prevLen = prevMessagesLengthRef.current;
-    const prevFirstMessageId = prevFirstMessageIdRef.current;
-    const curLen = messagesLength;
-    prevMessagesLengthRef.current = curLen;
-    prevFirstMessageIdRef.current = firstMessageId;
-
-    if (curLen <= prevLen) return;
-
-    const didPrependOlderMessages =
-      prevFirstMessageId !== undefined &&
-      firstMessageId !== undefined &&
-      firstMessageId !== prevFirstMessageId;
-
-    if (didPrependOlderMessages) {
+    if (isInitializedRef.current) {
+      return;
+    }
+    if (!conversationId || messagesLength === 0 || isLoading) {
       return;
     }
 
+    isInitializedRef.current = true;
+    updateShowScrollToBottom(false);
+  }, [conversationId, isLoading, messagesLength, updateShowScrollToBottom]);
+
+  useEffect(() => {
     const pendingScroll = pendingScrollToBottomRef.current;
-    const shouldAutoScroll = pendingScroll || isNearBottomRef.current;
-    if (!shouldAutoScroll) return;
+    if (!pendingScroll || messagesLength === 0) {
+      return;
+    }
 
     pendingScrollToBottomRef.current = null;
-    listRef.current?.scrollToEnd?.({
-      animated: pendingScroll?.animated ?? true,
+    const frameId = requestAnimationFrame(() => {
+      void listRef.current?.scrollToEnd?.({ animated: pendingScroll.animated });
+      updateShowScrollToBottom(false);
     });
-    isNearBottomRef.current = true;
-    updateShowScrollToBottom(false);
-  }, [firstMessageId, messagesLength, listRef, updateShowScrollToBottom]);
 
-  // Track scroll position continuously
+    return () => cancelAnimationFrame(frameId);
+  }, [listRef, messagesLength, updateShowScrollToBottom]);
+
+  const syncScrollToBottomVisibility = useCallback(() => {
+    const state = listRef.current?.getState?.();
+    if (!state) {
+      return;
+    }
+
+    const hasContent = (state.contentLength ?? 0) > 0;
+    const isNearLatest = state.isNearEnd ?? state.isAtEnd ?? true;
+    updateShowScrollToBottom(hasContent && !isNearLatest);
+  }, [listRef, updateShowScrollToBottom]);
+
   const handleScroll = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const { contentOffset, contentSize, layoutMeasurement } =
-        event.nativeEvent;
-
-      const distanceFromBottom =
-        contentSize.height - layoutMeasurement.height - contentOffset.y;
-      const isNearBottom = distanceFromBottom <= NEAR_BOTTOM_THRESHOLD;
-
-      isNearBottomRef.current = isNearBottom;
-      updateShowScrollToBottom(!isNearBottom && contentSize.height > 0);
+    (_event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      syncScrollToBottomVisibility();
     },
-    [updateShowScrollToBottom],
+    [syncScrollToBottomVisibility],
   );
 
   const scrollToBottom = useCallback(
     (animated = true) => {
       pendingScrollToBottomRef.current = { animated };
-      if (isInitializedRef.current && messagesLength > 0) {
-        listRef.current?.scrollToEnd?.({ animated });
-      }
-      isNearBottomRef.current = true;
+      void listRef.current?.scrollToEnd?.({ animated });
       updateShowScrollToBottom(false);
     },
-    [listRef, messagesLength, updateShowScrollToBottom],
+    [listRef, updateShowScrollToBottom],
   );
 
   const shouldLoadMore = useCallback(() => {
     return isInitializedRef.current && !isLoading;
   }, [isLoading]);
 
-  const handleViewableItemsChanged = useCallback(
-    (_info: { viewableItems: ViewToken<any>[]; changed: ViewToken<any>[] }) => {
-      if (messagesLength === 0) {
-        isNearBottomRef.current = true;
-        updateShowScrollToBottom(false);
-      }
-    },
-    [messagesLength, updateShowScrollToBottom],
-  );
-
   return {
     shouldLoadMore,
     handleScroll,
-    handleViewableItemsChanged,
-    viewabilityConfig: CHAT_VIEWABILITY_CONFIG,
     scrollToBottom,
     showScrollToBottom,
   };

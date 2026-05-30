@@ -4,6 +4,7 @@ import {
   View,
   type LayoutChangeEvent,
 } from "react-native";
+import type { RefObject } from "react";
 import { KeyboardComposer } from "@launchhq/react-native-keyboard-composer";
 import { Button, Spinner, useThemeColor } from "heroui-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,7 +18,7 @@ import {
 import { useTranslation } from "@/hooks/use-translation";
 import { useColorScheme } from "@/lib/use-color-scheme";
 
-const KEYBOARD_COMPOSER_GAP = 10;
+export const KEYBOARD_GAP = 8;
 const MIN_BOTTOM_PADDING = 16;
 
 function useComposerGradientColors(backgroundColor: string) {
@@ -41,9 +42,10 @@ function useComposerGradientColors(backgroundColor: string) {
 }
 
 interface ChatFormProps {
+  composerRef: RefObject<View | null>;
+  onComposerLayout: (event: LayoutChangeEvent) => void;
   composerHeight: number;
   onComposerHeightChange: (height: number) => void;
-  onFormHeightChange: (height: number) => void;
   onKeyboardHeightChange: (height: number) => void;
   blurTrigger: number;
   isKeyboardOpen: boolean;
@@ -63,9 +65,10 @@ interface ChatFormProps {
 }
 
 export function ChatForm({
+  composerRef,
+  onComposerLayout,
   composerHeight,
   onComposerHeightChange,
-  onFormHeightChange,
   onKeyboardHeightChange,
   blurTrigger,
   isKeyboardOpen,
@@ -91,18 +94,15 @@ export function ChatForm({
   const composerGradientColors = useComposerGradientColors(backgroundColor);
   const actionButtonColor = "";
   const bottomOverlayInset = isKeyboardOpen
-    ? KEYBOARD_COMPOSER_GAP
+    ? 0
     : Math.max(safeAreaBottom, MIN_BOTTOM_PADDING);
-
-  const handleFormLayout = (event: LayoutChangeEvent) => {
-    onFormHeightChange(event.nativeEvent.layout.height);
-  };
 
   return (
     <View
       pointerEvents="box-none"
-      onLayout={handleFormLayout}
-      style={[styles.container, { bottom: -bottomOverlayInset }]}
+      ref={composerRef}
+      onLayout={onComposerLayout}
+      style={styles.container}
     >
       {/* {showScrollToBottom ? (
         <View pointerEvents="box-none" style={styles.scrollToBottomContainer}>
@@ -216,12 +216,7 @@ export function ChatForm({
 
 const styles = StyleSheet.create({
   container: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 20,
-    elevation: 20,
+    width: "100%",
   },
   composerGradient: {
     paddingTop: 16,

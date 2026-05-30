@@ -3,10 +3,7 @@ import { Platform } from "react-native";
 export const isDevelopment = process.env.NODE_ENV === "development";
 const simulateProd = process.env.EXPO_PUBLIC_SIMULATE_PROD === "true";
 
-console.log("Payment config - simulateProd:", simulateProd);
-
 export const getAPIKey = () => {
-  console.log("getAPIKey - isDevelopment:", isDevelopment);
   if (isDevelopment && !simulateProd) {
     return process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY || "";
   }
