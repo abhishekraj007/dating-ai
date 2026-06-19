@@ -22,7 +22,7 @@ export default function NotFound() {
           className="mb-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-lg"
         >
           <Image
-            src="/logo-dark.png"
+            src="/logo-transparent.png"
             alt="FeelAI"
             width={120}
             height={36}
@@ -30,7 +30,7 @@ export default function NotFound() {
             className="block h-9 w-auto dark:hidden"
           />
           <Image
-            src="/logo-white.png"
+            src="/logo-transparent.png"
             alt="FeelAI"
             width={120}
             height={36}

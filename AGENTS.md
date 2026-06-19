@@ -20,7 +20,7 @@
   - For web UI design, accessibility, and UX audits: check `web-design-guidelines`
   - For building visually polished web interfaces, landing pages, or dashboards: check `frontend-design`
   - For upgrading Expo SDK or fixing dependency issues: check `upgrading-expo`
-  - Skills are located in `.agent/skills/` - read the SKILL.md file for each relevant skill before implementing
+  - Read the SKILL.md file for each relevant skill before implementing
 - **ALWAYS check heroui-react MCP server for available components before using shadcn-ui components**
 - use heroui-react and shadcn-ui for web components and screens development
 - use Use shadcn CLI for installing any new web components

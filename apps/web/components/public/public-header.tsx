@@ -45,14 +45,14 @@ export function PublicHeader() {
           <div className="flex min-w-0 items-center gap-2">
             <Link href="/" className="flex min-w-0 items-center gap-2">
               <Image
-                src="/logo-dark.png"
+                src="/logo-transparent.png"
                 alt="FeelAI logo"
                 width={32}
                 height={32}
                 className="block dark:hidden"
               />
               <Image
-                src="/logo-white.png"
+                src="/logo-transparent.png"
                 alt="FeelAI logo"
                 width={32}
                 height={32}
