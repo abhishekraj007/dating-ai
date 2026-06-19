@@ -2,6 +2,7 @@ import Image from "next/image";
 import { CharacterGrid } from "@/components/public/character-grid";
 import type { PublicProfileCard } from "@/components/public/character-card";
 import { DiscoverPreferenceDialog } from "@/components/public/discover-preference-dialog";
+import { HomeSeoContent } from "@/components/public/home-seo-content";
 import { PublicFilterBar } from "@/components/public/public-filter-bar";
 import { getSegmentConfig, type PublicSegment } from "@/lib/public-segments";
 
@@ -51,12 +52,11 @@ export function PublicPageContent({
                   ? "Discover AI Characters built for real conversations and companionship."
                   : config.heroTitle}
               </h1>
-              {/* Hero description copy lives in page metadata + JSON-LD */}
-              {/* <p className="hidden max-w-lg text-sm leading-6 text-white/72 sm:block">
+              <p className="hidden max-w-lg text-sm leading-6 text-white/72 sm:block">
                 {isHome
                   ? "Browse AI girlfriends, AI boyfriends, and virtual companions for dating-style chat, friendship, and roleplay."
                   : config.heroDescription}
-              </p> */}
+              </p>
             </div>
           </div>
         </div>
@@ -70,6 +70,8 @@ export function PublicPageContent({
           variant={variant}
         />
       </section>
+
+      {isHome ? <HomeSeoContent /> : null}
     </main>
   );
 }

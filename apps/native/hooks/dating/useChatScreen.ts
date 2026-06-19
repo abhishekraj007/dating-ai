@@ -9,9 +9,10 @@ import {
   useDeleteMessage,
   useClearChat,
 } from "./useMessages";
-import { useRequestChatImage } from "./useImageRequest";
-import type { ImageRequestOptions } from "./useImageRequest";
+import { useRequestChatMedia } from "./useImageRequest";
+import type { MediaRequestOptions } from "./useImageRequest";
 import { useChatScroll } from "./useChatScroll";
+import { useChatKeyboardList } from "./useChatKeyboardList";
 import { useCredits } from "./useCredits";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -53,8 +54,13 @@ export function useChatScreen() {
         : "ios";
   const [message, setMessage] = useState("");
   const [isStopRequested, setIsStopRequested] = useState(false);
-  const listRef = useRef<any>(null);
   const lastSubmittedInputRef = useRef("");
+  const {
+    listRef,
+    composerRef,
+    contentInsetEndAdjustment,
+    onComposerLayout,
+  } = useChatKeyboardList();
 
   // Keyboard composer state
   const [composerHeight, setComposerHeight] = useState(48);
@@ -78,7 +84,7 @@ export function useChatScreen() {
     hasMore,
     loadMore,
     isAITyping,
-  } = useMessages(threadId);
+  } = useMessages(threadId, id as Id<"aiConversations">);
 
   const { sendMessage, sendMessageWithOptimistic, retryMessage, stopResponse } =
     useSendMessage();
@@ -92,7 +98,7 @@ export function useChatScreen() {
   // Image request state
   const [isImageSheetOpen, setIsImageSheetOpen] = useState(false);
   const [isRequestingImage, setIsRequestingImage] = useState(false);
-  const { requestImage } = useRequestChatImage();
+  const { requestMedia } = useRequestChatMedia();
   const { deleteMessage } = useDeleteMessage();
   const { clearChat } = useClearChat();
   const [isClearing, setIsClearing] = useState(false);
@@ -183,19 +189,13 @@ export function useChatScreen() {
   }, [router]);
 
   // Chat scroll behavior
-  const {
-    shouldLoadMore,
-    handleScroll,
-    handleViewableItemsChanged,
-    viewabilityConfig,
-    scrollToBottom,
-    showScrollToBottom,
-  } = useChatScroll({
-    listRef,
-    messages,
-    conversationId: threadId ?? id,
-    isLoading: isLoadingMessages,
-  });
+  const { shouldLoadMore, handleScroll, scrollToBottom, showScrollToBottom } =
+    useChatScroll({
+      listRef,
+      messages,
+      conversationId: threadId ?? id,
+      isLoading: isLoadingMessages,
+    });
 
   useEffect(() => {
     if (!pendingAssistantState) {
@@ -318,14 +318,11 @@ export function useChatScreen() {
       const content = text.trim();
 
       lastSubmittedInputRef.current = content;
-      dismissKeyboard();
       setMessage("");
       void sendConversationMessage(content, { optimistic: true });
-
-      // Scroll to bottom when user sends message
       scrollToBottom(true);
     },
-    [dismissKeyboard, id, isSending, sendConversationMessage, scrollToBottom],
+    [id, isSending, scrollToBottom, sendConversationMessage],
   );
 
   const handleStopResponse = useCallback(async () => {
@@ -351,30 +348,34 @@ export function useChatScreen() {
   }, [clearPendingAssistantState, id, showTypingIndicator, stopResponse, t]);
 
   const handleImageRequest = useCallback(
-    async (options: ImageRequestOptions) => {
+    async (options: MediaRequestOptions) => {
       if (!id) return;
 
-      // Client-side credit check for image requests (5 credits)
-      if (!hasEnoughCredits("IMAGE_REQUEST")) {
+      const creditAction =
+        options.mediaType === "video" ? "VIDEO_REQUEST" : "IMAGE_REQUEST";
+
+      if (!hasEnoughCredits(creditAction)) {
         handleOpenCreditsModal();
         return;
       }
 
       setIsRequestingImage(true);
       try {
-        await requestImage(id, options, platform);
+        await requestMedia(id, options, platform);
         setIsImageSheetOpen(false);
-      } catch (error: any) {
-        if (error.message && error.message.includes("Insufficient credits")) {
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : String(error);
+        if (message.includes("Insufficient credits")) {
           handleOpenCreditsModal();
         } else {
-          console.error("Failed to request image:", error);
+          console.error("Failed to request media:", error);
         }
       } finally {
         setIsRequestingImage(false);
       }
     },
-    [id, requestImage, hasEnoughCredits, handleOpenCreditsModal, platform],
+    [id, requestMedia, hasEnoughCredits, handleOpenCreditsModal, platform],
   );
 
   const handleOpenImageSheet = () => {
@@ -567,9 +568,7 @@ export function useChatScreen() {
     return lastQuizQuestionId;
   }, [messages]);
 
-  // Total bottom inset for messages
-  const totalBottomInset = composerHeight + 16;
-
+  // LegendList contentInsetEndAdjustment reserves space for the floating composer.
   return {
     // Navigation
     id,
@@ -577,6 +576,7 @@ export function useChatScreen() {
 
     // Refs
     listRef,
+    composerRef,
     popoverRef,
 
     // Conversation data
@@ -601,15 +601,14 @@ export function useChatScreen() {
 
     // Scroll handlers
     handleScroll,
-    handleViewableItemsChanged,
-    viewabilityConfig,
     scrollToBottom,
     showScrollToBottom,
+    contentInsetEndAdjustment,
+    onComposerLayout,
 
     // Keyboard state
     composerHeight,
     setComposerHeight,
-    keyboardHeight,
     setKeyboardHeight,
     blurTrigger,
     isKeyboardOpen,
@@ -638,7 +637,6 @@ export function useChatScreen() {
 
     // Computed values
     interactiveQuizQuestionId,
-    totalBottomInset,
 
     // Handlers
     handleSend,

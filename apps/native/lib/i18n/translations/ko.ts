@@ -308,6 +308,10 @@ export const ko: TranslationMap = {
   "quiz.started": "퀴즈 시작",
   "quiz.letsPlay": "퀴즈를 해봅시다!",
   "quiz.endQuiz": "퀴즈 종료",
+
+  "media.recordingVideo": "동영상 촬영 중...",
+  "media.takingPhoto": "사진 촬영 중...",
+
   "signIn.failed": "로그인에 실패했습니다",
   "signUp.failed": "회원가입에 실패했습니다",
   "signUp.createAccount": "계정 만들기",

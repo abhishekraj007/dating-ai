@@ -6,6 +6,7 @@ import { Avatar, ScrollShadow, Skeleton } from "heroui-native";
 import { Image } from "lucide-react-native";
 import { Image as ExpoImage } from "expo-image";
 import { Header } from "@/components";
+import { CachedAvatarImage } from "@/components/cached-avatar-image";
 import { GenderTabs, LevelBadge } from "@/components/dating";
 import { parseStructuredContent } from "@/components/dating/bubbles/message-types";
 import { useConversations, useStartConversation } from "@/hooks/dating";
@@ -62,8 +63,14 @@ export default function ChatsScreen() {
       if (structuredContent.type === "image_response") {
         return { text: t("chats.sentPhoto"), isImage: true };
       }
+      if (structuredContent.type === "video_response") {
+        return { text: t("chats.sentVideo"), isImage: true };
+      }
       if (structuredContent.type === "image_request") {
         return { text: t("chats.requestedPhoto"), isImage: true };
+      }
+      if (structuredContent.type === "video_request") {
+        return { text: t("chats.requestedVideo"), isImage: true };
       }
       if (
         structuredContent.type === "quiz_question" ||
@@ -210,7 +217,7 @@ export default function ChatsScreen() {
       >
         <Avatar alt="" size="md">
           {item.profile?.avatarUrl ? (
-            <Avatar.Image source={{ uri: item.profile.avatarUrl }} />
+            <CachedAvatarImage uri={item.profile.avatarUrl} />
           ) : (
             <Avatar.Fallback>{item.profile?.name?.[0] ?? "AI"}</Avatar.Fallback>
           )}

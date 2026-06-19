@@ -5,6 +5,12 @@ import {
   type QuizAnswerResultData,
   type ImageRequestData,
   type ImageResponseData,
+  type ImageProcessingData,
+  type ImageFailedData,
+  type VideoRequestData,
+  type VideoResponseData,
+  type VideoProcessingData,
+  type VideoFailedData,
   type ChatErrorData,
   type CreditsRequiredData,
 } from "./bubbles";
@@ -13,11 +19,13 @@ import { QuizResultBubble } from "./bubbles/QuizResultBubble";
 import { QuizStartBubble } from "./bubbles/QuizStartBubble";
 import { ChatErrorBubble } from "./bubbles/ChatErrorBubble";
 import { CreditsRequiredBubble } from "./bubbles/CreditsRequiredBubble";
-import { ImageRequestBubble, ImageResponseBubble } from "./bubbles/ImageBubble";
+import { ImageRequestBubble, ImageResponseBubble, ImageProcessingBubble, ImageFailedBubble } from "./bubbles/ImageBubble";
+import { VideoRequestBubble, VideoResponseBubble, VideoProcessingBubble, VideoFailedBubble } from "./bubbles/VideoBubble";
 import {
   AITextBubble,
   UserTextBubble,
   UserImageRequestBubble,
+  UserVideoRequestBubble,
 } from "./bubbles/TextBubble";
 
 interface MessageBubbleProps {
@@ -59,6 +67,15 @@ export const MessageBubble = ({
 
   // User messages
   if (isUser) {
+    if (structuredContent?.type === "video_request") {
+      return (
+        <UserVideoRequestBubble
+          data={structuredContent as VideoRequestData}
+          time={time}
+          onLongPress={onLongPress}
+        />
+      );
+    }
     if (structuredContent?.type === "image_request") {
       return (
         <UserImageRequestBubble
@@ -112,10 +129,58 @@ export const MessageBubble = ({
           />
         );
 
+      case "video_request":
+        return (
+          <VideoRequestBubble
+            data={structuredContent as VideoRequestData}
+            {...bubbleProps}
+          />
+        );
+
+      case "video_processing":
+        return (
+          <VideoProcessingBubble
+            data={structuredContent as VideoProcessingData}
+            {...bubbleProps}
+          />
+        );
+
+      case "video_failed":
+        return (
+          <VideoFailedBubble
+            data={structuredContent as VideoFailedData}
+            {...bubbleProps}
+          />
+        );
+
+      case "video_response":
+        return (
+          <VideoResponseBubble
+            data={structuredContent as VideoResponseData}
+            {...bubbleProps}
+          />
+        );
+
       case "image_request":
         return (
           <ImageRequestBubble
             data={structuredContent as ImageRequestData}
+            {...bubbleProps}
+          />
+        );
+
+      case "image_processing":
+        return (
+          <ImageProcessingBubble
+            data={structuredContent as ImageProcessingData}
+            {...bubbleProps}
+          />
+        );
+
+      case "image_failed":
+        return (
+          <ImageFailedBubble
+            data={structuredContent as ImageFailedData}
             {...bubbleProps}
           />
         );

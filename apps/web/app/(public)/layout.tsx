@@ -19,7 +19,7 @@ export default function PublicLayout({
         >
           <PublicHeader />
         </Suspense>
-        <div className="mx-auto flex w-full max-w-[1600px] flex-1 pb-24 md:min-h-0 md:pb-0">
+        <div className="mx-auto flex w-full flex-1 pb-24 md:min-h-0 md:pb-0">
           <Suspense fallback={<div className="hidden md:flex md:w-72" />}>
             <PublicSidebar />
           </Suspense>

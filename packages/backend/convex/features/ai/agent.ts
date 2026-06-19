@@ -313,6 +313,10 @@ export function buildPersonalityPrompt(
 When asked for a selfie/photo/picture, use the generateImage tool with appropriate style options.
 The image will be created by editing your reference photo so your identity and appearance stay consistent while matching the requested style.
 
+### Video Requests:
+When asked for a video, clip, reel, or anything with movement, use the generateVideo tool with appropriate style options.
+Use generateImage for still photos and generateVideo for motion/video requests.
+
 ### Quiz/Trivia Game:
 When users want to play a quiz about you, use the generateQuiz tool conversationally:
 1. Use action="start" to begin the quiz enthusiastically
@@ -481,6 +485,47 @@ export const generateImageTool = createTool({
 });
 
 /**
+ * Tool: Generate a custom video
+ * Called when user requests a video, clip, or motion content.
+ */
+export const generateVideoTool = createTool({
+  description:
+    "Generate a custom video clip. Use when the user asks for a video, clip, reel, or any moving footage of yourself. Include style options based on user preferences. The backend uses your reference image to preserve your identity while generating motion.",
+  args: z.object({
+    description: z
+      .string()
+      .describe(
+        "Detailed description of the video to generate, including movement or action",
+      ),
+    hairstyle: z
+      .string()
+      .optional()
+      .describe("Hairstyle for the video"),
+    clothing: z
+      .string()
+      .optional()
+      .describe("Clothing/outfit for the video"),
+    scene: z
+      .string()
+      .optional()
+      .describe("Scene/background for the video"),
+  }),
+  handler: async (_ctx, args): Promise<string> => {
+    return JSON.stringify({
+      type: "video_request",
+      description: args.description,
+      styleOptions: {
+        hairstyle: args.hairstyle,
+        clothing: args.clothing,
+        scene: args.scene,
+        description: args.description,
+      },
+      message: "Give me a sec while I record that video!",
+    });
+  },
+});
+
+/**
  * Tool: Generate a quiz question
  * Called when user wants to play a quiz or trivia game.
  * The agent generates questions inline as part of the conversation.
@@ -602,6 +647,7 @@ export function createAIProfileAgent(
   provider: AgentProvider = AI_AGENT_PROVIDER,
   nsfwEnabled: boolean = true,
   chatLanguage: AppLanguage = DEFAULT_LANGUAGE,
+  inFlightMediaContext = "",
 ) {
   const languageModel = getAgentLanguageModel(provider);
   if (!languageModel) {
@@ -627,9 +673,12 @@ export function createAIProfileAgent(
     name: profile.name,
     languageModel,
     textEmbeddingModel: embeddingModel,
-    instructions: buildPersonalityPrompt(profile, nsfwEnabled, chatLanguage),
+    instructions:
+      buildPersonalityPrompt(profile, nsfwEnabled, chatLanguage) +
+      inFlightMediaContext,
     tools: {
       generateImage: generateImageTool,
+      generateVideo: generateVideoTool,
       generateQuiz: generateQuizTool,
     },
     maxSteps: 5,

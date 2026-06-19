@@ -65,7 +65,7 @@ export default function MainLayout({
 
         <div
           className={cn(
-            "mx-auto flex w-full max-w-[1600px] flex-1 min-h-0 md:h-screen md:pb-0",
+            "mx-auto flex w-full flex-1 min-h-0 md:h-screen md:pb-0",
             isChatConversation ? "pb-0" : "pb-24",
           )}
         >

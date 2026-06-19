@@ -313,6 +313,10 @@ export const hi: TranslationMap = {
   "quiz.started": "क्विज़ शुरू हुआ",
   "quiz.letsPlay": "चलो क्विज़ खेलते हैं!",
   "quiz.endQuiz": "क्विज़ समाप्त करें",
+
+  "media.recordingVideo": "वीडियो रिकॉर्ड हो रहा है...",
+  "media.takingPhoto": "फ़ोटो ली जा रही है...",
+
   "signIn.failed": "साइन इन विफल",
   "signUp.failed": "साइन अप विफल",
   "signUp.createAccount": "अकाउंट बनाएं",

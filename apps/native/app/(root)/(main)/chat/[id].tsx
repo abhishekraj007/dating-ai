@@ -1,20 +1,18 @@
 import { View, Text, Pressable, useWindowDimensions } from "react-native";
-import { FlashList } from "@shopify/flash-list";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { type LegendListRenderItemProps } from "@legendapp/list/react-native";
+import { KeyboardAwareLegendList } from "@legendapp/list/keyboard";
 import {
-  Button,
-  Avatar,
-  Skeleton,
-  Spinner,
-  Popover,
-  ScrollShadow,
-} from "heroui-native";
-import { LinearGradient } from "expo-linear-gradient";
+  KeyboardGestureArea,
+  KeyboardStickyView,
+} from "react-native-keyboard-controller";
+import {
+  useSafeAreaInsets,
+  SafeAreaView,
+} from "react-native-safe-area-context";
+import { Button, Avatar, Skeleton, Spinner, Popover } from "heroui-native";
+import { CachedAvatarImage } from "@/components/cached-avatar-image";
 import {
   ChevronLeft,
-  Circle,
-  Dot,
-  DotIcon,
   Hand,
   MessageCircle,
   MoreVertical,
@@ -23,6 +21,7 @@ import {
 import { LanguageSheet } from "@/components/language/language-sheet";
 import {
   ChatForm,
+  KEYBOARD_GAP,
   MessageBubble,
   ImageRequestSheet,
   MessageActionsSheet,
@@ -34,10 +33,31 @@ import { useChatScreen } from "@/hooks/dating";
 import { useThemeColor } from "heroui-native";
 import { useTranslation } from "@/hooks/use-translation";
 
-const BOTTOM_SHADOW_SIZE = 20;
+const CHAT_ESTIMATED_ITEM_SIZE = 120;
+
+type ChatMessage = {
+  _id: string;
+  _creationTime: number;
+  role: string;
+  content?: string;
+  order: number;
+};
+
+function getMessageContentType(content: unknown) {
+  if (typeof content !== "string") {
+    return "text";
+  }
+
+  return content.match(/"type":"([^"]+)"/)?.[1] ?? "text";
+}
+
+function getMessageRenderKey(item: { _id: string; content?: string }) {
+  return item._id;
+}
 
 export default function ChatScreen() {
   const { t } = useTranslation();
+  const { bottom: safeAreaBottom } = useSafeAreaInsets();
   const foregroundColor = useThemeColor("foreground");
   const foregroundColorMuted = useThemeColor("muted");
   const { height } = useWindowDimensions();
@@ -45,16 +65,19 @@ export default function ChatScreen() {
 
   const {
     // Navigation
+    id,
     router,
 
     // Refs
     listRef,
+    composerRef,
     popoverRef,
 
     // Conversation data
     conversation,
     profile,
     messages,
+    threadId,
 
     // Loading states
     isLoadingConversation,
@@ -72,10 +95,10 @@ export default function ChatScreen() {
 
     // Scroll handlers
     handleScroll,
-    handleViewableItemsChanged,
-    viewabilityConfig,
     scrollToBottom,
     showScrollToBottom,
+    contentInsetEndAdjustment,
+    onComposerLayout,
 
     // Keyboard state
     composerHeight,
@@ -126,9 +149,7 @@ export default function ChatScreen() {
     handleOpenCreditsModal,
   } = useChatScreen();
 
-  // console.log("messages", messages);
-
-  const renderMessage = ({ item }: { item: any }) => {
+  const renderMessage = ({ item }: LegendListRenderItemProps<ChatMessage>) => {
     const isUser = item.role === "user";
     const isInteractiveQuizQuestion = item._id === interactiveQuizQuestionId;
 
@@ -187,7 +208,7 @@ export default function ChatScreen() {
               >
                 <Avatar size="sm" alt={profile?.name ?? "AI"}>
                   {profile?.avatarUrl ? (
-                    <Avatar.Image source={{ uri: profile.avatarUrl }} />
+                    <CachedAvatarImage uri={profile.avatarUrl} />
                   ) : (
                     <Avatar.Fallback>
                       {profile?.name?.[0] ?? "AI"}
@@ -258,145 +279,159 @@ export default function ChatScreen() {
         </View>
 
         <View style={{ flex: 1 }}>
-          {/* Messages with bottom scroll shadow */}
-          <View style={{ flex: 1 }}>
-            <ScrollShadow
-              size={BOTTOM_SHADOW_SIZE}
-              visibility="bottom"
-              LinearGradientComponent={LinearGradient}
+          <KeyboardGestureArea interpolator="ios" style={{ flex: 1 }}>
+            <KeyboardAwareLegendList
+              key={threadId ?? id}
+              ref={listRef}
+              data={messages}
+              renderItem={renderMessage}
+              keyExtractor={getMessageRenderKey}
+              getItemType={(item) => getMessageContentType(item.content)}
+              recycleItems={false}
+              alignItemsAtEnd
+              initialScrollAtEnd
+              maintainScrollAtEnd={{
+                animated: true,
+                on: { dataChange: true },
+              }}
+              maintainScrollAtEndThreshold={0.03}
+              maintainVisibleContentPosition={{ data: true, size: true }}
+              contentInsetEndAdjustment={contentInsetEndAdjustment}
+              keyboardOffset={safeAreaBottom}
               style={{ flex: 1 }}
-            >
-              <FlashList
-                ref={listRef}
-                data={messages}
-                renderItem={renderMessage}
-                keyExtractor={(item) => item._id}
-                contentContainerStyle={{
-                  paddingTop: 16,
-                  paddingBottom: 16,
-                }}
-                showsVerticalScrollIndicator={false}
-                keyboardDismissMode="interactive"
-                keyboardShouldPersistTaps="handled"
-                onScroll={handleScroll}
-                onViewableItemsChanged={handleViewableItemsChanged}
-                viewabilityConfig={viewabilityConfig}
-                onScrollBeginDrag={dismissKeyboard}
-                scrollEventThrottle={16}
-                onStartReached={() => {
-                  if (!shouldLoadMore() || !hasMore || isLoadingMore) {
-                    return;
-                  }
-                  loadMore();
-                }}
-                onStartReachedThreshold={0.3}
-                ListHeaderComponent={
-                  isLoadingMore ? (
-                    <View className="py-4 items-center">
-                      <Spinner size="sm" />
-                    </View>
-                  ) : null
+              contentContainerStyle={{ paddingTop: 16 }}
+              showsVerticalScrollIndicator={false}
+              keyboardDismissMode="interactive"
+              keyboardShouldPersistTaps="handled"
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+              onStartReached={() => {
+                if (!shouldLoadMore() || !hasMore || isLoadingMore) {
+                  return;
                 }
-                ListFooterComponent={
-                  showTypingIndicator ? (
-                    <View className="pt-2">
-                      <TypingIndicator
-                        avatarUrl={profile?.avatarUrl}
-                        profileName={profile?.name}
-                      />
-                    </View>
-                  ) : null
-                }
-                ListEmptyComponent={
-                  isLoadingConversation || isLoadingMessages ? (
-                    <View className="p-4 gap-4">
-                      <View className="flex-row gap-2">
-                        <Skeleton className="w-8 h-8 rounded-full" />
-                        <View className="gap-2">
-                          <Skeleton className="h-16 w-52 rounded-2xl rounded-tl-sm" />
-                          <Skeleton className="h-3 w-12" />
-                        </View>
-                      </View>
-                      <View className="flex-row justify-end">
-                        <View className="gap-2 items-end">
-                          <Skeleton className="h-10 w-40 rounded-2xl rounded-br-sm" />
-                          <Skeleton className="h-3 w-10" />
-                        </View>
-                      </View>
-                      <View className="flex-row gap-2">
-                        <Skeleton className="w-8 h-8 rounded-full" />
-                        <View className="gap-2">
-                          <Skeleton className="h-24 w-64 rounded-2xl rounded-tl-sm" />
-                          <Skeleton className="h-3 w-12" />
-                        </View>
+                loadMore();
+              }}
+              onStartReachedThreshold={0.3}
+              ListHeaderComponent={
+                isLoadingMore ? (
+                  <View className="py-4 items-center">
+                    <Spinner size="sm" />
+                  </View>
+                ) : null
+              }
+              ListFooterComponent={
+                showTypingIndicator ? (
+                  <View className="pt-2">
+                    <TypingIndicator
+                      avatarUrl={profile?.avatarUrl}
+                      profileName={profile?.name}
+                    />
+                  </View>
+                ) : null
+              }
+              ListEmptyComponent={
+                isLoadingConversation || isLoadingMessages ? (
+                  <View className="p-4 gap-4">
+                    <View className="flex-row gap-2">
+                      <Skeleton className="w-8 h-8 rounded-full" />
+                      <View className="gap-2">
+                        <Skeleton className="h-16 w-52 rounded-2xl rounded-tl-sm" />
+                        <Skeleton className="h-3 w-12" />
                       </View>
                     </View>
-                  ) : !conversation ? (
-                    <View
-                      className="flex-1 items-center justify-center px-6 pt-20"
-                      style={{
-                        height: emptyHeight,
-                      }}
+                    <View className="flex-row justify-end">
+                      <View className="gap-2 items-end">
+                        <Skeleton className="h-10 w-40 rounded-2xl rounded-br-sm" />
+                        <Skeleton className="h-3 w-10" />
+                      </View>
+                    </View>
+                    <View className="flex-row gap-2">
+                      <Skeleton className="w-8 h-8 rounded-full" />
+                      <View className="gap-2">
+                        <Skeleton className="h-24 w-64 rounded-2xl rounded-tl-sm" />
+                        <Skeleton className="h-3 w-12" />
+                      </View>
+                    </View>
+                  </View>
+                ) : !conversation ? (
+                  <View
+                    className="flex-1 items-center justify-center px-6 pt-20"
+                    style={{
+                      height: emptyHeight,
+                    }}
+                  >
+                    <Text className="text-foreground text-lg font-semibold mb-2">
+                      {t("chat.conversationNotFound")}
+                    </Text>
+                    <Button className="mt-4" onPress={() => router.back()}>
+                      <Button.Label>{t("common.goBack")}</Button.Label>
+                    </Button>
+                  </View>
+                ) : (
+                  <View
+                    className="flex-1 items-center justify-center px-6 pt-20"
+                    style={{
+                      height: emptyHeight,
+                    }}
+                  >
+                    <Text className="text-foreground text-lg font-semibold">
+                      {t("chat.startConversation")}
+                    </Text>
+                    <Text className="text-muted text-center">
+                      {t("chat.sayHello", {
+                        name: profile?.name ?? t("chat.aiCompanion"),
+                      })}
+                    </Text>
+                    <Button
+                      variant="ghost"
+                      className="mt-4 rounded-full px-6"
+                      isDisabled={isSending || showTypingIndicator}
+                      onPress={() => handleSend("Hi")}
                     >
-                      <Text className="text-foreground text-lg font-semibold mb-2">
-                        {t("chat.conversationNotFound")}
-                      </Text>
-                      <Button className="mt-4" onPress={() => router.back()}>
-                        <Button.Label>{t("common.goBack")}</Button.Label>
-                      </Button>
-                    </View>
-                  ) : (
-                    <View
-                      className="flex-1 items-center justify-center px-6 pt-20"
-                      style={{
-                        height: emptyHeight,
-                      }}
-                    >
-                      <Text className="text-foreground text-lg font-semibold">
-                        {t("chat.startConversation")}
-                      </Text>
-                      <Text className="text-muted text-center">
-                        {t("chat.sayHello", {
-                          name: profile?.name ?? t("chat.aiCompanion"),
-                        })}
-                      </Text>
-                      <Button
-                        variant="ghost"
-                        className="mt-4 rounded-full px-6"
-                        isDisabled={isSending || showTypingIndicator}
-                        onPress={() => handleSend("Hi")}
-                      >
-                        <Button.Label>
-                          <Hand color={foregroundColorMuted} />
-                        </Button.Label>
-                      </Button>
-                    </View>
-                  )
-                }
-              />
-            </ScrollShadow>
-          </View>
+                      <Button.Label>
+                        <Hand color={foregroundColorMuted} />
+                      </Button.Label>
+                    </Button>
+                  </View>
+                )
+              }
+            />
+          </KeyboardGestureArea>
 
-          <ChatForm
-            composerHeight={composerHeight}
-            onComposerHeightChange={setComposerHeight}
-            onKeyboardHeightChange={setKeyboardHeight}
-            blurTrigger={blurTrigger}
-            isKeyboardOpen={isKeyboardOpen}
-            showScrollToBottom={showScrollToBottom}
-            message={message}
-            onChangeMessage={setMessage}
-            onSend={handleSend}
-            onScrollToBottom={() => scrollToBottom(true)}
-            onStopResponse={handleStopResponse}
-            showTypingIndicator={showTypingIndicator}
-            isSending={isSending}
-            isRequestingImage={isRequestingImage}
-            onOpenImageSheet={handleOpenImageSheet}
-            onStartQuiz={handleStartQuiz}
-            onOpenTopicsSheet={handleOpenTopicsSheet}
-            onOpenSuggestionsSheet={handleOpenSuggestionsSheet}
-          />
+          <KeyboardStickyView
+            offset={{ closed: 0 }}
+            pointerEvents="box-none"
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 20,
+            }}
+          >
+            <ChatForm
+              composerRef={composerRef}
+              onComposerLayout={onComposerLayout}
+              composerHeight={composerHeight}
+              onComposerHeightChange={setComposerHeight}
+              onKeyboardHeightChange={setKeyboardHeight}
+              blurTrigger={blurTrigger}
+              isKeyboardOpen={isKeyboardOpen}
+              showScrollToBottom={showScrollToBottom}
+              message={message}
+              onChangeMessage={setMessage}
+              onSend={handleSend}
+              onScrollToBottom={() => scrollToBottom(true)}
+              onStopResponse={handleStopResponse}
+              showTypingIndicator={showTypingIndicator}
+              isSending={isSending}
+              isRequestingImage={isRequestingImage}
+              onOpenImageSheet={handleOpenImageSheet}
+              onStartQuiz={handleStartQuiz}
+              onOpenTopicsSheet={handleOpenTopicsSheet}
+              onOpenSuggestionsSheet={handleOpenSuggestionsSheet}
+            />
+          </KeyboardStickyView>
         </View>
       </View>
 

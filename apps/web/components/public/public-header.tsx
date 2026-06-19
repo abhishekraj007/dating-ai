@@ -40,19 +40,19 @@ export function PublicHeader() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/70 bg-background/90 backdrop-blur md:hidden">
-      <div className="mx-auto max-w-[1600px] px-3 sm:px-4">
+      <div className="mx-auto px-3 sm:px-4">
         <div className="flex h-[60px] items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <Link href="/" className="flex min-w-0 items-center gap-2">
               <Image
-                src="/logo-dark.png"
+                src="/logo-transparent.png"
                 alt="FeelAI logo"
                 width={32}
                 height={32}
                 className="block dark:hidden"
               />
               <Image
-                src="/logo-white.png"
+                src="/logo-transparent.png"
                 alt="FeelAI logo"
                 width={32}
                 height={32}

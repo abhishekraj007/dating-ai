@@ -4,6 +4,7 @@ import Markdown from "react-native-markdown-display";
 import { useMarkdownStyles } from "./useMarkdownStyles";
 import type { AIBubbleProps } from "./message-types";
 import { useTranslation } from "@/hooks/use-translation";
+import { CachedAvatarImage } from "@/components/cached-avatar-image";
 
 interface Props extends AIBubbleProps {
   message?: string;
@@ -41,7 +42,7 @@ export function QuizStartBubble({
       <View className="flex-row px-4">
         <Avatar alt="" size="sm" className="mr-2">
           {avatarUrl ? (
-            <Avatar.Image source={{ uri: avatarUrl }} />
+            <CachedAvatarImage uri={avatarUrl} />
           ) : (
             <Avatar.Fallback>{profileName?.[0] ?? "AI"}</Avatar.Fallback>
           )}

@@ -265,6 +265,7 @@ export default defineSchema({
       }),
     ),
     imageKey: v.optional(v.string()), // R2 key when complete
+    responseMessageId: v.optional(v.string()),
     status: v.union(
       v.literal("pending"),
       v.literal("processing"),
@@ -276,9 +277,48 @@ export default defineSchema({
     creditsCharged: v.number(),
   })
     .index("by_conversation", ["conversationId"])
+    .index("by_conversation_and_status", ["conversationId", "status"])
     .index("by_user", ["userId"])
     .index("by_status", ["status"])
     .index("by_image_key", ["imageKey"]),
+
+  // Chat video generation requests
+  chatVideos: defineTable({
+    conversationId: v.id("aiConversations"),
+    userId: v.string(),
+    aiProfileId: v.id("aiProfiles"),
+    platform: v.optional(
+      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    ),
+    prompt: v.string(),
+    styleOptions: v.optional(
+      v.object({
+        hairstyle: v.optional(v.string()),
+        clothing: v.optional(v.string()),
+        scene: v.optional(v.string()),
+        description: v.optional(v.string()),
+        duration: v.optional(v.number()),
+      }),
+    ),
+    videoKey: v.optional(v.string()),
+    posterKey: v.optional(v.string()),
+    responseMessageId: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    replicateJobId: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+    creditsCharged: v.number(),
+  })
+    .index("by_conversation", ["conversationId"])
+    .index("by_conversation_and_status", ["conversationId", "status"])
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_video_key", ["videoKey"])
+    .index("by_poster_key", ["posterKey"]),
 
   // System AI profile generation jobs (manual + cron)
   profileGenerationJobs: defineTable({

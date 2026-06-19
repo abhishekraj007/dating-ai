@@ -10,5 +10,10 @@ export function getSiteUrl() {
     return `https://${process.env.VERCEL_URL}`;
   }
 
+  if (process.env.NODE_ENV === "production") {
+    return "https://feelai.chat";
+  }
+
   return "http://localhost:3004";
 }
+

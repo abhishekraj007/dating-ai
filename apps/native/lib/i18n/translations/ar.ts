@@ -306,6 +306,10 @@ export const ar: TranslationMap = {
   "quiz.started": "بدأ الاختبار",
   "quiz.letsPlay": "هيا نلعب اختباراً!",
   "quiz.endQuiz": "إنهاء الاختبار",
+
+  "media.recordingVideo": "جارٍ تسجيل فيديو...",
+  "media.takingPhoto": "جارٍ التقاط صورة...",
+
   "signIn.failed": "فشل تسجيل الدخول",
   "signUp.failed": "فشل إنشاء الحساب",
   "signUp.createAccount": "إنشاء حساب",

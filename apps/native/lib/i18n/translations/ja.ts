@@ -316,6 +316,10 @@ export const ja: TranslationMap = {
   "quiz.started": "クイズ開始",
   "quiz.letsPlay": "クイズで遊びましょう！",
   "quiz.endQuiz": "クイズを終了",
+
+  "media.recordingVideo": "動画を撮影中...",
+  "media.takingPhoto": "写真を撮影中...",
+
   "signIn.failed": "サインインに失敗しました",
   "signUp.failed": "サインアップに失敗しました",
   "signUp.createAccount": "アカウントを作成",

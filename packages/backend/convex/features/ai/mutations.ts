@@ -10,6 +10,16 @@ import {
 import { components } from "../../_generated/api";
 import { authComponent } from "../../lib/betterAuth";
 import {
+  chatImageStyleOptionsValidator,
+  chatVideoStyleOptionsValidator,
+} from "./chatMediaValidators";
+import {
+  attachMediaProcessingPlaceholder,
+  buildMediaFailedContent,
+  buildMediaResponseContent,
+  patchAgentMessageContent,
+} from "./chatMediaPlaceholders";
+import {
   calculateRelationshipLevel,
   calculateCompatibilityScore,
   createAIProfileAgent,
@@ -23,9 +33,27 @@ import {
 
 const TEXT_MESSAGE_CREDIT_COST = 1;
 const CHAT_IMAGE_REQUEST_CREDIT_COST = 5;
+const CHAT_VIDEO_REQUEST_CREDIT_COST = 200;
+
+function isLikelyChatVideoRequest(content: string) {
+  const normalized = content.toLowerCase().trim();
+
+  return [
+    /\b(send|show|give|get|see|make|create|generate|record|film|share)\b[\s\S]{0,80}\b(video|clip|reel|movie|footage)\b/,
+    /\b(can|could|would|will)\s+(you|u|i)\b[\s\S]{0,80}\b(video|clip|reel|movie|footage)\b/,
+    /\b(new|another|more|your|ur)\b[\s\S]{0,40}\b(video|clip|reel|movie|footage)\b/,
+    /\b(video|clip|reel|movie|footage)\b[\s\S]{0,40}\b(please|pls|plz|rn|now|of you|from you|for me|your|ur)\b/,
+    /^\s*(video|clip|reel|movie|footage)\??\s*$/,
+    /\b(send|show|make|create)\b[\s\S]{0,80}\b(move|moving|dance|dancing|walk|walking|wave|waving)\b[\s\S]{0,40}\b(video|clip|reel|yourself|you)\b/,
+  ].some((pattern) => pattern.test(normalized));
+}
 
 function isLikelyChatImageRequest(content: string) {
   const normalized = content.toLowerCase().trim();
+
+  if (isLikelyChatVideoRequest(normalized)) {
+    return false;
+  }
 
   return [
     /\b(send|show|give|get|see|take|snap|share|make|create|generate)\b[\s\S]{0,80}\b(selfie|photo|picture|pic|image|shot|snap)\b/,
@@ -36,12 +64,13 @@ function isLikelyChatImageRequest(content: string) {
   ].some((pattern) => pattern.test(normalized));
 }
 
-async function saveImageCreditsRequiredMessage(
+async function saveMediaCreditsRequiredMessage(
   ctx: Parameters<typeof saveMessage>[0],
   args: {
     threadId: string;
     userId: string;
     agentName: string;
+    action: "image_request" | "video_request";
     requiredCredits: number;
     currentCredits: number;
     promptMessageId?: string;
@@ -54,7 +83,7 @@ async function saveImageCreditsRequiredMessage(
       role: "assistant",
       content: JSON.stringify({
         type: "credits_required",
-        action: "image_request",
+        action: args.action,
         requiredCredits: args.requiredCredits,
         currentCredits: args.currentCredits,
         message: `You need at least ${args.requiredCredits} credits for this request.`,
@@ -156,7 +185,11 @@ export const sendMessage = mutation({
     const currentCredits = profile.credits ?? 0;
     const messageCost = TEXT_MESSAGE_CREDIT_COST;
     const imageCost = CHAT_IMAGE_REQUEST_CREDIT_COST;
+    const videoCost = CHAT_VIDEO_REQUEST_CREDIT_COST;
+    const isVideoRequest = isLikelyChatVideoRequest(content);
     const isImageRequest = isLikelyChatImageRequest(content);
+    const isMediaRequest = isVideoRequest || isImageRequest;
+    const mediaCost = isVideoRequest ? videoCost : imageCost;
 
     if (currentCredits < messageCost) {
       throw new Error("Insufficient credits");
@@ -189,15 +222,16 @@ export const sendMessage = mutation({
       relationshipLevel: newLevel,
       compatibilityScore: newScore,
       pendingPromptMessageId:
-        isImageRequest && currentCredits < imageCost ? null : messageId,
+        isMediaRequest && currentCredits < mediaCost ? null : messageId,
     });
 
-    if (isImageRequest && currentCredits < imageCost) {
-      await saveImageCreditsRequiredMessage(ctx, {
+    if (isMediaRequest && currentCredits < mediaCost) {
+      await saveMediaCreditsRequiredMessage(ctx, {
         threadId: conversation.threadId,
         userId: user._id,
         agentName: aiProfile.name,
-        requiredCredits: imageCost,
+        action: isVideoRequest ? "video_request" : "image_request",
+        requiredCredits: mediaCost,
         currentCredits,
         promptMessageId: messageId,
       });
@@ -205,7 +239,7 @@ export const sendMessage = mutation({
       return { messageId };
     }
 
-    if (!isImageRequest) {
+    if (!isMediaRequest) {
       await ctx.db.patch(profile._id, {
         credits: currentCredits - messageCost,
       });
@@ -221,6 +255,7 @@ export const sendMessage = mutation({
         threadId: conversation.threadId,
         userId: user._id,
         aiProfileId: conversation.aiProfileId,
+        promptContent: content,
         platform,
       },
     );
@@ -750,6 +785,49 @@ export const adminDeleteProfile = mutation({
         await ctx.db.delete(image._id);
       }
 
+      const chatVideos = await ctx.db
+        .query("chatVideos")
+        .withIndex("by_conversation", (q) =>
+          q.eq("conversationId", conversation._id),
+        )
+        .collect();
+
+      for (const video of chatVideos) {
+        if (video.videoKey) {
+          try {
+            await r2.deleteObject(ctx, video.videoKey);
+          } catch (error) {
+            console.error(
+              "[adminDeleteProfile] Failed to delete chat video from R2:",
+              {
+                profileId,
+                conversationId: conversation._id,
+                videoKey: video.videoKey,
+                error,
+              },
+            );
+          }
+        }
+
+        if (video.posterKey) {
+          try {
+            await r2.deleteObject(ctx, video.posterKey);
+          } catch (error) {
+            console.error(
+              "[adminDeleteProfile] Failed to delete chat video poster from R2:",
+              {
+                profileId,
+                conversationId: conversation._id,
+                posterKey: video.posterKey,
+                error,
+              },
+            );
+          }
+        }
+
+        await ctx.db.delete(video._id);
+      }
+
       const quizSessions = await ctx.db
         .query("quizSessions")
         .withIndex("by_conversation", (q) =>
@@ -894,19 +972,21 @@ export const createChatImageRequestInternal = internalMutation({
       v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
     ),
     prompt: v.string(),
-    styleOptions: v.optional(
-      v.object({
-        hairstyle: v.optional(v.string()),
-        clothing: v.optional(v.string()),
-        scene: v.optional(v.string()),
-        description: v.optional(v.string()),
-      }),
-    ),
+    styleOptions: chatImageStyleOptionsValidator,
+    promptMessageId: v.optional(v.string()),
   },
   returns: v.union(v.id("chatImages"), v.null()),
   handler: async (
     ctx,
-    { conversationId, userId, aiProfileId, platform, prompt, styleOptions },
+    {
+      conversationId,
+      userId,
+      aiProfileId,
+      platform,
+      prompt,
+      styleOptions,
+      promptMessageId,
+    },
   ) => {
     // Get user profile to check/deduct credits
     const profile = await ctx.db
@@ -928,10 +1008,11 @@ export const createChatImageRequestInternal = internalMutation({
       const aiProfile = await ctx.db.get(aiProfileId);
 
       if (conversation?.threadId && aiProfile) {
-        await saveImageCreditsRequiredMessage(ctx, {
+        await saveMediaCreditsRequiredMessage(ctx, {
           threadId: conversation.threadId,
           userId,
           agentName: aiProfile.name,
+          action: "image_request",
           requiredCredits: imageCost,
           currentCredits,
         });
@@ -952,16 +1033,17 @@ export const createChatImageRequestInternal = internalMutation({
       aiProfileId,
       platform,
       prompt,
-      styleOptions: styleOptions
-        ? {
-            hairstyle: styleOptions.hairstyle,
-            clothing: styleOptions.clothing,
-            scene: styleOptions.scene,
-            description: styleOptions.description,
-          }
-        : undefined,
+      styleOptions,
       status: "pending",
       creditsCharged: imageCost,
+    });
+
+    await attachMediaProcessingPlaceholder(ctx, {
+      conversationId,
+      requestId,
+      mediaType: "image",
+      prompt,
+      promptMessageId,
     });
 
     // Schedule image generation
@@ -988,14 +1070,7 @@ export const requestChatImage = mutation({
     platform: v.optional(
       v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
     ),
-    styleOptions: v.optional(
-      v.object({
-        hairstyle: v.optional(v.string()),
-        clothing: v.optional(v.string()),
-        scene: v.optional(v.string()),
-        description: v.optional(v.string()),
-      }),
-    ),
+    styleOptions: chatImageStyleOptionsValidator,
   },
   returns: v.id("chatImages"),
   handler: async (ctx, { conversationId, prompt, platform, styleOptions }) => {
@@ -1076,6 +1151,13 @@ export const requestChatImage = mutation({
           message: userMessage,
         }),
       });
+
+      await attachMediaProcessingPlaceholder(ctx, {
+        conversationId,
+        requestId,
+        mediaType: "image",
+        prompt,
+      });
     }
 
     // Schedule image generation
@@ -1113,6 +1195,10 @@ export const updateChatImageRequest = internalMutation({
       throw new Error("Chat image request not found");
     }
 
+    if (request.status === "completed" || request.status === "failed") {
+      return null;
+    }
+
     const patch: Record<string, unknown> = { status: updates.status };
     if (updates.imageKey) patch.imageKey = updates.imageKey;
     if (updates.replicateJobId) patch.replicateJobId = updates.replicateJobId;
@@ -1120,36 +1206,39 @@ export const updateChatImageRequest = internalMutation({
 
     await ctx.db.patch(requestId, patch);
 
-    // If completed successfully, add the image as a message in the conversation
     if (updates.status === "completed" && updates.imageKey) {
       const conversation = await ctx.db.get(request.conversationId);
       if (conversation && conversation.threadId) {
-        // Get the AI profile for the agent
         const profile = await ctx.db.get(request.aiProfileId);
 
         if (profile) {
-          // Create the agent for this profile
-          const agent = createAIProfileAgent(profile);
-
-          // Add a message with the generated image (use message parameter for assistant messages)
-          await saveMessage(ctx, components.agent, {
-            threadId: conversation.threadId,
-            userId: conversation.userId,
-            message: {
-              role: "assistant",
-              content: JSON.stringify({
-                type: "image_response",
-                imageKey: updates.imageKey,
-                prompt: request.prompt,
-              }),
-            },
-            agentName: profile.name,
+          const responseContent = buildMediaResponseContent("image", {
+            requestId,
+            prompt: request.prompt,
+            imageKey: updates.imageKey,
           });
+
+          if (request.responseMessageId) {
+            await patchAgentMessageContent(
+              ctx,
+              request.responseMessageId,
+              responseContent,
+            );
+          } else {
+            await saveMessage(ctx, components.agent, {
+              threadId: conversation.threadId,
+              userId: conversation.userId,
+              message: {
+                role: "assistant",
+                content: responseContent,
+              },
+              agentName: profile.name,
+            });
+          }
         }
       }
     }
 
-    // Refund credits on failure and send apology message
     if (updates.status === "failed") {
       const userProfile = await ctx.db
         .query("profile")
@@ -1162,22 +1251,356 @@ export const updateChatImageRequest = internalMutation({
         });
       }
 
-      // Send an apology message from the AI
       const conversation = await ctx.db.get(request.conversationId);
       if (conversation && conversation.threadId) {
         const profile = await ctx.db.get(request.aiProfileId);
         if (profile) {
-          const agent = createAIProfileAgent(profile);
-          await saveMessage(ctx, components.agent, {
-            threadId: conversation.threadId,
-            userId: conversation.userId,
-            message: {
-              role: "assistant",
-              content:
-                "Oops, I couldn't take that photo right now 😅 My camera seems to be acting up! Can you ask me something else instead?",
-            },
-            agentName: profile.name,
+          const failureMessage =
+            "Oops, I couldn't take that photo right now. My camera seems to be acting up! Can you ask me something else instead?";
+          const failureContent = buildMediaFailedContent(
+            "image",
+            requestId,
+            failureMessage,
+          );
+
+          if (request.responseMessageId) {
+            await patchAgentMessageContent(
+              ctx,
+              request.responseMessageId,
+              failureContent,
+            );
+          } else {
+            await saveMessage(ctx, components.agent, {
+              threadId: conversation.threadId,
+              userId: conversation.userId,
+              message: {
+                role: "assistant",
+                content: failureContent,
+              },
+              agentName: profile.name,
+            });
+          }
+        }
+      }
+    }
+
+    return null;
+  },
+});
+
+/**
+ * Internal mutation to create a chat video request from agent tool call.
+ */
+export const createChatVideoRequestInternal = internalMutation({
+  args: {
+    conversationId: v.id("aiConversations"),
+    userId: v.string(),
+    aiProfileId: v.id("aiProfiles"),
+    platform: v.optional(
+      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    ),
+    prompt: v.string(),
+    styleOptions: chatVideoStyleOptionsValidator,
+    promptMessageId: v.optional(v.string()),
+  },
+  returns: v.union(v.id("chatVideos"), v.null()),
+  handler: async (
+    ctx,
+    {
+      conversationId,
+      userId,
+      aiProfileId,
+      platform,
+      prompt,
+      styleOptions,
+      promptMessageId,
+    },
+  ) => {
+    const profile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", userId))
+      .unique();
+
+    if (!profile) {
+      console.error("User profile not found for agent video request");
+      return null;
+    }
+
+    const currentCredits = profile.credits ?? 0;
+    const videoCost = CHAT_VIDEO_REQUEST_CREDIT_COST;
+
+    if (currentCredits < videoCost) {
+      console.log("Insufficient credits for agent video request");
+      const conversation = await ctx.db.get(conversationId);
+      const aiProfile = await ctx.db.get(aiProfileId);
+
+      if (conversation?.threadId && aiProfile) {
+        await saveMediaCreditsRequiredMessage(ctx, {
+          threadId: conversation.threadId,
+          userId,
+          agentName: aiProfile.name,
+          action: "video_request",
+          requiredCredits: videoCost,
+          currentCredits,
+        });
+      }
+
+      return null;
+    }
+
+    await ctx.db.patch(profile._id, {
+      credits: currentCredits - videoCost,
+    });
+
+    const requestId = await ctx.db.insert("chatVideos", {
+      conversationId,
+      userId,
+      aiProfileId,
+      platform,
+      prompt,
+      styleOptions,
+      status: "pending",
+      creditsCharged: videoCost,
+    });
+
+    await attachMediaProcessingPlaceholder(ctx, {
+      conversationId,
+      requestId,
+      mediaType: "video",
+      prompt,
+      promptMessageId,
+    });
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.features.ai.actions.generateChatVideo,
+      {
+        requestId,
+      },
+    );
+
+    console.log("Created agent-initiated video request:", requestId);
+    return requestId;
+  },
+});
+
+/**
+ * Request a custom video from an AI profile.
+ */
+export const requestChatVideo = mutation({
+  args: {
+    conversationId: v.id("aiConversations"),
+    prompt: v.string(),
+    platform: v.optional(
+      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    ),
+    styleOptions: chatVideoStyleOptionsValidator,
+  },
+  returns: v.id("chatVideos"),
+  handler: async (ctx, { conversationId, prompt, platform, styleOptions }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    const conversation = await ctx.db.get(conversationId);
+    if (!conversation || conversation.userId !== user._id) {
+      throw new Error("Conversation not found");
+    }
+
+    const profile = await ctx.db
+      .query("profile")
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
+      .unique();
+
+    if (!profile) {
+      throw new Error("User profile not found");
+    }
+
+    const currentCredits = profile.credits ?? 0;
+    const videoCost = CHAT_VIDEO_REQUEST_CREDIT_COST;
+
+    if (currentCredits < videoCost) {
+      throw new Error("Insufficient credits");
+    }
+
+    await ctx.db.patch(profile._id, {
+      credits: currentCredits - videoCost,
+    });
+
+    const requestId = await ctx.db.insert("chatVideos", {
+      conversationId,
+      userId: user._id,
+      aiProfileId: conversation.aiProfileId,
+      platform,
+      prompt,
+      styleOptions,
+      status: "pending",
+      creditsCharged: videoCost,
+    });
+
+    if (conversation.threadId) {
+      const styleDescription = styleOptions
+        ? [
+            "Send me a video",
+            styleOptions.hairstyle && `with ${styleOptions.hairstyle}`,
+            styleOptions.clothing && `wearing ${styleOptions.clothing}`,
+            styleOptions.scene && `in a ${styleOptions.scene} setting`,
+          ]
+            .filter(Boolean)
+            .join(", ")
+        : "";
+      const detailDescription = styleOptions?.description?.trim();
+
+      const userMessage = [
+        detailDescription ? `${detailDescription}` : null,
+        `${styleDescription ? ` ${styleDescription}` : ""}`,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      await saveMessage(ctx, components.agent, {
+        threadId: conversation.threadId,
+        userId: user._id,
+        prompt: JSON.stringify({
+          type: "video_request",
+          prompt,
+          styleOptions,
+          requestId,
+          message: userMessage,
+        }),
+      });
+
+      await attachMediaProcessingPlaceholder(ctx, {
+        conversationId,
+        requestId,
+        mediaType: "video",
+        prompt,
+      });
+    }
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.features.ai.actions.generateChatVideo,
+      {
+        requestId,
+      },
+    );
+
+    return requestId;
+  },
+});
+
+/**
+ * Internal mutation to update chat video request status.
+ */
+export const updateChatVideoRequest = internalMutation({
+  args: {
+    requestId: v.id("chatVideos"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    videoKey: v.optional(v.string()),
+    posterKey: v.optional(v.string()),
+    replicateJobId: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+  },
+  handler: async (ctx, { requestId, ...updates }) => {
+    const request = await ctx.db.get(requestId);
+    if (!request) {
+      throw new Error("Chat video request not found");
+    }
+
+    if (request.status === "completed" || request.status === "failed") {
+      return null;
+    }
+
+    const patch: Record<string, unknown> = { status: updates.status };
+    if (updates.videoKey) patch.videoKey = updates.videoKey;
+    if (updates.posterKey) patch.posterKey = updates.posterKey;
+    if (updates.replicateJobId) patch.replicateJobId = updates.replicateJobId;
+    if (updates.errorMessage) patch.errorMessage = updates.errorMessage;
+
+    await ctx.db.patch(requestId, patch);
+
+    if (updates.status === "completed" && updates.videoKey) {
+      const conversation = await ctx.db.get(request.conversationId);
+      if (conversation && conversation.threadId) {
+        const profile = await ctx.db.get(request.aiProfileId);
+
+        if (profile) {
+          const responseContent = buildMediaResponseContent("video", {
+            requestId,
+            prompt: request.prompt,
+            videoKey: updates.videoKey,
+            posterKey: updates.posterKey ?? request.posterKey,
           });
+
+          if (request.responseMessageId) {
+            await patchAgentMessageContent(
+              ctx,
+              request.responseMessageId,
+              responseContent,
+            );
+          } else {
+            await saveMessage(ctx, components.agent, {
+              threadId: conversation.threadId,
+              userId: conversation.userId,
+              message: {
+                role: "assistant",
+                content: responseContent,
+              },
+              agentName: profile.name,
+            });
+          }
+        }
+      }
+    }
+
+    if (updates.status === "failed") {
+      const userProfile = await ctx.db
+        .query("profile")
+        .withIndex("by_auth_user_id", (q) => q.eq("authUserId", request.userId))
+        .unique();
+
+      if (userProfile) {
+        await ctx.db.patch(userProfile._id, {
+          credits: (userProfile.credits ?? 0) + request.creditsCharged,
+        });
+      }
+
+      const conversation = await ctx.db.get(request.conversationId);
+      if (conversation && conversation.threadId) {
+        const profile = await ctx.db.get(request.aiProfileId);
+        if (profile) {
+          const failureMessage =
+            "Sorry, I couldn't record that video right now. My camera seems to be acting up! Can you ask me something else instead?";
+          const failureContent = buildMediaFailedContent(
+            "video",
+            requestId,
+            failureMessage,
+          );
+
+          if (request.responseMessageId) {
+            await patchAgentMessageContent(
+              ctx,
+              request.responseMessageId,
+              failureContent,
+            );
+          } else {
+            await saveMessage(ctx, components.agent, {
+              threadId: conversation.threadId,
+              userId: conversation.userId,
+              message: {
+                role: "assistant",
+                content: failureContent,
+              },
+              agentName: profile.name,
+            });
+          }
         }
       }
     }
@@ -1328,6 +1751,41 @@ export const clearChat = mutation({
       console.log("[clearChat] Deleting DB record:", image._id);
       await ctx.db.delete(image._id);
       console.log("[clearChat] DB delete success for:", image._id);
+    }
+
+    const chatVideos = await ctx.db
+      .query("chatVideos")
+      .withIndex("by_conversation", (q) =>
+        q.eq("conversationId", conversationId),
+      )
+      .collect();
+
+    for (const video of chatVideos) {
+      if (video.videoKey) {
+        try {
+          await r2.deleteObject(ctx, video.videoKey);
+        } catch (error) {
+          console.error(
+            "[clearChat] Failed to delete R2 object:",
+            video.videoKey,
+            error,
+          );
+        }
+      }
+
+      if (video.posterKey) {
+        try {
+          await r2.deleteObject(ctx, video.posterKey);
+        } catch (error) {
+          console.error(
+            "[clearChat] Failed to delete R2 object:",
+            video.posterKey,
+            error,
+          );
+        }
+      }
+
+      await ctx.db.delete(video._id);
     }
 
     // Delete all quiz sessions for this conversation

@@ -33,6 +33,7 @@ export {
   updateAIProfile,
   archiveAIProfile,
   requestChatImage,
+  requestChatVideo,
   adminUpdateProfile,
   adminGenerateUploadUrl,
   adminDeleteProfileImage,

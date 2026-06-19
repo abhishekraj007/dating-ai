@@ -291,6 +291,10 @@ export const zh: TranslationMap = {
   "quiz.started": "问答已开始",
   "quiz.letsPlay": "来玩问答吧！",
   "quiz.endQuiz": "结束问答",
+
+  "media.recordingVideo": "正在录制视频...",
+  "media.takingPhoto": "正在拍照...",
+
   "signIn.failed": "登录失败",
   "signUp.failed": "注册失败",
   "signUp.createAccount": "创建账户",

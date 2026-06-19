@@ -66,23 +66,34 @@ const SCENE_OPTIONS = [
   "Studio portrait",
 ];
 
-export interface ImageRequestOptions {
+export type MediaRequestType = "photo" | "video";
+
+export interface MediaRequestOptions {
+  mediaType: MediaRequestType;
   hairstyle?: string;
   clothing?: string;
   scene?: string;
   description?: string;
+  duration?: number;
 }
+
+export type ImageRequestOptions = Omit<MediaRequestOptions, "mediaType">;
 
 interface ImageRequestSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (options: ImageRequestOptions) => void;
+  onSubmit: (options: MediaRequestOptions) => void;
   onBuyCredits?: () => void;
   isLoading?: boolean;
   credits?: number;
 }
 
+const DEFAULT_VIDEO_DURATION = 5;
+const VIDEO_DURATION_OPTIONS = [5, 10] as const;
+
 interface ImageRequestSheetContentProps {
+  mediaType: "photo" | "video";
+  onChangeMediaType: (value: "photo" | "video") => void;
   activeTab: string;
   onChangeTab: (value: string) => void;
   selectedHairstyle: string | null;
@@ -91,11 +102,15 @@ interface ImageRequestSheetContentProps {
   onSelectClothing: (value: string | null) => void;
   selectedScene: string | null;
   onSelectScene: (value: string | null) => void;
+  videoDuration: number;
+  onVideoDurationChange: (value: number) => void;
   resetKey: number;
   onExtraDetailsChange: (value: string, hasDetails: boolean) => void;
 }
 
 function ImageRequestSheetContent({
+  mediaType,
+  onChangeMediaType,
   activeTab,
   onChangeTab,
   selectedHairstyle,
@@ -104,6 +119,8 @@ function ImageRequestSheetContent({
   onSelectClothing,
   selectedScene,
   onSelectScene,
+  videoDuration,
+  onVideoDurationChange,
   resetKey,
   onExtraDetailsChange,
 }: ImageRequestSheetContentProps) {
@@ -127,6 +144,7 @@ function ImageRequestSheetContent({
     selectedScene ||
     trimmedExtraDetails,
   );
+  const creditCost = mediaType === "video" ? 200 : 5;
 
   const handleChangeText = (value: string) => {
     setExtraDetails(value);
@@ -166,18 +184,39 @@ function ImageRequestSheetContent({
     <View className="px-4 pt-5">
       <View className="flex-row items-center justify-between mb-4">
         <BottomSheet.Title className="text-center">
-          {t("imageRequest.title")}
+          {mediaType === "video"
+            ? t("imageRequest.videoTitle")
+            : t("imageRequest.title")}
         </BottomSheet.Title>
         <View className="flex-row items-center gap-1 bg-surface-secondary px-3 py-1.5 rounded-full">
           <Sparkles size={14} color={accentColor} />
           <Text size="sm" variant="accent">
-            {t("imageRequest.credits", { count: 5 })}
+            {t("imageRequest.credits", { count: creditCost })}
           </Text>
         </View>
       </View>
 
+      <Tabs
+        value={mediaType}
+        onValueChange={(value) => onChangeMediaType(value as "photo" | "video")}
+        variant="primary"
+        className="mb-4"
+      >
+        <Tabs.List>
+          <Tabs.Indicator />
+          <Tabs.Trigger value="photo" className="flex-1">
+            <Tabs.Label>{t("imageRequest.photoTab")}</Tabs.Label>
+          </Tabs.Trigger>
+          <Tabs.Trigger value="video" className="flex-1">
+            <Tabs.Label>{t("imageRequest.videoTab")}</Tabs.Label>
+          </Tabs.Trigger>
+        </Tabs.List>
+      </Tabs>
+
       <Text size="sm" variant="muted" className="mb-3">
-        {t("imageRequest.subtitle")}
+        {mediaType === "video"
+          ? t("imageRequest.videoSubtitle")
+          : t("imageRequest.subtitle")}
       </Text>
 
       <TextField className="mb-4">
@@ -186,7 +225,11 @@ function ImageRequestSheetContent({
           onChangeText={handleChangeText}
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
-          placeholder={t("imageRequest.extraDetailsPlaceholder")}
+          placeholder={
+            mediaType === "video"
+              ? t("imageRequest.videoExtraDetailsPlaceholder")
+              : t("imageRequest.extraDetailsPlaceholder")
+          }
           placeholderTextColor={mutedColor}
           multiline
           numberOfLines={2}
@@ -204,6 +247,27 @@ function ImageRequestSheetContent({
           }}
         />
       </TextField>
+
+      {mediaType === "video" ? (
+        <View className="mb-4">
+          <Label className="mb-2">{t("imageRequest.duration")}</Label>
+          <View className="flex-row flex-wrap gap-2">
+            {VIDEO_DURATION_OPTIONS.map((option) => (
+              <Chip
+                key={option}
+                size="md"
+                variant={videoDuration === option ? "primary" : "secondary"}
+                color={videoDuration === option ? "accent" : "default"}
+                onPress={() => onVideoDurationChange(option)}
+              >
+                <Chip.Label>
+                  {t("imageRequest.durationSeconds", { count: option })}
+                </Chip.Label>
+              </Chip>
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       <Tabs value={activeTab} onValueChange={onChangeTab} variant="secondary">
         <Tabs.List className="mb-2">
@@ -302,12 +366,14 @@ export function ImageRequestSheet({
 }: ImageRequestSheetProps) {
   const { t } = useTranslation();
   const { bottom } = useSafeAreaInsets();
+  const [mediaType, setMediaType] = useState<"photo" | "video">("photo");
   const [activeTab, setActiveTab] = useState("hairstyle");
   const [selectedHairstyle, setSelectedHairstyle] = useState<string | null>(
     null,
   );
   const [selectedClothing, setSelectedClothing] = useState<string | null>(null);
   const [selectedScene, setSelectedScene] = useState<string | null>(null);
+  const [videoDuration, setVideoDuration] = useState(DEFAULT_VIDEO_DURATION);
   const [hasExtraDetails, setHasExtraDetails] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const extraDetailsRef = useRef("");
@@ -316,7 +382,8 @@ export function ImageRequestSheet({
   const hasAnySelection = Boolean(
     selectedHairstyle || selectedClothing || selectedScene || hasExtraDetails,
   );
-  const hasEnoughCredits = credits >= 5;
+  const creditCost = mediaType === "video" ? 200 : 5;
+  const hasEnoughCredits = credits >= creditCost;
 
   const handleExtraDetailsChange = (value: string, hasDetails: boolean) => {
     extraDetailsRef.current = value;
@@ -330,6 +397,7 @@ export function ImageRequestSheet({
     setSelectedHairstyle(null);
     setSelectedClothing(null);
     setSelectedScene(null);
+    setVideoDuration(DEFAULT_VIDEO_DURATION);
     setHasExtraDetails(false);
     hasExtraDetailsRef.current = false;
     extraDetailsRef.current = "";
@@ -339,10 +407,12 @@ export function ImageRequestSheet({
   const handleSubmit = () => {
     Keyboard.dismiss();
     onSubmit({
+      mediaType,
       hairstyle: selectedHairstyle ?? undefined,
       clothing: selectedClothing ?? undefined,
       scene: selectedScene ?? undefined,
       description: extraDetailsRef.current.trim() || undefined,
+      duration: mediaType === "video" ? videoDuration : undefined,
     });
     resetForm();
   };
@@ -387,10 +457,12 @@ export function ImageRequestSheet({
               <Spinner color={accentForegroundColor} size="sm" />
             ) : (
               <>
-                <Camera size={18} color={accentForegroundColor} />
+                {/* <Camera size={18} color={accentForegroundColor} /> */}
                 <Button.Label>
                   {hasEnoughCredits
-                    ? t("imageRequest.generatePhoto")
+                    ? mediaType === "video"
+                      ? t("imageRequest.generateVideo")
+                      : t("imageRequest.generatePhoto")
                     : t("account.profile.buyCredits")}
                 </Button.Label>
               </>
@@ -400,7 +472,7 @@ export function ImageRequestSheet({
 
         {!hasEnoughCredits && (
           <Text size="xs" variant="danger" className="text-center mt-2">
-            {t("imageRequest.insufficientCredits")}
+            {t("imageRequest.insufficientCredits", { count: creditCost })}
           </Text>
         )}
       </View>
@@ -417,6 +489,8 @@ export function ImageRequestSheet({
       footerComponent={renderFooter}
     >
       <ImageRequestSheetContent
+        mediaType={mediaType}
+        onChangeMediaType={setMediaType}
         activeTab={activeTab}
         onChangeTab={setActiveTab}
         selectedHairstyle={selectedHairstyle}
@@ -425,6 +499,8 @@ export function ImageRequestSheet({
         onSelectClothing={setSelectedClothing}
         selectedScene={selectedScene}
         onSelectScene={setSelectedScene}
+        videoDuration={videoDuration}
+        onVideoDurationChange={setVideoDuration}
         resetKey={resetKey}
         onExtraDetailsChange={handleExtraDetailsChange}
       />

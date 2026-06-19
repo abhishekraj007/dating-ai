@@ -1,19 +1,49 @@
-import { ScrollView, StyleSheet, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  type LayoutChangeEvent,
+} from "react-native";
+import type { RefObject } from "react";
 import { KeyboardComposer } from "@launchhq/react-native-keyboard-composer";
-import { KeyboardStickyView } from "react-native-keyboard-controller";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Spinner, useThemeColor } from "heroui-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Camera,
-  ChevronDown,
   HelpCircle,
   Lightbulb,
   MessageSquare,
 } from "lucide-react-native";
 import { useTranslation } from "@/hooks/use-translation";
+import { useColorScheme } from "@/lib/use-color-scheme";
+
+export const KEYBOARD_GAP = 8;
+const MIN_BOTTOM_PADDING = 16;
+
+function useComposerGradientColors(backgroundColor: string) {
+  const { isDarkColorScheme } = useColorScheme();
+
+  if (backgroundColor.startsWith("#")) {
+    return [
+      `${backgroundColor}00`,
+      `${backgroundColor}CC`,
+      backgroundColor,
+    ] as const;
+  }
+
+  return isDarkColorScheme
+    ? (["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.82)", "rgb(0, 0, 0)"] as const)
+    : ([
+        "rgba(255, 255, 255, 0)",
+        "rgba(255, 255, 255, 0.82)",
+        "rgb(255, 255, 255)",
+      ] as const);
+}
 
 interface ChatFormProps {
+  composerRef: RefObject<View | null>;
+  onComposerLayout: (event: LayoutChangeEvent) => void;
   composerHeight: number;
   onComposerHeightChange: (height: number) => void;
   onKeyboardHeightChange: (height: number) => void;
@@ -35,6 +65,8 @@ interface ChatFormProps {
 }
 
 export function ChatForm({
+  composerRef,
+  onComposerLayout,
   composerHeight,
   onComposerHeightChange,
   onKeyboardHeightChange,
@@ -55,45 +87,49 @@ export function ChatForm({
   onOpenSuggestionsSheet,
 }: ChatFormProps) {
   const { t } = useTranslation();
-  const { bottom } = useSafeAreaInsets();
-  const foregroundColor = useThemeColor("foreground");
+  const { bottom: safeAreaBottom } = useSafeAreaInsets();
+  // const foregroundColor = useThemeColor("foreground");
   const foregroundColorMuted = useThemeColor("muted");
   const backgroundColor = useThemeColor("background");
+  const composerGradientColors = useComposerGradientColors(backgroundColor);
   const actionButtonColor = "";
+  const bottomOverlayInset = isKeyboardOpen
+    ? 0
+    : Math.max(safeAreaBottom, MIN_BOTTOM_PADDING);
 
   return (
-    <KeyboardStickyView>
-      <View>
-        {showScrollToBottom ? (
-          <View style={styles.scrollToBottomContainer}>
-            <Button
-              variant="secondary"
-              size="sm"
-              isIconOnly
-              onPress={onScrollToBottom}
-              className="rounded-full"
-              style={styles.scrollToBottomButton}
-            >
-              <ChevronDown size={18} color={foregroundColor} />
-            </Button>
-          </View>
-        ) : null}
-        <LinearGradient
-          colors={[
-            `${backgroundColor}00`,
-            `${backgroundColor}CC`,
-            backgroundColor,
-          ]}
-          locations={[0, 0.45, 1]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={[
-            styles.composerContainer,
-            {
-              paddingBottom: isKeyboardOpen ? 8 : Math.max(bottom, 8),
-            },
-          ]}
-        >
+    <View
+      pointerEvents="box-none"
+      ref={composerRef}
+      onLayout={onComposerLayout}
+      style={styles.container}
+    >
+      {/* {showScrollToBottom ? (
+        <View pointerEvents="box-none" style={styles.scrollToBottomContainer}>
+          <Button
+            variant="secondary"
+            size="sm"
+            isIconOnly
+            onPress={onScrollToBottom}
+            className="rounded-full"
+            style={styles.scrollToBottomButton}
+          >
+            <ChevronDown size={18} color={foregroundColor} />
+          </Button>
+        </View>
+      ) : null} */}
+      <LinearGradient
+        pointerEvents="box-none"
+        colors={composerGradientColors}
+        locations={[0, 0.35, 1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={[
+          styles.composerGradient,
+          { paddingBottom: bottomOverlayInset },
+        ]}
+      >
+        <View pointerEvents="auto">
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -172,19 +208,21 @@ export function ChatForm({
               />
             </View>
           </View>
-        </LinearGradient>
-      </View>
-    </KeyboardStickyView>
+        </View>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  composerContainer: {
-    paddingTop: 8,
+  container: {
+    width: "100%",
+  },
+  composerGradient: {
+    paddingTop: 16,
   },
   scrollToBottomContainer: {
     position: "absolute",
-    top: -48,
     right: 8,
     zIndex: 10,
   },
