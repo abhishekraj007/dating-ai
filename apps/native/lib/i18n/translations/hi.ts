@@ -58,7 +58,6 @@ export const hi: TranslationMap = {
   "onboarding.languages.chatDescription":
     "आपके AI साथी जिस भाषा में जवाब देते हैं, उसे नियंत्रित करता है।",
 
-
   "onboarding.gender.title": "आप किसमें रुचि रखते हैं?",
   "onboarding.gender.female": "महिलाएँ",
   "onboarding.gender.male": "पुरुष",
@@ -332,4 +331,9 @@ export const hi: TranslationMap = {
   "settings.colorTheme": "रंग थीम",
   "settings.notificationsDescription":
     "महत्वपूर्ण अपडेट्स के नोटिफिकेशन प्राप्त करें",
+  "updates.title": "अपडेट उपलब्ध",
+  "updates.description":
+    "ऐप का नया वर्शन उपलब्ध है। नवीनतम सुविधाओं और सुधारों के लिए अभी पुनः लॉन्च करें।",
+  "updates.relaunch": "पुनः लॉन्च करें",
+  "updates.dismiss": "अभी नहीं",
 };

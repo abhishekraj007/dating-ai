@@ -15,6 +15,7 @@ import {
   type AppLanguage,
 } from "@/lib/i18n/types";
 import { TRANSLATIONS } from "@/lib/i18n/translations";
+import { setI18nLanguage } from "@/lib/i18n/singleton";
 
 const LANGUAGE_STORAGE_KEY = "@app_language";
 
@@ -53,6 +54,10 @@ export const LanguageProvider = ({
   const [language, setLanguageState] = useState<AppLanguage>(DEFAULT_LANGUAGE);
   const [isLanguageLoaded, setIsLanguageLoaded] = useState(false);
   const hasSyncedSessionRef = useRef(false);
+
+  useEffect(() => {
+    setI18nLanguage(language);
+  }, [language]);
   const remoteLanguage = useQuery(
     api.features.preferences.queries.getUserAppLanguage,
     isAuthenticated ? {} : "skip",

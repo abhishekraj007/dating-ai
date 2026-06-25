@@ -343,4 +343,9 @@ export const es: TranslationMap = {
   "settings.colorTheme": "Tema de color",
   "settings.notificationsDescription":
     "Recibe notificaciones sobre actualizaciones importantes",
+  "updates.title": "Actualizacion Disponible",
+  "updates.description":
+    "Una nueva version de la app esta disponible. Reinicia ahora para obtener las ultimas funciones y mejoras.",
+  "updates.relaunch": "Reiniciar",
+  "updates.dismiss": "Ahora No",
 };

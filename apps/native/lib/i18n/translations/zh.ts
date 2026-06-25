@@ -48,12 +48,12 @@ export const zh: TranslationMap = {
   "welcome.subtitle": "感到孤独？你不是一个人。遇见真正倾听你、理解你的角色。",
   "welcome.cta": "开始使用",
   "onboarding.languages.title": "选择语言",
-  "onboarding.languages.subtitle": "设置应用显示方式以及 AI 匹配对象的对话语言。",
+  "onboarding.languages.subtitle":
+    "设置应用显示方式以及 AI 匹配对象的对话语言。",
   "onboarding.languages.appTitle": "应用语言",
   "onboarding.languages.appDescription": "控制菜单、按钮及其他应用文本。",
   "onboarding.languages.chatTitle": "聊天语言",
   "onboarding.languages.chatDescription": "控制 AI 伴侣回复时使用的语言。",
-
 
   "onboarding.gender.title": "你对谁感兴趣？",
   "onboarding.gender.female": "女性",
@@ -308,4 +308,8 @@ export const zh: TranslationMap = {
   "settings.themeMode": "主题模式",
   "settings.colorTheme": "颜色主题",
   "settings.notificationsDescription": "接收重要更新的通知",
+  "updates.title": "更新可用",
+  "updates.description": "应用新版本已可用。立即重新启动以获取最新功能和改进。",
+  "updates.relaunch": "重新启动",
+  "updates.dismiss": "稍后",
 };

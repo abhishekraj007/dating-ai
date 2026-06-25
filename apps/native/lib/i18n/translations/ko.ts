@@ -58,7 +58,6 @@ export const ko: TranslationMap = {
   "onboarding.languages.chatDescription":
     "AI 동반자가 답장하는 언어를 제어합니다.",
 
-
   "onboarding.gender.title": "누구에게 관심이 있나요?",
   "onboarding.gender.female": "여성",
   "onboarding.gender.male": "남성",
@@ -326,4 +325,9 @@ export const ko: TranslationMap = {
   "settings.themeMode": "테마 모드",
   "settings.colorTheme": "색상 테마",
   "settings.notificationsDescription": "중요한 업데이트에 대한 알림 받기",
+  "updates.title": "업데이트 가능",
+  "updates.description":
+    "앱의 새 버전이 사용 가능합니다. 최신 기능과 개선 사항을 받으려면 지금 다시 시작하세요.",
+  "updates.relaunch": "다시 시작",
+  "updates.dismiss": "나중에",
 };

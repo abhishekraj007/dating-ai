@@ -58,7 +58,6 @@ export const ar: TranslationMap = {
   "onboarding.languages.chatDescription":
     "تتحكم في اللغة التي يرد بها رفاقك من الذكاء الاصطناعي.",
 
-
   "onboarding.gender.title": "بمن أنت مهتم؟",
   "onboarding.gender.female": "إناث",
   "onboarding.gender.male": "ذكور",
@@ -324,4 +323,9 @@ export const ar: TranslationMap = {
   "settings.themeMode": "وضع المظهر",
   "settings.colorTheme": "مظهر اللون",
   "settings.notificationsDescription": "تلقي إشعارات حول التحديثات المهمة",
+  "updates.title": "تحديث متاح",
+  "updates.description":
+    "إصدار جديد من التطبيق متاح. أعد التشغيل الآن للحصول على أحدث الميزات والتحسينات.",
+  "updates.relaunch": "إعادة التشغيل",
+  "updates.dismiss": "ليس الآن",
 };

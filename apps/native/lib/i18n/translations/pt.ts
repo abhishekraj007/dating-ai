@@ -58,7 +58,6 @@ export const pt: TranslationMap = {
   "onboarding.languages.chatDescription":
     "Controla o idioma em que seus companheiros de IA respondem.",
 
-
   "onboarding.gender.title": "Em quem você tem interesse?",
   "onboarding.gender.female": "Mulheres",
   "onboarding.gender.male": "Homens",
@@ -338,4 +337,9 @@ export const pt: TranslationMap = {
   "settings.colorTheme": "Tema de cor",
   "settings.notificationsDescription":
     "Receba notificações sobre atualizações importantes",
+  "updates.title": "Atualizacao Disponivel",
+  "updates.description":
+    "Uma nova versao do app esta disponivel. Reinicie agora para obter os ultimos recursos e melhorias.",
+  "updates.relaunch": "Reiniciar",
+  "updates.dismiss": "Agora Nao",
 };

@@ -59,7 +59,6 @@ export const ja: TranslationMap = {
   "onboarding.languages.chatDescription":
     "AIコンパニオンが返信する言語を制御します。",
 
-
   "onboarding.gender.title": "誰に興味がありますか？",
   "onboarding.gender.female": "女性",
   "onboarding.gender.male": "男性",
@@ -334,4 +333,9 @@ export const ja: TranslationMap = {
   "settings.themeMode": "テーマモード",
   "settings.colorTheme": "カラーテーマ",
   "settings.notificationsDescription": "重要なアップデートの通知を受け取る",
+  "updates.title": "アップデート可能",
+  "updates.description":
+    "アプリの新バージョンが利用可能です。最新の機能と改善を取得するには今すぐ再起動してください。",
+  "updates.relaunch": "再起動",
+  "updates.dismiss": "後で",
 };

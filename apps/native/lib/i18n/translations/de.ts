@@ -59,7 +59,6 @@ export const de: TranslationMap = {
   "onboarding.languages.chatDescription":
     "Steuert die Sprache, in der deine KI-Begleiter antworten.",
 
-
   "onboarding.gender.title": "Wer interessiert dich?",
   "onboarding.gender.female": "Frauen",
   "onboarding.gender.male": "Männer",
@@ -340,4 +339,9 @@ export const de: TranslationMap = {
   "settings.colorTheme": "Farbthema",
   "settings.notificationsDescription":
     "Erhalte Benachrichtigungen über wichtige Updates",
+  "updates.title": "Update Verfugbar",
+  "updates.description":
+    "Eine neue Version der App ist verfugbar. Starte jetzt neu, um die neuesten Funktionen und Verbesserungen zu erhalten.",
+  "updates.relaunch": "Neu Starten",
+  "updates.dismiss": "Spater",
 };
