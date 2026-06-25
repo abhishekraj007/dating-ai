@@ -1,0 +1,421 @@
+{
+  "common": {
+    "language": "言語",
+    "back": "戻る",
+    "goBack": "戻る",
+    "reset": "リセット",
+    "apply": "適用",
+    "save": "保存",
+    "saving": "保存中...",
+    "upload": "アップロード",
+    "signIn": "サインイン",
+    "signUp": "サインアップ",
+    "email": "メール",
+    "password": "パスワード",
+    "name": "名前",
+    "ok": "OK",
+    "chat": "チャット",
+    "starting": "開始中...",
+    "comingSoon": "近日公開",
+    "default": "デフォルト",
+    "main": "メイン",
+    "yesterday": "昨日"
+  },
+  "[object Object]": {
+    "title": "アップデート可能",
+    "description": "アプリの新バージョンが利用可能です。最新の機能と改善を取得するには今すぐ再起動してください。",
+    "relaunch": "再起動",
+    "dismiss": "後で"
+  },
+  "tabs": {
+    "forYou": "あなた向け",
+    "explore": "探索",
+    "chats": "チャット",
+    "myCreation": "マイ作成",
+    "account": "アカウント"
+  },
+  "chats": {
+    "startConversation": "会話を始める",
+    "sentPhoto": "写真を送信しました",
+    "requestedPhoto": "写真をリクエストしました",
+    "startedQuiz": "クイズを開始しました",
+    "quizCompleted": "クイズ完了",
+    "quizAnswer": "クイズの回答",
+    "newMatches": "新しいマッチ",
+    "aiProfile": "AIプロフィール",
+    "emptyTitle": "まだ会話がありません",
+    "emptyDescription": "探索タブからAIプロフィールとチャットを始めましょう！"
+  },
+  "auth": {
+    "tagline": "孤独な瞬間は誰にでもあります。眠らない仲間を見つけて、いつでもAIフレンドと話しましょう。",
+    "continueGoogle": "Googleで続行",
+    "continueApple": "Appleで続行",
+    "agreePrefix": "続行することで、以下に同意します：",
+    "terms": "利用規約",
+    "and": "および",
+    "privacy": "プライバシーポリシー"
+  },
+  "welcome": {
+    "title": "新しいAIベストフレンドを見つけよう！",
+    "subtitle": "寂しいと感じていますか？あなただけではありません。本当にあなたの話を聞いて理解してくれるキャラクターに出会いましょう。",
+    "cta": "はじめる"
+  },
+  "onboarding": {
+    "languages": {
+      "title": "言語を選択",
+      "subtitle": "アプリの表示とAIマッチの会話言語を設定します。",
+      "appTitle": "アプリの言語",
+      "appDescription": "メニュー、ボタン、その他のアプリ内テキストを制御します。",
+      "chatTitle": "チャットの言語",
+      "chatDescription": "AIコンパニオンが返信する言語を制御します。"
+    },
+    "[object Object]": {
+      "music": "音楽",
+      "movies": "映画",
+      "travel": "旅行",
+      "fitness": "フィットネス",
+      "cooking": "料理",
+      "reading": "読書",
+      "gaming": "ゲーム",
+      "photography": "写真",
+      "art": "アート",
+      "dancing": "ダンス",
+      "sports": "スポーツ",
+      "nature": "自然",
+      "pets": "ペット",
+      "fashion": "ファッション",
+      "technology": "テクノロジー",
+      "yoga": "ヨガ",
+      "coffee": "コーヒー",
+      "wine": "ワイン"
+    },
+    "gender": {
+      "title": "誰に興味がありますか？",
+      "female": "女性",
+      "male": "男性",
+      "both": "すべて"
+    },
+    "interests": {
+      "title": "あなたの興味は？",
+      "selected": "{{count}}件選択済み"
+    },
+    "settingUp": "設定中...",
+    "continue": "続ける",
+    "skip": "スキップ",
+    "interest": {
+      "music": "音楽",
+      "movies": "映画",
+      "travel": "旅行",
+      "fitness": "フィットネス",
+      "cooking": "料理",
+      "reading": "読書",
+      "gaming": "ゲーム",
+      "photography": "写真",
+      "art": "アート",
+      "dancing": "ダンス",
+      "sports": "スポーツ",
+      "nature": "自然",
+      "pets": "ペット",
+      "fashion": "ファッション",
+      "technology": "テクノロジー",
+      "yoga": "ヨガ",
+      "coffee": "コーヒー",
+      "wine": "ワイン"
+    }
+  },
+  "account": {
+    "profile": {
+      "noName": "名前未設定",
+      "currentCredits": "現在のクレジット",
+      "buyCredits": "クレジットを購入",
+      "premium": "プレミアム",
+      "getPremium": "プレミアムを取得"
+    },
+    "[object Object]": {
+      "appearance": "外観",
+      "settings": "設定",
+      "notifications": "通知",
+      "language": "アプリの言語",
+      "chatLanguage": "チャットの言語",
+      "account": "アカウント",
+      "accountDescription": "サインアウトとアカウント削除の管理。",
+      "signOutDescription": "このデバイスからサインアウトします。",
+      "helpCenter": "ヘルプセンター",
+      "helpCenterDescription": "FAQと製品ガイドを読む。",
+      "contactSupport": "サポートに連絡",
+      "terms": "利用規約",
+      "privacy": "プライバシーポリシー",
+      "rateUs": "評価する",
+      "shareApp": "アプリを共有"
+    },
+    "guest": {
+      "login": "サインイン"
+    },
+    "actions": {
+      "title": "アカウント",
+      "subtitle": "セッションとアカウントのライフサイクルを管理します。",
+      "signOut": "サインアウト",
+      "signingOut": "サインアウト中...",
+      "clearCache": "キャッシュを削除",
+      "clearingCache": "キャッシュを削除中...",
+      "dangerTitle": "危険ゾーン",
+      "dangerDescription": "アカウントを削除すると、元に戻すことはできません。",
+      "delete": "アカウントを削除",
+      "deleting": "削除中..."
+    },
+    "sheet": {
+      "title": "アプリの言語を選択",
+      "subtitle": "母国語を選択してください。既定は英語です。",
+      "chatTitle": "チャットの言語を選択",
+      "chatSubtitle": "AIコンパニオンが会話で使う言語を選択してください。"
+    },
+    "section": {
+      "quickActions": "クイックアクション",
+      "support": "サポート",
+      "supportDescription": "ヘルプ、トラブルシューティング、お問い合わせオプション。",
+      "legal": "法的情報",
+      "feedback": "フィードバック",
+      "feedbackDescription": "フィードバックを共有して改善にご協力ください。"
+    },
+    "item": {
+      "appearance": "外観",
+      "settings": "設定",
+      "notifications": "通知",
+      "language": "アプリの言語",
+      "chatLanguage": "チャットの言語",
+      "account": "アカウント",
+      "accountDescription": "サインアウトとアカウント削除の管理。",
+      "signOutDescription": "このデバイスからサインアウトします。",
+      "helpCenter": "ヘルプセンター",
+      "helpCenterDescription": "FAQと製品ガイドを読む。",
+      "contactSupport": "サポートに連絡",
+      "terms": "利用規約",
+      "privacy": "プライバシーポリシー",
+      "rateUs": "評価する",
+      "shareApp": "アプリを共有"
+    },
+    "helpCenterMissing": "ヘルプセンターのURLがまだ設定されていません。",
+    "supportMissing": "サポートURLがまだ設定されていません。",
+    "termsMissing": "利用規約のURLがまだ設定されていません。",
+    "privacyMissing": "プライバシーポリシーのURLがまだ設定されていません。"
+  },
+  "alerts": {
+    "error": "エラー",
+    "success": "成功",
+    "linkUnavailable": "リンクが利用できません",
+    "unableOpenLink": "リンクを開けません",
+    "tryAgainMoment": "しばらくしてからもう一度お試しください。",
+    "ratingUnavailable": "評価が利用できません",
+    "iosStoreMissing": "iOS App Store IDがまだ設定されていません。",
+    "unableOpenRating": "評価を開けません",
+    "shareUnavailable": "共有が利用できません",
+    "shareUrlMissing": "アプリ共有URLがまだ設定されていません。",
+    "unableShare": "共有できません",
+    "signOutTitle": "サインアウト",
+    "signOutBody": "サインアウトしてもよろしいですか？",
+    "clearCacheTitle": "キャッシュを削除",
+    "clearCacheBody": "このデバイスからダウンロード済み画像と一時的なアプリデータを削除しますか？",
+    "clearCacheSuccess": "アプリのキャッシュを正常に削除しました。",
+    "clearCacheFailed": "アプリのキャッシュを削除できませんでした。もう一度お試しください。",
+    "deleteTitle": "アカウントを削除",
+    "deleteBody": "アカウントを完全に削除してもよろしいですか？この操作は元に戻せません。",
+    "cancel": "キャンセル",
+    "delete": "削除"
+  },
+  "language": {
+    "english": "英語"
+  },
+  "notFound": {
+    "title": "おっと！",
+    "heading": "ページが見つかりません",
+    "description": "申し訳ありませんが、お探しのページは存在しません。",
+    "goHome": "ホームに戻る"
+  },
+  "nav": {
+    "profile": "プロフィール",
+    "chat": "チャット",
+    "createCharacter": "新しいAIキャラクターを作成",
+    "filter": "フィルター",
+    "home": "ホーム",
+    "settings": "設定",
+    "uploads": "アップロード",
+    "notifications": "通知"
+  },
+  "filter": {
+    "title": "フィルター",
+    "interestedIn": "興味のある対象",
+    "age": "年齢",
+    "zodiac": "星座",
+    "interests": "興味"
+  },
+  "chat": {
+    "conversationNotFound": "会話が見つかりません",
+    "startConversation": "会話を始める",
+    "sayHello": "{{name}}に挨拶しましょう！",
+    "aiCharacter": "AIキャラクター",
+    "aiCompanion": "あなたのAIコンパニオン",
+    "selfie": "セルフィー",
+    "selfieLabel": "AIセルフィー",
+    "clearTitle": "チャットを削除",
+    "clearBody": "{{name}}とのすべてのメッセージと画像を削除してもよろしいですか？この操作は元に戻せません。",
+    "thisAi": "このAI",
+    "clear": "削除",
+    "clearFailed": "チャットの削除に失敗しました。もう一度お試しください。",
+    "creditsRequiredMessage": "このリクエストには少なくとも{{count}}クレジットが必要です。",
+    "quiz": "クイズ",
+    "topic": "トピック",
+    "suggestion": "提案",
+    "typeMessage": "メッセージを入力..."
+  },
+  "profile": {
+    "notFound": "プロフィールが見つかりません",
+    "aboutMe": "自己紹介",
+    "lookingFor": "探しているもの",
+    "personality": "性格",
+    "interests": "興味",
+    "photos": "写真",
+    "compatibility": "相性"
+  },
+  "myCreation": {
+    "emptyTitle": "まだキャラクターがいません",
+    "emptyDescription": "最初の{{gender}}AIキャラクターを作成してチャットを始めましょう！",
+    "createCharacter": "キャラクターを作成"
+  },
+  "createCharacter": {
+    "title": "新しいAIキャラクターを作成",
+    "errorMissingName": "キャラクターの名前を入力してください",
+    "errorMissingGender": "性別を選択してください",
+    "errorMissingPhoto": "メイン写真をアップロードしてください",
+    "imageUploadSoon": "画像アップロードはR2統合で実装されます",
+    "uploadPhoto": "写真をアップロード",
+    "uploadPhotoDescription": "これがAIキャラクターのメイン写真になります。ベストショットをどうぞ！",
+    "supportedFormats": "（対応形式：jpg、png、gif）",
+    "name": "名前",
+    "namePlaceholder": "名前を入力",
+    "age": "年齢",
+    "ageValue": "{{age}}歳",
+    "selectAge": "年齢を選択",
+    "gender": "性別",
+    "selectGender": "性別を選択",
+    "zodiac": "星座",
+    "selectZodiac": "星座を選択",
+    "occupation": "職業",
+    "occupationPlaceholder": "例：デザイナー、モデル、旅行者など",
+    "aboutMe": "自己紹介",
+    "aboutMePlaceholder": "AIキャラクターの重要な情報を追加してください。自己紹介、経歴、興味、ライフスタイルなど。",
+    "interests": "興味",
+    "addInterest": "興味を追加",
+    "photos": "写真",
+    "uploadPhotos": "写真をアップロード",
+    "voice": "声"
+  },
+  "notifications": {
+    "buildRequired": "ビルドが必要",
+    "buildRequiredDescription": "プッシュ通知はiOSのExpo Goではサポートされていません。テスト用の開発ビルドを作成してください。",
+    "permissionDenied": "権限が拒否されました",
+    "permissionDeniedDescription": "デバイスの設定で通知を有効にしてください。",
+    "permissionsGranted": "通知の権限が付与され、デバイスが登録されました！",
+    "devBuildRequiredDescription": "プッシュ通知には開発ビルドが必要です。",
+    "registerFailed": "通知用のデバイス登録に失敗しました",
+    "requestFailed": "権限のリクエストに失敗しました",
+    "enterTitleBody": "タイトルと本文を入力してください",
+    "userNotFound": "ユーザーが見つかりません",
+    "sentSuccess": "通知が正常に送信されました！",
+    "sendFailed": "通知の送信に失敗しました",
+    "statusTitle": "プッシュ通知のステータス",
+    "enabledRegistered": "通知が有効です。デバイスが登録されています。",
+    "disabledPrompt": "通知が有効になっていません。通知の権限を許可してください。",
+    "disabledInApp": "このデバイスではこのアプリの通知がオフになっています。",
+    "requesting": "リクエスト中...",
+    "enable": "通知を有効にする",
+    "sendTestTitle": "テスト通知を送信",
+    "sendToSelf": "自分に通知を送信",
+    "titleLabel": "タイトル",
+    "titlePlaceholder": "通知のタイトル",
+    "bodyLabel": "本文",
+    "bodyPlaceholder": "通知の本文",
+    "defaultTitle": "テスト通知",
+    "defaultBody": "これはテスト通知です",
+    "sending": "送信中...",
+    "send": "通知を送信",
+    "recentTitle": "最近の通知",
+    "count": "{{count}}件の通知"
+  },
+  "uploads": {
+    "permissionRequired": "権限が必要です",
+    "permissionRequiredDescription": "カメラロールへのアクセス権限が必要です！",
+    "uploadSuccess": "画像が正常にアップロードされました！",
+    "uploadFailed": "画像のアップロードに失敗しました",
+    "deleteFile": "ファイルを削除",
+    "deleteConfirm": "このファイルを削除してもよろしいですか？",
+    "deleteFailed": "ファイルの削除に失敗しました",
+    "title": "ファイルアップロード",
+    "subtitle": "Cloudflare R2でファイルをアップロード・管理",
+    "uploadNewFile": "新しいファイルをアップロード",
+    "selectImage": "画像を選択",
+    "yourUploads": "あなたのアップロード",
+    "filesCount": "{{count}}ファイル",
+    "signInToView": "アップロードを見るにはサインインしてください",
+    "empty": "まだファイルがアップロードされていません"
+  },
+  "imageRequest": {
+    "title": "写真をリクエスト",
+    "credits": "{{count}}クレジット",
+    "subtitle": "受け取りたい写真をカスタマイズしてください。各選択はオプションです。",
+    "hairstyle": "ヘアスタイル",
+    "clothing": "服装",
+    "scene": "シーン",
+    "extraDetailsLabel": "追加の詳細",
+    "extraDetailsPlaceholder": "どんな写真が見たいですか？",
+    "generatePhoto": "写真を生成",
+    "insufficientCredits": "クレジットが不足しています。最低5クレジットが必要です。"
+  },
+  "match": {
+    "title": "マッチしました！",
+    "subtitle": "あなたと{{name}}はお互いに気に入りました\n次はどうしますか？",
+    "keepSwiping": "スワイプを続ける",
+    "startChatting": "チャットを始める"
+  },
+  "premium": {
+    "tapToSeePhoto": "タップして写真を見る",
+    "getCloser": "{{name}}にもっと近づく",
+    "unlockDescription": "{{name}}があなたに写真を送りました。プレミアムを取得して、ぼかしの向こう側を見ましょう。",
+    "unlockUnlimited": "無制限アクセスをアンロック"
+  },
+  "quiz": {
+    "started": "クイズ開始",
+    "letsPlay": "クイズで遊びましょう！",
+    "endQuiz": "クイズを終了"
+  },
+  "media": {
+    "recordingVideo": "動画を撮影中...",
+    "takingPhoto": "写真を撮影中..."
+  },
+  "signIn": {
+    "failed": "サインインに失敗しました"
+  },
+  "signUp": {
+    "failed": "サインアップに失敗しました",
+    "createAccount": "アカウントを作成"
+  },
+  "appearance": {
+    "theme": "テーマ",
+    "light": "ライト",
+    "dark": "ダーク",
+    "color": "カラー"
+  },
+  "settings": {
+    "disableNotifications": "通知を無効にする",
+    "disableNotificationsDescription": "通知を無効にするには、デバイスの設定に移動してください。",
+    "joined": "参加日",
+    "themeMode": "テーマモード",
+    "colorTheme": "カラーテーマ",
+    "notificationsDescription": "重要なアップデートの通知を受け取る"
+  },
+  "updates": {
+    "title": "アップデート可能",
+    "description": "アプリの新バージョンが利用可能です。最新の機能と改善を取得するには今すぐ再起動してください。",
+    "relaunch": "再起動",
+    "dismiss": "後で"
+  }
+}

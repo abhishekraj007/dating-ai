@@ -1,0 +1,421 @@
+{
+  "common": {
+    "language": "اللغة",
+    "back": "رجوع",
+    "goBack": "العودة",
+    "reset": "إعادة تعيين",
+    "apply": "تطبيق",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ...",
+    "upload": "رفع",
+    "signIn": "تسجيل الدخول",
+    "signUp": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "name": "الاسم",
+    "ok": "حسناً",
+    "chat": "دردشة",
+    "starting": "جارٍ البدء...",
+    "comingSoon": "قريباً",
+    "default": "افتراضي",
+    "main": "رئيسي",
+    "yesterday": "أمس"
+  },
+  "[object Object]": {
+    "title": "تحديث متاح",
+    "description": "إصدار جديد من التطبيق متاح. أعد التشغيل الآن للحصول على أحدث الميزات والتحسينات.",
+    "relaunch": "إعادة التشغيل",
+    "dismiss": "ليس الآن"
+  },
+  "tabs": {
+    "forYou": "لك",
+    "explore": "استكشاف",
+    "chats": "الدردشات",
+    "myCreation": "إنشائي",
+    "account": "الحساب"
+  },
+  "chats": {
+    "startConversation": "بدء محادثة",
+    "sentPhoto": "أرسل صورة",
+    "requestedPhoto": "طلب صورة",
+    "startedQuiz": "بدأ اختباراً",
+    "quizCompleted": "تم إكمال الاختبار",
+    "quizAnswer": "إجابة الاختبار",
+    "newMatches": "تطابقات جديدة",
+    "aiProfile": "ملف AI",
+    "emptyTitle": "لا توجد محادثات بعد",
+    "emptyDescription": "ابدأ الدردشة مع ملفات AI من تبويب الاستكشاف!"
+  },
+  "auth": {
+    "tagline": "لحظات الوحدة تحدث. اعثر على رفقة لا تنام أبداً، تحدث مع أصدقائك AI في أي وقت.",
+    "continueGoogle": "المتابعة عبر Google",
+    "continueApple": "المتابعة عبر Apple",
+    "agreePrefix": "بالمتابعة، أنت توافق على",
+    "terms": "شروط الخدمة",
+    "and": "و",
+    "privacy": "سياسة الخصوصية"
+  },
+  "welcome": {
+    "title": "اعثر على صديقك AI الجديد والمزيد!",
+    "subtitle": "تشعر بالوحدة؟ لست وحدك. تعرف على شخصيات تستمع إليك وتفهمك حقاً.",
+    "cta": "ابدأ"
+  },
+  "onboarding": {
+    "languages": {
+      "title": "اختر لغاتك",
+      "subtitle": "حدد مظهر التطبيق واللغة التي يتحدث بها شركاؤك من الذكاء الاصطناعي.",
+      "appTitle": "لغة التطبيق",
+      "appDescription": "تتحكم في القوائم والأزرار ونصوص التطبيق الأخرى.",
+      "chatTitle": "لغة الدردشة",
+      "chatDescription": "تتحكم في اللغة التي يرد بها رفاقك من الذكاء الاصطناعي."
+    },
+    "[object Object]": {
+      "music": "موسيقى",
+      "movies": "أفلام",
+      "travel": "سفر",
+      "fitness": "لياقة",
+      "cooking": "طبخ",
+      "reading": "قراءة",
+      "gaming": "ألعاب",
+      "photography": "تصوير",
+      "art": "فن",
+      "dancing": "رقص",
+      "sports": "رياضة",
+      "nature": "طبيعة",
+      "pets": "حيوانات أليفة",
+      "fashion": "أزياء",
+      "technology": "تكنولوجيا",
+      "yoga": "يوغا",
+      "coffee": "قهوة",
+      "wine": "نبيذ"
+    },
+    "gender": {
+      "title": "بمن أنت مهتم؟",
+      "female": "إناث",
+      "male": "ذكور",
+      "both": "الجميع"
+    },
+    "interests": {
+      "title": "ما هي اهتماماتك؟",
+      "selected": "{{count}} محدد"
+    },
+    "settingUp": "جارٍ الإعداد...",
+    "continue": "متابعة",
+    "skip": "تخطي",
+    "interest": {
+      "music": "موسيقى",
+      "movies": "أفلام",
+      "travel": "سفر",
+      "fitness": "لياقة",
+      "cooking": "طبخ",
+      "reading": "قراءة",
+      "gaming": "ألعاب",
+      "photography": "تصوير",
+      "art": "فن",
+      "dancing": "رقص",
+      "sports": "رياضة",
+      "nature": "طبيعة",
+      "pets": "حيوانات أليفة",
+      "fashion": "أزياء",
+      "technology": "تكنولوجيا",
+      "yoga": "يوغا",
+      "coffee": "قهوة",
+      "wine": "نبيذ"
+    }
+  },
+  "account": {
+    "profile": {
+      "noName": "لم يتم تعيين اسم",
+      "currentCredits": "الرصيد الحالي",
+      "buyCredits": "شراء رصيد",
+      "premium": "بريميوم",
+      "getPremium": "احصل على بريميوم"
+    },
+    "[object Object]": {
+      "appearance": "المظهر",
+      "settings": "الإعدادات",
+      "notifications": "الإشعارات",
+      "language": "لغة التطبيق",
+      "chatLanguage": "لغة الدردشة",
+      "account": "الحساب",
+      "accountDescription": "تسجيل الخروج وإدارة حذف الحساب.",
+      "signOutDescription": "تسجيل الخروج من هذا الجهاز.",
+      "helpCenter": "مركز المساعدة",
+      "helpCenterDescription": "اقرأ الأسئلة الشائعة وأدلة المنتج.",
+      "contactSupport": "اتصل بالدعم",
+      "terms": "شروط الخدمة",
+      "privacy": "سياسة الخصوصية",
+      "rateUs": "قيّمنا",
+      "shareApp": "مشاركة التطبيق"
+    },
+    "guest": {
+      "login": "تسجيل الدخول"
+    },
+    "actions": {
+      "title": "الحساب",
+      "subtitle": "إدارة جلستك ودورة حياة حسابك.",
+      "signOut": "تسجيل الخروج",
+      "signingOut": "جارٍ تسجيل الخروج...",
+      "clearCache": "مسح ذاكرة التخزين المؤقت",
+      "clearingCache": "جارٍ مسح ذاكرة التخزين المؤقت...",
+      "dangerTitle": "منطقة الخطر",
+      "dangerDescription": "بمجرد حذف حسابك، لا يمكن التراجع.",
+      "delete": "حذف الحساب",
+      "deleting": "جارٍ الحذف..."
+    },
+    "sheet": {
+      "title": "اختر لغة التطبيق",
+      "subtitle": "اختر لغتك الأم. اللغة الافتراضية هي الإنجليزية.",
+      "chatTitle": "اختر لغة الدردشة",
+      "chatSubtitle": "اختر اللغة التي يجب أن يستخدمها رفاقك من الذكاء الاصطناعي في المحادثات."
+    },
+    "section": {
+      "quickActions": "إجراءات سريعة",
+      "support": "الدعم",
+      "supportDescription": "المساعدة واستكشاف الأخطاء وخيارات الاتصال.",
+      "legal": "قانوني",
+      "feedback": "ملاحظات",
+      "feedbackDescription": "شارك ملاحظاتك وساعدنا على التحسين."
+    },
+    "item": {
+      "appearance": "المظهر",
+      "settings": "الإعدادات",
+      "notifications": "الإشعارات",
+      "language": "لغة التطبيق",
+      "chatLanguage": "لغة الدردشة",
+      "account": "الحساب",
+      "accountDescription": "تسجيل الخروج وإدارة حذف الحساب.",
+      "signOutDescription": "تسجيل الخروج من هذا الجهاز.",
+      "helpCenter": "مركز المساعدة",
+      "helpCenterDescription": "اقرأ الأسئلة الشائعة وأدلة المنتج.",
+      "contactSupport": "اتصل بالدعم",
+      "terms": "شروط الخدمة",
+      "privacy": "سياسة الخصوصية",
+      "rateUs": "قيّمنا",
+      "shareApp": "مشاركة التطبيق"
+    },
+    "helpCenterMissing": "رابط مركز المساعدة لم يتم تكوينه بعد.",
+    "supportMissing": "رابط الدعم لم يتم تكوينه بعد.",
+    "termsMissing": "رابط الشروط لم يتم تكوينه بعد.",
+    "privacyMissing": "رابط الخصوصية لم يتم تكوينه بعد."
+  },
+  "alerts": {
+    "error": "خطأ",
+    "success": "نجاح",
+    "linkUnavailable": "الرابط غير متاح",
+    "unableOpenLink": "تعذر فتح الرابط",
+    "tryAgainMoment": "يرجى المحاولة مرة أخرى بعد قليل.",
+    "ratingUnavailable": "التقييم غير متاح",
+    "iosStoreMissing": "معرف App Store لنظام iOS لم يتم تكوينه بعد.",
+    "unableOpenRating": "تعذر فتح التقييم",
+    "shareUnavailable": "المشاركة غير متاحة",
+    "shareUrlMissing": "رابط مشاركة التطبيق لم يتم تكوينه بعد.",
+    "unableShare": "تعذرت المشاركة",
+    "signOutTitle": "تسجيل الخروج",
+    "signOutBody": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+    "clearCacheTitle": "مسح ذاكرة التخزين المؤقت",
+    "clearCacheBody": "مسح الصور التي تم تنزيلها وبيانات التطبيق المؤقتة من هذا الجهاز؟",
+    "clearCacheSuccess": "تم مسح ذاكرة التخزين المؤقت للتطبيق بنجاح.",
+    "clearCacheFailed": "تعذر مسح ذاكرة التخزين المؤقت للتطبيق. حاول مرة أخرى.",
+    "deleteTitle": "حذف الحساب",
+    "deleteBody": "هل أنت متأكد أنك تريد حذف حسابك نهائياً؟ لا يمكن التراجع عن هذا الإجراء.",
+    "cancel": "إلغاء",
+    "delete": "حذف"
+  },
+  "language": {
+    "english": "الإنجليزية"
+  },
+  "notFound": {
+    "title": "عذراً!",
+    "heading": "الصفحة غير موجودة",
+    "description": "عذراً، الصفحة التي تبحث عنها غير موجودة.",
+    "goHome": "الذهاب للرئيسية"
+  },
+  "nav": {
+    "profile": "الملف الشخصي",
+    "chat": "دردشة",
+    "createCharacter": "إنشاء شخصية AI جديدة",
+    "filter": "تصفية",
+    "home": "الرئيسية",
+    "settings": "الإعدادات",
+    "uploads": "التحميلات",
+    "notifications": "الإشعارات"
+  },
+  "filter": {
+    "title": "تصفية",
+    "interestedIn": "مهتم بـ",
+    "age": "العمر",
+    "zodiac": "الأبراج",
+    "interests": "الاهتمامات"
+  },
+  "chat": {
+    "conversationNotFound": "المحادثة غير موجودة",
+    "startConversation": "بدء محادثة",
+    "sayHello": "قل مرحباً لـ {{name}}!",
+    "aiCharacter": "شخصية ذكاء اصطناعي",
+    "aiCompanion": "رفيقك AI",
+    "selfie": "سيلفي",
+    "selfieLabel": "سيلفي AI",
+    "clearTitle": "مسح الدردشة",
+    "clearBody": "هل أنت متأكد أنك تريد حذف جميع الرسائل والصور مع {{name}}؟ لا يمكن التراجع عن هذا الإجراء.",
+    "thisAi": "هذا الـ AI",
+    "clear": "مسح",
+    "clearFailed": "فشل مسح الدردشة. يرجى المحاولة مرة أخرى.",
+    "quiz": "اختبار",
+    "topic": "موضوع",
+    "suggestion": "اقتراح",
+    "typeMessage": "اكتب رسالة...",
+    "creditsRequiredMessage": "أنت بحاجة إلى {{count}} رصيدًا على الأقل لهذا الطلب."
+  },
+  "profile": {
+    "notFound": "الملف الشخصي غير موجود",
+    "aboutMe": "عني",
+    "lookingFor": "أبحث عن",
+    "personality": "الشخصية",
+    "interests": "الاهتمامات",
+    "photos": "الصور",
+    "compatibility": "التوافق"
+  },
+  "myCreation": {
+    "emptyTitle": "لا توجد شخصيات بعد",
+    "emptyDescription": "أنشئ أول شخصية AI {{gender}} وابدأ الدردشة!",
+    "createCharacter": "إنشاء شخصية"
+  },
+  "createCharacter": {
+    "title": "إنشاء شخصية AI جديدة",
+    "errorMissingName": "يرجى إدخال اسم لشخصيتك",
+    "errorMissingGender": "يرجى اختيار الجنس",
+    "errorMissingPhoto": "يرجى رفع صورة رئيسية",
+    "imageUploadSoon": "سيتم تنفيذ رفع الصور مع تكامل R2",
+    "uploadPhoto": "رفع صورة",
+    "uploadPhotoDescription": "ستكون هذه الصورة الرئيسية لشخصيتك AI. قدم أفضل صورة لديك!",
+    "supportedFormats": "(الصيغ المدعومة: jpg و png و gif)",
+    "name": "الاسم",
+    "namePlaceholder": "أدخل الاسم",
+    "age": "العمر",
+    "ageValue": "{{age}} سنة",
+    "selectAge": "اختر العمر",
+    "gender": "الجنس",
+    "selectGender": "اختر الجنس",
+    "zodiac": "الأبراج",
+    "selectZodiac": "اختر البرج",
+    "occupation": "المهنة",
+    "occupationPlaceholder": "مثال: مصمم، عارض أزياء، مسافر، إلخ.",
+    "aboutMe": "عني",
+    "aboutMePlaceholder": "أضف معلومات مهمة عن شخصيتك AI، مثل المقدمة والخلفية والاهتمامات ونمط الحياة وغيرها.",
+    "interests": "الاهتمامات",
+    "addInterest": "إضافة اهتمام",
+    "photos": "الصور",
+    "uploadPhotos": "رفع صور",
+    "voice": "الصوت"
+  },
+  "notifications": {
+    "buildRequired": "يلزم إنشاء بناء",
+    "buildRequiredDescription": "الإشعارات الفورية غير مدعومة في Expo Go على iOS. أنشئ بناء تطوير للاختبار.",
+    "permissionDenied": "تم رفض الإذن",
+    "permissionDeniedDescription": "فعّل الإشعارات في إعدادات جهازك.",
+    "permissionsGranted": "تم منح أذونات الإشعارات وتسجيل الجهاز!",
+    "devBuildRequiredDescription": "الإشعارات الفورية تتطلب بناء تطوير.",
+    "registerFailed": "فشل تسجيل الجهاز للإشعارات",
+    "requestFailed": "فشل طلب الأذونات",
+    "enterTitleBody": "يرجى إدخال العنوان والنص",
+    "userNotFound": "المستخدم غير موجود",
+    "sentSuccess": "تم إرسال الإشعار بنجاح!",
+    "sendFailed": "فشل إرسال الإشعار",
+    "statusTitle": "حالة الإشعارات الفورية",
+    "enabledRegistered": "الإشعارات مفعلة. الجهاز مسجل.",
+    "disabledPrompt": "الإشعارات غير مفعلة. يرجى السماح بأذونات الإشعارات.",
+    "disabledInApp": "تم إيقاف الإشعارات لهذا التطبيق على هذا الجهاز.",
+    "requesting": "جارٍ الطلب...",
+    "enable": "تفعيل الإشعارات",
+    "sendTestTitle": "إرسال إشعار تجريبي",
+    "sendToSelf": "أرسل إشعاراً لنفسك",
+    "titleLabel": "العنوان",
+    "titlePlaceholder": "عنوان الإشعار",
+    "bodyLabel": "النص",
+    "bodyPlaceholder": "نص الإشعار",
+    "defaultTitle": "إشعار تجريبي",
+    "defaultBody": "هذا إشعار تجريبي",
+    "sending": "جارٍ الإرسال...",
+    "send": "إرسال إشعار",
+    "recentTitle": "الإشعارات الأخيرة",
+    "count": "{{count}} إشعار"
+  },
+  "uploads": {
+    "permissionRequired": "الإذن مطلوب",
+    "permissionRequiredDescription": "يلزم الإذن للوصول إلى ألبوم الصور!",
+    "uploadSuccess": "تم رفع الصورة بنجاح!",
+    "uploadFailed": "فشل رفع الصورة",
+    "deleteFile": "حذف الملف",
+    "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذا الملف؟",
+    "deleteFailed": "فشل حذف الملف",
+    "title": "رفع الملفات",
+    "subtitle": "ارفع وأدر ملفاتك باستخدام Cloudflare R2",
+    "uploadNewFile": "رفع ملف جديد",
+    "selectImage": "اختر صورة",
+    "yourUploads": "تحميلاتك",
+    "filesCount": "{{count}} ملفات",
+    "signInToView": "سجل الدخول لعرض تحميلاتك",
+    "empty": "لم يتم رفع أي ملفات بعد"
+  },
+  "imageRequest": {
+    "title": "طلب صورة",
+    "credits": "{{count}} رصيد",
+    "subtitle": "خصص الصورة التي تريد استلامها. كل اختيار اختياري.",
+    "hairstyle": "تسريحة الشعر",
+    "clothing": "الملابس",
+    "scene": "المشهد",
+    "extraDetailsLabel": "تفاصيل إضافية",
+    "extraDetailsPlaceholder": "ما نوع الصورة التي تريد رؤيتها؟",
+    "generatePhoto": "إنشاء صورة",
+    "insufficientCredits": "رصيد غير كافٍ. تحتاج إلى 5 أرصدة على الأقل."
+  },
+  "match": {
+    "title": "إنه تطابق!",
+    "subtitle": "أنت و{{name}} أعجبتما ببعضكما\nما خطوتك التالية؟",
+    "keepSwiping": "استمر بالتمرير",
+    "startChatting": "ابدأ الدردشة"
+  },
+  "premium": {
+    "tapToSeePhoto": "انقر لرؤية الصورة",
+    "getCloser": "اقترب أكثر من {{name}}",
+    "unlockDescription": "أرسل لك {{name}} صورة. احصل على بريميوم واكتشف ما وراء الضبابية.",
+    "unlockUnlimited": "فتح الوصول غير المحدود"
+  },
+  "quiz": {
+    "started": "بدأ الاختبار",
+    "letsPlay": "هيا نلعب اختباراً!",
+    "endQuiz": "إنهاء الاختبار"
+  },
+  "media": {
+    "recordingVideo": "جارٍ تسجيل فيديو...",
+    "takingPhoto": "جارٍ التقاط صورة..."
+  },
+  "signIn": {
+    "failed": "فشل تسجيل الدخول"
+  },
+  "signUp": {
+    "failed": "فشل إنشاء الحساب",
+    "createAccount": "إنشاء حساب"
+  },
+  "appearance": {
+    "theme": "المظهر",
+    "light": "فاتح",
+    "dark": "داكن",
+    "color": "اللون"
+  },
+  "settings": {
+    "disableNotifications": "تعطيل الإشعارات",
+    "disableNotificationsDescription": "لتعطيل الإشعارات، انتقل إلى إعدادات جهازك.",
+    "joined": "انضم في",
+    "themeMode": "وضع المظهر",
+    "colorTheme": "مظهر اللون",
+    "notificationsDescription": "تلقي إشعارات حول التحديثات المهمة"
+  },
+  "updates": {
+    "title": "تحديث متاح",
+    "description": "إصدار جديد من التطبيق متاح. أعد التشغيل الآن للحصول على أحدث الميزات والتحسينات.",
+    "relaunch": "إعادة التشغيل",
+    "dismiss": "ليس الآن"
+  }
+}

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Alert, AppState, type AppStateStatus } from "react-native";
 import * as Updates from "expo-updates";
-import { t as i18nT, loadSavedLanguage } from "@/lib/i18n/singleton";
+import i18n from "@/lib/i18n";
 
 const LOG_PREFIX = "[ExpoUpdates]";
 const UPDATE_CHECK_THROTTLE_MS = 60_000;
@@ -67,18 +67,18 @@ function showUpdateAlert(source: string) {
   console.log(LOG_PREFIX, "Showing update alert", { source });
 
   Alert.alert(
-    i18nT("updates.title"),
-    i18nT("updates.description"),
+    i18n.t("updates.title"),
+    i18n.t("updates.description"),
     [
       {
-        text: i18nT("updates.dismiss"),
+        text: i18n.t("updates.dismiss"),
         style: "cancel",
         onPress: () => {
           didShowAlertRef.current = false;
         },
       },
       {
-        text: i18nT("updates.relaunch"),
+        text: i18n.t("updates.relaunch"),
         onPress: () => {
           void Updates.reloadAsync().catch((error) => {
             didShowAlertRef.current = false;
@@ -115,7 +115,6 @@ export function useExpoUpdatesBootstrap(options?: { test?: boolean }) {
 
     didLogLaunchRef.current = true;
     console.log(LOG_PREFIX, "Running update", getRunningUpdateInfo());
-    void loadSavedLanguage();
     void logRecentUpdateIssues();
   }, []);
 

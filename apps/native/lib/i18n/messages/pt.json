@@ -1,0 +1,421 @@
+{
+  "common": {
+    "language": "Idioma",
+    "back": "Voltar",
+    "goBack": "Voltar",
+    "reset": "Redefinir",
+    "apply": "Aplicar",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "upload": "Enviar",
+    "signIn": "Entrar",
+    "signUp": "Cadastrar",
+    "email": "E-mail",
+    "password": "Senha",
+    "name": "Nome",
+    "ok": "OK",
+    "chat": "Chat",
+    "starting": "Iniciando...",
+    "comingSoon": "Em breve",
+    "default": "Padrão",
+    "main": "Principal",
+    "yesterday": "Ontem"
+  },
+  "[object Object]": {
+    "title": "Atualizacao Disponivel",
+    "description": "Uma nova versao do app esta disponivel. Reinicie agora para obter os ultimos recursos e melhorias.",
+    "relaunch": "Reiniciar",
+    "dismiss": "Agora Nao"
+  },
+  "tabs": {
+    "forYou": "Para você",
+    "explore": "Explorar",
+    "chats": "Conversas",
+    "myCreation": "Minha criação",
+    "account": "Conta"
+  },
+  "chats": {
+    "startConversation": "Iniciar uma conversa",
+    "sentPhoto": "Enviou uma foto",
+    "requestedPhoto": "Solicitou uma foto",
+    "startedQuiz": "Iniciou um quiz",
+    "quizCompleted": "Quiz concluído",
+    "quizAnswer": "Resposta do quiz",
+    "newMatches": "Novos matches",
+    "aiProfile": "Perfil IA",
+    "emptyTitle": "Nenhuma conversa ainda",
+    "emptyDescription": "Comece a conversar com perfis IA na aba Explorar!"
+  },
+  "auth": {
+    "tagline": "Momentos de solidão acontecem. Encontre companhia que nunca dorme, converse com seus amigos IA a qualquer hora.",
+    "continueGoogle": "Continuar com Google",
+    "continueApple": "Continuar com Apple",
+    "agreePrefix": "Ao continuar, você concorda com nossos",
+    "terms": "termos de serviço",
+    "and": "e",
+    "privacy": "política de privacidade"
+  },
+  "welcome": {
+    "title": "Encontre seu novo melhor amigo IA e mais!",
+    "subtitle": "Se sentindo sozinho? Você não é o único. Conheça personagens que realmente te ouvem e te entendem.",
+    "cta": "Começar"
+  },
+  "onboarding": {
+    "languages": {
+      "title": "Escolha seus idiomas",
+      "subtitle": "Defina como o app aparece e em qual idioma seus matches de IA falam.",
+      "appTitle": "Idioma do app",
+      "appDescription": "Controla menus, botões e outros textos do app.",
+      "chatTitle": "Idioma do chat",
+      "chatDescription": "Controla o idioma em que seus companheiros de IA respondem."
+    },
+    "[object Object]": {
+      "music": "Música",
+      "movies": "Filmes",
+      "travel": "Viagem",
+      "fitness": "Fitness",
+      "cooking": "Culinária",
+      "reading": "Leitura",
+      "gaming": "Jogos",
+      "photography": "Fotografia",
+      "art": "Arte",
+      "dancing": "Dança",
+      "sports": "Esportes",
+      "nature": "Natureza",
+      "pets": "Pets",
+      "fashion": "Moda",
+      "technology": "Tecnologia",
+      "yoga": "Yoga",
+      "coffee": "Café",
+      "wine": "Vinho"
+    },
+    "gender": {
+      "title": "Em quem você tem interesse?",
+      "female": "Mulheres",
+      "male": "Homens",
+      "both": "Todos"
+    },
+    "interests": {
+      "title": "Quais são seus interesses?",
+      "selected": "{{count}} selecionados"
+    },
+    "settingUp": "Configurando...",
+    "continue": "Continuar",
+    "skip": "Pular",
+    "interest": {
+      "music": "Música",
+      "movies": "Filmes",
+      "travel": "Viagem",
+      "fitness": "Fitness",
+      "cooking": "Culinária",
+      "reading": "Leitura",
+      "gaming": "Jogos",
+      "photography": "Fotografia",
+      "art": "Arte",
+      "dancing": "Dança",
+      "sports": "Esportes",
+      "nature": "Natureza",
+      "pets": "Pets",
+      "fashion": "Moda",
+      "technology": "Tecnologia",
+      "yoga": "Yoga",
+      "coffee": "Café",
+      "wine": "Vinho"
+    }
+  },
+  "account": {
+    "profile": {
+      "noName": "Sem nome definido",
+      "currentCredits": "Créditos atuais",
+      "buyCredits": "Comprar créditos",
+      "premium": "Premium",
+      "getPremium": "Obter Premium"
+    },
+    "[object Object]": {
+      "appearance": "Aparência",
+      "settings": "Configurações",
+      "notifications": "Notificações",
+      "language": "Idioma do app",
+      "chatLanguage": "Idioma do chat",
+      "account": "Conta",
+      "accountDescription": "Sair e gerenciar exclusão de conta.",
+      "signOutDescription": "Sair deste dispositivo.",
+      "helpCenter": "Central de ajuda",
+      "helpCenterDescription": "Leia FAQs e guias do produto.",
+      "contactSupport": "Contatar suporte",
+      "terms": "Termos de serviço",
+      "privacy": "Política de privacidade",
+      "rateUs": "Avalie-nos",
+      "shareApp": "Compartilhar app"
+    },
+    "guest": {
+      "login": "Entrar"
+    },
+    "actions": {
+      "title": "Conta",
+      "subtitle": "Gerencie sua sessão e ciclo de vida da conta.",
+      "signOut": "Sair",
+      "signingOut": "Saindo...",
+      "clearCache": "Limpar cache",
+      "clearingCache": "Limpando cache...",
+      "dangerTitle": "Zona de perigo",
+      "dangerDescription": "Depois de excluir sua conta, não há como voltar atrás.",
+      "delete": "Excluir conta",
+      "deleting": "Excluindo..."
+    },
+    "sheet": {
+      "title": "Escolha o idioma do app",
+      "subtitle": "Selecione seu idioma nativo. O inglês é o padrão.",
+      "chatTitle": "Escolher idioma do chat",
+      "chatSubtitle": "Selecione o idioma que seus companheiros de IA devem usar nas conversas."
+    },
+    "section": {
+      "quickActions": "Ações rápidas",
+      "support": "Suporte",
+      "supportDescription": "Ajuda, solução de problemas e opções de contato.",
+      "legal": "Legal",
+      "feedback": "Feedback",
+      "feedbackDescription": "Compartilhe seu feedback e nos ajude a melhorar."
+    },
+    "item": {
+      "appearance": "Aparência",
+      "settings": "Configurações",
+      "notifications": "Notificações",
+      "language": "Idioma do app",
+      "chatLanguage": "Idioma do chat",
+      "account": "Conta",
+      "accountDescription": "Sair e gerenciar exclusão de conta.",
+      "signOutDescription": "Sair deste dispositivo.",
+      "helpCenter": "Central de ajuda",
+      "helpCenterDescription": "Leia FAQs e guias do produto.",
+      "contactSupport": "Contatar suporte",
+      "terms": "Termos de serviço",
+      "privacy": "Política de privacidade",
+      "rateUs": "Avalie-nos",
+      "shareApp": "Compartilhar app"
+    },
+    "helpCenterMissing": "A URL da central de ajuda ainda não está configurada.",
+    "supportMissing": "A URL de suporte ainda não está configurada.",
+    "termsMissing": "A URL dos termos ainda não está configurada.",
+    "privacyMissing": "A URL de privacidade ainda não está configurada."
+  },
+  "alerts": {
+    "error": "Erro",
+    "success": "Sucesso",
+    "linkUnavailable": "Link indisponível",
+    "unableOpenLink": "Não foi possível abrir o link",
+    "tryAgainMoment": "Tente novamente em um momento.",
+    "ratingUnavailable": "Avaliação indisponível",
+    "iosStoreMissing": "O ID da App Store iOS ainda não está configurado.",
+    "unableOpenRating": "Não foi possível abrir a avaliação",
+    "shareUnavailable": "Compartilhamento indisponível",
+    "shareUrlMissing": "A URL de compartilhamento do app ainda não está configurada.",
+    "unableShare": "Não foi possível compartilhar",
+    "signOutTitle": "Sair",
+    "signOutBody": "Tem certeza de que deseja sair?",
+    "clearCacheTitle": "Limpar cache",
+    "clearCacheBody": "Limpar imagens baixadas e dados temporários do app deste dispositivo?",
+    "clearCacheSuccess": "O cache do app foi limpo com sucesso.",
+    "clearCacheFailed": "Não foi possível limpar o cache do app. Tente novamente.",
+    "deleteTitle": "Excluir conta",
+    "deleteBody": "Tem certeza de que deseja excluir permanentemente sua conta? Esta ação não pode ser desfeita.",
+    "cancel": "Cancelar",
+    "delete": "Excluir"
+  },
+  "language": {
+    "english": "Inglês"
+  },
+  "notFound": {
+    "title": "Ops!",
+    "heading": "Página não encontrada",
+    "description": "Desculpe, a página que você procura não existe.",
+    "goHome": "Ir para o início"
+  },
+  "nav": {
+    "profile": "Perfil",
+    "chat": "Chat",
+    "createCharacter": "Criar novo personagem IA",
+    "filter": "Filtro",
+    "home": "Início",
+    "settings": "Configurações",
+    "uploads": "Uploads",
+    "notifications": "Notificações"
+  },
+  "filter": {
+    "title": "Filtro",
+    "interestedIn": "Interessado em",
+    "age": "Idade",
+    "zodiac": "Zodíaco",
+    "interests": "Interesses"
+  },
+  "chat": {
+    "conversationNotFound": "Conversa não encontrada",
+    "startConversation": "Iniciar uma conversa",
+    "sayHello": "Diga olá para {{name}}!",
+    "aiCharacter": "Personagem de IA",
+    "aiCompanion": "seu companheiro IA",
+    "selfie": "Selfie",
+    "selfieLabel": "Selfie IA",
+    "clearTitle": "Limpar chat",
+    "clearBody": "Tem certeza de que deseja excluir todas as mensagens e imagens com {{name}}? Esta ação não pode ser desfeita.",
+    "thisAi": "esta IA",
+    "clear": "Limpar",
+    "clearFailed": "Falha ao limpar o chat. Tente novamente.",
+    "quiz": "Quiz",
+    "creditsRequiredMessage": "Você precisa de pelo menos {{count}} créditos para esta solicitação.",
+    "topic": "Tópico",
+    "suggestion": "Sugestão",
+    "typeMessage": "Digite uma mensagem..."
+  },
+  "profile": {
+    "notFound": "Perfil não encontrado",
+    "aboutMe": "Sobre mim",
+    "lookingFor": "Procurando",
+    "personality": "Personalidade",
+    "interests": "Interesses",
+    "photos": "Fotos",
+    "compatibility": "Compatibilidade"
+  },
+  "myCreation": {
+    "emptyTitle": "Nenhum personagem ainda",
+    "emptyDescription": "Crie seu primeiro personagem IA {{gender}} e comece a conversar!",
+    "createCharacter": "Criar personagem"
+  },
+  "createCharacter": {
+    "title": "Criar novo personagem IA",
+    "errorMissingName": "Por favor, insira um nome para seu personagem",
+    "errorMissingGender": "Por favor, selecione um gênero",
+    "errorMissingPhoto": "Por favor, envie uma foto principal",
+    "imageUploadSoon": "O upload de imagens será implementado com a integração R2",
+    "uploadPhoto": "Enviar uma foto",
+    "uploadPhotoDescription": "Esta será a foto principal do seu personagem IA. Dê sua melhor foto!",
+    "supportedFormats": "(Formatos suportados: jpg, png e gif)",
+    "name": "Nome",
+    "namePlaceholder": "Digite o nome",
+    "age": "Idade",
+    "ageValue": "{{age}} anos",
+    "selectAge": "Selecionar idade",
+    "gender": "Gênero",
+    "selectGender": "Selecionar gênero",
+    "zodiac": "Zodíaco",
+    "selectZodiac": "Selecionar zodíaco",
+    "occupation": "Profissão",
+    "occupationPlaceholder": "ex. Designer, Modelo, Viajante, etc.",
+    "aboutMe": "Sobre mim",
+    "aboutMePlaceholder": "Adicione informações importantes sobre seu personagem IA, como introdução, histórico, interesses, estilo de vida, etc.",
+    "interests": "Interesses",
+    "addInterest": "Adicionar interesse",
+    "photos": "Fotos",
+    "uploadPhotos": "Enviar fotos",
+    "voice": "Voz"
+  },
+  "notifications": {
+    "buildRequired": "Build necessário",
+    "buildRequiredDescription": "Notificações push não são suportadas no Expo Go no iOS. Crie um build de desenvolvimento para testar.",
+    "permissionDenied": "Permissão negada",
+    "permissionDeniedDescription": "Ative as notificações nas configurações do seu dispositivo.",
+    "permissionsGranted": "Permissões de notificação concedidas e dispositivo registrado!",
+    "devBuildRequiredDescription": "Notificações push requerem um build de desenvolvimento.",
+    "registerFailed": "Falha ao registrar o dispositivo para notificações",
+    "requestFailed": "Falha ao solicitar permissões",
+    "enterTitleBody": "Por favor, insira título e corpo",
+    "userNotFound": "Usuário não encontrado",
+    "sentSuccess": "Notificação enviada com sucesso!",
+    "sendFailed": "Falha ao enviar a notificação",
+    "statusTitle": "Status das notificações push",
+    "enabledRegistered": "Notificações ativadas. Dispositivo registrado.",
+    "disabledPrompt": "Notificações não ativadas. Permita as permissões de notificação.",
+    "disabledInApp": "As notificações estão desativadas para este app neste dispositivo.",
+    "requesting": "Solicitando...",
+    "enable": "Ativar notificações",
+    "sendTestTitle": "Enviar notificação de teste",
+    "sendToSelf": "Envie uma notificação para si mesmo",
+    "titleLabel": "Título",
+    "titlePlaceholder": "Título da notificação",
+    "bodyLabel": "Corpo",
+    "bodyPlaceholder": "Corpo da notificação",
+    "defaultTitle": "Notificação de teste",
+    "defaultBody": "Esta é uma notificação de teste",
+    "sending": "Enviando...",
+    "send": "Enviar notificação",
+    "recentTitle": "Notificações recentes",
+    "count": "{{count}} notificação(ões)"
+  },
+  "uploads": {
+    "permissionRequired": "Permissão necessária",
+    "permissionRequiredDescription": "É necessária permissão para acessar a galeria de fotos!",
+    "uploadSuccess": "Imagem enviada com sucesso!",
+    "uploadFailed": "Falha ao enviar a imagem",
+    "deleteFile": "Excluir arquivo",
+    "deleteConfirm": "Tem certeza de que deseja excluir este arquivo?",
+    "deleteFailed": "Falha ao excluir o arquivo",
+    "title": "Upload de arquivos",
+    "subtitle": "Envie e gerencie seus arquivos com Cloudflare R2",
+    "uploadNewFile": "Enviar novo arquivo",
+    "selectImage": "Selecionar imagem",
+    "yourUploads": "Seus uploads",
+    "filesCount": "{{count}} arquivos",
+    "signInToView": "Entre para ver seus uploads",
+    "empty": "Nenhum arquivo enviado ainda"
+  },
+  "imageRequest": {
+    "title": "Solicitar foto",
+    "credits": "{{count}} créditos",
+    "subtitle": "Personalize a foto que deseja receber. Cada seleção é opcional.",
+    "hairstyle": "Penteado",
+    "clothing": "Roupa",
+    "scene": "Cena",
+    "extraDetailsLabel": "Detalhes extras",
+    "extraDetailsPlaceholder": "Que tipo de foto você gostaria de ver?",
+    "generatePhoto": "Gerar foto",
+    "insufficientCredits": "Créditos insuficientes. Você precisa de pelo menos 5 créditos."
+  },
+  "match": {
+    "title": "É um match!",
+    "subtitle": "Você e {{name}} se curtiram\nQual é seu próximo passo?",
+    "keepSwiping": "Continuar deslizando",
+    "startChatting": "Começar a conversar"
+  },
+  "premium": {
+    "tapToSeePhoto": "Toque para ver a foto",
+    "getCloser": "Chegue mais perto de {{name}}",
+    "unlockDescription": "{{name}} te enviou uma foto. Obtenha Premium e descubra o que se esconde por trás do desfoque.",
+    "unlockUnlimited": "Desbloquear acesso ilimitado"
+  },
+  "quiz": {
+    "started": "Quiz iniciado",
+    "letsPlay": "Vamos jogar um quiz!",
+    "endQuiz": "Encerrar quiz"
+  },
+  "media": {
+    "recordingVideo": "Gravando um vídeo...",
+    "takingPhoto": "Tirando uma foto..."
+  },
+  "signIn": {
+    "failed": "Falha ao entrar"
+  },
+  "signUp": {
+    "failed": "Falha ao cadastrar",
+    "createAccount": "Criar conta"
+  },
+  "appearance": {
+    "theme": "Tema",
+    "light": "Claro",
+    "dark": "Escuro",
+    "color": "Cor"
+  },
+  "settings": {
+    "disableNotifications": "Desativar notificações",
+    "disableNotificationsDescription": "Para desativar as notificações, vá para as configurações do seu dispositivo.",
+    "joined": "Entrou em",
+    "themeMode": "Modo do tema",
+    "colorTheme": "Tema de cor",
+    "notificationsDescription": "Receba notificações sobre atualizações importantes"
+  },
+  "updates": {
+    "title": "Atualizacao Disponivel",
+    "description": "Uma nova versao do app esta disponivel. Reinicie agora para obter os ultimos recursos e melhorias.",
+    "relaunch": "Reiniciar",
+    "dismiss": "Agora Nao"
+  }
+}

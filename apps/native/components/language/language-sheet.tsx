@@ -2,7 +2,7 @@ import { BottomSheet, RadioGroup } from "heroui-native";
 import { Text, View } from "react-native";
 import { useTranslation } from "@/hooks/use-translation";
 import { useChatLanguage } from "@/hooks/use-chat-language";
-import type { AppLanguage } from "@/lib/i18n/types";
+import type { AppLanguage } from "@/lib/i18n";
 
 type LanguageSheetProps = {
   isOpen: boolean;
@@ -20,9 +20,7 @@ export const LanguageSheet = ({
 
   const isApp = variant === "app";
   const selectedLanguage = isApp ? language : chatLanguage;
-  const title = isApp
-    ? t("account.sheet.title")
-    : t("account.sheet.chatTitle");
+  const title = isApp ? t("account.sheet.title") : t("account.sheet.chatTitle");
   const subtitle = isApp
     ? t("account.sheet.subtitle")
     : t("account.sheet.chatSubtitle");

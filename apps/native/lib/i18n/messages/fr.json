@@ -1,0 +1,421 @@
+{
+  "common": {
+    "language": "Langue",
+    "back": "Retour",
+    "goBack": "Revenir",
+    "reset": "Réinitialiser",
+    "apply": "Appliquer",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "upload": "Télécharger",
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "name": "Nom",
+    "ok": "OK",
+    "chat": "Chat",
+    "starting": "Démarrage...",
+    "comingSoon": "Bientôt disponible",
+    "default": "Par défaut",
+    "main": "Principal",
+    "yesterday": "Hier"
+  },
+  "[object Object]": {
+    "title": "Mise a Jour Disponible",
+    "description": "Une nouvelle version de l'application est disponible. Relancez maintenant pour profiter des dernieres fonctionnalites et ameliorations.",
+    "relaunch": "Relancer",
+    "dismiss": "Plus Tard"
+  },
+  "tabs": {
+    "forYou": "Pour vous",
+    "explore": "Explorer",
+    "chats": "Chats",
+    "myCreation": "Mes créations",
+    "account": "Compte"
+  },
+  "chats": {
+    "startConversation": "Démarrer une conversation",
+    "sentPhoto": "A envoyé une photo",
+    "requestedPhoto": "A demandé une photo",
+    "startedQuiz": "A lancé un quiz",
+    "quizCompleted": "Quiz terminé",
+    "quizAnswer": "Réponse au quiz",
+    "newMatches": "Nouveaux matchs",
+    "aiProfile": "Profil IA",
+    "emptyTitle": "Pas encore de conversations",
+    "emptyDescription": "Commencez à discuter avec des profils IA depuis l'onglet Explorer !"
+  },
+  "auth": {
+    "tagline": "Les moments de solitude arrivent. Trouvez une compagnie qui ne dort jamais, parlez avec vos amis IA à tout moment.",
+    "continueGoogle": "Continuer avec Google",
+    "continueApple": "Continuer avec Apple",
+    "agreePrefix": "En continuant, vous acceptez nos",
+    "terms": "conditions d'utilisation",
+    "and": "et",
+    "privacy": "politique de confidentialité"
+  },
+  "welcome": {
+    "title": "Trouvez votre nouveau meilleur ami IA et plus !",
+    "subtitle": "Vous vous sentez seul ? Vous n'êtes pas le seul. Rencontrez des personnages qui vous écoutent et vous comprennent vraiment.",
+    "cta": "Commencer"
+  },
+  "onboarding": {
+    "languages": {
+      "title": "Choisissez vos langues",
+      "subtitle": "Définissez l'apparence de l'app et la langue de vos matchs IA.",
+      "appTitle": "Langue de l'app",
+      "appDescription": "Contrôle les menus, boutons et textes de l'application.",
+      "chatTitle": "Langue du chat",
+      "chatDescription": "Contrôle la langue dans laquelle vos compagnons IA répondent."
+    },
+    "[object Object]": {
+      "music": "Musique",
+      "movies": "Films",
+      "travel": "Voyage",
+      "fitness": "Fitness",
+      "cooking": "Cuisine",
+      "reading": "Lecture",
+      "gaming": "Jeux vidéo",
+      "photography": "Photographie",
+      "art": "Art",
+      "dancing": "Danse",
+      "sports": "Sports",
+      "nature": "Nature",
+      "pets": "Animaux",
+      "fashion": "Mode",
+      "technology": "Technologie",
+      "yoga": "Yoga",
+      "coffee": "Café",
+      "wine": "Vin"
+    },
+    "gender": {
+      "title": "Qui vous intéresse ?",
+      "female": "Femmes",
+      "male": "Hommes",
+      "both": "Tous"
+    },
+    "interests": {
+      "title": "Quels sont vos centres d'intérêt ?",
+      "selected": "{{count}} sélectionnés"
+    },
+    "settingUp": "Configuration...",
+    "continue": "Continuer",
+    "skip": "Passer",
+    "interest": {
+      "music": "Musique",
+      "movies": "Films",
+      "travel": "Voyage",
+      "fitness": "Fitness",
+      "cooking": "Cuisine",
+      "reading": "Lecture",
+      "gaming": "Jeux vidéo",
+      "photography": "Photographie",
+      "art": "Art",
+      "dancing": "Danse",
+      "sports": "Sports",
+      "nature": "Nature",
+      "pets": "Animaux",
+      "fashion": "Mode",
+      "technology": "Technologie",
+      "yoga": "Yoga",
+      "coffee": "Café",
+      "wine": "Vin"
+    }
+  },
+  "account": {
+    "profile": {
+      "noName": "Aucun nom défini",
+      "currentCredits": "Crédits actuels",
+      "buyCredits": "Acheter des crédits",
+      "premium": "Premium",
+      "getPremium": "Obtenir Premium"
+    },
+    "[object Object]": {
+      "appearance": "Apparence",
+      "settings": "Paramètres",
+      "notifications": "Notifications",
+      "language": "Langue de l'app",
+      "chatLanguage": "Langue du chat",
+      "account": "Compte",
+      "accountDescription": "Se déconnecter et gérer la suppression du compte.",
+      "signOutDescription": "Se déconnecter de cet appareil.",
+      "helpCenter": "Centre d'aide",
+      "helpCenterDescription": "Lisez les FAQ et les guides produit.",
+      "contactSupport": "Contacter le support",
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité",
+      "rateUs": "Évaluez-nous",
+      "shareApp": "Partager l'app"
+    },
+    "guest": {
+      "login": "Se connecter"
+    },
+    "actions": {
+      "title": "Compte",
+      "subtitle": "Gérez votre session et le cycle de vie de votre compte.",
+      "signOut": "Se déconnecter",
+      "signingOut": "Déconnexion...",
+      "clearCache": "Vider le cache",
+      "clearingCache": "Vidage du cache...",
+      "dangerTitle": "Zone de danger",
+      "dangerDescription": "Une fois votre compte supprimé, il n'y a pas de retour en arrière.",
+      "delete": "Supprimer le compte",
+      "deleting": "Suppression..."
+    },
+    "sheet": {
+      "title": "Choisir la langue de l'app",
+      "subtitle": "Sélectionnez votre langue maternelle. L'anglais est la langue par défaut.",
+      "chatTitle": "Choisir la langue du chat",
+      "chatSubtitle": "Sélectionnez la langue que vos compagnons IA utilisent dans les conversations."
+    },
+    "section": {
+      "quickActions": "Actions rapides",
+      "support": "Support",
+      "supportDescription": "Aide, dépannage et options de contact.",
+      "legal": "Mentions légales",
+      "feedback": "Commentaires",
+      "feedbackDescription": "Partagez vos commentaires et aidez-nous à nous améliorer."
+    },
+    "item": {
+      "appearance": "Apparence",
+      "settings": "Paramètres",
+      "notifications": "Notifications",
+      "language": "Langue de l'app",
+      "chatLanguage": "Langue du chat",
+      "account": "Compte",
+      "accountDescription": "Se déconnecter et gérer la suppression du compte.",
+      "signOutDescription": "Se déconnecter de cet appareil.",
+      "helpCenter": "Centre d'aide",
+      "helpCenterDescription": "Lisez les FAQ et les guides produit.",
+      "contactSupport": "Contacter le support",
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité",
+      "rateUs": "Évaluez-nous",
+      "shareApp": "Partager l'app"
+    },
+    "helpCenterMissing": "L'URL du centre d'aide n'est pas encore configurée.",
+    "supportMissing": "L'URL du support n'est pas encore configurée.",
+    "termsMissing": "L'URL des conditions n'est pas encore configurée.",
+    "privacyMissing": "L'URL de confidentialité n'est pas encore configurée."
+  },
+  "alerts": {
+    "error": "Erreur",
+    "success": "Succès",
+    "linkUnavailable": "Lien indisponible",
+    "unableOpenLink": "Impossible d'ouvrir le lien",
+    "tryAgainMoment": "Veuillez réessayer dans un instant.",
+    "ratingUnavailable": "Évaluation indisponible",
+    "iosStoreMissing": "L'identifiant App Store iOS n'est pas encore configuré.",
+    "unableOpenRating": "Impossible d'ouvrir l'évaluation",
+    "shareUnavailable": "Partage indisponible",
+    "shareUrlMissing": "L'URL de partage de l'app n'est pas encore configurée.",
+    "unableShare": "Impossible de partager",
+    "signOutTitle": "Se déconnecter",
+    "signOutBody": "Êtes-vous sûr de vouloir vous déconnecter ?",
+    "clearCacheTitle": "Vider le cache",
+    "clearCacheBody": "Supprimer les images téléchargées et les données temporaires de l'application de cet appareil ?",
+    "clearCacheSuccess": "Le cache de l'application a bien été vidé.",
+    "clearCacheFailed": "Impossible de vider le cache de l'application. Réessayez.",
+    "deleteTitle": "Supprimer le compte",
+    "deleteBody": "Êtes-vous sûr de vouloir supprimer définitivement votre compte ? Cette action est irréversible.",
+    "cancel": "Annuler",
+    "delete": "Supprimer"
+  },
+  "language": {
+    "english": "Anglais"
+  },
+  "notFound": {
+    "title": "Oups !",
+    "heading": "Page introuvable",
+    "description": "Désolé, la page que vous recherchez n'existe pas.",
+    "goHome": "Aller à l'accueil"
+  },
+  "nav": {
+    "profile": "Profil",
+    "chat": "Chat",
+    "createCharacter": "Créer un nouveau personnage IA",
+    "filter": "Filtre",
+    "home": "Accueil",
+    "settings": "Paramètres",
+    "uploads": "Téléchargements",
+    "notifications": "Notifications"
+  },
+  "filter": {
+    "title": "Filtre",
+    "interestedIn": "Intéressé par",
+    "age": "Âge",
+    "zodiac": "Zodiaque",
+    "interests": "Centres d'intérêt"
+  },
+  "chat": {
+    "conversationNotFound": "Conversation introuvable",
+    "startConversation": "Démarrer une conversation",
+    "sayHello": "Dites bonjour à {{name}} !",
+    "aiCharacter": "Personnage IA",
+    "aiCompanion": "votre compagnon IA",
+    "selfie": "Selfie",
+    "selfieLabel": "Selfie IA",
+    "clearTitle": "Effacer le chat",
+    "clearBody": "Êtes-vous sûr de vouloir supprimer tous les messages et images avec {{name}} ? Cette action est irréversible.",
+    "thisAi": "cette IA",
+    "clear": "Effacer",
+    "clearFailed": "Échec de l'effacement du chat. Veuillez réessayer.",
+    "creditsRequiredMessage": "Il vous faut au moins {{count}} crédits pour cette demande.",
+    "quiz": "Quiz",
+    "topic": "Sujet",
+    "suggestion": "Suggestion",
+    "typeMessage": "Tapez un message..."
+  },
+  "profile": {
+    "notFound": "Profil introuvable",
+    "aboutMe": "À propos de moi",
+    "lookingFor": "Recherche",
+    "personality": "Personnalité",
+    "interests": "Centres d'intérêt",
+    "photos": "Photos",
+    "compatibility": "Compatibilité"
+  },
+  "myCreation": {
+    "emptyTitle": "Pas encore de personnages",
+    "emptyDescription": "Créez votre premier personnage IA {{gender}} et commencez à discuter !",
+    "createCharacter": "Créer un personnage"
+  },
+  "createCharacter": {
+    "title": "Créer un nouveau personnage IA",
+    "errorMissingName": "Veuillez entrer un nom pour votre personnage",
+    "errorMissingGender": "Veuillez sélectionner un genre",
+    "errorMissingPhoto": "Veuillez télécharger une photo principale",
+    "imageUploadSoon": "Le téléchargement d'images sera implémenté avec l'intégration R2",
+    "uploadPhoto": "Télécharger une photo",
+    "uploadPhotoDescription": "Ce sera la photo principale de votre personnage IA. Donnez votre meilleure photo !",
+    "supportedFormats": "(Formats supportés : jpg, png et gif)",
+    "name": "Nom",
+    "namePlaceholder": "Entrez le nom",
+    "age": "Âge",
+    "ageValue": "{{age}} ans",
+    "selectAge": "Sélectionner l'âge",
+    "gender": "Genre",
+    "selectGender": "Sélectionner le genre",
+    "zodiac": "Zodiaque",
+    "selectZodiac": "Sélectionner le zodiaque",
+    "occupation": "Profession",
+    "occupationPlaceholder": "ex. Designer, Mannequin, Voyageur, etc.",
+    "aboutMe": "À propos de moi",
+    "aboutMePlaceholder": "Ajoutez des informations importantes sur votre personnage IA, comme l'introduction, le parcours, les intérêts, le style de vie, etc.",
+    "interests": "Centres d'intérêt",
+    "addInterest": "Ajouter un intérêt",
+    "photos": "Photos",
+    "uploadPhotos": "Télécharger des photos",
+    "voice": "Voix"
+  },
+  "notifications": {
+    "buildRequired": "Compilation requise",
+    "buildRequiredDescription": "Les notifications push ne sont pas prises en charge dans Expo Go sur iOS. Créez une compilation de développement pour tester.",
+    "permissionDenied": "Permission refusée",
+    "permissionDeniedDescription": "Activez les notifications dans les paramètres de votre appareil.",
+    "permissionsGranted": "Permissions de notification accordées et appareil enregistré !",
+    "devBuildRequiredDescription": "Les notifications push nécessitent une compilation de développement.",
+    "registerFailed": "Échec de l'enregistrement de l'appareil pour les notifications",
+    "requestFailed": "Échec de la demande de permissions",
+    "enterTitleBody": "Veuillez entrer le titre et le corps",
+    "userNotFound": "Utilisateur introuvable",
+    "sentSuccess": "Notification envoyée avec succès !",
+    "sendFailed": "Échec de l'envoi de la notification",
+    "statusTitle": "État des notifications push",
+    "enabledRegistered": "Notifications activées. Appareil enregistré.",
+    "disabledPrompt": "Notifications non activées. Veuillez autoriser les permissions de notification.",
+    "disabledInApp": "Les notifications sont désactivées pour cette application sur cet appareil.",
+    "requesting": "Demande en cours...",
+    "enable": "Activer les notifications",
+    "sendTestTitle": "Envoyer une notification test",
+    "sendToSelf": "Envoyez-vous une notification",
+    "titleLabel": "Titre",
+    "titlePlaceholder": "Titre de la notification",
+    "bodyLabel": "Corps",
+    "bodyPlaceholder": "Corps de la notification",
+    "defaultTitle": "Notification test",
+    "defaultBody": "Ceci est une notification test",
+    "sending": "Envoi...",
+    "send": "Envoyer la notification",
+    "recentTitle": "Notifications récentes",
+    "count": "{{count}} notification(s)"
+  },
+  "uploads": {
+    "permissionRequired": "Permission requise",
+    "permissionRequiredDescription": "La permission d'accéder à la pellicule est requise !",
+    "uploadSuccess": "Image téléchargée avec succès !",
+    "uploadFailed": "Échec du téléchargement de l'image",
+    "deleteFile": "Supprimer le fichier",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce fichier ?",
+    "deleteFailed": "Échec de la suppression du fichier",
+    "title": "Téléchargement de fichiers",
+    "subtitle": "Téléchargez et gérez vos fichiers avec Cloudflare R2",
+    "uploadNewFile": "Télécharger un nouveau fichier",
+    "selectImage": "Sélectionner une image",
+    "yourUploads": "Vos téléchargements",
+    "filesCount": "{{count}} fichiers",
+    "signInToView": "Connectez-vous pour voir vos téléchargements",
+    "empty": "Aucun fichier téléchargé pour le moment"
+  },
+  "imageRequest": {
+    "title": "Demander une photo",
+    "credits": "{{count}} crédits",
+    "subtitle": "Personnalisez la photo que vous souhaitez recevoir. Chaque sélection est optionnelle.",
+    "hairstyle": "Coiffure",
+    "clothing": "Vêtements",
+    "scene": "Scène",
+    "extraDetailsLabel": "Détails supplémentaires",
+    "extraDetailsPlaceholder": "Quel type de photo aimeriez-vous voir ?",
+    "generatePhoto": "Générer la photo",
+    "insufficientCredits": "Crédits insuffisants. Vous avez besoin d'au moins 5 crédits."
+  },
+  "match": {
+    "title": "C'est un match !",
+    "subtitle": "Vous et {{name}} vous plaisez\nQuelle est votre prochaine étape ?",
+    "keepSwiping": "Continuer à swiper",
+    "startChatting": "Commencer à discuter"
+  },
+  "premium": {
+    "tapToSeePhoto": "Appuyez pour voir la photo",
+    "getCloser": "Rapprochez-vous de {{name}}",
+    "unlockDescription": "{{name}} vous a envoyé une photo. Obtenez Premium et découvrez ce qui se cache derrière le flou.",
+    "unlockUnlimited": "Débloquer l'accès illimité"
+  },
+  "quiz": {
+    "started": "Quiz lancé",
+    "letsPlay": "Jouons à un quiz !",
+    "endQuiz": "Terminer le quiz"
+  },
+  "media": {
+    "recordingVideo": "Enregistrement d'une vidéo...",
+    "takingPhoto": "Prise d'une photo..."
+  },
+  "signIn": {
+    "failed": "Échec de la connexion"
+  },
+  "signUp": {
+    "failed": "Échec de l'inscription",
+    "createAccount": "Créer un compte"
+  },
+  "appearance": {
+    "theme": "Thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "color": "Couleur"
+  },
+  "settings": {
+    "disableNotifications": "Désactiver les notifications",
+    "disableNotificationsDescription": "Pour désactiver les notifications, allez dans les paramètres de votre appareil.",
+    "joined": "Inscrit",
+    "themeMode": "Mode du thème",
+    "colorTheme": "Thème de couleur",
+    "notificationsDescription": "Recevez des notifications sur les mises à jour importantes"
+  },
+  "updates": {
+    "title": "Mise a Jour Disponible",
+    "description": "Une nouvelle version de l'application est disponible. Relancez maintenant pour profiter des dernieres fonctionnalites et ameliorations.",
+    "relaunch": "Relancer",
+    "dismiss": "Plus Tard"
+  }
+}

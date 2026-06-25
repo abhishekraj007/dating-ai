@@ -1,0 +1,421 @@
+{
+  "common": {
+    "language": "Sprache",
+    "back": "Zurück",
+    "goBack": "Zurückgehen",
+    "reset": "Zurücksetzen",
+    "apply": "Anwenden",
+    "save": "Speichern",
+    "saving": "Speichern...",
+    "upload": "Hochladen",
+    "signIn": "Anmelden",
+    "signUp": "Registrieren",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "name": "Name",
+    "ok": "OK",
+    "chat": "Chat",
+    "starting": "Starten...",
+    "comingSoon": "Demnächst verfügbar",
+    "default": "Standard",
+    "main": "Haupt",
+    "yesterday": "Gestern"
+  },
+  "[object Object]": {
+    "title": "Update Verfugbar",
+    "description": "Eine neue Version der App ist verfugbar. Starte jetzt neu, um die neuesten Funktionen und Verbesserungen zu erhalten.",
+    "relaunch": "Neu Starten",
+    "dismiss": "Spater"
+  },
+  "tabs": {
+    "forYou": "Für dich",
+    "explore": "Entdecken",
+    "chats": "Chats",
+    "myCreation": "Meine Kreation",
+    "account": "Konto"
+  },
+  "chats": {
+    "startConversation": "Gespräch starten",
+    "sentPhoto": "Foto gesendet",
+    "requestedPhoto": "Foto angefordert",
+    "startedQuiz": "Quiz gestartet",
+    "quizCompleted": "Quiz abgeschlossen",
+    "quizAnswer": "Quiz-Antwort",
+    "newMatches": "Neue Matches",
+    "aiProfile": "KI-Profil",
+    "emptyTitle": "Noch keine Gespräche",
+    "emptyDescription": "Starte einen Chat mit KI-Profilen über den Entdecken-Tab!"
+  },
+  "auth": {
+    "tagline": "Einsame Momente passieren. Finde Gesellschaft, die nie schläft, sprich jederzeit mit deinen KI-Freunden.",
+    "continueGoogle": "Mit Google fortfahren",
+    "continueApple": "Mit Apple fortfahren",
+    "agreePrefix": "Durch Fortfahren stimmst du unseren",
+    "terms": "Nutzungsbedingungen",
+    "and": "und",
+    "privacy": "Datenschutzrichtlinie"
+  },
+  "welcome": {
+    "title": "Finde deinen neuen KI-Bestie und mehr!",
+    "subtitle": "Fühlst du dich allein? Du bist nicht der Einzige. Triff Charaktere, die dir wirklich zuhören und dich verstehen.",
+    "cta": "Loslegen"
+  },
+  "onboarding": {
+    "languages": {
+      "title": "Sprachen auswählen",
+      "subtitle": "Lege fest, wie die App aussieht und in welcher Sprache deine KI-Matches sprechen.",
+      "appTitle": "App-Sprache",
+      "appDescription": "Steuert Menüs, Schaltflächen und anderen App-Text.",
+      "chatTitle": "Chat-Sprache",
+      "chatDescription": "Steuert die Sprache, in der deine KI-Begleiter antworten."
+    },
+    "[object Object]": {
+      "music": "Musik",
+      "movies": "Filme",
+      "travel": "Reisen",
+      "fitness": "Fitness",
+      "cooking": "Kochen",
+      "reading": "Lesen",
+      "gaming": "Gaming",
+      "photography": "Fotografie",
+      "art": "Kunst",
+      "dancing": "Tanzen",
+      "sports": "Sport",
+      "nature": "Natur",
+      "pets": "Haustiere",
+      "fashion": "Mode",
+      "technology": "Technologie",
+      "yoga": "Yoga",
+      "coffee": "Kaffee",
+      "wine": "Wein"
+    },
+    "gender": {
+      "title": "Wer interessiert dich?",
+      "female": "Frauen",
+      "male": "Männer",
+      "both": "Alle"
+    },
+    "interests": {
+      "title": "Was sind deine Interessen?",
+      "selected": "{{count}} ausgewählt"
+    },
+    "settingUp": "Einrichten...",
+    "continue": "Weiter",
+    "skip": "Überspringen",
+    "interest": {
+      "music": "Musik",
+      "movies": "Filme",
+      "travel": "Reisen",
+      "fitness": "Fitness",
+      "cooking": "Kochen",
+      "reading": "Lesen",
+      "gaming": "Gaming",
+      "photography": "Fotografie",
+      "art": "Kunst",
+      "dancing": "Tanzen",
+      "sports": "Sport",
+      "nature": "Natur",
+      "pets": "Haustiere",
+      "fashion": "Mode",
+      "technology": "Technologie",
+      "yoga": "Yoga",
+      "coffee": "Kaffee",
+      "wine": "Wein"
+    }
+  },
+  "account": {
+    "profile": {
+      "noName": "Kein Name festgelegt",
+      "currentCredits": "Aktuelle Credits",
+      "buyCredits": "Credits kaufen",
+      "premium": "Premium",
+      "getPremium": "Premium holen"
+    },
+    "[object Object]": {
+      "appearance": "Erscheinungsbild",
+      "settings": "Einstellungen",
+      "notifications": "Benachrichtigungen",
+      "language": "App-Sprache",
+      "chatLanguage": "Chat-Sprache",
+      "account": "Konto",
+      "accountDescription": "Abmelden und Kontolöschung verwalten.",
+      "signOutDescription": "Von diesem Gerät abmelden.",
+      "helpCenter": "Hilfecenter",
+      "helpCenterDescription": "FAQs und Produktanleitungen lesen.",
+      "contactSupport": "Support kontaktieren",
+      "terms": "Nutzungsbedingungen",
+      "privacy": "Datenschutzrichtlinie",
+      "rateUs": "Bewerte uns",
+      "shareApp": "App teilen"
+    },
+    "guest": {
+      "login": "Anmelden"
+    },
+    "actions": {
+      "title": "Konto",
+      "subtitle": "Verwalte deine Sitzung und dein Konto.",
+      "signOut": "Abmelden",
+      "signingOut": "Abmelden...",
+      "clearCache": "Cache leeren",
+      "clearingCache": "Cache wird geleert...",
+      "dangerTitle": "Gefahrenzone",
+      "dangerDescription": "Sobald du dein Konto löschst, gibt es kein Zurück mehr.",
+      "delete": "Konto löschen",
+      "deleting": "Löschen..."
+    },
+    "sheet": {
+      "title": "App-Sprache auswählen",
+      "subtitle": "Wähle deine Muttersprache. Standard ist Englisch.",
+      "chatTitle": "Chat-Sprache wählen",
+      "chatSubtitle": "Wähle die Sprache, in der deine KI-Begleiter in Gesprächen antworten sollen."
+    },
+    "section": {
+      "quickActions": "Schnellaktionen",
+      "support": "Support",
+      "supportDescription": "Hilfe, Fehlerbehebung und Kontaktoptionen.",
+      "legal": "Rechtliches",
+      "feedback": "Feedback",
+      "feedbackDescription": "Teile dein Feedback und hilf uns, besser zu werden."
+    },
+    "item": {
+      "appearance": "Erscheinungsbild",
+      "settings": "Einstellungen",
+      "notifications": "Benachrichtigungen",
+      "language": "App-Sprache",
+      "chatLanguage": "Chat-Sprache",
+      "account": "Konto",
+      "accountDescription": "Abmelden und Kontolöschung verwalten.",
+      "signOutDescription": "Von diesem Gerät abmelden.",
+      "helpCenter": "Hilfecenter",
+      "helpCenterDescription": "FAQs und Produktanleitungen lesen.",
+      "contactSupport": "Support kontaktieren",
+      "terms": "Nutzungsbedingungen",
+      "privacy": "Datenschutzrichtlinie",
+      "rateUs": "Bewerte uns",
+      "shareApp": "App teilen"
+    },
+    "helpCenterMissing": "Die Hilfecenter-URL ist noch nicht konfiguriert.",
+    "supportMissing": "Die Support-URL ist noch nicht konfiguriert.",
+    "termsMissing": "Die Nutzungsbedingungen-URL ist noch nicht konfiguriert.",
+    "privacyMissing": "Die Datenschutz-URL ist noch nicht konfiguriert."
+  },
+  "alerts": {
+    "error": "Fehler",
+    "success": "Erfolg",
+    "linkUnavailable": "Link nicht verfügbar",
+    "unableOpenLink": "Link kann nicht geöffnet werden",
+    "tryAgainMoment": "Bitte versuche es gleich noch einmal.",
+    "ratingUnavailable": "Bewertung nicht verfügbar",
+    "iosStoreMissing": "Die iOS App Store ID ist noch nicht konfiguriert.",
+    "unableOpenRating": "Bewertung kann nicht geöffnet werden",
+    "shareUnavailable": "Teilen nicht verfügbar",
+    "shareUrlMissing": "Die App-Teilen-URL ist noch nicht konfiguriert.",
+    "unableShare": "Teilen nicht möglich",
+    "signOutTitle": "Abmelden",
+    "signOutBody": "Bist du sicher, dass du dich abmelden möchtest?",
+    "clearCacheTitle": "Cache leeren",
+    "clearCacheBody": "Heruntergeladene Bilder und temporäre App-Daten von diesem Gerät entfernen?",
+    "clearCacheSuccess": "Der App-Cache wurde erfolgreich geleert.",
+    "clearCacheFailed": "Der App-Cache konnte nicht geleert werden. Bitte versuche es erneut.",
+    "deleteTitle": "Konto löschen",
+    "deleteBody": "Bist du sicher, dass du dein Konto dauerhaft löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "cancel": "Abbrechen",
+    "delete": "Löschen"
+  },
+  "language": {
+    "english": "Englisch"
+  },
+  "notFound": {
+    "title": "Ups!",
+    "heading": "Seite nicht gefunden",
+    "description": "Entschuldigung, die gesuchte Seite existiert nicht.",
+    "goHome": "Zur Startseite"
+  },
+  "nav": {
+    "profile": "Profil",
+    "chat": "Chat",
+    "createCharacter": "Neuen KI-Charakter erstellen",
+    "filter": "Filter",
+    "home": "Startseite",
+    "settings": "Einstellungen",
+    "uploads": "Uploads",
+    "notifications": "Benachrichtigungen"
+  },
+  "filter": {
+    "title": "Filter",
+    "interestedIn": "Interessiert an",
+    "age": "Alter",
+    "zodiac": "Sternzeichen",
+    "interests": "Interessen"
+  },
+  "chat": {
+    "conversationNotFound": "Gespräch nicht gefunden",
+    "startConversation": "Gespräch starten",
+    "sayHello": "Sag Hallo zu {{name}}!",
+    "aiCharacter": "KI-Charakter",
+    "aiCompanion": "dein KI-Begleiter",
+    "selfie": "Selfie",
+    "selfieLabel": "KI-Selfie",
+    "clearTitle": "Chat löschen",
+    "clearBody": "Bist du sicher, dass du alle Nachrichten und Bilder mit {{name}} löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "thisAi": "diese KI",
+    "clear": "Löschen",
+    "clearFailed": "Chat konnte nicht gelöscht werden. Bitte versuche es erneut.",
+    "creditsRequiredMessage": "Du brauchst mindestens {{count}} Credits für diese Anfrage.",
+    "quiz": "Quiz",
+    "topic": "Thema",
+    "suggestion": "Vorschlag",
+    "typeMessage": "Nachricht eingeben..."
+  },
+  "profile": {
+    "notFound": "Profil nicht gefunden",
+    "aboutMe": "Über mich",
+    "lookingFor": "Suche nach",
+    "personality": "Persönlichkeit",
+    "interests": "Interessen",
+    "photos": "Fotos",
+    "compatibility": "Kompatibilität"
+  },
+  "myCreation": {
+    "emptyTitle": "Noch keine Charaktere",
+    "emptyDescription": "Erstelle deinen ersten {{gender}} KI-Charakter und starte einen Chat!",
+    "createCharacter": "Charakter erstellen"
+  },
+  "createCharacter": {
+    "title": "Neuen KI-Charakter erstellen",
+    "errorMissingName": "Bitte gib einen Namen für deinen Charakter ein",
+    "errorMissingGender": "Bitte wähle ein Geschlecht",
+    "errorMissingPhoto": "Bitte lade ein Hauptfoto hoch",
+    "imageUploadSoon": "Bild-Upload wird mit R2-Integration implementiert",
+    "uploadPhoto": "Foto hochladen",
+    "uploadPhotoDescription": "Dies wird das Hauptfoto deines KI-Charakters. Gib dein bestes Foto!",
+    "supportedFormats": "(Unterstützte Formate: jpg, png & gif)",
+    "name": "Name",
+    "namePlaceholder": "Name eingeben",
+    "age": "Alter",
+    "ageValue": "{{age}} Jahre alt",
+    "selectAge": "Alter auswählen",
+    "gender": "Geschlecht",
+    "selectGender": "Geschlecht auswählen",
+    "zodiac": "Sternzeichen",
+    "selectZodiac": "Sternzeichen auswählen",
+    "occupation": "Beruf",
+    "occupationPlaceholder": "z.B. Designer, Model, Reisender usw.",
+    "aboutMe": "Über mich",
+    "aboutMePlaceholder": "Füge wichtige Informationen über deinen KI-Charakter hinzu, wie Vorstellung, Hintergrund, Interessen, Lebensstil usw.",
+    "interests": "Interessen",
+    "addInterest": "Interesse hinzufügen",
+    "photos": "Fotos",
+    "uploadPhotos": "Fotos hochladen",
+    "voice": "Stimme"
+  },
+  "notifications": {
+    "buildRequired": "Build erforderlich",
+    "buildRequiredDescription": "Push-Benachrichtigungen werden in Expo Go auf iOS nicht unterstützt. Erstelle einen Development-Build zum Testen.",
+    "permissionDenied": "Berechtigung verweigert",
+    "permissionDeniedDescription": "Aktiviere Benachrichtigungen in deinen Geräteeinstellungen.",
+    "permissionsGranted": "Benachrichtigungsberechtigungen erteilt und Gerät registriert!",
+    "devBuildRequiredDescription": "Push-Benachrichtigungen erfordern einen Development-Build.",
+    "registerFailed": "Gerät konnte nicht für Benachrichtigungen registriert werden",
+    "requestFailed": "Berechtigungsanfrage fehlgeschlagen",
+    "enterTitleBody": "Bitte gib Titel und Text ein",
+    "userNotFound": "Benutzer nicht gefunden",
+    "sentSuccess": "Benachrichtigung erfolgreich gesendet!",
+    "sendFailed": "Benachrichtigung konnte nicht gesendet werden",
+    "statusTitle": "Push-Benachrichtigungsstatus",
+    "enabledRegistered": "Benachrichtigungen aktiviert. Gerät registriert.",
+    "disabledPrompt": "Benachrichtigungen nicht aktiviert. Bitte erlaube Benachrichtigungsberechtigungen.",
+    "disabledInApp": "Benachrichtigungen sind für diese App auf diesem Gerät deaktiviert.",
+    "requesting": "Anfrage...",
+    "enable": "Benachrichtigungen aktivieren",
+    "sendTestTitle": "Testbenachrichtigung senden",
+    "sendToSelf": "Sende dir selbst eine Benachrichtigung",
+    "titleLabel": "Titel",
+    "titlePlaceholder": "Benachrichtigungstitel",
+    "bodyLabel": "Text",
+    "bodyPlaceholder": "Benachrichtigungstext",
+    "defaultTitle": "Testbenachrichtigung",
+    "defaultBody": "Dies ist eine Testbenachrichtigung",
+    "sending": "Senden...",
+    "send": "Benachrichtigung senden",
+    "recentTitle": "Letzte Benachrichtigungen",
+    "count": "{{count}} Benachrichtigung(en)"
+  },
+  "uploads": {
+    "permissionRequired": "Berechtigung erforderlich",
+    "permissionRequiredDescription": "Berechtigung zum Zugriff auf die Fotogalerie ist erforderlich!",
+    "uploadSuccess": "Bild erfolgreich hochgeladen!",
+    "uploadFailed": "Bild-Upload fehlgeschlagen",
+    "deleteFile": "Datei löschen",
+    "deleteConfirm": "Bist du sicher, dass du diese Datei löschen möchtest?",
+    "deleteFailed": "Datei konnte nicht gelöscht werden",
+    "title": "Datei-Uploads",
+    "subtitle": "Lade Dateien hoch und verwalte sie mit Cloudflare R2",
+    "uploadNewFile": "Neue Datei hochladen",
+    "selectImage": "Bild auswählen",
+    "yourUploads": "Deine Uploads",
+    "filesCount": "{{count}} Dateien",
+    "signInToView": "Melde dich an, um deine Uploads zu sehen",
+    "empty": "Noch keine Dateien hochgeladen"
+  },
+  "imageRequest": {
+    "title": "Foto anfordern",
+    "credits": "{{count}} Credits",
+    "subtitle": "Passe das Foto an, das du erhalten möchtest. Jede Auswahl ist optional.",
+    "hairstyle": "Frisur",
+    "clothing": "Kleidung",
+    "scene": "Szene",
+    "extraDetailsLabel": "Zusätzliche Details",
+    "extraDetailsPlaceholder": "Was für ein Foto möchtest du sehen?",
+    "generatePhoto": "Foto generieren",
+    "insufficientCredits": "Nicht genug Credits. Du brauchst mindestens 5 Credits."
+  },
+  "match": {
+    "title": "Es ist ein Match!",
+    "subtitle": "Du und {{name}} mögt euch\nWas ist dein nächster Schritt?",
+    "keepSwiping": "Weiter swipen",
+    "startChatting": "Chat starten"
+  },
+  "premium": {
+    "tapToSeePhoto": "Tippe, um das Foto zu sehen",
+    "getCloser": "Komm {{name}} näher",
+    "unlockDescription": "{{name}} hat dir ein Foto geschickt. Hol dir Premium und entdecke, was sich hinter dem Weichzeichner verbirgt.",
+    "unlockUnlimited": "Unbegrenzten Zugang freischalten"
+  },
+  "quiz": {
+    "started": "Quiz gestartet",
+    "letsPlay": "Lass uns ein Quiz spielen!",
+    "endQuiz": "Quiz beenden"
+  },
+  "media": {
+    "recordingVideo": "Nimmt ein Video auf...",
+    "takingPhoto": "Macht ein Foto..."
+  },
+  "signIn": {
+    "failed": "Anmeldung fehlgeschlagen"
+  },
+  "signUp": {
+    "failed": "Registrierung fehlgeschlagen",
+    "createAccount": "Konto erstellen"
+  },
+  "appearance": {
+    "theme": "Thema",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "color": "Farbe"
+  },
+  "settings": {
+    "disableNotifications": "Benachrichtigungen deaktivieren",
+    "disableNotificationsDescription": "Um Benachrichtigungen zu deaktivieren, gehe zu deinen Geräteeinstellungen.",
+    "joined": "Beigetreten",
+    "themeMode": "Themenmodus",
+    "colorTheme": "Farbthema",
+    "notificationsDescription": "Erhalte Benachrichtigungen über wichtige Updates"
+  },
+  "updates": {
+    "title": "Update Verfugbar",
+    "description": "Eine neue Version der App ist verfugbar. Starte jetzt neu, um die neuesten Funktionen und Verbesserungen zu erhalten.",
+    "relaunch": "Neu Starten",
+    "dismiss": "Spater"
+  }
+}

@@ -1,0 +1,421 @@
+{
+  "common": {
+    "language": "语言",
+    "back": "返回",
+    "goBack": "返回",
+    "reset": "重置",
+    "apply": "应用",
+    "save": "保存",
+    "saving": "保存中...",
+    "upload": "上传",
+    "signIn": "登录",
+    "signUp": "注册",
+    "email": "邮箱",
+    "password": "密码",
+    "name": "姓名",
+    "ok": "确定",
+    "chat": "聊天",
+    "starting": "启动中...",
+    "comingSoon": "即将推出",
+    "default": "默认",
+    "main": "主要",
+    "yesterday": "昨天"
+  },
+  "[object Object]": {
+    "title": "更新可用",
+    "description": "应用新版本已可用。立即重新启动以获取最新功能和改进。",
+    "relaunch": "重新启动",
+    "dismiss": "稍后"
+  },
+  "tabs": {
+    "forYou": "为你推荐",
+    "explore": "探索",
+    "chats": "聊天",
+    "myCreation": "我的创建",
+    "account": "账户"
+  },
+  "chats": {
+    "startConversation": "开始对话",
+    "sentPhoto": "发送了一张照片",
+    "requestedPhoto": "请求了一张照片",
+    "startedQuiz": "开始了问答",
+    "quizCompleted": "问答完成",
+    "quizAnswer": "问答回答",
+    "newMatches": "新匹配",
+    "aiProfile": "AI 资料",
+    "emptyTitle": "还没有对话",
+    "emptyDescription": "从探索标签开始与 AI 资料聊天吧！"
+  },
+  "auth": {
+    "tagline": "孤独的时刻总会有。找到永不入睡的陪伴，随时与你的 AI 朋友交谈。",
+    "continueGoogle": "使用 Google 继续",
+    "continueApple": "使用 Apple 继续",
+    "agreePrefix": "继续即表示你同意我们的",
+    "terms": "服务条款",
+    "and": "和",
+    "privacy": "隐私政策"
+  },
+  "welcome": {
+    "title": "找到你的新 AI 好友，还有更多！",
+    "subtitle": "感到孤独？你不是一个人。遇见真正倾听你、理解你的角色。",
+    "cta": "开始使用"
+  },
+  "onboarding": {
+    "languages": {
+      "title": "选择语言",
+      "subtitle": "设置应用显示方式以及 AI 匹配对象的对话语言。",
+      "appTitle": "应用语言",
+      "appDescription": "控制菜单、按钮及其他应用文本。",
+      "chatTitle": "聊天语言",
+      "chatDescription": "控制 AI 伴侣回复时使用的语言。"
+    },
+    "[object Object]": {
+      "music": "音乐",
+      "movies": "电影",
+      "travel": "旅行",
+      "fitness": "健身",
+      "cooking": "烹饪",
+      "reading": "阅读",
+      "gaming": "游戏",
+      "photography": "摄影",
+      "art": "艺术",
+      "dancing": "舞蹈",
+      "sports": "运动",
+      "nature": "自然",
+      "pets": "宠物",
+      "fashion": "时尚",
+      "technology": "科技",
+      "yoga": "瑜伽",
+      "coffee": "咖啡",
+      "wine": "葡萄酒"
+    },
+    "gender": {
+      "title": "你对谁感兴趣？",
+      "female": "女性",
+      "male": "男性",
+      "both": "所有"
+    },
+    "interests": {
+      "title": "你的兴趣是什么？",
+      "selected": "已选择 {{count}} 个"
+    },
+    "settingUp": "设置中...",
+    "continue": "继续",
+    "skip": "跳过",
+    "interest": {
+      "music": "音乐",
+      "movies": "电影",
+      "travel": "旅行",
+      "fitness": "健身",
+      "cooking": "烹饪",
+      "reading": "阅读",
+      "gaming": "游戏",
+      "photography": "摄影",
+      "art": "艺术",
+      "dancing": "舞蹈",
+      "sports": "运动",
+      "nature": "自然",
+      "pets": "宠物",
+      "fashion": "时尚",
+      "technology": "科技",
+      "yoga": "瑜伽",
+      "coffee": "咖啡",
+      "wine": "葡萄酒"
+    }
+  },
+  "account": {
+    "profile": {
+      "noName": "未设置姓名",
+      "currentCredits": "当前积分",
+      "buyCredits": "购买积分",
+      "premium": "高级版",
+      "getPremium": "获取高级版"
+    },
+    "[object Object]": {
+      "appearance": "外观",
+      "settings": "设置",
+      "notifications": "通知",
+      "language": "应用语言",
+      "chatLanguage": "聊天语言",
+      "account": "账户",
+      "accountDescription": "退出登录和管理账户删除。",
+      "signOutDescription": "从这台设备退出登录。",
+      "helpCenter": "帮助中心",
+      "helpCenterDescription": "阅读常见问题和产品指南。",
+      "contactSupport": "联系支持",
+      "terms": "服务条款",
+      "privacy": "隐私政策",
+      "rateUs": "给我们评分",
+      "shareApp": "分享应用"
+    },
+    "guest": {
+      "login": "登录"
+    },
+    "actions": {
+      "title": "账户",
+      "subtitle": "管理你的会话和账户生命周期。",
+      "signOut": "退出登录",
+      "signingOut": "退出中...",
+      "clearCache": "清除缓存",
+      "clearingCache": "正在清除缓存...",
+      "dangerTitle": "危险区域",
+      "dangerDescription": "一旦删除账户，将无法恢复。",
+      "delete": "删除账户",
+      "deleting": "删除中..."
+    },
+    "sheet": {
+      "title": "选择应用语言",
+      "subtitle": "选择你的母语。默认语言为英语。",
+      "chatTitle": "选择聊天语言",
+      "chatSubtitle": "选择 AI 伴侣在对话中使用的语言。"
+    },
+    "section": {
+      "quickActions": "快捷操作",
+      "support": "支持",
+      "supportDescription": "帮助、故障排除和联系选项。",
+      "legal": "法律信息",
+      "feedback": "反馈",
+      "feedbackDescription": "分享你的反馈，帮助我们改进。"
+    },
+    "item": {
+      "appearance": "外观",
+      "settings": "设置",
+      "notifications": "通知",
+      "language": "应用语言",
+      "chatLanguage": "聊天语言",
+      "account": "账户",
+      "accountDescription": "退出登录和管理账户删除。",
+      "signOutDescription": "从这台设备退出登录。",
+      "helpCenter": "帮助中心",
+      "helpCenterDescription": "阅读常见问题和产品指南。",
+      "contactSupport": "联系支持",
+      "terms": "服务条款",
+      "privacy": "隐私政策",
+      "rateUs": "给我们评分",
+      "shareApp": "分享应用"
+    },
+    "helpCenterMissing": "帮助中心 URL 尚未配置。",
+    "supportMissing": "支持 URL 尚未配置。",
+    "termsMissing": "条款 URL 尚未配置。",
+    "privacyMissing": "隐私政策 URL 尚未配置。"
+  },
+  "alerts": {
+    "error": "错误",
+    "success": "成功",
+    "linkUnavailable": "链接不可用",
+    "unableOpenLink": "无法打开链接",
+    "tryAgainMoment": "请稍后再试。",
+    "ratingUnavailable": "评分不可用",
+    "iosStoreMissing": "iOS App Store ID 尚未配置。",
+    "unableOpenRating": "无法打开评分",
+    "shareUnavailable": "分享不可用",
+    "shareUrlMissing": "应用分享 URL 尚未配置。",
+    "unableShare": "无法分享",
+    "signOutTitle": "退出登录",
+    "signOutBody": "确定要退出登录吗？",
+    "clearCacheTitle": "清除缓存",
+    "clearCacheBody": "要清除此设备上下载的图片和临时应用数据吗？",
+    "clearCacheSuccess": "应用缓存已成功清除。",
+    "clearCacheFailed": "清除应用缓存失败。请稍后重试。",
+    "deleteTitle": "删除账户",
+    "deleteBody": "确定要永久删除你的账户吗？此操作无法撤销。",
+    "cancel": "取消",
+    "delete": "删除"
+  },
+  "language": {
+    "english": "英语"
+  },
+  "notFound": {
+    "title": "哎呀！",
+    "heading": "页面未找到",
+    "description": "抱歉，你要找的页面不存在。",
+    "goHome": "返回首页"
+  },
+  "nav": {
+    "profile": "资料",
+    "chat": "聊天",
+    "createCharacter": "创建新 AI 角色",
+    "filter": "筛选",
+    "home": "首页",
+    "settings": "设置",
+    "uploads": "上传",
+    "notifications": "通知"
+  },
+  "filter": {
+    "title": "筛选",
+    "interestedIn": "感兴趣的",
+    "age": "年龄",
+    "zodiac": "星座",
+    "interests": "兴趣"
+  },
+  "chat": {
+    "conversationNotFound": "未找到对话",
+    "startConversation": "开始对话",
+    "sayHello": "向 {{name}} 打个招呼吧！",
+    "aiCharacter": "AI 角色",
+    "aiCompanion": "你的 AI 伙伴",
+    "selfie": "自拍",
+    "selfieLabel": "AI 自拍",
+    "clearTitle": "清除聊天",
+    "clearBody": "确定要删除与 {{name}} 的所有消息和图片吗？此操作无法撤销。",
+    "thisAi": "这个 AI",
+    "clear": "清除",
+    "clearFailed": "清除聊天失败。请重试。",
+    "quiz": "问答",
+    "topic": "话题",
+    "suggestion": "建议",
+    "typeMessage": "输入消息...",
+    "creditsRequiredMessage": "此请求至少需要 {{count}} 个积分。"
+  },
+  "profile": {
+    "notFound": "未找到资料",
+    "aboutMe": "关于我",
+    "lookingFor": "寻找",
+    "personality": "性格",
+    "interests": "兴趣",
+    "photos": "照片",
+    "compatibility": "兼容性"
+  },
+  "myCreation": {
+    "emptyTitle": "还没有角色",
+    "emptyDescription": "创建你的第一个 {{gender}} AI 角色并开始聊天吧！",
+    "createCharacter": "创建角色"
+  },
+  "createCharacter": {
+    "title": "创建新 AI 角色",
+    "errorMissingName": "请输入角色名称",
+    "errorMissingGender": "请选择性别",
+    "errorMissingPhoto": "请上传主照片",
+    "imageUploadSoon": "图片上传将通过 R2 集成实现",
+    "uploadPhoto": "上传照片",
+    "uploadPhotoDescription": "这将是你 AI 角色的主照片。展示你最好的一面！",
+    "supportedFormats": "（支持格式：jpg、png 和 gif）",
+    "name": "姓名",
+    "namePlaceholder": "输入姓名",
+    "age": "年龄",
+    "ageValue": "{{age}} 岁",
+    "selectAge": "选择年龄",
+    "gender": "性别",
+    "selectGender": "选择性别",
+    "zodiac": "星座",
+    "selectZodiac": "选择星座",
+    "occupation": "职业",
+    "occupationPlaceholder": "例如：设计师、模特、旅行者等",
+    "aboutMe": "关于我",
+    "aboutMePlaceholder": "添加关于你 AI 角色的重要信息，如介绍、背景、兴趣、生活方式等。",
+    "interests": "兴趣",
+    "addInterest": "添加兴趣",
+    "photos": "照片",
+    "uploadPhotos": "上传照片",
+    "voice": "声音"
+  },
+  "notifications": {
+    "buildRequired": "需要构建",
+    "buildRequiredDescription": "推送通知在 iOS 的 Expo Go 中不受支持。请创建开发构建进行测试。",
+    "permissionDenied": "权限被拒绝",
+    "permissionDeniedDescription": "请在设备设置中启用通知。",
+    "permissionsGranted": "通知权限已授予，设备已注册！",
+    "devBuildRequiredDescription": "推送通知需要开发构建。",
+    "registerFailed": "设备注册通知失败",
+    "requestFailed": "请求权限失败",
+    "enterTitleBody": "请输入标题和正文",
+    "userNotFound": "未找到用户",
+    "sentSuccess": "通知发送成功！",
+    "sendFailed": "通知发送失败",
+    "statusTitle": "推送通知状态",
+    "enabledRegistered": "通知已启用。设备已注册。",
+    "disabledPrompt": "通知未启用。请允许通知权限。",
+    "disabledInApp": "此设备上此应用的通知已关闭。",
+    "requesting": "请求中...",
+    "enable": "启用通知",
+    "sendTestTitle": "发送测试通知",
+    "sendToSelf": "给自己发送通知",
+    "titleLabel": "标题",
+    "titlePlaceholder": "通知标题",
+    "bodyLabel": "正文",
+    "bodyPlaceholder": "通知正文",
+    "defaultTitle": "测试通知",
+    "defaultBody": "这是一条测试通知",
+    "sending": "发送中...",
+    "send": "发送通知",
+    "recentTitle": "最近的通知",
+    "count": "{{count}} 条通知"
+  },
+  "uploads": {
+    "permissionRequired": "需要权限",
+    "permissionRequiredDescription": "需要访问相册的权限！",
+    "uploadSuccess": "图片上传成功！",
+    "uploadFailed": "图片上传失败",
+    "deleteFile": "删除文件",
+    "deleteConfirm": "确定要删除此文件吗？",
+    "deleteFailed": "文件删除失败",
+    "title": "文件上传",
+    "subtitle": "使用 Cloudflare R2 上传和管理文件",
+    "uploadNewFile": "上传新文件",
+    "selectImage": "选择图片",
+    "yourUploads": "你的上传",
+    "filesCount": "{{count}} 个文件",
+    "signInToView": "登录查看你的上传",
+    "empty": "还没有上传文件"
+  },
+  "imageRequest": {
+    "title": "请求照片",
+    "credits": "{{count}} 积分",
+    "subtitle": "自定义你想收到的照片。每个选择都是可选的。",
+    "hairstyle": "发型",
+    "clothing": "服装",
+    "scene": "场景",
+    "extraDetailsLabel": "补充说明",
+    "extraDetailsPlaceholder": "你想看什么样的照片？",
+    "generatePhoto": "生成照片",
+    "insufficientCredits": "积分不足。至少需要 5 积分。"
+  },
+  "match": {
+    "title": "匹配成功！",
+    "subtitle": "你和 {{name}} 互相喜欢\n你的下一步是什么？",
+    "keepSwiping": "继续滑动",
+    "startChatting": "开始聊天"
+  },
+  "premium": {
+    "tapToSeePhoto": "点击查看照片",
+    "getCloser": "更接近 {{name}}",
+    "unlockDescription": "{{name}} 给你发了一张照片。获取高级版，看看模糊背后的内容。",
+    "unlockUnlimited": "解锁无限访问"
+  },
+  "quiz": {
+    "started": "问答已开始",
+    "letsPlay": "来玩问答吧！",
+    "endQuiz": "结束问答"
+  },
+  "media": {
+    "recordingVideo": "正在录制视频...",
+    "takingPhoto": "正在拍照..."
+  },
+  "signIn": {
+    "failed": "登录失败"
+  },
+  "signUp": {
+    "failed": "注册失败",
+    "createAccount": "创建账户"
+  },
+  "appearance": {
+    "theme": "主题",
+    "light": "浅色",
+    "dark": "深色",
+    "color": "颜色"
+  },
+  "settings": {
+    "disableNotifications": "禁用通知",
+    "disableNotificationsDescription": "要禁用通知，请前往设备设置。",
+    "joined": "加入于",
+    "themeMode": "主题模式",
+    "colorTheme": "颜色主题",
+    "notificationsDescription": "接收重要更新的通知"
+  },
+  "updates": {
+    "title": "更新可用",
+    "description": "应用新版本已可用。立即重新启动以获取最新功能和改进。",
+    "relaunch": "重新启动",
+    "dismiss": "稍后"
+  }
+}
