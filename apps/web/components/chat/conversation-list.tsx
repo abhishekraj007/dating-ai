@@ -5,12 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CreditsModal } from "@/components/credits-modal";
 import { cn } from "@/lib/utils";
 import {
   useConversations,
   useStartConversation,
 } from "@/hooks/use-conversations";
 import { useAIProfiles } from "@/hooks/use-ai-profiles";
+import { useChatBillingGate } from "@/hooks/use-chat-billing-gate";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import type { Id } from "@dating-ai/backend/convex/_generated/dataModel";
@@ -37,10 +39,20 @@ export function ConversationList() {
   const { profiles: newMatchProfiles, isLoading: isLoadingProfiles } =
     useAIProfiles({ limit: 12, excludeExistingConversations: true });
   const { startConversation } = useStartConversation();
+  const {
+    canStartChat,
+  } = useChatBillingGate();
   const [startingConvFor, setStartingConvFor] = useState<string | null>(null);
+  const [isCreditsOpen, setIsCreditsOpen] = useState(false);
 
   const handleNewMatchClick = async (profileId: string) => {
     if (startingConvFor) return;
+
+    if (!canStartChat()) {
+      setIsCreditsOpen(true);
+      return;
+    }
+
     setStartingConvFor(profileId);
     try {
       const convId = await startConversation({
@@ -179,6 +191,8 @@ export function ConversationList() {
           )}
         </div>
       </div>
+
+      <CreditsModal open={isCreditsOpen} onOpenChange={setIsCreditsOpen} />
     </div>
   );
 }
