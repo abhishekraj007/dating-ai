@@ -1,4 +1,8 @@
 import { api, useQuery } from "@dating-ai/backend";
+import {
+  DEFAULT_IOS_APP_STORE_ID,
+  FALLBACK_ANDROID_APP_ID,
+} from "@dating-ai/backend/convex/features/appConfig/shared";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -18,8 +22,6 @@ import {
 } from "lucide-react-native";
 import { Alert, Platform, Share } from "react-native";
 import { useTranslation } from "@/hooks/use-translation";
-
-const FALLBACK_ANDROID_APP_ID = "com.noosperai.feelchat";
 
 type RuntimeAppConfig = {
   baseWebUrl?: string;
@@ -111,7 +113,8 @@ export const useAccountSections = ({
       if (Platform.OS === "ios") {
         const iosAppStoreId =
           runtimeConfig?.iosAppStoreId ??
-          process.env.EXPO_PUBLIC_IOS_APP_STORE_ID;
+          process.env.EXPO_PUBLIC_IOS_APP_STORE_ID ??
+          DEFAULT_IOS_APP_STORE_ID;
 
         if (!iosAppStoreId) {
           Alert.alert(

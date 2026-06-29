@@ -3,6 +3,8 @@ import { v } from "convex/values";
 import {
   APP_CONFIG_KEY,
   buildUrlFromBase,
+  DEFAULT_IOS_APP_STORE_ID,
+  FALLBACK_ANDROID_APP_ID,
   normalizeNsfwEnabledPlatforms,
   resolveRevenueCatCreditProductIds,
 } from "./shared";
@@ -10,7 +12,6 @@ import { requireAdmin } from "./guards";
 
 const fallbackBaseWebUrl =
   process.env.SITE_URL ?? process.env.EXPO_PUBLIC_CONVEX_SITE_URL;
-const fallbackAndroidAppId = "com.noosperai.feelchat";
 
 const nsfwEnabledPlatformsValidator = v.array(
   v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
@@ -73,8 +74,8 @@ export const getPublicAppConfig = query({
       helpCenterUrl,
       supportUrl,
       shareUrl,
-      iosAppStoreId: config?.iosAppStoreId,
-      androidAppId: config?.androidAppId ?? fallbackAndroidAppId,
+      iosAppStoreId: config?.iosAppStoreId ?? DEFAULT_IOS_APP_STORE_ID,
+      androidAppId: config?.androidAppId ?? FALLBACK_ANDROID_APP_ID,
       showMyCreationTab: config?.showMyCreationTab ?? false,
       nsfwEnabledPlatforms: normalizeNsfwEnabledPlatforms(
         config?.nsfwEnabledPlatforms,
@@ -105,8 +106,8 @@ export const getAdminAppConfig = query({
       helpCenterUrl: config?.helpCenterUrl,
       supportUrl: config?.supportUrl,
       shareUrl: config?.shareUrl,
-      iosAppStoreId: config?.iosAppStoreId,
-      androidAppId: config?.androidAppId ?? fallbackAndroidAppId,
+      iosAppStoreId: config?.iosAppStoreId ?? DEFAULT_IOS_APP_STORE_ID,
+      androidAppId: config?.androidAppId ?? FALLBACK_ANDROID_APP_ID,
       showMyCreationTab: config?.showMyCreationTab ?? false,
       nsfwEnabledPlatforms: normalizeNsfwEnabledPlatforms(
         config?.nsfwEnabledPlatforms,

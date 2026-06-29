@@ -127,18 +127,12 @@ export function DownloadAppModal({
             </DialogHeader>
 
             <div className="mt-7 sm:mt-8">
-              {iosUrl ? (
-                <StoreDownloadButton
-                  href={iosUrl}
-                  subtitle="Download on the"
-                  label="App Store"
-                  icon={<AppleStoreIcon className="h-5 w-5" />}
-                />
-              ) : (
-                <p className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-4 text-center text-sm text-muted-foreground">
-                  App Store link is not configured yet. Please check back soon.
-                </p>
-              )}
+              <StoreDownloadButton
+                href={iosUrl}
+                subtitle="Download on the"
+                label="App Store"
+                icon={<AppleStoreIcon className="h-5 w-5" />}
+              />
             </div>
           </div>
         </div>
