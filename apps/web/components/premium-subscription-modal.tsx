@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useQuery as useConvexQuery } from "convex/react";
 import { api as convexApi } from "@dating-ai/backend/convex/_generated/api";
+import { DownloadAppModal } from "@/components/download-app-modal";
+import { DISABLE_WEB_PAYMENT } from "@/lib/web-payment";
 import { Crown, Loader2, Sparkles } from "lucide-react";
 import {
   Dialog,
@@ -22,7 +24,21 @@ interface PremiumSubscriptionModalProps {
   description?: string;
 }
 
-export function PremiumSubscriptionModal({
+export function PremiumSubscriptionModal(props: PremiumSubscriptionModalProps) {
+  if (DISABLE_WEB_PAYMENT) {
+    return (
+      <DownloadAppModal
+        open={props.open}
+        onOpenChange={props.onOpenChange}
+        reason="premium"
+      />
+    );
+  }
+
+  return <PremiumCheckoutModal {...props} />;
+}
+
+function PremiumCheckoutModal({
   open,
   onOpenChange,
   title = "Unlock premium",

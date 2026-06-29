@@ -27,6 +27,7 @@ import { ChatImageRequestDialog } from "@/components/chat/chat-image-request-dia
 import { CreditsModal } from "@/components/credits-modal";
 import { TypingIndicator } from "@/components/chat/typing-indicator";
 import { useConversation } from "@/hooks/use-conversations";
+import { useChatBillingGate } from "@/hooks/use-chat-billing-gate";
 import {
   useMessages,
   useSendMessage,
@@ -120,6 +121,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const { clearChat } = useClearChat();
   const { deleteMessage } = useDeleteMessage();
   const { requestImage } = useRequestChatImage();
+  const { canSendMessage } = useChatBillingGate();
 
   const [isSending, setIsSending] = useState(false);
   const [isRequestingImage, setIsRequestingImage] = useState(false);
@@ -162,6 +164,12 @@ export function ChatView({ conversationId }: ChatViewProps) {
 
   const handleSend = async (content: string) => {
     if (!conversation || isSending) return;
+
+    if (!canSendMessage()) {
+      setIsCreditsModalOpen(true);
+      return;
+    }
+
     setIsSending(true);
     try {
       await sendMessage({
@@ -169,8 +177,13 @@ export function ChatView({ conversationId }: ChatViewProps) {
         content,
         platform: "web",
       });
-    } catch {
-      // error handled silently - user can retry
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not send message.";
+
+      if (message.includes("Insufficient credits")) {
+        setIsCreditsModalOpen(true);
+      }
     } finally {
       setIsSending(false);
     }
