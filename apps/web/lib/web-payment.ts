@@ -13,12 +13,12 @@ function readEnvBoolean(
  * When true, web checkout is disabled and users are directed to the FeelChat
  * iOS app for credits and subscription purchases.
  *
- * Set `NEXT_PUBLIC_DISABLE_WEB_PAYMENT=true` to enable. Defaults to `false`
- * when the env var is missing or empty.
+ * Defaults to `true` (App Store download flow). Set
+ * `NEXT_PUBLIC_DISABLE_WEB_PAYMENT=false` to enable Polar checkout on web.
  */
 export const DISABLE_WEB_PAYMENT = readEnvBoolean(
   process.env.NEXT_PUBLIC_DISABLE_WEB_PAYMENT,
-  false,
+  true,
 );
 
 export type DownloadAppReason = "credits" | "premium";
