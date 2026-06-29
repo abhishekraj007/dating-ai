@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useQuery as useConvexQuery } from "convex/react";
 import { api as convexApi } from "@dating-ai/backend/convex/_generated/api";
+import { DownloadAppModal } from "@/components/download-app-modal";
+import { DISABLE_WEB_PAYMENT } from "@/lib/web-payment";
 import { Coins, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -23,7 +25,21 @@ interface CreditsModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function CreditsModal({ open, onOpenChange }: CreditsModalProps) {
+export function CreditsModal(props: CreditsModalProps) {
+  if (DISABLE_WEB_PAYMENT) {
+    return (
+      <DownloadAppModal
+        open={props.open}
+        onOpenChange={props.onOpenChange}
+        reason="credits"
+      />
+    );
+  }
+
+  return <CreditsCheckoutModal {...props} />;
+}
+
+function CreditsCheckoutModal({ open, onOpenChange }: CreditsModalProps) {
   const userData = useConvexQuery(convexApi.user.fetchUserAndProfile);
   const { openCheckout, preloadCheckout, loadingProductId } =
     usePolarEmbedCheckout();

@@ -9,12 +9,11 @@ import {
   useRef,
   useState,
 } from "react";
-import {
+import i18n, {
   DEFAULT_LANGUAGE,
   SUPPORTED_LANGUAGES,
   type AppLanguage,
-} from "@/lib/i18n/types";
-import { TRANSLATIONS } from "@/lib/i18n/translations";
+} from "@/lib/i18n";
 
 const LANGUAGE_STORAGE_KEY = "@app_language";
 
@@ -32,18 +31,6 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(
   undefined,
 );
 
-const interpolate = (template: string, values?: TranslationValues) => {
-  if (!values) {
-    return template;
-  }
-
-  return template.replace(/\{\{(.*?)\}\}/g, (_, rawKey: string) => {
-    const key = rawKey.trim();
-    const value = values[key];
-    return value === undefined ? "" : String(value);
-  });
-};
-
 export const LanguageProvider = ({
   children,
 }: {
@@ -53,6 +40,10 @@ export const LanguageProvider = ({
   const [language, setLanguageState] = useState<AppLanguage>(DEFAULT_LANGUAGE);
   const [isLanguageLoaded, setIsLanguageLoaded] = useState(false);
   const hasSyncedSessionRef = useRef(false);
+
+  useEffect(() => {
+    i18n.locale = language;
+  }, [language]);
   const remoteLanguage = useQuery(
     api.features.preferences.queries.getUserAppLanguage,
     isAuthenticated ? {} : "skip",
@@ -154,9 +145,7 @@ export const LanguageProvider = ({
 
   const value = useMemo(() => {
     const t = (key: string, values?: TranslationValues) => {
-      const selectedLanguageMap = TRANSLATIONS[language] ?? {};
-      const template = selectedLanguageMap[key] ?? key;
-      return interpolate(template, values);
+      return i18n.t(key, values);
     };
 
     return {

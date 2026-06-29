@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
-import { AppState, type AppStateStatus } from "react-native";
+import { Alert, AppState, type AppStateStatus } from "react-native";
 import * as Updates from "expo-updates";
+import i18n from "@/lib/i18n";
 
 const LOG_PREFIX = "[ExpoUpdates]";
 const UPDATE_CHECK_THROTTLE_MS = 60_000;
@@ -55,7 +56,45 @@ async function logRecentUpdateIssues() {
   }
 }
 
-export function useExpoUpdatesBootstrap() {
+const didShowAlertRef = { current: false };
+
+function showUpdateAlert(source: string) {
+  if (didShowAlertRef.current) {
+    return;
+  }
+  didShowAlertRef.current = true;
+
+  console.log(LOG_PREFIX, "Showing update alert", { source });
+
+  Alert.alert(
+    i18n.t("updates.title"),
+    i18n.t("updates.description"),
+    [
+      {
+        text: i18n.t("updates.dismiss"),
+        style: "cancel",
+        onPress: () => {
+          didShowAlertRef.current = false;
+        },
+      },
+      {
+        text: i18n.t("updates.relaunch"),
+        onPress: () => {
+          void Updates.reloadAsync().catch((error) => {
+            didShowAlertRef.current = false;
+            console.warn(LOG_PREFIX, "Could not reload after alert confirm", {
+              message: getErrorMessage(error),
+            });
+          });
+        },
+      },
+    ],
+    { cancelable: true },
+  );
+}
+
+export function useExpoUpdatesBootstrap(options?: { test?: boolean }) {
+  const testMode = options?.test ?? false;
   const {
     isStartupProcedureRunning,
     isUpdatePending,
@@ -100,23 +139,22 @@ export function useExpoUpdatesBootstrap() {
   }, [downloadError]);
 
   useEffect(() => {
+    if (testMode) {
+      return;
+    }
+
     if (!isUpdatePending || didReloadForPendingRef.current) {
       return;
     }
 
     didReloadForPendingRef.current = true;
-    console.log(LOG_PREFIX, "Pending update downloaded, reloading", {
+    console.log(LOG_PREFIX, "Pending update downloaded, showing alert", {
       updateId: downloadedUpdate?.updateId,
       createdAt: downloadedUpdate?.createdAt?.toISOString(),
       current: getRunningUpdateInfo(),
     });
 
-    void Updates.reloadAsync().catch((error) => {
-      didReloadForPendingRef.current = false;
-      console.warn(LOG_PREFIX, "Could not reload pending update", {
-        message: getErrorMessage(error),
-      });
-    });
+    showUpdateAlert("pending");
   }, [
     downloadedUpdate?.createdAt,
     downloadedUpdate?.updateId,
@@ -125,7 +163,7 @@ export function useExpoUpdatesBootstrap() {
 
   useEffect(() => {
     const checkAndApplyUpdate = async (source: string) => {
-      if (__DEV__) {
+      if (__DEV__ && !testMode) {
         return;
       }
 
@@ -177,8 +215,8 @@ export function useExpoUpdatesBootstrap() {
         });
 
         if (fetchResult.isNew || fetchResult.isRollBackToEmbedded) {
-          console.log(LOG_PREFIX, "Reloading to apply update", { source });
-          await Updates.reloadAsync();
+          console.log(LOG_PREFIX, "Update ready, showing alert", { source });
+          showUpdateAlert(source);
         }
       } catch (error) {
         console.warn(LOG_PREFIX, "Update check failed", {
@@ -189,6 +227,15 @@ export function useExpoUpdatesBootstrap() {
         isCheckingRef.current = false;
       }
     };
+
+    if (testMode) {
+      if (!didStartLaunchCheckRef.current) {
+        didStartLaunchCheckRef.current = true;
+        console.log(LOG_PREFIX, "Test mode: simulating update alert");
+        showUpdateAlert("test");
+      }
+      return;
+    }
 
     if (!isStartupProcedureRunning && !didStartLaunchCheckRef.current) {
       didStartLaunchCheckRef.current = true;

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { AppLanguage } from "@/lib/i18n/types";
+import type { AppLanguage } from "@/lib/i18n";
 
 // Static options - no need to fetch from backend for onboarding
 // TODO: Replace placeholder images with actual assets

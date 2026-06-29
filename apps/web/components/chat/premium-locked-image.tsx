@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Crown, Lock, Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { PremiumSubscriptionModal } from "@/components/premium-subscription-modal";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { usePolarSubscriptionsQuery } from "@/hooks/use-polar-catalog";
 import { usePolarEmbedCheckout } from "@/hooks/use-polar-embed-checkout";
+import { DISABLE_WEB_PAYMENT } from "@/lib/web-payment";
 import { cn } from "@/lib/utils";
 
 interface PremiumLockedImageProps {
@@ -25,6 +27,75 @@ interface PremiumLockedImageProps {
 }
 
 export function PremiumLockedImage({
+  imageUrl,
+  profileName = "AI",
+  profileAvatar,
+  viewerName,
+  viewerEmail,
+  viewerAuthUserId,
+}: PremiumLockedImageProps) {
+  const [open, setOpen] = useState(false);
+
+  if (DISABLE_WEB_PAYMENT) {
+    return (
+      <>
+        <PremiumLockedImageTrigger
+          imageUrl={imageUrl}
+          profileName={profileName}
+          onClick={() => setOpen(true)}
+        />
+        <PremiumSubscriptionModal open={open} onOpenChange={setOpen} />
+      </>
+    );
+  }
+
+  return (
+    <PremiumLockedImageCheckout
+      imageUrl={imageUrl}
+      profileName={profileName}
+      profileAvatar={profileAvatar}
+      viewerName={viewerName}
+      viewerEmail={viewerEmail}
+      viewerAuthUserId={viewerAuthUserId}
+    />
+  );
+}
+
+function PremiumLockedImageTrigger({
+  imageUrl,
+  profileName = "AI",
+  onClick,
+}: {
+  imageUrl: string;
+  profileName?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative overflow-hidden rounded-3xl text-left"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageUrl}
+        alt={`Premium photo from ${profileName}`}
+        className="max-w-[260px] rounded-3xl object-cover blur-2xl saturate-75 transition-transform duration-300 group-hover:scale-[1.02]"
+        loading="lazy"
+      />
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/20 px-4 text-center">
+        <div className="flex h-8 w-8 md:h-11 md:w-11 items-center justify-center rounded-full bg-background/90 text-foreground shadow-lg">
+          <Lock className="h-3 w-3 md:h-5 md:w-5" />
+        </div>
+        <div className="rounded-full bg-background/95 px-4 py-2 text-xs md:text-sm font-medium text-foreground shadow-lg">
+          Tap to see photo
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function PremiumLockedImageCheckout({
   imageUrl,
   profileName = "AI",
   profileAvatar,
@@ -112,27 +183,11 @@ export function PremiumLockedImage({
 
   return (
     <>
-      <button
-        type="button"
+      <PremiumLockedImageTrigger
+        imageUrl={imageUrl}
+        profileName={profileName}
         onClick={() => setOpen(true)}
-        className="group relative overflow-hidden rounded-3xl text-left"
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={imageUrl}
-          alt={`Premium photo from ${profileName}`}
-          className="max-w-[260px] rounded-3xl object-cover blur-2xl saturate-75 transition-transform duration-300 group-hover:scale-[1.02]"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/20 px-4 text-center">
-          <div className="flex h-8 w-8 md:h-11 md:w-11 items-center justify-center rounded-full bg-background/90 text-foreground shadow-lg">
-            <Lock className="h-3 w-3 md:h-5 md:w-5" />
-          </div>
-          <div className="rounded-full bg-background/95 px-4 py-2 text-xs md:text-sm font-medium text-foreground shadow-lg">
-            Tap to see photo
-          </div>
-        </div>
-      </button>
+      />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md overflow-hidden p-0">

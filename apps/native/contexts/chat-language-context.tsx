@@ -13,7 +13,7 @@ import {
   DEFAULT_LANGUAGE,
   SUPPORTED_LANGUAGES,
   type AppLanguage,
-} from "@/lib/i18n/types";
+} from "@/lib/i18n";
 
 const CHAT_LANGUAGE_STORAGE_KEY = "@chat_language";
 

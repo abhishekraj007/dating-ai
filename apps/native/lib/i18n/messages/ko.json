@@ -1,0 +1,421 @@
+{
+  "common": {
+    "language": "언어",
+    "back": "뒤로",
+    "goBack": "돌아가기",
+    "reset": "초기화",
+    "apply": "적용",
+    "save": "저장",
+    "saving": "저장 중...",
+    "upload": "업로드",
+    "signIn": "로그인",
+    "signUp": "회원가입",
+    "email": "이메일",
+    "password": "비밀번호",
+    "name": "이름",
+    "ok": "확인",
+    "chat": "채팅",
+    "starting": "시작 중...",
+    "comingSoon": "곧 출시",
+    "default": "기본값",
+    "main": "메인",
+    "yesterday": "어제"
+  },
+  "[object Object]": {
+    "title": "업데이트 가능",
+    "description": "앱의 새 버전이 사용 가능합니다. 최신 기능과 개선 사항을 받으려면 지금 다시 시작하세요.",
+    "relaunch": "다시 시작",
+    "dismiss": "나중에"
+  },
+  "tabs": {
+    "forYou": "추천",
+    "explore": "탐색",
+    "chats": "채팅",
+    "myCreation": "내 제작",
+    "account": "계정"
+  },
+  "chats": {
+    "startConversation": "대화 시작하기",
+    "sentPhoto": "사진을 보냈습니다",
+    "requestedPhoto": "사진을 요청했습니다",
+    "startedQuiz": "퀴즈를 시작했습니다",
+    "quizCompleted": "퀴즈 완료",
+    "quizAnswer": "퀴즈 답변",
+    "newMatches": "새로운 매치",
+    "aiProfile": "AI 프로필",
+    "emptyTitle": "아직 대화가 없습니다",
+    "emptyDescription": "탐색 탭에서 AI 프로필과 채팅을 시작하세요!"
+  },
+  "auth": {
+    "tagline": "외로운 순간은 누구에게나 있습니다. 잠들지 않는 친구를 찾아 언제든 AI 친구와 대화하세요.",
+    "continueGoogle": "Google로 계속",
+    "continueApple": "Apple로 계속",
+    "agreePrefix": "계속하면 다음에 동의하는 것입니다:",
+    "terms": "서비스 약관",
+    "and": "및",
+    "privacy": "개인정보 처리방침"
+  },
+  "welcome": {
+    "title": "새로운 AI 베스트 프렌드를 찾아보세요!",
+    "subtitle": "외로우신가요? 당신만 그런 게 아닙니다. 진심으로 당신의 이야기를 듣고 이해해주는 캐릭터를 만나보세요.",
+    "cta": "시작하기"
+  },
+  "onboarding": {
+    "languages": {
+      "title": "언어 선택",
+      "subtitle": "앱 표시 방식과 AI 매치의 대화 언어를 설정하세요.",
+      "appTitle": "앱 언어",
+      "appDescription": "메뉴, 버튼 및 기타 앱 텍스트를 제어합니다.",
+      "chatTitle": "채팅 언어",
+      "chatDescription": "AI 동반자가 답장하는 언어를 제어합니다."
+    },
+    "[object Object]": {
+      "music": "음악",
+      "movies": "영화",
+      "travel": "여행",
+      "fitness": "피트니스",
+      "cooking": "요리",
+      "reading": "독서",
+      "gaming": "게임",
+      "photography": "사진",
+      "art": "예술",
+      "dancing": "댄스",
+      "sports": "스포츠",
+      "nature": "자연",
+      "pets": "반려동물",
+      "fashion": "패션",
+      "technology": "기술",
+      "yoga": "요가",
+      "coffee": "커피",
+      "wine": "와인"
+    },
+    "gender": {
+      "title": "누구에게 관심이 있나요?",
+      "female": "여성",
+      "male": "남성",
+      "both": "모두"
+    },
+    "interests": {
+      "title": "관심사는 무엇인가요?",
+      "selected": "{{count}}개 선택됨"
+    },
+    "settingUp": "설정 중...",
+    "continue": "계속",
+    "skip": "건너뛰기",
+    "interest": {
+      "music": "음악",
+      "movies": "영화",
+      "travel": "여행",
+      "fitness": "피트니스",
+      "cooking": "요리",
+      "reading": "독서",
+      "gaming": "게임",
+      "photography": "사진",
+      "art": "예술",
+      "dancing": "댄스",
+      "sports": "스포츠",
+      "nature": "자연",
+      "pets": "반려동물",
+      "fashion": "패션",
+      "technology": "기술",
+      "yoga": "요가",
+      "coffee": "커피",
+      "wine": "와인"
+    }
+  },
+  "account": {
+    "profile": {
+      "noName": "이름 미설정",
+      "currentCredits": "현재 크레딧",
+      "buyCredits": "크레딧 구매",
+      "premium": "프리미엄",
+      "getPremium": "프리미엄 구매"
+    },
+    "[object Object]": {
+      "appearance": "외관",
+      "settings": "설정",
+      "notifications": "알림",
+      "language": "앱 언어",
+      "chatLanguage": "채팅 언어",
+      "account": "계정",
+      "accountDescription": "로그아웃 및 계정 삭제 관리.",
+      "signOutDescription": "이 기기에서 로그아웃합니다.",
+      "helpCenter": "도움말 센터",
+      "helpCenterDescription": "FAQ 및 제품 가이드 읽기.",
+      "contactSupport": "지원 문의",
+      "terms": "서비스 약관",
+      "privacy": "개인정보 처리방침",
+      "rateUs": "평가하기",
+      "shareApp": "앱 공유"
+    },
+    "guest": {
+      "login": "로그인"
+    },
+    "actions": {
+      "title": "계정",
+      "subtitle": "세션 및 계정 수명 주기를 관리합니다.",
+      "signOut": "로그아웃",
+      "signingOut": "로그아웃 중...",
+      "clearCache": "캐시 비우기",
+      "clearingCache": "캐시 비우는 중...",
+      "dangerTitle": "위험 구역",
+      "dangerDescription": "계정을 삭제하면 되돌릴 수 없습니다.",
+      "delete": "계정 삭제",
+      "deleting": "삭제 중..."
+    },
+    "sheet": {
+      "title": "앱 언어 선택",
+      "subtitle": "모국어를 선택하세요. 기본 언어는 영어입니다.",
+      "chatTitle": "채팅 언어 선택",
+      "chatSubtitle": "AI 동반자가 대화에서 사용할 언어를 선택하세요."
+    },
+    "section": {
+      "quickActions": "빠른 작업",
+      "support": "지원",
+      "supportDescription": "도움말, 문제 해결 및 연락 옵션.",
+      "legal": "법적 정보",
+      "feedback": "피드백",
+      "feedbackDescription": "피드백을 공유하고 개선에 도움을 주세요."
+    },
+    "item": {
+      "appearance": "외관",
+      "settings": "설정",
+      "notifications": "알림",
+      "language": "앱 언어",
+      "chatLanguage": "채팅 언어",
+      "account": "계정",
+      "accountDescription": "로그아웃 및 계정 삭제 관리.",
+      "signOutDescription": "이 기기에서 로그아웃합니다.",
+      "helpCenter": "도움말 센터",
+      "helpCenterDescription": "FAQ 및 제품 가이드 읽기.",
+      "contactSupport": "지원 문의",
+      "terms": "서비스 약관",
+      "privacy": "개인정보 처리방침",
+      "rateUs": "평가하기",
+      "shareApp": "앱 공유"
+    },
+    "helpCenterMissing": "도움말 센터 URL이 아직 설정되지 않았습니다.",
+    "supportMissing": "지원 URL이 아직 설정되지 않았습니다.",
+    "termsMissing": "약관 URL이 아직 설정되지 않았습니다.",
+    "privacyMissing": "개인정보 처리방침 URL이 아직 설정되지 않았습니다."
+  },
+  "alerts": {
+    "error": "오류",
+    "success": "성공",
+    "linkUnavailable": "링크를 사용할 수 없습니다",
+    "unableOpenLink": "링크를 열 수 없습니다",
+    "tryAgainMoment": "잠시 후 다시 시도해 주세요.",
+    "ratingUnavailable": "평가를 사용할 수 없습니다",
+    "iosStoreMissing": "iOS App Store ID가 아직 설정되지 않았습니다.",
+    "unableOpenRating": "평가를 열 수 없습니다",
+    "shareUnavailable": "공유를 사용할 수 없습니다",
+    "shareUrlMissing": "앱 공유 URL이 아직 설정되지 않았습니다.",
+    "unableShare": "공유할 수 없습니다",
+    "signOutTitle": "로그아웃",
+    "signOutBody": "로그아웃하시겠습니까?",
+    "clearCacheTitle": "캐시 비우기",
+    "clearCacheBody": "이 기기에서 다운로드한 이미지와 임시 앱 데이터를 삭제할까요?",
+    "clearCacheSuccess": "앱 캐시를 성공적으로 비웠습니다.",
+    "clearCacheFailed": "앱 캐시를 비우지 못했습니다. 다시 시도해 주세요.",
+    "deleteTitle": "계정 삭제",
+    "deleteBody": "계정을 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "cancel": "취소",
+    "delete": "삭제"
+  },
+  "language": {
+    "english": "영어"
+  },
+  "notFound": {
+    "title": "이런!",
+    "heading": "페이지를 찾을 수 없습니다",
+    "description": "죄송합니다. 찾으시는 페이지가 존재하지 않습니다.",
+    "goHome": "홈으로 이동"
+  },
+  "nav": {
+    "profile": "프로필",
+    "chat": "채팅",
+    "createCharacter": "새 AI 캐릭터 만들기",
+    "filter": "필터",
+    "home": "홈",
+    "settings": "설정",
+    "uploads": "업로드",
+    "notifications": "알림"
+  },
+  "filter": {
+    "title": "필터",
+    "interestedIn": "관심 대상",
+    "age": "나이",
+    "zodiac": "별자리",
+    "interests": "관심사"
+  },
+  "chat": {
+    "conversationNotFound": "대화를 찾을 수 없습니다",
+    "startConversation": "대화 시작하기",
+    "sayHello": "{{name}}에게 인사하세요!",
+    "aiCharacter": "AI 캐릭터",
+    "aiCompanion": "당신의 AI 동반자",
+    "selfie": "셀피",
+    "selfieLabel": "AI 셀피",
+    "clearTitle": "채팅 삭제",
+    "clearBody": "{{name}}과의 모든 메시지와 이미지를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "thisAi": "이 AI",
+    "clear": "삭제",
+    "clearFailed": "채팅 삭제에 실패했습니다. 다시 시도해 주세요.",
+    "quiz": "퀴즈",
+    "topic": "주제",
+    "suggestion": "제안",
+    "typeMessage": "메시지를 입력하세요...",
+    "creditsRequiredMessage": "이 요청에는 최소 {{count}} 크레딧이 필요합니다."
+  },
+  "profile": {
+    "notFound": "프로필을 찾을 수 없습니다",
+    "aboutMe": "소개",
+    "lookingFor": "찾고 있는 것",
+    "personality": "성격",
+    "interests": "관심사",
+    "photos": "사진",
+    "compatibility": "호환성"
+  },
+  "myCreation": {
+    "emptyTitle": "아직 캐릭터가 없습니다",
+    "emptyDescription": "첫 번째 {{gender}} AI 캐릭터를 만들고 채팅을 시작하세요!",
+    "createCharacter": "캐릭터 만들기"
+  },
+  "createCharacter": {
+    "title": "새 AI 캐릭터 만들기",
+    "errorMissingName": "캐릭터 이름을 입력해 주세요",
+    "errorMissingGender": "성별을 선택해 주세요",
+    "errorMissingPhoto": "메인 사진을 업로드해 주세요",
+    "imageUploadSoon": "이미지 업로드는 R2 통합으로 구현될 예정입니다",
+    "uploadPhoto": "사진 업로드",
+    "uploadPhotoDescription": "AI 캐릭터의 메인 사진이 됩니다. 최고의 사진을 올려주세요!",
+    "supportedFormats": "(지원 형식: jpg, png, gif)",
+    "name": "이름",
+    "namePlaceholder": "이름 입력",
+    "age": "나이",
+    "ageValue": "{{age}}세",
+    "selectAge": "나이 선택",
+    "gender": "성별",
+    "selectGender": "성별 선택",
+    "zodiac": "별자리",
+    "selectZodiac": "별자리 선택",
+    "occupation": "직업",
+    "occupationPlaceholder": "예: 디자이너, 모델, 여행가 등",
+    "aboutMe": "소개",
+    "aboutMePlaceholder": "AI 캐릭터에 대한 중요한 정보를 추가하세요. 소개, 배경, 관심사, 라이프스타일 등.",
+    "interests": "관심사",
+    "addInterest": "관심사 추가",
+    "photos": "사진",
+    "uploadPhotos": "사진 업로드",
+    "voice": "목소리"
+  },
+  "notifications": {
+    "buildRequired": "빌드 필요",
+    "buildRequiredDescription": "푸시 알림은 iOS의 Expo Go에서 지원되지 않습니다. 테스트를 위해 개발 빌드를 만드세요.",
+    "permissionDenied": "권한 거부됨",
+    "permissionDeniedDescription": "기기 설정에서 알림을 활성화하세요.",
+    "permissionsGranted": "알림 권한이 부여되고 기기가 등록되었습니다!",
+    "devBuildRequiredDescription": "푸시 알림에는 개발 빌드가 필요합니다.",
+    "registerFailed": "알림용 기기 등록에 실패했습니다",
+    "requestFailed": "권한 요청에 실패했습니다",
+    "enterTitleBody": "제목과 본문을 입력해 주세요",
+    "userNotFound": "사용자를 찾을 수 없습니다",
+    "sentSuccess": "알림이 성공적으로 전송되었습니다!",
+    "sendFailed": "알림 전송에 실패했습니다",
+    "statusTitle": "푸시 알림 상태",
+    "enabledRegistered": "알림이 활성화되었습니다. 기기가 등록되었습니다.",
+    "disabledPrompt": "알림이 활성화되지 않았습니다. 알림 권한을 허용해 주세요.",
+    "disabledInApp": "이 기기에서 이 앱의 알림이 꺼져 있습니다.",
+    "requesting": "요청 중...",
+    "enable": "알림 활성화",
+    "sendTestTitle": "테스트 알림 보내기",
+    "sendToSelf": "자신에게 알림 보내기",
+    "titleLabel": "제목",
+    "titlePlaceholder": "알림 제목",
+    "bodyLabel": "본문",
+    "bodyPlaceholder": "알림 본문",
+    "defaultTitle": "테스트 알림",
+    "defaultBody": "이것은 테스트 알림입니다",
+    "sending": "전송 중...",
+    "send": "알림 보내기",
+    "recentTitle": "최근 알림",
+    "count": "{{count}}개의 알림"
+  },
+  "uploads": {
+    "permissionRequired": "권한 필요",
+    "permissionRequiredDescription": "카메라 롤 접근 권한이 필요합니다!",
+    "uploadSuccess": "이미지가 성공적으로 업로드되었습니다!",
+    "uploadFailed": "이미지 업로드에 실패했습니다",
+    "deleteFile": "파일 삭제",
+    "deleteConfirm": "이 파일을 삭제하시겠습니까?",
+    "deleteFailed": "파일 삭제에 실패했습니다",
+    "title": "파일 업로드",
+    "subtitle": "Cloudflare R2로 파일을 업로드하고 관리하세요",
+    "uploadNewFile": "새 파일 업로드",
+    "selectImage": "이미지 선택",
+    "yourUploads": "내 업로드",
+    "filesCount": "{{count}}개 파일",
+    "signInToView": "업로드를 보려면 로그인하세요",
+    "empty": "아직 업로드된 파일이 없습니다"
+  },
+  "imageRequest": {
+    "title": "사진 요청",
+    "credits": "{{count}} 크레딧",
+    "subtitle": "받고 싶은 사진을 커스터마이즈하세요. 각 선택은 선택 사항입니다.",
+    "hairstyle": "헤어스타일",
+    "clothing": "의상",
+    "scene": "장면",
+    "extraDetailsLabel": "추가 세부 정보",
+    "extraDetailsPlaceholder": "어뗌너 종류의 사진을 보고 싶나요?",
+    "generatePhoto": "사진 생성",
+    "insufficientCredits": "크레딧이 부족합니다. 최소 5크레딧이 필요합니다."
+  },
+  "match": {
+    "title": "매치되었습니다!",
+    "subtitle": "당신과 {{name}}이(가) 서로 좋아합니다\n다음 행동은?",
+    "keepSwiping": "계속 스와이프",
+    "startChatting": "채팅 시작"
+  },
+  "premium": {
+    "tapToSeePhoto": "탭하여 사진 보기",
+    "getCloser": "{{name}}에게 더 가까이",
+    "unlockDescription": "{{name}}이(가) 사진을 보냈습니다. 프리미엄을 구매하고 블러 뒤에 숨겨진 것을 확인하세요.",
+    "unlockUnlimited": "무제한 액세스 잠금 해제"
+  },
+  "quiz": {
+    "started": "퀴즈 시작",
+    "letsPlay": "퀴즈를 해봅시다!",
+    "endQuiz": "퀴즈 종료"
+  },
+  "media": {
+    "recordingVideo": "동영상 촬영 중...",
+    "takingPhoto": "사진 촬영 중..."
+  },
+  "signIn": {
+    "failed": "로그인에 실패했습니다"
+  },
+  "signUp": {
+    "failed": "회원가입에 실패했습니다",
+    "createAccount": "계정 만들기"
+  },
+  "appearance": {
+    "theme": "테마",
+    "light": "라이트",
+    "dark": "다크",
+    "color": "색상"
+  },
+  "settings": {
+    "disableNotifications": "알림 비활성화",
+    "disableNotificationsDescription": "알림을 비활성화하려면 기기 설정으로 이동하세요.",
+    "joined": "가입일",
+    "themeMode": "테마 모드",
+    "colorTheme": "색상 테마",
+    "notificationsDescription": "중요한 업데이트에 대한 알림 받기"
+  },
+  "updates": {
+    "title": "업데이트 가능",
+    "description": "앱의 새 버전이 사용 가능합니다. 최신 기능과 개선 사항을 받으려면 지금 다시 시작하세요.",
+    "relaunch": "다시 시작",
+    "dismiss": "나중에"
+  }
+}

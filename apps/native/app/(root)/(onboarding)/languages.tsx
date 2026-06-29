@@ -8,8 +8,8 @@ import { useTranslation } from "@/hooks/use-translation";
 import { useChatLanguage } from "@/hooks/use-chat-language";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 import { LanguageSheet } from "@/components/language/language-sheet";
-import { SUPPORTED_LANGUAGES } from "@/lib/i18n/types";
-import type { AppLanguage } from "@/lib/i18n/types";
+import { SUPPORTED_LANGUAGES } from "@/lib/i18n";
+import type { AppLanguage } from "@/lib/i18n";
 
 function getLanguageLabel(code: AppLanguage) {
   return SUPPORTED_LANGUAGES?.find((l) => l.code === code)?.label ?? code;

@@ -1,0 +1,421 @@
+{
+  "common": {
+    "language": "भाषा",
+    "back": "वापस",
+    "goBack": "वापस जाएं",
+    "reset": "रीसेट",
+    "apply": "लागू करें",
+    "save": "सेव करें",
+    "saving": "सेव हो रहा है...",
+    "upload": "अपलोड",
+    "signIn": "साइन इन",
+    "signUp": "साइन अप",
+    "email": "ईमेल",
+    "password": "पासवर्ड",
+    "name": "नाम",
+    "ok": "ठीक है",
+    "chat": "चैट",
+    "starting": "शुरू हो रहा है...",
+    "comingSoon": "जल्द आ रहा है",
+    "default": "डिफ़ॉल्ट",
+    "main": "मुख्य",
+    "yesterday": "कल"
+  },
+  "[object Object]": {
+    "title": "अपडेट उपलब्ध",
+    "description": "ऐप का नया वर्शन उपलब्ध है। नवीनतम सुविधाओं और सुधारों के लिए अभी पुनः लॉन्च करें।",
+    "relaunch": "पुनः लॉन्च करें",
+    "dismiss": "अभी नहीं"
+  },
+  "tabs": {
+    "forYou": "आपके लिए",
+    "explore": "खोजें",
+    "chats": "चैट",
+    "myCreation": "मेरी क्रिएशन",
+    "account": "अकाउंट"
+  },
+  "chats": {
+    "startConversation": "बातचीत शुरू करें",
+    "sentPhoto": "फोटो भेजी",
+    "requestedPhoto": "फोटो अनुरोध किया",
+    "startedQuiz": "क्विज़ शुरू किया",
+    "quizCompleted": "क्विज़ पूरा हुआ",
+    "quizAnswer": "क्विज़ उत्तर",
+    "newMatches": "नए मैच",
+    "aiProfile": "AI प्रोफ़ाइल",
+    "emptyTitle": "अभी कोई बातचीत नहीं",
+    "emptyDescription": "Explore टैब से AI प्रोफ़ाइल के साथ चैट शुरू करें!"
+  },
+  "auth": {
+    "tagline": "अकेलापन महसूस होना सामान्य है। ऐसे AI दोस्तों से बात करें जो हमेशा आपके साथ हों।",
+    "continueGoogle": "Google से जारी रखें",
+    "continueApple": "Apple से जारी रखें",
+    "agreePrefix": "जारी रखकर आप हमारी",
+    "terms": "सेवा शर्तों",
+    "and": "और",
+    "privacy": "गोपनीयता नीति"
+  },
+  "welcome": {
+    "title": "अपना नया AI बेस्टफ्रेंड और बहुत कुछ पाएँ!",
+    "subtitle": "अकेलापन? आप अकेले नहीं हैं। ऐसे किरदारों से मिलें जो सच में आपको समझते हैं।",
+    "cta": "शुरू करें"
+  },
+  "onboarding": {
+    "languages": {
+      "title": "अपनी भाषाएँ चुनें",
+      "subtitle": "ऐप कैसा दिखे और आपके AI मैच किस भाषा में बात करें, यह सेट करें।",
+      "appTitle": "ऐप भाषा",
+      "appDescription": "मेन्यू, बटन और अन्य ऐप टेक्स्ट नियंत्रित करता है।",
+      "chatTitle": "चैट भाषा",
+      "chatDescription": "आपके AI साथी जिस भाषा में जवाब देते हैं, उसे नियंत्रित करता है।"
+    },
+    "[object Object]": {
+      "music": "संगीत",
+      "movies": "फिल्में",
+      "travel": "यात्रा",
+      "fitness": "फ़िटनेस",
+      "cooking": "खाना बनाना",
+      "reading": "पढ़ना",
+      "gaming": "गेमिंग",
+      "photography": "फ़ोटोग्राफी",
+      "art": "कला",
+      "dancing": "डांस",
+      "sports": "खेल",
+      "nature": "प्रकृति",
+      "pets": "पालतू",
+      "fashion": "फ़ैशन",
+      "technology": "टेक्नोलॉजी",
+      "yoga": "योग",
+      "coffee": "कॉफी",
+      "wine": "वाइन"
+    },
+    "gender": {
+      "title": "आप किसमें रुचि रखते हैं?",
+      "female": "महिलाएँ",
+      "male": "पुरुष",
+      "both": "सभी"
+    },
+    "interests": {
+      "title": "आपकी रुचियाँ क्या हैं?",
+      "selected": "{{count}} चुने गए"
+    },
+    "settingUp": "सेटअप हो रहा है...",
+    "continue": "जारी रखें",
+    "skip": "छोड़ें",
+    "interest": {
+      "music": "संगीत",
+      "movies": "फिल्में",
+      "travel": "यात्रा",
+      "fitness": "फ़िटनेस",
+      "cooking": "खाना बनाना",
+      "reading": "पढ़ना",
+      "gaming": "गेमिंग",
+      "photography": "फ़ोटोग्राफी",
+      "art": "कला",
+      "dancing": "डांस",
+      "sports": "खेल",
+      "nature": "प्रकृति",
+      "pets": "पालतू",
+      "fashion": "फ़ैशन",
+      "technology": "टेक्नोलॉजी",
+      "yoga": "योग",
+      "coffee": "कॉफी",
+      "wine": "वाइन"
+    }
+  },
+  "account": {
+    "profile": {
+      "noName": "कोई नाम सेट नहीं",
+      "currentCredits": "वर्तमान क्रेडिट",
+      "buyCredits": "क्रेडिट खरीदें",
+      "premium": "प्रीमियम",
+      "getPremium": "प्रीमियम लें"
+    },
+    "[object Object]": {
+      "language": "ऐप भाषा",
+      "chatLanguage": "चैट भाषा",
+      "appearance": "दिखावट",
+      "settings": "सेटिंग्स",
+      "notifications": "नोटिफिकेशन",
+      "account": "अकाउंट",
+      "accountDescription": "साइन आउट करें और अकाउंट डिलीशन मैनेज करें।",
+      "signOutDescription": "इस डिवाइस से साइन आउट करें।",
+      "helpCenter": "हेल्प सेंटर",
+      "helpCenterDescription": "FAQ और प्रोडक्ट गाइडेंस पढ़ें।",
+      "contactSupport": "सपोर्ट से संपर्क करें",
+      "terms": "सेवा की शर्तें",
+      "privacy": "गोपनीयता नीति",
+      "rateUs": "रेट करें",
+      "shareApp": "ऐप शेयर करें"
+    },
+    "guest": {
+      "login": "लॉग इन"
+    },
+    "actions": {
+      "title": "अकाउंट",
+      "subtitle": "अपने सत्र और अकाउंट को मैनेज करें।",
+      "signOut": "साइन आउट",
+      "signingOut": "साइन आउट हो रहा है...",
+      "clearCache": "कैश साफ़ करें",
+      "clearingCache": "कैश साफ़ किया जा रहा है...",
+      "dangerTitle": "खतरे का क्षेत्र",
+      "dangerDescription": "एक बार अकाउंट डिलीट करने के बाद इसे वापस नहीं लाया जा सकता।",
+      "delete": "अकाउंट डिलीट करें",
+      "deleting": "डिलीट हो रहा है..."
+    },
+    "item": {
+      "language": "ऐप भाषा",
+      "chatLanguage": "चैट भाषा",
+      "appearance": "दिखावट",
+      "settings": "सेटिंग्स",
+      "notifications": "नोटिफिकेशन",
+      "account": "अकाउंट",
+      "accountDescription": "साइन आउट करें और अकाउंट डिलीशन मैनेज करें।",
+      "signOutDescription": "इस डिवाइस से साइन आउट करें।",
+      "helpCenter": "हेल्प सेंटर",
+      "helpCenterDescription": "FAQ और प्रोडक्ट गाइडेंस पढ़ें।",
+      "contactSupport": "सपोर्ट से संपर्क करें",
+      "terms": "सेवा की शर्तें",
+      "privacy": "गोपनीयता नीति",
+      "rateUs": "रेट करें",
+      "shareApp": "ऐप शेयर करें"
+    },
+    "sheet": {
+      "title": "ऐप की भाषा चुनें",
+      "subtitle": "अपनी मातृभाषा चुनें। डिफ़ॉल्ट भाषा अंग्रेज़ी है।",
+      "chatTitle": "चैट भाषा चुनें",
+      "chatSubtitle": "वह भाषा चुनें जिसमें आपके AI साथी बातचीत करें।"
+    },
+    "section": {
+      "quickActions": "त्वरित क्रियाएँ",
+      "support": "सहायता",
+      "supportDescription": "मदद, समस्या समाधान और संपर्क विकल्प।",
+      "legal": "कानूनी",
+      "feedback": "फीडबैक",
+      "feedbackDescription": "अपना सुझाव दें और हमें बेहतर बनने में मदद करें।"
+    },
+    "helpCenterMissing": "हेल्प सेंटर URL कॉन्फ़िगर नहीं है।",
+    "supportMissing": "सपोर्ट URL कॉन्फ़िगर नहीं है।",
+    "termsMissing": "टर्म्स URL कॉन्फ़िगर नहीं है।",
+    "privacyMissing": "प्राइवेसी URL कॉन्फ़िगर नहीं है।"
+  },
+  "alerts": {
+    "error": "त्रुटि",
+    "success": "सफलता",
+    "linkUnavailable": "लिंक उपलब्ध नहीं है",
+    "unableOpenLink": "लिंक खोलने में असमर्थ",
+    "tryAgainMoment": "कृपया थोड़ी देर बाद फिर प्रयास करें।",
+    "ratingUnavailable": "रेटिंग उपलब्ध नहीं है",
+    "iosStoreMissing": "iOS App Store ID अभी कॉन्फ़िगर नहीं है।",
+    "unableOpenRating": "रेटिंग खोलने में असमर्थ",
+    "shareUnavailable": "शेयर उपलब्ध नहीं है",
+    "shareUrlMissing": "ऐप शेयर URL कॉन्फ़िगर नहीं है।",
+    "unableShare": "शेयर करने में असमर्थ",
+    "signOutTitle": "साइन आउट",
+    "signOutBody": "क्या आप वाकई साइन आउट करना चाहते हैं?",
+    "clearCacheTitle": "कैश साफ़ करें",
+    "clearCacheBody": "क्या इस डिवाइस से डाउनलोड की गई इमेज और अस्थायी ऐप डेटा हटाना चाहते हैं?",
+    "clearCacheSuccess": "ऐप कैश सफलतापूर्वक साफ़ हो गया।",
+    "clearCacheFailed": "ऐप कैश साफ़ नहीं हो सका। कृपया फिर से प्रयास करें।",
+    "deleteTitle": "अकाउंट डिलीट करें",
+    "deleteBody": "क्या आप अपना अकाउंट स्थायी रूप से डिलीट करना चाहते हैं? यह क्रिया वापस नहीं होगी।",
+    "cancel": "रद्द करें",
+    "delete": "डिलीट"
+  },
+  "language": {
+    "english": "अंग्रेज़ी"
+  },
+  "notFound": {
+    "title": "ओह!",
+    "heading": "पेज नहीं मिला",
+    "description": "माफ़ कीजिए, यह पेज मौजूद नहीं है।",
+    "goHome": "होम पर जाएँ"
+  },
+  "nav": {
+    "profile": "प्रोफ़ाइल",
+    "chat": "चैट",
+    "createCharacter": "नया AI किरदार बनाएं",
+    "filter": "फ़िल्टर",
+    "home": "होम",
+    "settings": "सेटिंग्स",
+    "uploads": "अपलोड्स",
+    "notifications": "नोटिफिकेशन"
+  },
+  "filter": {
+    "title": "फ़िल्टर",
+    "interestedIn": "रुचि",
+    "age": "उम्र",
+    "zodiac": "राशि",
+    "interests": "रुचियाँ"
+  },
+  "chat": {
+    "conversationNotFound": "बातचीत नहीं मिली",
+    "startConversation": "बातचीत शुरू करें",
+    "sayHello": "{{name}} को हेलो कहें!",
+    "aiCharacter": "एआई कैरेक्टर",
+    "aiCompanion": "आपका AI साथी",
+    "selfie": "सेल्फी",
+    "selfieLabel": "AI सेल्फी",
+    "clearTitle": "चैट साफ़ करें",
+    "clearBody": "क्या आप {{name}} के साथ सभी संदेश और तस्वीरें हटाना चाहते हैं? यह क्रिया वापस नहीं होगी।",
+    "thisAi": "इस AI",
+    "clear": "साफ़ करें",
+    "clearFailed": "चैट साफ़ नहीं हो सकी। कृपया फिर प्रयास करें।",
+    "quiz": "क्विज़",
+    "topic": "विषय",
+    "suggestion": "सुझाव",
+    "creditsRequiredMessage": "इस अनुरोध के लिए आपको कम से कम {{count}} क्रेडिट चाहिए।",
+    "typeMessage": "संदेश लिखें..."
+  },
+  "profile": {
+    "notFound": "प्रोफ़ाइल नहीं मिली",
+    "aboutMe": "मेरे बारे में",
+    "lookingFor": "क्या खोज रहे हैं",
+    "personality": "व्यक्तित्व",
+    "interests": "रुचियाँ",
+    "photos": "फोटो",
+    "compatibility": "संगतता"
+  },
+  "myCreation": {
+    "emptyTitle": "अभी कोई किरदार नहीं",
+    "emptyDescription": "अपना पहला {{gender}} AI किरदार बनाएं और चैट शुरू करें!",
+    "createCharacter": "किरदार बनाएं"
+  },
+  "createCharacter": {
+    "title": "नया AI किरदार बनाएं",
+    "errorMissingName": "कृपया किरदार का नाम दर्ज करें",
+    "errorMissingGender": "कृपया जेंडर चुनें",
+    "errorMissingPhoto": "कृपया मुख्य फोटो अपलोड करें",
+    "imageUploadSoon": "इमेज अपलोड जल्द R2 इंटीग्रेशन के साथ उपलब्ध होगा",
+    "uploadPhoto": "फोटो अपलोड करें",
+    "uploadPhotoDescription": "यह आपके AI किरदार की मुख्य फोटो होगी। अपनी बेहतरीन फोटो दें!",
+    "supportedFormats": "(समर्थित फॉर्मेट: jpg, png, gif)",
+    "name": "नाम",
+    "namePlaceholder": "नाम दर्ज करें",
+    "age": "उम्र",
+    "ageValue": "{{age}} वर्ष",
+    "selectAge": "उम्र चुनें",
+    "gender": "जेंडर",
+    "selectGender": "जेंडर चुनें",
+    "zodiac": "राशि",
+    "selectZodiac": "राशि चुनें",
+    "occupation": "पेशा",
+    "occupationPlaceholder": "जैसे: डिज़ाइनर, मॉडल, ट्रैवलर आदि",
+    "aboutMe": "मेरे बारे में",
+    "aboutMePlaceholder": "अपने AI किरदार के बारे में जानकारी जोड़ें, जैसे परिचय, पृष्ठभूमि, रुचियाँ, जीवनशैली आदि।",
+    "interests": "रुचियाँ",
+    "addInterest": "रुचि जोड़ें",
+    "photos": "फोटो",
+    "uploadPhotos": "फोटो अपलोड करें",
+    "voice": "आवाज़"
+  },
+  "notifications": {
+    "buildRequired": "बिल्ड आवश्यक",
+    "buildRequiredDescription": "iOS पर Expo Go में push notifications समर्थित नहीं हैं। टेस्ट के लिए development build बनाएं।",
+    "permissionDenied": "अनुमति अस्वीकृत",
+    "permissionDeniedDescription": "नोटिफिकेशन पाने के लिए डिवाइस सेटिंग्स में अनुमति दें।",
+    "permissionsGranted": "नोटिफिकेशन अनुमति मिल गई और डिवाइस रजिस्टर हो गया!",
+    "devBuildRequiredDescription": "Push notifications के लिए development build आवश्यक है।",
+    "registerFailed": "नोटिफिकेशन के लिए डिवाइस रजिस्टर नहीं हो सका",
+    "requestFailed": "अनुमति अनुरोध विफल",
+    "enterTitleBody": "कृपया शीर्षक और बॉडी दोनों दर्ज करें",
+    "userNotFound": "यूज़र नहीं मिला",
+    "sentSuccess": "नोटिफिकेशन सफलतापूर्वक भेजा गया!",
+    "sendFailed": "नोटिफिकेशन भेजने में विफल",
+    "statusTitle": "पुश नोटिफिकेशन स्थिति",
+    "enabledRegistered": "नोटिफिकेशन चालू हैं। डिवाइस रजिस्टर है।",
+    "disabledPrompt": "नोटिफिकेशन सक्षम नहीं हैं। कृपया अनुमति दें।",
+    "disabledInApp": "इस डिवाइस पर इस ऐप के लिए नोटिफिकेशन बंद हैं।",
+    "requesting": "अनुरोध किया जा रहा है...",
+    "enable": "नोटिफिकेशन सक्षम करें",
+    "sendTestTitle": "टेस्ट नोटिफिकेशन भेजें",
+    "sendToSelf": "खुद को नोटिफिकेशन भेजें",
+    "titleLabel": "शीर्षक",
+    "titlePlaceholder": "नोटिफिकेशन शीर्षक",
+    "bodyLabel": "संदेश",
+    "bodyPlaceholder": "नोटिफिकेशन संदेश",
+    "defaultTitle": "टेस्ट नोटिफिकेशन",
+    "defaultBody": "यह एक टेस्ट नोटिफिकेशन है",
+    "sending": "भेजा जा रहा है...",
+    "send": "नोटिफिकेशन भेजें",
+    "recentTitle": "हाल के नोटिफिकेशन",
+    "count": "{{count}} नोटिफिकेशन"
+  },
+  "uploads": {
+    "permissionRequired": "अनुमति आवश्यक",
+    "permissionRequiredDescription": "कैमरा रोल एक्सेस के लिए अनुमति आवश्यक है!",
+    "uploadSuccess": "इमेज सफलतापूर्वक अपलोड हुई!",
+    "uploadFailed": "इमेज अपलोड विफल",
+    "deleteFile": "फाइल हटाएं",
+    "deleteConfirm": "क्या आप इस फाइल को हटाना चाहते हैं?",
+    "deleteFailed": "फाइल हटाने में विफल",
+    "title": "फाइल अपलोड्स",
+    "subtitle": "Cloudflare R2 के साथ फाइल अपलोड और प्रबंधन करें",
+    "uploadNewFile": "नई फाइल अपलोड करें",
+    "selectImage": "इमेज चुनें",
+    "yourUploads": "आपके अपलोड्स",
+    "filesCount": "{{count}} फाइलें",
+    "signInToView": "अपलोड देखने के लिए साइन इन करें",
+    "empty": "अभी तक कोई फाइल अपलोड नहीं हुई"
+  },
+  "imageRequest": {
+    "title": "फोटो अनुरोध",
+    "credits": "{{count}} क्रेडिट",
+    "subtitle": "जो फोटो चाहिए उसे कस्टमाइज़ करें। हर चयन वैकल्पिक है।",
+    "hairstyle": "हेयरस्टाइल",
+    "clothing": "कपड़े",
+    "scene": "सीन",
+    "extraDetailsLabel": "अतिरिक्त जानकारी",
+    "extraDetailsPlaceholder": "आप किस तरह की फोटो देखना चाहते हैं?",
+    "generatePhoto": "फोटो बनाएं",
+    "insufficientCredits": "क्रेडिट कम हैं। कम से कम 5 क्रेडिट चाहिए।"
+  },
+  "match": {
+    "title": "यह मैच है!",
+    "subtitle": "आप और {{name}} एक-दूसरे को पसंद करते हैं\nअब आगे क्या?",
+    "keepSwiping": "स्वाइप जारी रखें",
+    "startChatting": "चैट शुरू करें"
+  },
+  "premium": {
+    "tapToSeePhoto": "फोटो देखने के लिए टैप करें",
+    "getCloser": "{{name}} के और करीब आएं",
+    "unlockDescription": "{{name}} ने आपको फोटो भेजी है। प्रीमियम लें और ब्लर के पीछे देखें।",
+    "unlockUnlimited": "अनलिमिटेड एक्सेस अनलॉक करें"
+  },
+  "quiz": {
+    "started": "क्विज़ शुरू हुआ",
+    "letsPlay": "चलो क्विज़ खेलते हैं!",
+    "endQuiz": "क्विज़ समाप्त करें"
+  },
+  "media": {
+    "recordingVideo": "वीडियो रिकॉर्ड हो रहा है...",
+    "takingPhoto": "फ़ोटो ली जा रही है..."
+  },
+  "signIn": {
+    "failed": "साइन इन विफल"
+  },
+  "signUp": {
+    "failed": "साइन अप विफल",
+    "createAccount": "अकाउंट बनाएं"
+  },
+  "appearance": {
+    "theme": "थीम",
+    "light": "लाइट",
+    "dark": "डार्क",
+    "color": "रंग"
+  },
+  "settings": {
+    "disableNotifications": "नोटिफिकेशन बंद करें",
+    "disableNotificationsDescription": "नोटिफिकेशन बंद करने के लिए डिवाइस सेटिंग्स में जाएं।",
+    "joined": "जुड़े",
+    "themeMode": "थीम मोड",
+    "colorTheme": "रंग थीम",
+    "notificationsDescription": "महत्वपूर्ण अपडेट्स के नोटिफिकेशन प्राप्त करें"
+  },
+  "updates": {
+    "title": "अपडेट उपलब्ध",
+    "description": "ऐप का नया वर्शन उपलब्ध है। नवीनतम सुविधाओं और सुधारों के लिए अभी पुनः लॉन्च करें।",
+    "relaunch": "पुनः लॉन्च करें",
+    "dismiss": "अभी नहीं"
+  }
+}

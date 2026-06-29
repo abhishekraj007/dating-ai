@@ -2,6 +2,11 @@ export const APP_CONFIG_KEY = "global";
 
 export type NsfwPlatform = "ios" | "android" | "web";
 
+export const FALLBACK_ANDROID_APP_ID = "com.noosperai.feelchat";
+
+/** FeelChat on the App Store (bundle: com.noosperai.feelchat). */
+export const DEFAULT_IOS_APP_STORE_ID = "6768152855";
+
 export const DEFAULT_REVENUECAT_CREDIT_PRODUCT_IDS: Array<string> = [
   "feelchat.rc_credit_1999",
   "feelchat.rc_credit_3900",
