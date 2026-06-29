@@ -34,29 +34,6 @@ function AppleStoreIcon({ className }: { className?: string }) {
   );
 }
 
-function GooglePlayIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className={className}>
-      <path
-        fill="currentColor"
-        d="M3.6 1.8c-.3.2-.6.6-.6 1.1v18.2c0 .5.3.9.6 1.1l.1.1 10.2-10.2v-.2L3.7 1.7l-.1.1Z"
-      />
-      <path
-        fill="currentColor"
-        d="M16.5 13.5 6.1 23.9l.1.1c.4.3 1 .3 1.6-.1l11.1-6.4-2.4-3.9Z"
-      />
-      <path
-        fill="currentColor"
-        d="M16.5 10.5 14.1 6.6 6.1 0.1C5.5-.3 4.9-.3 4.5 0l11.1 6.4 1.9-3.1Z"
-      />
-      <path
-        fill="currentColor"
-        d="m20.3 11.1-2.8-1.6-2.4 4 2.4 4 2.8-1.6c.8-.5.8-1.7 0-2.2Z"
-      />
-    </svg>
-  );
-}
-
 function StoreDownloadButton({
   href,
   label,
@@ -98,7 +75,7 @@ export function DownloadAppModal({
   onOpenChange,
   reason = "credits",
 }: DownloadAppModalProps) {
-  const { iosUrl, androidUrl } = useAppStoreLinks();
+  const { iosUrl } = useAppStoreLinks();
   const copy = getDownloadAppCopy(reason);
   const BadgeIcon = reason === "premium" ? Crown : Coins;
 
@@ -149,7 +126,7 @@ export function DownloadAppModal({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="mt-7 flex flex-col gap-3 sm:mt-8">
+            <div className="mt-7 sm:mt-8">
               {iosUrl ? (
                 <StoreDownloadButton
                   href={iosUrl}
@@ -157,13 +134,11 @@ export function DownloadAppModal({
                   label="App Store"
                   icon={<AppleStoreIcon className="h-5 w-5" />}
                 />
-              ) : null}
-              <StoreDownloadButton
-                href={androidUrl}
-                subtitle="Get it on"
-                label="Google Play"
-                icon={<GooglePlayIcon className="h-5 w-5" />}
-              />
+              ) : (
+                <p className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-4 text-center text-sm text-muted-foreground">
+                  App Store link is not configured yet. Please check back soon.
+                </p>
+              )}
             </div>
           </div>
         </div>

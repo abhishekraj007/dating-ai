@@ -13,9 +13,9 @@ export function getDownloadAppCopy(reason: DownloadAppReason) {
   if (reason === "premium") {
     return {
       badge: "Premium",
-      title: "Get premium in the app",
+      title: "Get premium on the App Store",
       description:
-        "Subscriptions and premium access are managed in the FeelChat mobile app. Download it to unlock photos, videos, and full chat features.",
+        "Subscriptions and premium access are managed in the FeelChat iOS app. Download it from the App Store to unlock photos, videos, and full chat features.",
     };
   }
 
@@ -23,6 +23,6 @@ export function getDownloadAppCopy(reason: DownloadAppReason) {
     badge: "Credits",
     title: "Get credits in the app",
     description:
-      "Web payments are not available yet. Download the FeelChat app to buy credits and keep chatting without interruption.",
+      "Web payments are not available yet. Download FeelChat from the App Store to buy credits and keep chatting without interruption.",
   };
 }

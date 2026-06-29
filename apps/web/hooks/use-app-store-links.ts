@@ -9,6 +9,5 @@ export function useAppStoreLinks() {
 
   return buildAppStoreLinks({
     iosAppStoreId: appConfig?.iosAppStoreId,
-    androidAppId: appConfig?.androidAppId,
   });
 }
