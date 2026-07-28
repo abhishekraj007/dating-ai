@@ -5,6 +5,8 @@
     "dev": "convex dev",
     "deploy": "convex deploy",
     "deploy:prod": "convex deploy --env-file .env.production.local",
+    "deploy:cloud": "convex deploy --env-file .env.cloud.production.local",
+    "sync:railway-to-cloud": "bash scripts/sync-railway-to-cloud.sh",
     "dev:setup": "convex dev --configure --until-success"
   },
   "author": "",
