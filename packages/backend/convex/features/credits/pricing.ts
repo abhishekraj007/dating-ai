@@ -15,7 +15,7 @@ export const CREDITS_PRICING = {
   AI_CHARACTER_CREATION: 10, // For generating profile images
   
   // Free tier limits
-  FREE_TRIAL_CREDITS: 20, // Credits given to new users
+  FREE_TRIAL_CREDITS: 5, // Credits given to new users
 } as const;
 
 export type CreditAction = keyof typeof CREDITS_PRICING;
