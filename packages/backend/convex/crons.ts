@@ -2,13 +2,14 @@ import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
 
-// Auto-generate one new system profile every 6 hours.
-crons.interval(
-  "auto generate ai profile",
-  { hours: 72 },
-  "features/ai/profileGeneration:enqueueCronProfileGeneration" as any,
-  {},
-);
+// Disabled: auto-generate one new system profile every 72 hours.
+// Uncomment to re-enable.
+// crons.interval(
+//   "auto generate ai profile",
+//   { hours: 72 },
+//   "features/ai/profileGeneration:enqueueCronProfileGeneration" as any,
+//   {},
+// );
 
 // Clean up terminal generation jobs older than retention window.
 crons.interval(
