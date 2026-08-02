@@ -392,7 +392,9 @@ export function ChatView({ conversationId }: ChatViewProps) {
                 isQuizActive={msg._id === interactiveQuizQuestionId}
                 onQuizAnswer={handleQuizAnswer}
                 onEndQuiz={handleEndQuiz}
-                onDelete={(order) => deleteMessage(conversationId, order)}
+                onDelete={(order) =>
+                  deleteMessage(conversationId, msg._id, order)
+                }
               />
             ))}
             {isAITyping && !messages[messages.length - 1]?.isStreaming && (

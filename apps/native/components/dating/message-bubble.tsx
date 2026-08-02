@@ -19,8 +19,18 @@ import { QuizResultBubble } from "./bubbles/QuizResultBubble";
 import { QuizStartBubble } from "./bubbles/QuizStartBubble";
 import { ChatErrorBubble } from "./bubbles/ChatErrorBubble";
 import { CreditsRequiredBubble } from "./bubbles/CreditsRequiredBubble";
-import { ImageRequestBubble, ImageResponseBubble, ImageProcessingBubble, ImageFailedBubble } from "./bubbles/ImageBubble";
-import { VideoRequestBubble, VideoResponseBubble, VideoProcessingBubble, VideoFailedBubble } from "./bubbles/VideoBubble";
+import {
+  ImageRequestBubble,
+  ImageResponseBubble,
+  ImageProcessingBubble,
+  ImageFailedBubble,
+} from "./bubbles/ImageBubble";
+import {
+  VideoRequestBubble,
+  VideoResponseBubble,
+  VideoProcessingBubble,
+  VideoFailedBubble,
+} from "./bubbles/VideoBubble";
 import {
   AITextBubble,
   UserTextBubble,
@@ -39,6 +49,7 @@ interface MessageBubbleProps {
   onEndQuiz?: () => void;
   onRetryChatError?: (promptMessageId: string) => void;
   isRetrying?: boolean;
+  isStreaming?: boolean;
   onBuyCredits?: () => void;
   onLongPress?: () => void;
 }
@@ -58,12 +69,14 @@ export const MessageBubble = ({
   onEndQuiz,
   onRetryChatError,
   isRetrying = false,
+  isStreaming = false,
   onBuyCredits,
   onLongPress,
 }: MessageBubbleProps) => {
   const time = format(new Date(timestamp), "HH:mm");
-  const structuredContent = parseStructuredContent(content);
   const bubbleProps = { avatarUrl, profileName, time };
+  const structuredContent =
+    !isUser && isStreaming ? null : parseStructuredContent(content);
 
   // User messages
   if (isUser) {
@@ -215,5 +228,11 @@ export const MessageBubble = ({
   }
 
   // Default: AI text message
-  return <AITextBubble content={content} {...bubbleProps} />;
+  return (
+    <AITextBubble
+      content={content}
+      isStreaming={isStreaming}
+      {...bubbleProps}
+    />
+  );
 };

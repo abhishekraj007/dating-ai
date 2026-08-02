@@ -11,6 +11,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Camera,
+  ChevronDown,
   HelpCircle,
   Lightbulb,
   MessageSquare,
@@ -50,12 +51,13 @@ interface ChatFormProps {
   blurTrigger: number;
   isKeyboardOpen: boolean;
   showScrollToBottom: boolean;
+  hasUnseenMessages: boolean;
   message: string;
   onChangeMessage: (text: string) => void;
   onSend: (text: string) => void;
   onScrollToBottom: () => void;
   onStopResponse: () => void;
-  showTypingIndicator: boolean;
+  isResponseStreaming: boolean;
   isSending: boolean;
   isRequestingImage: boolean;
   onOpenImageSheet: () => void;
@@ -73,12 +75,13 @@ export function ChatForm({
   blurTrigger,
   isKeyboardOpen,
   showScrollToBottom,
+  hasUnseenMessages,
   message,
   onChangeMessage,
   onSend,
   onScrollToBottom,
   onStopResponse,
-  showTypingIndicator,
+  isResponseStreaming,
   isSending,
   isRequestingImage,
   onOpenImageSheet,
@@ -88,7 +91,7 @@ export function ChatForm({
 }: ChatFormProps) {
   const { t } = useTranslation();
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
-  // const foregroundColor = useThemeColor("foreground");
+  const foregroundColor = useThemeColor("foreground");
   const foregroundColorMuted = useThemeColor("muted");
   const backgroundColor = useThemeColor("background");
   const composerGradientColors = useComposerGradientColors(backgroundColor);
@@ -104,7 +107,7 @@ export function ChatForm({
       onLayout={onComposerLayout}
       style={styles.container}
     >
-      {/* {showScrollToBottom ? (
+      {showScrollToBottom ? (
         <View pointerEvents="box-none" style={styles.scrollToBottomContainer}>
           <Button
             variant="secondary"
@@ -113,21 +116,26 @@ export function ChatForm({
             onPress={onScrollToBottom}
             className="rounded-full"
             style={styles.scrollToBottomButton}
+            accessibilityLabel="Jump to latest message"
           >
             <ChevronDown size={18} color={foregroundColor} />
+            {hasUnseenMessages ? (
+              <View
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+                className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-pink-500"
+              />
+            ) : null}
           </Button>
         </View>
-      ) : null} */}
+      ) : null}
       <LinearGradient
         pointerEvents="box-none"
         colors={composerGradientColors}
         locations={[0, 0.35, 1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={[
-          styles.composerGradient,
-          { paddingBottom: bottomOverlayInset },
-        ]}
+        style={[styles.composerGradient, { paddingBottom: bottomOverlayInset }]}
       >
         <View pointerEvents="auto">
           <ScrollView
@@ -200,7 +208,7 @@ export function ChatForm({
                 onChangeText={onChangeMessage}
                 onHeightChange={onComposerHeightChange}
                 onKeyboardHeightChange={onKeyboardHeightChange}
-                isStreaming={showTypingIndicator}
+                isStreaming={isResponseStreaming}
                 blurTrigger={blurTrigger}
                 editable={!isSending}
                 minHeight={48}
@@ -223,7 +231,8 @@ const styles = StyleSheet.create({
   },
   scrollToBottomContainer: {
     position: "absolute",
-    right: 8,
+    right: 16,
+    top: -28,
     zIndex: 10,
   },
   scrollToBottomButton: {

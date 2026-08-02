@@ -59,6 +59,7 @@ export function useChatScreen() {
     listRef,
     composerRef,
     contentInsetEndAdjustment,
+    scrollMessageToEnd,
     onComposerLayout,
   } = useChatKeyboardList();
 
@@ -80,10 +81,10 @@ export function useChatScreen() {
   const {
     messages,
     isLoading: isLoadingMessages,
-    isLoadingMore,
     hasMore,
     loadMore,
     isAITyping,
+    hasInvisibleStreamingMessage,
   } = useMessages(threadId, id as Id<"aiConversations">);
 
   const { sendMessage, sendMessageWithOptimistic, retryMessage, stopResponse } =
@@ -106,9 +107,10 @@ export function useChatScreen() {
 
   // Message actions sheet
   const [isMessageActionsOpen, setIsMessageActionsOpen] = useState(false);
-  const [selectedMessageOrder, setSelectedMessageOrder] = useState<
-    number | null
-  >(null);
+  const [selectedMessage, setSelectedMessage] = useState<{
+    id: string;
+    order: number;
+  } | null>(null);
 
   // Topics and suggestions sheets
   const [isTopicsSheetOpen, setIsTopicsSheetOpen] = useState(false);
@@ -180,8 +182,10 @@ export function useChatScreen() {
     !isAITyping &&
     !hasAIResponseAfterSend;
 
-  const showTypingIndicator =
+  const isResponseStreaming =
     !isStopRequested && (isAITyping || isWaitingForAI);
+  const showTypingIndicator =
+    !isStopRequested && (hasInvisibleStreamingMessage || isWaitingForAI);
 
   const handleOpenCreditsModal = useCallback(() => {
     setIsImageSheetOpen(false);
@@ -189,13 +193,24 @@ export function useChatScreen() {
   }, [router]);
 
   // Chat scroll behavior
-  const { shouldLoadMore, handleScroll, scrollToBottom, showScrollToBottom } =
-    useChatScroll({
-      listRef,
-      messages,
-      conversationId: threadId ?? id,
-      isLoading: isLoadingMessages,
-    });
+  const {
+    shouldLoadMore,
+    handleScroll,
+    handleScrollBeginDrag,
+    handleScrollEnd,
+    scrollToBottom,
+    prepareForNewTurn,
+    markUserInteraction,
+    showScrollToBottom,
+    hasUnseenMessages,
+    isFollowingLatest,
+  } = useChatScroll({
+    listRef,
+    messages,
+    conversationId: threadId ?? id,
+    isLoading: isLoadingMessages,
+    scrollMessageToEnd,
+  });
 
   useEffect(() => {
     if (!pendingAssistantState) {
@@ -258,6 +273,7 @@ export function useChatScreen() {
         return false;
       }
 
+      prepareForNewTurn();
       setIsStopRequested(false);
       setIsSending(true);
       startPendingAssistantState();
@@ -281,10 +297,13 @@ export function useChatScreen() {
         }
 
         return true;
-      } catch (error: any) {
+      } catch (error: unknown) {
         clearPendingAssistantState();
+        markUserInteraction();
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
 
-        if (error.message?.includes("Insufficient credits")) {
+        if (errorMessage.includes("Insufficient credits")) {
           handleOpenCreditsModal();
         } else {
           console.error("Failed to send message:", error);
@@ -302,8 +321,10 @@ export function useChatScreen() {
       handleOpenCreditsModal,
       id,
       isSending,
+      markUserInteraction,
       t,
       platform,
+      prepareForNewTurn,
       sendMessage,
       sendMessageWithOptimistic,
       startPendingAssistantState,
@@ -320,13 +341,12 @@ export function useChatScreen() {
       lastSubmittedInputRef.current = content;
       setMessage("");
       void sendConversationMessage(content, { optimistic: true });
-      scrollToBottom(true);
     },
-    [id, isSending, scrollToBottom, sendConversationMessage],
+    [id, isSending, sendConversationMessage],
   );
 
   const handleStopResponse = useCallback(async () => {
-    if (!id || !showTypingIndicator) {
+    if (!id || !isResponseStreaming) {
       return;
     }
 
@@ -345,7 +365,15 @@ export function useChatScreen() {
       console.error("Failed to stop response:", error);
       Alert.alert(t("alerts.error"), t("chat.stopFailed"));
     }
-  }, [clearPendingAssistantState, id, showTypingIndicator, stopResponse, t]);
+  }, [clearPendingAssistantState, id, isResponseStreaming, stopResponse, t]);
+
+  const handleMessageChange = useCallback(
+    (text: string) => {
+      markUserInteraction();
+      setMessage(text);
+    },
+    [markUserInteraction],
+  );
 
   const handleImageRequest = useCallback(
     async (options: MediaRequestOptions) => {
@@ -364,8 +392,7 @@ export function useChatScreen() {
         await requestMedia(id, options, platform);
         setIsImageSheetOpen(false);
       } catch (error: unknown) {
-        const message =
-          error instanceof Error ? error.message : String(error);
+        const message = error instanceof Error ? error.message : String(error);
         if (message.includes("Insufficient credits")) {
           handleOpenCreditsModal();
         } else {
@@ -379,6 +406,7 @@ export function useChatScreen() {
   );
 
   const handleOpenImageSheet = () => {
+    markUserInteraction();
     dismissKeyboard();
     setIsImageSheetOpen(true);
   };
@@ -390,33 +418,40 @@ export function useChatScreen() {
   }, [dismissKeyboard, id, isSending, sendConversationMessage]);
 
   const handleOpenTopicsSheet = () => {
+    markUserInteraction();
     dismissKeyboard();
     setIsTopicsSheetOpen(true);
   };
 
   const handleOpenSuggestionsSheet = () => {
+    markUserInteraction();
     dismissKeyboard();
     setIsSuggestionsSheetOpen(true);
   };
 
   const handleOpenMessageActions = useCallback(
-    (messageOrder: number) => {
+    (messageId: string, messageOrder: number) => {
+      markUserInteraction();
       dismissKeyboard();
-      setSelectedMessageOrder(messageOrder);
+      setSelectedMessage({ id: messageId, order: messageOrder });
       setIsMessageActionsOpen(true);
     },
-    [dismissKeyboard],
+    [dismissKeyboard, markUserInteraction],
   );
 
   const handleDeleteMessage = useCallback(async () => {
-    if (selectedMessageOrder === null) return;
+    if (!selectedMessage) return;
     try {
-      await deleteMessage(id as string, selectedMessageOrder);
+      await deleteMessage(
+        id as string,
+        selectedMessage.id,
+        selectedMessage.order,
+      );
     } catch (error) {
       console.error("Failed to delete message:", error);
     }
-    setSelectedMessageOrder(null);
-  }, [deleteMessage, id, selectedMessageOrder]);
+    setSelectedMessage(null);
+  }, [deleteMessage, id, selectedMessage]);
 
   const handleQuizAnswer = useCallback(
     async (answer: string) => {
@@ -588,7 +623,6 @@ export function useChatScreen() {
     // Loading states
     isLoadingConversation,
     isLoadingMessages,
-    isLoadingMore,
     isClearing,
     isSending,
     isRequestingImage,
@@ -605,6 +639,10 @@ export function useChatScreen() {
     showScrollToBottom,
     contentInsetEndAdjustment,
     onComposerLayout,
+    handleScrollBeginDrag,
+    handleScrollEnd,
+    hasUnseenMessages,
+    isFollowingLatest,
 
     // Keyboard state
     composerHeight,
@@ -616,10 +654,11 @@ export function useChatScreen() {
 
     // Message input
     message,
-    setMessage,
+    setMessage: handleMessageChange,
 
     // Typing indicator
     showTypingIndicator,
+    isResponseStreaming,
     isAITyping,
     // Sheet states
     isImageSheetOpen,

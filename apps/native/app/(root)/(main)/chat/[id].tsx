@@ -1,6 +1,4 @@
 import { View, Text, Pressable, useWindowDimensions } from "react-native";
-import { type LegendListRenderItemProps } from "@legendapp/list/react-native";
-import { KeyboardAwareLegendList } from "@legendapp/list/keyboard";
 import {
   KeyboardGestureArea,
   KeyboardStickyView,
@@ -21,39 +19,15 @@ import {
 import { LanguageSheet } from "@/components/language/language-sheet";
 import {
   ChatForm,
-  KEYBOARD_GAP,
-  MessageBubble,
+  ChatMessageList,
   ImageRequestSheet,
   MessageActionsSheet,
   TopicsSheet,
   SuggestionsSheet,
-  TypingIndicator,
 } from "@/components/dating";
 import { useChatScreen } from "@/hooks/dating";
 import { useThemeColor } from "heroui-native";
 import { useTranslation } from "@/hooks/use-translation";
-
-const CHAT_ESTIMATED_ITEM_SIZE = 120;
-
-type ChatMessage = {
-  _id: string;
-  _creationTime: number;
-  role: string;
-  content?: string;
-  order: number;
-};
-
-function getMessageContentType(content: unknown) {
-  if (typeof content !== "string") {
-    return "text";
-  }
-
-  return content.match(/"type":"([^"]+)"/)?.[1] ?? "text";
-}
-
-function getMessageRenderKey(item: { _id: string; content?: string }) {
-  return item._id;
-}
 
 export default function ChatScreen() {
   const { t } = useTranslation();
@@ -82,7 +56,6 @@ export default function ChatScreen() {
     // Loading states
     isLoadingConversation,
     isLoadingMessages,
-    isLoadingMore,
     isClearing,
     isSending,
     isRequestingImage,
@@ -97,8 +70,12 @@ export default function ChatScreen() {
     handleScroll,
     scrollToBottom,
     showScrollToBottom,
+    hasUnseenMessages,
+    isFollowingLatest,
     contentInsetEndAdjustment,
     onComposerLayout,
+    handleScrollBeginDrag,
+    handleScrollEnd,
 
     // Keyboard state
     composerHeight,
@@ -114,6 +91,7 @@ export default function ChatScreen() {
 
     // Typing indicator
     showTypingIndicator,
+    isResponseStreaming,
     // Sheet states
     isImageSheetOpen,
     setIsImageSheetOpen,
@@ -148,30 +126,6 @@ export default function ChatScreen() {
     handleOpenChatLanguage,
     handleOpenCreditsModal,
   } = useChatScreen();
-
-  const renderMessage = ({ item }: LegendListRenderItemProps<ChatMessage>) => {
-    const isUser = item.role === "user";
-    const isInteractiveQuizQuestion = item._id === interactiveQuizQuestionId;
-
-    return (
-      <MessageBubble
-        content={item.content || ""}
-        isUser={isUser}
-        timestamp={item._creationTime}
-        avatarUrl={!isUser ? profile?.avatarUrl : undefined}
-        profileName={profile?.name}
-        isQuizActive={isInteractiveQuizQuestion}
-        onQuizAnswer={handleQuizAnswer}
-        onEndQuiz={handleEndQuiz}
-        onRetryChatError={handleRetryFailedResponse}
-        isRetrying={isSending}
-        onBuyCredits={handleOpenCreditsModal}
-        onLongPress={
-          isUser ? () => handleOpenMessageActions(item.order) : undefined
-        }
-      />
-    );
-  };
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
@@ -280,121 +234,36 @@ export default function ChatScreen() {
 
         <View style={{ flex: 1 }}>
           <KeyboardGestureArea interpolator="ios" style={{ flex: 1 }}>
-            <KeyboardAwareLegendList
-              key={threadId ?? id}
-              ref={listRef}
-              data={messages}
-              renderItem={renderMessage}
-              keyExtractor={getMessageRenderKey}
-              getItemType={(item) => getMessageContentType(item.content)}
-              recycleItems={false}
-              alignItemsAtEnd
-              initialScrollAtEnd
-              maintainScrollAtEnd={{
-                animated: true,
-                on: { dataChange: true },
-              }}
-              maintainScrollAtEndThreshold={0.03}
-              maintainVisibleContentPosition={{ data: true, size: true }}
-              contentInsetEndAdjustment={contentInsetEndAdjustment}
+            <ChatMessageList
+              listRef={listRef}
+              messages={messages}
+              conversationKey={threadId ?? id ?? "chat"}
+              conversationExists={Boolean(conversation)}
+              isLoadingConversation={isLoadingConversation}
+              isLoadingMessages={isLoadingMessages}
+              hasMore={hasMore}
+              shouldLoadMore={shouldLoadMore}
+              loadMore={loadMore}
+              profile={profile}
+              interactiveQuizQuestionId={interactiveQuizQuestionId}
+              isSending={isSending}
+              isFollowingLatest={isFollowingLatest}
+              isResponseStreaming={isResponseStreaming}
+              showTypingIndicator={showTypingIndicator}
+              emptyHeight={emptyHeight}
               keyboardOffset={safeAreaBottom}
-              style={{ flex: 1 }}
-              contentContainerStyle={{ paddingTop: 16 }}
-              showsVerticalScrollIndicator={false}
-              keyboardDismissMode="interactive"
-              keyboardShouldPersistTaps="handled"
+              foregroundColorMuted={foregroundColorMuted}
+              contentInsetEndAdjustment={contentInsetEndAdjustment}
               onScroll={handleScroll}
-              scrollEventThrottle={16}
-              onStartReached={() => {
-                if (!shouldLoadMore() || !hasMore || isLoadingMore) {
-                  return;
-                }
-                loadMore();
-              }}
-              onStartReachedThreshold={0.3}
-              ListHeaderComponent={
-                isLoadingMore ? (
-                  <View className="py-4 items-center">
-                    <Spinner size="sm" />
-                  </View>
-                ) : null
-              }
-              ListFooterComponent={
-                showTypingIndicator ? (
-                  <View className="pt-2">
-                    <TypingIndicator
-                      avatarUrl={profile?.avatarUrl}
-                      profileName={profile?.name}
-                    />
-                  </View>
-                ) : null
-              }
-              ListEmptyComponent={
-                isLoadingConversation || isLoadingMessages ? (
-                  <View className="p-4 gap-4">
-                    <View className="flex-row gap-2">
-                      <Skeleton className="w-8 h-8 rounded-full" />
-                      <View className="gap-2">
-                        <Skeleton className="h-16 w-52 rounded-2xl rounded-tl-sm" />
-                        <Skeleton className="h-3 w-12" />
-                      </View>
-                    </View>
-                    <View className="flex-row justify-end">
-                      <View className="gap-2 items-end">
-                        <Skeleton className="h-10 w-40 rounded-2xl rounded-br-sm" />
-                        <Skeleton className="h-3 w-10" />
-                      </View>
-                    </View>
-                    <View className="flex-row gap-2">
-                      <Skeleton className="w-8 h-8 rounded-full" />
-                      <View className="gap-2">
-                        <Skeleton className="h-24 w-64 rounded-2xl rounded-tl-sm" />
-                        <Skeleton className="h-3 w-12" />
-                      </View>
-                    </View>
-                  </View>
-                ) : !conversation ? (
-                  <View
-                    className="flex-1 items-center justify-center px-6 pt-20"
-                    style={{
-                      height: emptyHeight,
-                    }}
-                  >
-                    <Text className="text-foreground text-lg font-semibold mb-2">
-                      {t("chat.conversationNotFound")}
-                    </Text>
-                    <Button className="mt-4" onPress={() => router.back()}>
-                      <Button.Label>{t("common.goBack")}</Button.Label>
-                    </Button>
-                  </View>
-                ) : (
-                  <View
-                    className="flex-1 items-center justify-center px-6 pt-20"
-                    style={{
-                      height: emptyHeight,
-                    }}
-                  >
-                    <Text className="text-foreground text-lg font-semibold">
-                      {t("chat.startConversation")}
-                    </Text>
-                    <Text className="text-muted text-center">
-                      {t("chat.sayHello", {
-                        name: profile?.name ?? t("chat.aiCompanion"),
-                      })}
-                    </Text>
-                    <Button
-                      variant="ghost"
-                      className="mt-4 rounded-full px-6"
-                      isDisabled={isSending || showTypingIndicator}
-                      onPress={() => handleSend("Hi")}
-                    >
-                      <Button.Label>
-                        <Hand color={foregroundColorMuted} />
-                      </Button.Label>
-                    </Button>
-                  </View>
-                )
-              }
+              onScrollBeginDrag={handleScrollBeginDrag}
+              onScrollEnd={handleScrollEnd}
+              onGoBack={() => router.back()}
+              onSendGreeting={() => handleSend("Hi")}
+              onQuizAnswer={handleQuizAnswer}
+              onEndQuiz={handleEndQuiz}
+              onRetryChatError={handleRetryFailedResponse}
+              onBuyCredits={handleOpenCreditsModal}
+              onOpenMessageActions={handleOpenMessageActions}
             />
           </KeyboardGestureArea>
 
@@ -418,12 +287,13 @@ export default function ChatScreen() {
               blurTrigger={blurTrigger}
               isKeyboardOpen={isKeyboardOpen}
               showScrollToBottom={showScrollToBottom}
+              hasUnseenMessages={hasUnseenMessages}
               message={message}
               onChangeMessage={setMessage}
               onSend={handleSend}
               onScrollToBottom={() => scrollToBottom(true)}
               onStopResponse={handleStopResponse}
-              showTypingIndicator={showTypingIndicator}
+              isResponseStreaming={isResponseStreaming}
               isSending={isSending}
               isRequestingImage={isRequestingImage}
               onOpenImageSheet={handleOpenImageSheet}

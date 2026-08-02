@@ -3,6 +3,7 @@
 
 export { ProfileCard } from "./profile-card";
 export { MessageBubble } from "./message-bubble";
+export { ChatMessageList } from "./chat-message-list";
 export { VoiceMessagePlayer } from "./voice-message-player";
 export { ImageMessage } from "./image-message";
 export { CompatibilityIndicator } from "./compatibility-indicator";
@@ -11,7 +12,11 @@ export { PhotoUploadSlot } from "./photo-upload-slot";
 export { GenderTabs } from "./gender-tabs";
 export { InterestChip } from "./interest-chip";
 export { ImageRequestSheet } from "./image-request-sheet";
-export type { ImageRequestOptions, MediaRequestOptions, MediaRequestType } from "./image-request-sheet";
+export type {
+  ImageRequestOptions,
+  MediaRequestOptions,
+  MediaRequestType,
+} from "./image-request-sheet";
 export { MessageActionsSheet } from "./message-actions-sheet";
 export { TopicsSheet, CONVERSATION_TOPICS } from "./topics-sheet";
 export type { TopicId } from "./topics-sheet";

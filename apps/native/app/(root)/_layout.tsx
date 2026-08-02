@@ -26,6 +26,8 @@ export default function RootLayout() {
   const lastNavigationTarget = useRef<string | null>(null);
   const [hasFinishedInitialBootstrap, setHasFinishedInitialBootstrap] =
     useState(false);
+  const useLegacyHeaderBlur =
+    Platform.OS === "ios" && Number.parseInt(String(Platform.Version), 10) < 26;
 
   // Check if we're already on onboarding screens
   const isOnOnboarding = (segments as string[]).includes("(onboarding)");
@@ -104,7 +106,11 @@ export default function RootLayout() {
         screenOptions={{
           headerTitleAlign: "center",
           headerTransparent: true,
-          headerBlurEffect: isDark ? "dark" : "light",
+          headerBlurEffect: useLegacyHeaderBlur
+            ? isDark
+              ? "dark"
+              : "light"
+            : undefined,
           headerTintColor: themeColorForeground,
           headerStyle: {
             backgroundColor: Platform.select({

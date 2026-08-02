@@ -2,11 +2,14 @@ import { Stack } from "expo-router";
 import { useNavigationOptions } from "@/hooks/useNavigationOptions";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { useTranslation } from "@/hooks/use-translation";
+import { Platform } from "react-native";
 
 export default function MainLayout() {
   const { standard } = useNavigationOptions();
   const { isDark } = useAppTheme();
   const { t } = useTranslation();
+  const useLegacyHeaderBlur =
+    Platform.OS === "ios" && Number.parseInt(String(Platform.Version), 10) < 26;
 
   return (
     <Stack initialRouteName="(tabs)">
@@ -87,7 +90,11 @@ export default function MainLayout() {
           title: t("nav.settings"),
           presentation: "modal",
           headerBackButtonDisplayMode: "generic",
-          headerBlurEffect: isDark ? "dark" : "light",
+          headerBlurEffect: useLegacyHeaderBlur
+            ? isDark
+              ? "dark"
+              : "light"
+            : undefined,
           headerBackTitle: t("common.back"),
           ...standard,
         }}
