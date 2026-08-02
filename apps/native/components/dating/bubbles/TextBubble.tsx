@@ -17,6 +17,7 @@ function shouldRenderAsMarkdown(content: string) {
 
 interface AITextProps extends AIBubbleProps {
   content: string;
+  isStreaming?: boolean;
 }
 
 /**
@@ -27,9 +28,10 @@ export function AITextBubble({
   avatarUrl,
   profileName,
   time,
+  isStreaming = false,
 }: AITextProps) {
   const markdownStyles = useMarkdownStyles();
-  const renderMarkdown = shouldRenderAsMarkdown(content);
+  const renderMarkdown = !isStreaming && shouldRenderAsMarkdown(content);
 
   return (
     <AIBubbleWrapper
@@ -41,7 +43,10 @@ export function AITextBubble({
         {renderMarkdown ? (
           <Markdown style={markdownStyles}>{content}</Markdown>
         ) : (
-          <Text className="text-foreground text-[15px] leading-[22px]">
+          <Text
+            selectable
+            className="text-foreground text-[15px] leading-[22px]"
+          >
             {content}
           </Text>
         )}

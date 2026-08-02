@@ -129,10 +129,7 @@ function parseMediaPayload(content: string): ParsedMediaPayload | null {
   }
 
   const parsed = JSON.parse(payload) as ParsedMediaPayload;
-  if (
-    !parsed.type.startsWith("image_") &&
-    !parsed.type.startsWith("video_")
-  ) {
+  if (!parsed.type.startsWith("image_") && !parsed.type.startsWith("video_")) {
     return null;
   }
 
@@ -156,7 +153,10 @@ function mediaPayloadPriority(type: string): number {
 }
 
 function dedupeMediaPayloads(payloads: string[]): string[] {
-  const bestByRequest = new Map<string, { payload: string; priority: number }>();
+  const bestByRequest = new Map<
+    string,
+    { payload: string; priority: number }
+  >();
   const passthrough: string[] = [];
 
   for (const payload of payloads) {
@@ -176,7 +176,10 @@ function dedupeMediaPayloads(payloads: string[]): string[] {
     }
   }
 
-  return [...passthrough, ...Array.from(bestByRequest.values()).map((entry) => entry.payload)];
+  return [
+    ...passthrough,
+    ...Array.from(bestByRequest.values()).map((entry) => entry.payload),
+  ];
 }
 
 function isMediaToolAgentMessage(msg: any): boolean {
@@ -330,10 +333,7 @@ function filterSupersededMediaMessages(
       continue;
     }
 
-    if (
-      parsed.type.endsWith("_failed") ||
-      parsed.type.endsWith("_response")
-    ) {
+    if (parsed.type.endsWith("_failed") || parsed.type.endsWith("_response")) {
       const mediaKind = parsed.type.startsWith("video_") ? "video" : "image";
       resolvedRequests.add(`${mediaKind}:${parsed.requestId}`);
     }
@@ -366,10 +366,7 @@ function dedupeMediaResponsesAcrossMessages(
     const existing = preferredResponseByRequest.get(key);
     const isStandalone = !message._id.includes("-tool-");
 
-    if (
-      !existing ||
-      (isStandalone && existing._id.includes("-tool-"))
-    ) {
+    if (!existing || (isStandalone && existing._id.includes("-tool-"))) {
       preferredResponseByRequest.set(key, message);
     }
   }
@@ -411,10 +408,7 @@ function filterRedundantMediaRequests(
         otherParsed.type === `${mediaKind}_processing` ||
         otherParsed.type === `${mediaKind}_response`;
 
-      return (
-        isRelatedState &&
-        Math.abs(other.order - message.order) <= 1
-      );
+      return isRelatedState && Math.abs(other.order - message.order) <= 1;
     });
   });
 }
@@ -462,10 +456,7 @@ function extractToolOutputs(msg: any): string[] {
   });
 }
 
-function extractMessageText(
-  msg: any,
-  hideStructuredPayload: boolean,
-): string {
+function extractMessageText(msg: any, hideStructuredPayload: boolean): string {
   if (typeof msg.text !== "string") {
     return "";
   }
@@ -587,10 +578,12 @@ export function useDeleteMessage() {
 
   const deleteMessage = async (
     conversationId: string,
+    messageId: string,
     messageOrder: number,
   ) => {
     return await deleteMessageMutation({
       conversationId: conversationId as Id<"aiConversations">,
+      messageId,
       messageOrder,
     });
   };

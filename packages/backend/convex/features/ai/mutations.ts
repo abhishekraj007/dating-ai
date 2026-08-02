@@ -1617,9 +1617,11 @@ export const updateChatVideoRequest = internalMutation({
 export const deleteMessage = mutation({
   args: {
     conversationId: v.id("aiConversations"),
+    messageId: v.string(),
     messageOrder: v.number(),
   },
-  handler: async (ctx, { conversationId, messageOrder }) => {
+  returns: v.object({ success: v.boolean() }),
+  handler: async (ctx, { conversationId, messageId, messageOrder }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new Error("Not authenticated");
@@ -1628,6 +1630,20 @@ export const deleteMessage = mutation({
     const conversation = await ctx.db.get(conversationId);
     if (!conversation || conversation.userId !== user._id) {
       throw new Error("Conversation not found");
+    }
+
+    const [promptMessage] = await ctx.runQuery(
+      components.agent.messages.getMessagesByIds,
+      { messageIds: [messageId] },
+    );
+    if (
+      !promptMessage ||
+      promptMessage.threadId !== conversation.threadId ||
+      promptMessage.userId !== user._id ||
+      promptMessage.message?.role !== "user" ||
+      promptMessage.order !== messageOrder
+    ) {
+      throw new Error("Message not found");
     }
 
     // Get the AI profile to create the agent
@@ -1639,17 +1655,110 @@ export const deleteMessage = mutation({
     // Create the agent for this profile to use deleteMessageRange
     const agent = createAIProfileAgent(profile);
 
-    // Delete the user message and the following AI response
-    // We delete from messageOrder to messageOrder + 2 to include both
-    // the user message (order N) and the AI response (order N+1)
+    const [chatImages, chatVideos] = await Promise.all([
+      ctx.db
+        .query("chatImages")
+        .withIndex("by_conversation", (q) =>
+          q.eq("conversationId", conversationId),
+        )
+        .collect(),
+      ctx.db
+        .query("chatVideos")
+        .withIndex("by_conversation", (q) =>
+          q.eq("conversationId", conversationId),
+        )
+        .collect(),
+    ]);
+    const mediaResponseMessageIds = [
+      ...chatImages.map((image) => image.responseMessageId),
+      ...chatVideos.map((video) => video.responseMessageId),
+    ].filter((responseMessageId): responseMessageId is string =>
+      Boolean(responseMessageId),
+    );
+    const mediaResponseMessages =
+      mediaResponseMessageIds.length > 0
+        ? await ctx.runQuery(components.agent.messages.getMessagesByIds, {
+            messageIds: mediaResponseMessageIds,
+          })
+        : [];
+    const mediaResponseMessagesById = new Map(
+      mediaResponseMessages
+        .filter((message) => message?.threadId === conversation.threadId)
+        .map((message) => [message?._id, message] as const)
+        .filter(
+          (
+            entry,
+          ): entry is readonly [
+            string,
+            NonNullable<(typeof mediaResponseMessages)[number]>,
+          ] => Boolean(entry[0] && entry[1]),
+        ),
+    );
+    const promptContent =
+      typeof promptMessage.message?.content === "string"
+        ? promptMessage.message.content
+        : "";
+    const directMediaRequestId = promptContent.match(
+      /"type"\s*:\s*"(?:image|video)_request"[\s\S]*?"requestId"\s*:\s*"([^"]+)"/,
+    )?.[1];
+    const imagesToDelete = chatImages.filter(
+      (image) =>
+        image._id === directMediaRequestId ||
+        (image.responseMessageId &&
+          mediaResponseMessagesById.get(image.responseMessageId)?.order ===
+            messageOrder),
+    );
+    const videosToDelete = chatVideos.filter(
+      (video) =>
+        video._id === directMediaRequestId ||
+        (video.responseMessageId &&
+          mediaResponseMessagesById.get(video.responseMessageId)?.order ===
+            messageOrder),
+    );
+    const outOfOrderMediaResponseIds = new Set(
+      [...imagesToDelete, ...videosToDelete]
+        .map((media) => media.responseMessageId)
+        .filter((responseMessageId): responseMessageId is string => {
+          if (!responseMessageId) {
+            return false;
+          }
+          return (
+            mediaResponseMessagesById.get(responseMessageId)?.order !==
+            messageOrder
+          );
+        }),
+    );
+
+    for (const image of imagesToDelete) {
+      if (image.imageKey) {
+        await r2.deleteObject(ctx, image.imageKey);
+      }
+      await ctx.db.delete(image._id);
+    }
+
+    for (const video of videosToDelete) {
+      if (video.videoKey) {
+        await r2.deleteObject(ctx, video.videoKey);
+      }
+      if (video.posterKey) {
+        await r2.deleteObject(ctx, video.posterKey);
+      }
+      await ctx.db.delete(video._id);
+    }
+
+    for (const responseMessageId of outOfOrderMediaResponseIds) {
+      await agent.deleteMessage(ctx, { messageId: responseMessageId });
+    }
+
+    // One Agent order contains the user prompt and all of its responses.
     await agent.deleteMessageRange(ctx, {
       threadId: conversation.threadId,
       startOrder: messageOrder,
-      endOrder: messageOrder + 2, // Exclusive end, so this deletes order N and N+1
+      endOrder: messageOrder + 1,
     });
 
     // Update conversation message count
-    const newMessageCount = Math.max(0, conversation.messageCount - 2);
+    const newMessageCount = Math.max(0, conversation.messageCount - 1);
     await ctx.db.patch(conversationId, {
       messageCount: newMessageCount,
       relationshipLevel: calculateRelationshipLevel(newMessageCount),
