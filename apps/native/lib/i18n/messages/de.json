@@ -413,9 +413,8 @@
     "notificationsDescription": "Erhalte Benachrichtigungen über wichtige Updates"
   },
   "updates": {
-    "title": "Update Verfugbar",
-    "description": "Eine neue Version der App ist verfugbar. Starte jetzt neu, um die neuesten Funktionen und Verbesserungen zu erhalten.",
-    "relaunch": "Neu Starten",
-    "dismiss": "Spater"
+    "title": "Ein neues Update ist verfugbar",
+    "description": "Aktualisiere die App, um die neuesten Verbesserungen und Fehlerbehebungen zu erhalten.",
+    "refresh": "Aktualisieren"
   }
 }

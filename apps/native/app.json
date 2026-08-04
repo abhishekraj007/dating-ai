@@ -74,6 +74,9 @@
       "policy": "appVersion"
     },
     "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/2f515bb6-3e22-4c74-a7aa-9e026b636b05",
       "requestHeaders": {
         "expo-channel-name": "production"

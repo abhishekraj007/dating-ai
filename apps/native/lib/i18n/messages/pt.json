@@ -413,9 +413,8 @@
     "notificationsDescription": "Receba notificações sobre atualizações importantes"
   },
   "updates": {
-    "title": "Atualizacao Disponivel",
-    "description": "Uma nova versao do app esta disponivel. Reinicie agora para obter os ultimos recursos e melhorias.",
-    "relaunch": "Reiniciar",
-    "dismiss": "Agora Nao"
+    "title": "Ha uma nova atualizacao disponivel",
+    "description": "Atualize o app para obter as melhorias mais recentes e correcoes de bugs.",
+    "refresh": "Atualizar"
   }
 }

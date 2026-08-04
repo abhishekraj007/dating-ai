@@ -413,9 +413,8 @@
     "notificationsDescription": "Recevez des notifications sur les mises à jour importantes"
   },
   "updates": {
-    "title": "Mise a Jour Disponible",
-    "description": "Une nouvelle version de l'application est disponible. Relancez maintenant pour profiter des dernieres fonctionnalites et ameliorations.",
-    "relaunch": "Relancer",
-    "dismiss": "Plus Tard"
+    "title": "Une nouvelle mise a jour est disponible",
+    "description": "Actualisez l'app pour obtenir les dernieres ameliorations et corrections de bugs.",
+    "refresh": "Actualiser"
   }
 }

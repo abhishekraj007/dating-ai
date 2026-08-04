@@ -430,9 +430,8 @@
     "notificationsDescription": "Receive notifications about important updates"
   },
   "updates": {
-    "title": "Update Available",
-    "description": "A new version of the app is available. Relaunch now to get the latest features and improvements.",
-    "relaunch": "Relaunch",
-    "dismiss": "Not Now"
+    "title": "A new update is available",
+    "description": "Refresh the app to get the latest improvements and bug fixes.",
+    "refresh": "Refresh"
   }
 }

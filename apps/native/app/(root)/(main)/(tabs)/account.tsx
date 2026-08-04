@@ -1,7 +1,6 @@
-import { Fragment } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Spinner, Surface, useThemeColor } from "heroui-native";
+import { Button, Spinner, useThemeColor } from "heroui-native";
 import { api, useQuery } from "@dating-ai/backend";
 import { useRouter } from "expo-router";
 import { useConvexAuth } from "convex/react";
@@ -9,8 +8,8 @@ import { LogOut } from "lucide-react-native";
 import {
   AccountActionsSheet,
   AccountAppearanceSheet,
+  AccountAppInfo,
   AccountGuestSummary,
-  AccountLinkItem,
   AccountNotificationSheet,
   AccountProfileSummary,
   AccountSectionCard,
@@ -148,20 +147,9 @@ export default function AccountScreen() {
             <AccountSectionCard
               key={section.id}
               title={section.title}
-              description={section.description || ""}
-            >
-              {section.items.map((item) => (
-                <Fragment key={item.id}>
-                  <AccountLinkItem
-                    title={item.title}
-                    description={item.description || ""}
-                    icon={item.icon}
-                    onPress={item.onPress}
-                  />
-                  {/* {index < section.items.length - 1 ? <Separator /> : null} */}
-                </Fragment>
-              ))}
-            </AccountSectionCard>
+              description={section.description}
+              items={section.items}
+            />
           ))}
 
           {isAuthenticated ? (
@@ -199,6 +187,8 @@ export default function AccountScreen() {
               </View>
             </Button>
           ) : null}
+
+          <AccountAppInfo />
         </ScrollView>
 
         <AccountAppearanceSheet

@@ -6,21 +6,21 @@ import {
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import type { LucideIcon } from "lucide-react-native";
 import {
   Bell,
   FileCheck,
   FileText,
   LifeBuoy,
   MessageCircleQuestion,
-  Palette,
+  Globe,
   MessageCircle,
-  Settings,
+  Palette,
   Share2,
   Star,
   UserRound,
 } from "lucide-react-native";
 import { Alert, Platform, Share } from "react-native";
+import type { AccountActionItem } from "@/components/account/account-section-card";
 import { useTranslation } from "@/hooks/use-translation";
 
 type RuntimeAppConfig = {
@@ -50,14 +50,6 @@ const buildFallbackUrl = (path: string) => {
   }
 
   return `${baseUrl}${path}`;
-};
-
-type AccountActionItem = {
-  id: string;
-  title: string;
-  description?: string;
-  icon: LucideIcon;
-  onPress: () => void | Promise<void>;
 };
 
 export type AccountSection = {
@@ -218,7 +210,7 @@ export const useAccountSections = ({
         {
           id: "app-language",
           title: t("account.item.language"),
-          icon: Settings,
+          icon: Globe,
           onPress: onOpenAppLanguage,
         },
         {

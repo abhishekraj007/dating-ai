@@ -413,9 +413,8 @@
     "notificationsDescription": "接收重要更新的通知"
   },
   "updates": {
-    "title": "更新可用",
-    "description": "应用新版本已可用。立即重新启动以获取最新功能和改进。",
-    "relaunch": "重新启动",
-    "dismiss": "稍后"
+    "title": "有新的更新可用",
+    "description": "刷新应用以获取最新改进和错误修复。",
+    "refresh": "刷新"
   }
 }

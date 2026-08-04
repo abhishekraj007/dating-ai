@@ -1613,11 +1613,14 @@ export const updateChatVideoRequest = internalMutation({
  * Delete a user message and its AI response.
  * The user can only delete their own messages.
  * This deletes the user message and the following AI response(s).
+ *
+ * messageId is optional for backward compatibility with older clients that
+ * only sent conversationId + messageOrder.
  */
 export const deleteMessage = mutation({
   args: {
     conversationId: v.id("aiConversations"),
-    messageId: v.string(),
+    messageId: v.optional(v.string()),
     messageOrder: v.number(),
   },
   returns: v.object({ success: v.boolean() }),
@@ -1632,18 +1635,25 @@ export const deleteMessage = mutation({
       throw new Error("Conversation not found");
     }
 
-    const [promptMessage] = await ctx.runQuery(
-      components.agent.messages.getMessagesByIds,
-      { messageIds: [messageId] },
-    );
-    if (
-      !promptMessage ||
-      promptMessage.threadId !== conversation.threadId ||
-      promptMessage.userId !== user._id ||
-      promptMessage.message?.role !== "user" ||
-      promptMessage.order !== messageOrder
-    ) {
-      throw new Error("Message not found");
+    let promptContent = "";
+    if (messageId) {
+      const [promptMessage] = await ctx.runQuery(
+        components.agent.messages.getMessagesByIds,
+        { messageIds: [messageId] },
+      );
+      if (
+        !promptMessage ||
+        promptMessage.threadId !== conversation.threadId ||
+        promptMessage.userId !== user._id ||
+        promptMessage.message?.role !== "user" ||
+        promptMessage.order !== messageOrder
+      ) {
+        throw new Error("Message not found");
+      }
+      promptContent =
+        typeof promptMessage.message?.content === "string"
+          ? promptMessage.message.content
+          : "";
     }
 
     // Get the AI profile to create the agent
@@ -1694,10 +1704,6 @@ export const deleteMessage = mutation({
           ] => Boolean(entry[0] && entry[1]),
         ),
     );
-    const promptContent =
-      typeof promptMessage.message?.content === "string"
-        ? promptMessage.message.content
-        : "";
     const directMediaRequestId = promptContent.match(
       /"type"\s*:\s*"(?:image|video)_request"[\s\S]*?"requestId"\s*:\s*"([^"]+)"/,
     )?.[1];

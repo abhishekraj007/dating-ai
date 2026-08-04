@@ -3,110 +3,154 @@ import { Alert, AppState, type AppStateStatus } from "react-native";
 import * as Updates from "expo-updates";
 import i18n from "@/lib/i18n";
 
-const LOG_PREFIX = "[ExpoUpdates]";
-const UPDATE_CHECK_THROTTLE_MS = 60_000;
-const UPDATE_LOG_MAX_AGE_MS = 60 * 60 * 1000;
+interface UseExpoUpdatesBootstrapOptions {
+  testMode?: boolean;
+}
+
+const RATE_LIMIT_MS = 5 * 60 * 1000;
+const LOG_PREFIX = "[FeelChat][ExpoUpdates]";
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
 }
 
-function getRunningUpdateInfo() {
-  return {
-    isEnabled: Updates.isEnabled,
-    channel: Updates.channel,
-    runtimeVersion: Updates.runtimeVersion,
-    updateId: Updates.updateId,
-    createdAt: Updates.createdAt?.toISOString() ?? null,
-    isEmbeddedLaunch: Updates.isEmbeddedLaunch,
-    isEmergencyLaunch: Updates.isEmergencyLaunch,
-    emergencyLaunchReason: Updates.emergencyLaunchReason,
-    checkAutomatically: Updates.checkAutomatically,
-  };
-}
+export function useExpoUpdatesBootstrap({
+  testMode = false,
+}: UseExpoUpdatesBootstrapOptions = {}) {
+  const updates = Updates.useUpdates();
+  const didLogLaunchRef = useRef(false);
+  const isReloadingRef = useRef(false);
+  const isUpdateAlertVisibleRef = useRef(false);
+  const lastCheckTimeRef = useRef(0);
+  const isCheckingRef = useRef(false);
 
-async function logRecentUpdateIssues() {
-  try {
-    const entries = await Updates.readLogEntriesAsync(UPDATE_LOG_MAX_AGE_MS);
-    const issueEntries = entries.filter(
-      (entry) =>
-        entry.level === "warn" ||
-        entry.level === "error" ||
-        entry.level === "fatal",
-    );
+  const canUseExpoUpdates = !__DEV__ && Updates.isEnabled;
 
-    if (issueEntries.length === 0) {
+  const reloadUpdate = () => {
+    if (testMode) {
+      console.log(LOG_PREFIX, "test update reload passed");
       return;
     }
 
-    console.warn(
-      LOG_PREFIX,
-      "Recent expo-updates issues",
-      issueEntries.slice(-10).map((entry) => ({
-        code: entry.code,
-        level: entry.level,
-        message: entry.message,
-        updateId: entry.updateId,
-      })),
-    );
-  } catch (error) {
-    console.warn(LOG_PREFIX, "Could not read expo-updates logs", {
-      message: getErrorMessage(error),
+    if (isReloadingRef.current) {
+      return;
+    }
+
+    isReloadingRef.current = true;
+    console.log(LOG_PREFIX, "update reload started");
+
+    void Updates.reloadAsync().catch((error: unknown) => {
+      isReloadingRef.current = false;
+      isUpdateAlertVisibleRef.current = false;
+      console.warn(LOG_PREFIX, "update reload failed", {
+        message: getErrorMessage(error),
+      });
     });
-  }
-}
+  };
 
-const didShowAlertRef = { current: false };
+  const showUpdateReadyAlert = () => {
+    if (isUpdateAlertVisibleRef.current) {
+      return;
+    }
 
-function showUpdateAlert(source: string) {
-  if (didShowAlertRef.current) {
-    return;
-  }
-  didShowAlertRef.current = true;
+    isUpdateAlertVisibleRef.current = true;
 
-  console.log(LOG_PREFIX, "Showing update alert", { source });
+    if (testMode) {
+      console.log(LOG_PREFIX, "test update alert shown");
+    }
 
-  Alert.alert(
-    i18n.t("updates.title"),
-    i18n.t("updates.description"),
-    [
-      {
-        text: i18n.t("updates.dismiss"),
-        style: "cancel",
-        onPress: () => {
-          didShowAlertRef.current = false;
+    Alert.alert(
+      i18n.t("updates.title"),
+      i18n.t("updates.description"),
+      [
+        {
+          text: i18n.t("updates.refresh"),
+          onPress: reloadUpdate,
         },
-      },
-      {
-        text: i18n.t("updates.relaunch"),
-        onPress: () => {
-          void Updates.reloadAsync().catch((error) => {
-            didShowAlertRef.current = false;
-            console.warn(LOG_PREFIX, "Could not reload after alert confirm", {
-              message: getErrorMessage(error),
-            });
-          });
-        },
-      },
-    ],
-    { cancelable: true },
-  );
-}
+      ],
+      { cancelable: false },
+    );
+  };
 
-export function useExpoUpdatesBootstrap(options?: { test?: boolean }) {
-  const testMode = options?.test ?? false;
-  const {
-    isStartupProcedureRunning,
-    isUpdatePending,
-    downloadedUpdate,
-    checkError,
-    downloadError,
-  } = Updates.useUpdates();
-  const didLogLaunchRef = useRef(false);
-  const didStartLaunchCheckRef = useRef(false);
-  const didReloadForPendingRef = useRef(false);
-  const isCheckingRef = useRef(false);
-  const lastCheckAtRef = useRef(0);
+  const downloadUpdate = () => {
+    if (testMode) {
+      console.log(LOG_PREFIX, "test update fetch passed");
+      showUpdateReadyAlert();
+      return;
+    }
+
+    if (!Updates.isEnabled || updates.isDownloading) {
+      return;
+    }
+
+    void Updates.fetchUpdateAsync()
+      .then((result) => {
+        if (result.isNew || result.isRollBackToEmbedded) {
+          console.log(LOG_PREFIX, "update fetch passed");
+          showUpdateReadyAlert();
+          return;
+        }
+
+        console.log(LOG_PREFIX, "update fetch passed: no new update");
+      })
+      .catch((error: unknown) => {
+        console.warn(LOG_PREFIX, "update fetch failed", {
+          message: getErrorMessage(error),
+        });
+      });
+  };
+
+  const checkForUpdates = () => {
+    if (testMode) {
+      console.log(LOG_PREFIX, "test update check passed");
+      showUpdateReadyAlert();
+      return;
+    }
+
+    if (
+      !canUseExpoUpdates ||
+      isCheckingRef.current ||
+      isUpdateAlertVisibleRef.current
+    ) {
+      if (!__DEV__ && !Updates.isEnabled) {
+        console.warn(LOG_PREFIX, "update check failed: expo-updates disabled");
+      }
+
+      return;
+    }
+
+    const now = Date.now();
+
+    if (now - lastCheckTimeRef.current < RATE_LIMIT_MS) {
+      return;
+    }
+
+    lastCheckTimeRef.current = now;
+    isCheckingRef.current = true;
+
+    void Updates.checkForUpdateAsync()
+      .then((result) => {
+        if (result.isAvailable || result.isRollBackToEmbedded) {
+          console.log(LOG_PREFIX, "update available");
+          downloadUpdate();
+          return;
+        }
+
+        console.log(LOG_PREFIX, "update check passed: no update available");
+      })
+      .catch((error: unknown) => {
+        console.warn(LOG_PREFIX, "update check failed", {
+          message: getErrorMessage(error),
+        });
+      })
+      .finally(() => {
+        isCheckingRef.current = false;
+      });
+  };
 
   useEffect(() => {
     if (didLogLaunchRef.current) {
@@ -114,145 +158,55 @@ export function useExpoUpdatesBootstrap(options?: { test?: boolean }) {
     }
 
     didLogLaunchRef.current = true;
-    console.log(LOG_PREFIX, "Running update", getRunningUpdateInfo());
-    void logRecentUpdateIssues();
+    console.log(LOG_PREFIX, "running update", {
+      isEnabled: Updates.isEnabled,
+      channel: Updates.channel,
+      runtimeVersion: Updates.runtimeVersion,
+      updateId: Updates.updateId,
+    });
   }, []);
 
   useEffect(() => {
-    if (!checkError) {
-      return;
-    }
-
-    console.warn(LOG_PREFIX, "Update check error", {
-      message: getErrorMessage(checkError),
-    });
-  }, [checkError]);
+    checkForUpdates();
+  }, [testMode]);
 
   useEffect(() => {
-    if (!downloadError) {
-      return;
-    }
-
-    console.warn(LOG_PREFIX, "Update download error", {
-      message: getErrorMessage(downloadError),
-    });
-  }, [downloadError]);
-
-  useEffect(() => {
-    if (testMode) {
-      return;
-    }
-
-    if (!isUpdatePending || didReloadForPendingRef.current) {
-      return;
-    }
-
-    didReloadForPendingRef.current = true;
-    console.log(LOG_PREFIX, "Pending update downloaded, showing alert", {
-      updateId: downloadedUpdate?.updateId,
-      createdAt: downloadedUpdate?.createdAt?.toISOString(),
-      current: getRunningUpdateInfo(),
-    });
-
-    showUpdateAlert("pending");
-  }, [
-    downloadedUpdate?.createdAt,
-    downloadedUpdate?.updateId,
-    isUpdatePending,
-  ]);
-
-  useEffect(() => {
-    const checkAndApplyUpdate = async (source: string) => {
-      if (__DEV__ && !testMode) {
-        return;
-      }
-
-      if (!Updates.isEnabled) {
-        console.warn(LOG_PREFIX, "expo-updates is disabled", {
-          source,
-          current: getRunningUpdateInfo(),
-        });
-        return;
-      }
-
-      const now = Date.now();
-
-      if (
-        isCheckingRef.current ||
-        now - lastCheckAtRef.current < UPDATE_CHECK_THROTTLE_MS
-      ) {
-        return;
-      }
-
-      isCheckingRef.current = true;
-      lastCheckAtRef.current = now;
-
-      try {
-        console.log(LOG_PREFIX, "Checking for update", {
-          source,
-          current: getRunningUpdateInfo(),
-        });
-
-        const checkResult = await Updates.checkForUpdateAsync();
-
-        console.log(LOG_PREFIX, "Update check result", {
-          source,
-          isAvailable: checkResult.isAvailable,
-          isRollBackToEmbedded: checkResult.isRollBackToEmbedded,
-          reason: checkResult.reason,
-        });
-
-        if (!checkResult.isAvailable && !checkResult.isRollBackToEmbedded) {
-          return;
-        }
-
-        const fetchResult = await Updates.fetchUpdateAsync();
-
-        console.log(LOG_PREFIX, "Update fetch result", {
-          source,
-          isNew: fetchResult.isNew,
-          isRollBackToEmbedded: fetchResult.isRollBackToEmbedded,
-        });
-
-        if (fetchResult.isNew || fetchResult.isRollBackToEmbedded) {
-          console.log(LOG_PREFIX, "Update ready, showing alert", { source });
-          showUpdateAlert(source);
-        }
-      } catch (error) {
-        console.warn(LOG_PREFIX, "Update check failed", {
-          source,
-          message: getErrorMessage(error),
-        });
-      } finally {
-        isCheckingRef.current = false;
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === "active") {
+        checkForUpdates();
       }
     };
 
-    if (testMode) {
-      if (!didStartLaunchCheckRef.current) {
-        didStartLaunchCheckRef.current = true;
-        console.log(LOG_PREFIX, "Test mode: simulating update alert");
-        showUpdateAlert("test");
-      }
-      return;
-    }
-
-    if (!isStartupProcedureRunning && !didStartLaunchCheckRef.current) {
-      didStartLaunchCheckRef.current = true;
-      void checkAndApplyUpdate("launch");
-    }
-
     const subscription = AppState.addEventListener(
       "change",
-      (state: AppStateStatus) => {
-        if (state === "active") {
-          void checkAndApplyUpdate("foreground");
-        }
-      },
+      handleAppStateChange,
     );
 
     return () => {
       subscription.remove();
     };
-  }, [isStartupProcedureRunning]);
+  }, [testMode]);
+
+  useEffect(() => {
+    if (updates.checkError) {
+      console.warn(LOG_PREFIX, "update check failed", {
+        message: getErrorMessage(updates.checkError),
+      });
+    }
+  }, [updates.checkError]);
+
+  useEffect(() => {
+    if (updates.downloadError) {
+      console.warn(LOG_PREFIX, "update download failed", {
+        message: getErrorMessage(updates.downloadError),
+      });
+    }
+  }, [updates.downloadError]);
+
+  useEffect(() => {
+    if (updates.isUpdatePending) {
+      console.log(LOG_PREFIX, "pending update ready");
+      showUpdateReadyAlert();
+    }
+  }, [updates.isUpdatePending]);
 }
