@@ -178,7 +178,8 @@
       "terms": "सेवा की शर्तें",
       "privacy": "गोपनीयता नीति",
       "rateUs": "रेट करें",
-      "shareApp": "ऐप शेयर करें"
+      "shareApp": "ऐप शेयर करें",
+      "about": "के बारे में"
     },
     "sheet": {
       "title": "ऐप की भाषा चुनें",
@@ -274,7 +275,8 @@
     "personality": "व्यक्तित्व",
     "interests": "रुचियाँ",
     "photos": "फोटो",
-    "compatibility": "संगतता"
+    "compatibility": "संगतता",
+    "chatWith": "%{name} से चैट करें"
   },
   "myCreation": {
     "emptyTitle": "अभी कोई किरदार नहीं",

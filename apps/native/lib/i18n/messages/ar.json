@@ -192,7 +192,8 @@
       "terms": "شروط الخدمة",
       "privacy": "سياسة الخصوصية",
       "rateUs": "قيّمنا",
-      "shareApp": "مشاركة التطبيق"
+      "shareApp": "مشاركة التطبيق",
+      "about": "حول"
     },
     "helpCenterMissing": "رابط مركز المساعدة لم يتم تكوينه بعد.",
     "supportMissing": "رابط الدعم لم يتم تكوينه بعد.",
@@ -274,7 +275,8 @@
     "personality": "الشخصية",
     "interests": "الاهتمامات",
     "photos": "الصور",
-    "compatibility": "التوافق"
+    "compatibility": "التوافق",
+    "chatWith": "دردش مع %{name}"
   },
   "myCreation": {
     "emptyTitle": "لا توجد شخصيات بعد",

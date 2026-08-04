@@ -192,7 +192,8 @@
       "terms": "Conditions d'utilisation",
       "privacy": "Politique de confidentialité",
       "rateUs": "Évaluez-nous",
-      "shareApp": "Partager l'app"
+      "shareApp": "Partager l'app",
+      "about": "A propos"
     },
     "helpCenterMissing": "L'URL du centre d'aide n'est pas encore configurée.",
     "supportMissing": "L'URL du support n'est pas encore configurée.",
@@ -274,7 +275,8 @@
     "personality": "Personnalité",
     "interests": "Centres d'intérêt",
     "photos": "Photos",
-    "compatibility": "Compatibilité"
+    "compatibility": "Compatibilité",
+    "chatWith": "Discuter avec %{name}"
   },
   "myCreation": {
     "emptyTitle": "Pas encore de personnages",

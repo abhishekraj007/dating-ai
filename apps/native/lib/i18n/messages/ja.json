@@ -192,7 +192,8 @@
       "terms": "利用規約",
       "privacy": "プライバシーポリシー",
       "rateUs": "評価する",
-      "shareApp": "アプリを共有"
+      "shareApp": "アプリを共有",
+      "about": "情報"
     },
     "helpCenterMissing": "ヘルプセンターのURLがまだ設定されていません。",
     "supportMissing": "サポートURLがまだ設定されていません。",
@@ -274,7 +275,8 @@
     "personality": "性格",
     "interests": "興味",
     "photos": "写真",
-    "compatibility": "相性"
+    "compatibility": "相性",
+    "chatWith": "%{name}とチャット"
   },
   "myCreation": {
     "emptyTitle": "まだキャラクターがいません",

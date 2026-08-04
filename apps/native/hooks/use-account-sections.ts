@@ -10,6 +10,7 @@ import {
   Bell,
   FileCheck,
   FileText,
+  Info,
   LifeBuoy,
   MessageCircleQuestion,
   Globe,
@@ -65,6 +66,7 @@ type UseAccountSectionsOptions = {
   onOpenAppLanguage: () => void;
   onOpenChatLanguage: () => void;
   onOpenAccountActions: () => void;
+  onOpenAbout: () => void;
   isAuthenticated: boolean;
 };
 
@@ -74,6 +76,7 @@ export const useAccountSections = ({
   onOpenAppLanguage,
   onOpenChatLanguage,
   onOpenAccountActions,
+  onOpenAbout,
   isAuthenticated,
 }: UseAccountSectionsOptions) => {
   const router = useRouter();
@@ -266,6 +269,12 @@ export const useAccountSections = ({
           title: t("account.item.privacy"),
           icon: FileCheck,
           onPress: () => openExternal(privacyUrl, t("account.privacyMissing")),
+        },
+        {
+          id: "about",
+          title: t("account.item.about"),
+          icon: Info,
+          onPress: onOpenAbout,
         },
       ],
     },

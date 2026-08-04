@@ -192,7 +192,8 @@
       "terms": "服务条款",
       "privacy": "隐私政策",
       "rateUs": "给我们评分",
-      "shareApp": "分享应用"
+      "shareApp": "分享应用",
+      "about": "关于"
     },
     "helpCenterMissing": "帮助中心 URL 尚未配置。",
     "supportMissing": "支持 URL 尚未配置。",
@@ -274,7 +275,8 @@
     "personality": "性格",
     "interests": "兴趣",
     "photos": "照片",
-    "compatibility": "兼容性"
+    "compatibility": "兼容性",
+    "chatWith": "与%{name}聊天"
   },
   "myCreation": {
     "emptyTitle": "还没有角色",

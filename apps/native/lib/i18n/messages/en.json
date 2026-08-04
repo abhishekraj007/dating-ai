@@ -195,7 +195,8 @@
       "terms": "Terms of Service",
       "privacy": "Privacy Policy",
       "rateUs": "Rate Us",
-      "shareApp": "Share App"
+      "shareApp": "Share App",
+      "about": "About"
     },
     "helpCenterMissing": "Help Center URL is not configured yet.",
     "supportMissing": "Support URL is not configured yet.",
@@ -283,7 +284,8 @@
     "personality": "Personality",
     "interests": "Interests",
     "photos": "Photos",
-    "compatibility": "Compatibility"
+    "compatibility": "Compatibility",
+    "chatWith": "Chat with %{name}"
   },
   "myCreation": {
     "emptyTitle": "No Characters Yet",
@@ -396,7 +398,7 @@
   "premium": {
     "tapToSeePhoto": "Tap to See Photo",
     "getCloser": "Get closer to {{name}}",
-    "unlockDescription": "Get FeelChat Pro and find out what {{name}} made for you!",
+    "unlockDescription": "Get FeelChat Pro and find out what {{name}} sent you!",
     "unlockUnlimited": "Unlock Premium Content"
   },
   "quiz": {

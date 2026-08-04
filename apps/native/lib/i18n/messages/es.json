@@ -192,7 +192,8 @@
       "terms": "Términos de servicio",
       "privacy": "Política de privacidad",
       "rateUs": "Califícanos",
-      "shareApp": "Compartir app"
+      "shareApp": "Compartir app",
+      "about": "Acerca de"
     },
     "helpCenterMissing": "La URL del centro de ayuda aún no está configurada.",
     "supportMissing": "La URL de soporte aún no está configurada.",
@@ -274,7 +275,8 @@
     "personality": "Personalidad",
     "interests": "Intereses",
     "photos": "Fotos",
-    "compatibility": "Compatibilidad"
+    "compatibility": "Compatibilidad",
+    "chatWith": "Chatea con %{name}"
   },
   "myCreation": {
     "emptyTitle": "Aún no hay personajes",

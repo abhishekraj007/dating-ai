@@ -192,7 +192,8 @@
       "terms": "Nutzungsbedingungen",
       "privacy": "Datenschutzrichtlinie",
       "rateUs": "Bewerte uns",
-      "shareApp": "App teilen"
+      "shareApp": "App teilen",
+      "about": "Uber"
     },
     "helpCenterMissing": "Die Hilfecenter-URL ist noch nicht konfiguriert.",
     "supportMissing": "Die Support-URL ist noch nicht konfiguriert.",
@@ -274,7 +275,8 @@
     "personality": "Persönlichkeit",
     "interests": "Interessen",
     "photos": "Fotos",
-    "compatibility": "Kompatibilität"
+    "compatibility": "Kompatibilität",
+    "chatWith": "Chat mit %{name}"
   },
   "myCreation": {
     "emptyTitle": "Noch keine Charaktere",

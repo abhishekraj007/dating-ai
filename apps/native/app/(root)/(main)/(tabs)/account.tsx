@@ -6,9 +6,9 @@ import { useRouter } from "expo-router";
 import { useConvexAuth } from "convex/react";
 import { LogOut } from "lucide-react-native";
 import {
+  AccountAboutSheet,
   AccountActionsSheet,
   AccountAppearanceSheet,
-  AccountAppInfo,
   AccountGuestSummary,
   AccountNotificationSheet,
   AccountProfileSummary,
@@ -34,6 +34,7 @@ export default function AccountScreen() {
   const [isAppLanguageOpen, setIsAppLanguageOpen] = useState(false);
   const [isChatLanguageOpen, setIsChatLanguageOpen] = useState(false);
   const [isAccountActionsOpen, setIsAccountActionsOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const { sections } = useAccountSections({
@@ -42,6 +43,7 @@ export default function AccountScreen() {
     onOpenAppLanguage: () => setIsAppLanguageOpen(true),
     onOpenChatLanguage: () => setIsChatLanguageOpen(true),
     onOpenAccountActions: () => setIsAccountActionsOpen(true),
+    onOpenAbout: () => setIsAboutOpen(true),
     isAuthenticated,
   });
   const userData = useQuery(
@@ -187,13 +189,15 @@ export default function AccountScreen() {
               </View>
             </Button>
           ) : null}
-
-          <AccountAppInfo />
         </ScrollView>
 
         <AccountAppearanceSheet
           isOpen={isAppearanceOpen}
           onOpenChange={setIsAppearanceOpen}
+        />
+        <AccountAboutSheet
+          isOpen={isAboutOpen}
+          onOpenChange={setIsAboutOpen}
         />
         {isAuthenticated ? (
           <AccountNotificationSheet
