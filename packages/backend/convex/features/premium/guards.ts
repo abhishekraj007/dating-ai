@@ -1,4 +1,5 @@
 import * as Users from "../../model/user";
+import { PREMIUM_REQUIRED_ERROR } from "./errors";
 
 type PremiumAccessSnapshot =
   | {
@@ -90,6 +91,5 @@ export async function requirePremium(ctx: any): Promise<void> {
     return;
   }
 
-  // No premium access - throw error
-  throw new Error("Premium access required. Please upgrade your account.");
+  throw new Error(PREMIUM_REQUIRED_ERROR);
 }

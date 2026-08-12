@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useConvexAuth, useMutation } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { Button } from "@/components/ui/button";
-import { CreditsModal } from "@/components/credits-modal";
 import { PremiumSubscriptionModal } from "@/components/premium-subscription-modal";
 import { useAuthModal } from "@/components/auth/auth-modal-provider";
-import { useChatBillingGate } from "@/hooks/use-chat-billing-gate";
+import {
+  isPremiumRequiredError,
+  useChatBillingGate,
+} from "@/hooks/use-chat-billing-gate";
 import { toast } from "sonner";
 import type { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 
@@ -28,11 +30,9 @@ export function StartChatButton({
   const startConversation = useMutation(
     api.features.ai.mutations.startConversation,
   );
-  const {
-    canStartChat,
-  } = useChatBillingGate();
+  const { startChatBlockReason } = useChatBillingGate();
   const [isStarting, setIsStarting] = useState(false);
-  const [isCreditsOpen, setIsCreditsOpen] = useState(false);
+  const [isPremiumOpen, setIsPremiumOpen] = useState(false);
 
   const handleClick = async () => {
     if (!isAuthenticated) {
@@ -40,8 +40,8 @@ export function StartChatButton({
       return;
     }
 
-    if (!canStartChat()) {
-      setIsCreditsOpen(true);
+    if (startChatBlockReason() === "premium") {
+      setIsPremiumOpen(true);
       return;
     }
 
@@ -51,7 +51,11 @@ export function StartChatButton({
         aiProfileId: aiProfileId as Id<"aiProfiles">,
       });
       router.push(`/chat/${conversationId}`);
-    } catch {
+    } catch (error) {
+      if (isPremiumRequiredError(error)) {
+        setIsPremiumOpen(true);
+        return;
+      }
       toast.error("Could not start a conversation right now.");
     } finally {
       setIsStarting(false);
@@ -63,7 +67,12 @@ export function StartChatButton({
       <Button {...props} onClick={handleClick} disabled={isStarting}>
         {isStarting ? "Starting..." : children}
       </Button>
-      <CreditsModal open={isCreditsOpen} onOpenChange={setIsCreditsOpen} />
+      <PremiumSubscriptionModal
+        open={isPremiumOpen}
+        onOpenChange={setIsPremiumOpen}
+        title="Subscribe to start chatting"
+        description="Premium members can message matches. Upgrade to start this conversation."
+      />
     </>
   );
 }
