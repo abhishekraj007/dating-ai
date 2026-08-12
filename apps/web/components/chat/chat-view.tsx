@@ -25,7 +25,9 @@ import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatImageRequestDialog } from "@/components/chat/chat-image-request-dialog";
 import { CreditsModal } from "@/components/credits-modal";
+import { PremiumSubscriptionModal } from "@/components/premium-subscription-modal";
 import { TypingIndicator } from "@/components/chat/typing-indicator";
+import { getFirstChatSuggestions } from "@/components/onboarding/first-chat-suggestions";
 import { useConversation } from "@/hooks/use-conversations";
 import { useChatBillingGate } from "@/hooks/use-chat-billing-gate";
 import {
@@ -121,17 +123,28 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const { clearChat } = useClearChat();
   const { deleteMessage } = useDeleteMessage();
   const { requestImage } = useRequestChatImage();
-  const { canSendMessage } = useChatBillingGate();
+  const { canSendMessage } = useChatBillingGate(
+    conversation?.freeMessagesRemaining ?? 0,
+  );
 
   const [isSending, setIsSending] = useState(false);
   const [isRequestingImage, setIsRequestingImage] = useState(false);
   const [isImageRequestOpen, setIsImageRequestOpen] = useState(false);
   const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const [isClearing, startClearTransition] = useTransition();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const isFirstLoad = useRef(true);
   const interactiveQuizQuestionId = getInteractiveQuizQuestionId(messages);
+  const isOpeningPending =
+    conversation?.openingMessageStatus === "pending" && messages.length === 0;
+  const hasUserMessage = messages.some((message) => message.role === "user");
+  const hasAssistantMessage = messages.some(
+    (message) => message.role === "assistant",
+  );
+  const firstChatSuggestions =
+    hasAssistantMessage && !hasUserMessage ? getFirstChatSuggestions() : [];
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -166,7 +179,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
     if (!conversation || isSending) return;
 
     if (!canSendMessage()) {
-      setIsCreditsModalOpen(true);
+      setIsPremiumModalOpen(true);
       return;
     }
 
@@ -182,7 +195,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
         error instanceof Error ? error.message : "Could not send message.";
 
       if (message.includes("Insufficient credits")) {
-        setIsCreditsModalOpen(true);
+        setIsPremiumModalOpen(true);
       }
     } finally {
       setIsSending(false);
@@ -208,7 +221,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
     const creditsBalance = viewerProfile?.credits ?? 0;
     if (creditsBalance < 5) {
       setIsImageRequestOpen(false);
-      setIsCreditsModalOpen(true);
+      setIsPremiumModalOpen(true);
       return;
     }
 
@@ -225,7 +238,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
 
       if (message.includes("Insufficient credits")) {
         setIsImageRequestOpen(false);
-        setIsCreditsModalOpen(true);
+        setIsPremiumModalOpen(true);
       } else {
         toast.error(message);
       }
@@ -357,7 +370,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
             <MessagesSkeleton />
           </div>
         ) : messages.length === 0 ? (
-          <div className="relative z-[1] flex h-full flex-col items-center justify-center gap-2 px-4 py-12 text-center">
+          <div className="relative z-[1] flex h-full flex-col items-center justify-center gap-3 px-4 py-12 text-center">
             <Avatar className="h-16 w-16 ring-1 ring-black/10 dark:ring-white/10">
               <AvatarImage src={profile?.avatarUrl} alt={profile?.name} />
               <AvatarFallback className="text-2xl">
@@ -367,9 +380,20 @@ export function ChatView({ conversationId }: ChatViewProps) {
             <p className="text-balance font-semibold">
               {profile?.name ?? "AI"}
             </p>
-            <p className="text-sm text-muted-foreground text-pretty">
-              Say hello and start your conversation!
-            </p>
+            {isOpeningPending ? (
+              <>
+                <p className="text-sm text-muted-foreground text-pretty">
+                  {profile?.name
+                    ? `${profile.name} is writing you...`
+                    : "They're writing you..."}
+                </p>
+                <TypingIndicator />
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground text-pretty">
+                Say hello and start your conversation!
+              </p>
+            )}
           </div>
         ) : (
           <div className="relative z-[1] flex flex-col pb-2 pt-2">
@@ -395,11 +419,14 @@ export function ChatView({ conversationId }: ChatViewProps) {
                 onDelete={(order) =>
                   deleteMessage(conversationId, msg._id, order)
                 }
+                onSubscribe={() => setIsPremiumModalOpen(true)}
+                onBuyCredits={() => setIsCreditsModalOpen(true)}
               />
             ))}
-            {isAITyping && !messages[messages.length - 1]?.isStreaming && (
+            {isOpeningPending ||
+            (isAITyping && !messages[messages.length - 1]?.isStreaming) ? (
               <TypingIndicator />
-            )}
+            ) : null}
           </div>
         )}
 
@@ -432,6 +459,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
           characterName={profile?.name}
           // onRequestImage={() => setIsImageRequestOpen(true)}
           isRequestingImage={isRequestingImage}
+          suggestions={firstChatSuggestions}
         />
       </div>
 
@@ -450,6 +478,12 @@ export function ChatView({ conversationId }: ChatViewProps) {
       <CreditsModal
         open={isCreditsModalOpen}
         onOpenChange={setIsCreditsModalOpen}
+      />
+      <PremiumSubscriptionModal
+        open={isPremiumModalOpen}
+        onOpenChange={setIsPremiumModalOpen}
+        title={`Keep talking to ${profile?.name ?? "them"}`}
+        description={`Your free messages with ${profile?.name ?? "them"} just ran out. Subscribe to keep the conversation going.`}
       />
     </div>
   );

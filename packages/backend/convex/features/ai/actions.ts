@@ -3,7 +3,12 @@
 import { v } from "convex/values";
 import { internalAction } from "../../_generated/server";
 import { internal, api, components } from "../../_generated/api";
-import { createAIProfileAgent, getAvailableAgentProviders } from "./agent";
+import { createAIProfileAgent, getAvailableAgentProviders, getAgentLanguageModel, buildPersonalityPrompt } from "./agent";
+import { generateText } from "ai";
+import {
+  buildOpeningMessageFallback,
+  buildOpeningMessagePrompt,
+} from "./openingMessage";
 import { r2 } from "../../uploads";
 import { saveMessage } from "@convex-dev/agent";
 import { generateVideoWithFallback } from "./videoGeneration";
@@ -826,6 +831,95 @@ export const generateVoiceMessage = internalAction({
     // This will be implemented in the voice-gen todo
 
     console.log("Voice generation not yet implemented for:", text);
+
+    return null;
+  },
+});
+
+export const generateOpeningMessage = internalAction({
+  args: {
+    conversationId: v.id("aiConversations"),
+  },
+  returns: v.null(),
+  handler: async (ctx, { conversationId }) => {
+    const conversation = await ctx.runQuery(
+      internal.features.ai.internalQueries.getConversationInternal,
+      { conversationId },
+    );
+
+    if (!conversation) {
+      return null;
+    }
+
+    const profile = await ctx.runQuery(
+      internal.features.ai.internalQueries.getProfileInternal,
+      { profileId: conversation.aiProfileId },
+    );
+
+    if (!profile) {
+      await ctx.runMutation(
+        internal.features.ai.mutations.finalizeOpeningMessage,
+        {
+          conversationId,
+          preview: "",
+          status: "failed",
+        },
+      );
+      return null;
+    }
+
+    const chatLanguage = await ctx.runQuery(
+      internal.features.ai.internalQueries.getUserChatLanguageInternal,
+      { userId: conversation.userId },
+    );
+
+    const fallback = buildOpeningMessageFallback(profile, chatLanguage);
+    const providers = getAvailableAgentProviders();
+    let openingText = fallback;
+
+    for (const provider of providers) {
+      const model = getAgentLanguageModel(provider);
+      if (!model) {
+        continue;
+      }
+
+      try {
+        const result = await generateText({
+          model,
+          system: buildPersonalityPrompt(profile, false, chatLanguage),
+          prompt: buildOpeningMessagePrompt(profile, chatLanguage),
+        });
+        const text = result.text.trim();
+        if (text.length > 0) {
+          openingText = text.replace(/^["']|["']$/g, "");
+          break;
+        }
+      } catch (error) {
+        console.warn(
+          `Opening message provider "${provider}" failed:`,
+          error instanceof Error ? error.message : error,
+        );
+      }
+    }
+
+    await saveMessage(ctx, components.agent, {
+      threadId: conversation.threadId,
+      userId: conversation.userId,
+      message: {
+        role: "assistant",
+        content: openingText,
+      },
+      agentName: profile.name,
+    });
+
+    await ctx.runMutation(
+      internal.features.ai.mutations.finalizeOpeningMessage,
+      {
+        conversationId,
+        preview: openingText,
+        status: "ready",
+      },
+    );
 
     return null;
   },

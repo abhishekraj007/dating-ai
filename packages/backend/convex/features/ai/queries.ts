@@ -161,6 +161,72 @@ export const getProfiles = query({
   },
 });
 
+const onboardingCharacterValidator = v.object({
+  _id: v.id("aiProfiles"),
+  name: v.string(),
+  gender: v.union(v.literal("female"), v.literal("male")),
+  age: v.union(v.number(), v.null()),
+  avatarUrl: v.union(v.string(), v.null()),
+  tagline: v.string(),
+  occupation: v.union(v.string(), v.null()),
+  personalityTraits: v.array(v.string()),
+  isTrending: v.boolean(),
+});
+
+export const getOnboardingCharacters = query({
+  args: {
+    gender: v.optional(
+      v.union(v.literal("female"), v.literal("male"), v.literal("both")),
+    ),
+    platform: v.optional(
+      v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
+    ),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(onboardingCharacterValidator),
+  handler: async (ctx, { gender, platform, limit }) => {
+    const takeCount = Math.min(limit ?? 6, 12);
+    const genderFilter = gender === "both" ? undefined : gender;
+    const profiles = await activeProfilesDiscoverQuery(ctx, genderFilter).take(
+      40,
+    );
+
+    const visibleProfiles = profiles.filter((profile) => {
+      if (!platform) {
+        return true;
+      }
+      if (!profile.visibleOn || profile.visibleOn.length === 0) {
+        return true;
+      }
+      return profile.visibleOn.includes(platform);
+    });
+
+    return visibleProfiles.slice(0, takeCount).map((profile) => {
+      const taglineSource =
+        profile.occupation ??
+        profile.bio ??
+        profile.relationshipGoal ??
+        profile.personalityTraits?.[0] ??
+        "Ready to talk whenever you are.";
+
+      return {
+        _id: profile._id,
+        name: profile.name,
+        gender: profile.gender,
+        age: profile.age ?? null,
+        avatarUrl: buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+        ),
+        tagline: taglineSource,
+        occupation: profile.occupation ?? null,
+        personalityTraits: profile.personalityTraits ?? [],
+        isTrending: profile.isTrending === true,
+      };
+    });
+  },
+});
+
 export const getPublicProfiles = query({
   args: {
     gender: v.optional(v.union(v.literal("female"), v.literal("male"))),

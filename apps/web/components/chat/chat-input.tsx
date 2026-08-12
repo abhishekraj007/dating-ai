@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { FirstChatSuggestions } from "@/components/onboarding/first-chat-suggestions";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -20,6 +21,7 @@ interface ChatInputProps {
   onRequestImage?: () => void;
   onRequestVideo?: () => void;
   isRequestingImage?: boolean;
+  suggestions?: string[];
 }
 
 const TYPING_SPEED = 60;
@@ -76,6 +78,7 @@ export function ChatInput({
   onRequestImage,
   onRequestVideo,
   isRequestingImage,
+  suggestions = [],
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -121,6 +124,11 @@ export function ChatInput({
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 -top-10 h-10 bg-gradient-to-b from-transparent to-background/95"
+      />
+      <FirstChatSuggestions
+        suggestions={suggestions}
+        disabled={disabled || isSending}
+        onSelect={onSend}
       />
       <div className="flex items-end gap-2">
         <div className="relative flex-1">

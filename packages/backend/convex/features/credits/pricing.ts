@@ -16,6 +16,7 @@ export const CREDITS_PRICING = {
   
   // Free tier limits
   FREE_TRIAL_CREDITS: 5, // Credits given to new users
+  ONBOARDING_FREE_MESSAGES: 8, // First onboarding chat is not charged
 } as const;
 
 export type CreditAction = keyof typeof CREDITS_PRICING;

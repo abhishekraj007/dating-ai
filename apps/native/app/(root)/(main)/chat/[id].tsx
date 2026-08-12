@@ -11,7 +11,6 @@ import { Button, Avatar, Skeleton, Spinner, Popover } from "heroui-native";
 import { CachedAvatarImage } from "@/components/cached-avatar-image";
 import {
   ChevronLeft,
-  Hand,
   MessageCircle,
   MoreVertical,
   Trash2,
@@ -26,6 +25,7 @@ import {
   SuggestionsSheet,
 } from "@/components/dating";
 import { useChatScreen } from "@/hooks/dating";
+import { FirstChatSuggestions } from "@/components/onboarding/first-chat-suggestions";
 import { useThemeColor } from "heroui-native";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -125,6 +125,8 @@ export default function ChatScreen() {
     handleClearChat,
     handleOpenChatLanguage,
     handleOpenCreditsModal,
+    handleOpenBuyCredits,
+    firstChatSuggestions,
   } = useChatScreen();
 
   return (
@@ -262,7 +264,8 @@ export default function ChatScreen() {
               onQuizAnswer={handleQuizAnswer}
               onEndQuiz={handleEndQuiz}
               onRetryChatError={handleRetryFailedResponse}
-              onBuyCredits={handleOpenCreditsModal}
+              onBuyCredits={handleOpenBuyCredits}
+              onSubscribe={handleOpenCreditsModal}
               onOpenMessageActions={handleOpenMessageActions}
             />
           </KeyboardGestureArea>
@@ -300,6 +303,13 @@ export default function ChatScreen() {
               onStartQuiz={handleStartQuiz}
               onOpenTopicsSheet={handleOpenTopicsSheet}
               onOpenSuggestionsSheet={handleOpenSuggestionsSheet}
+              leadingAccessory={
+                <FirstChatSuggestions
+                  suggestions={firstChatSuggestions}
+                  disabled={isSending || isResponseStreaming}
+                  onSelect={handleSend}
+                />
+              }
             />
           </KeyboardStickyView>
         </View>

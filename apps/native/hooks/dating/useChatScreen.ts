@@ -15,6 +15,8 @@ import { useChatScroll } from "./useChatScroll";
 import { useChatKeyboardList } from "./useChatKeyboardList";
 import { useCredits } from "./useCredits";
 import { useTranslation } from "@/hooks/use-translation";
+import { usePurchases } from "@/contexts/purchases-context";
+import { getFirstChatSuggestions } from "@/components/onboarding/first-chat-suggestions";
 
 const AI_RESPONSE_WAIT_TIMEOUT_MS = 15000;
 const openedCreditsRequiredMessageIds = new Set<string>();
@@ -92,6 +94,7 @@ export function useChatScreen() {
 
   // Credits for client-side checking
   const { credits, hasEnoughCredits } = useCredits();
+  const { presentPaywall } = usePurchases();
 
   // Derive profile
   const profile = conversation?.profile;
@@ -182,12 +185,30 @@ export function useChatScreen() {
     !isAITyping &&
     !hasAIResponseAfterSend;
 
+  const isOpeningPending =
+    conversation?.openingMessageStatus === "pending" && messages.length === 0;
+  const hasUserMessage = messages.some((entry) => entry.role === "user");
+  const hasAssistantMessage = messages.some(
+    (entry) => entry.role === "assistant",
+  );
+  const showFirstChatSuggestions = hasAssistantMessage && !hasUserMessage;
+  const firstChatSuggestions = showFirstChatSuggestions
+    ? getFirstChatSuggestions(t)
+    : [];
+  const hasFreeTextMessages = (conversation?.freeMessagesRemaining ?? 0) > 0;
+
   const isResponseStreaming =
     !isStopRequested && (isAITyping || isWaitingForAI);
   const showTypingIndicator =
-    !isStopRequested && (hasInvisibleStreamingMessage || isWaitingForAI);
+    isOpeningPending ||
+    (!isStopRequested && (hasInvisibleStreamingMessage || isWaitingForAI));
 
   const handleOpenCreditsModal = useCallback(() => {
+    setIsImageSheetOpen(false);
+    void presentPaywall();
+  }, [presentPaywall]);
+
+  const handleOpenBuyCredits = useCallback(() => {
     setIsImageSheetOpen(false);
     router.push("/buy-credits");
   }, [router]);
@@ -268,7 +289,7 @@ export function useChatScreen() {
         return false;
       }
 
-      if (!hasEnoughCredits("TEXT_MESSAGE")) {
+      if (!hasFreeTextMessages && !hasEnoughCredits("TEXT_MESSAGE")) {
         handleOpenCreditsModal();
         return false;
       }
@@ -318,6 +339,7 @@ export function useChatScreen() {
     [
       clearPendingAssistantState,
       hasEnoughCredits,
+      hasFreeTextMessages,
       handleOpenCreditsModal,
       id,
       isSending,
@@ -695,5 +717,7 @@ export function useChatScreen() {
     handleClearChat,
     handleOpenChatLanguage,
     handleOpenCreditsModal,
+    handleOpenBuyCredits,
+    firstChatSuggestions,
   };
 }

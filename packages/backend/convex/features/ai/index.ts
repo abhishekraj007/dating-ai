@@ -21,6 +21,7 @@ export {
   getConversationByProfile,
   getMessages,
   getSystemProfiles,
+  getOnboardingCharacters,
 } from "./queries";
 
 // Public mutations

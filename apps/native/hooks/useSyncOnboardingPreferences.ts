@@ -1,26 +1,36 @@
 import { useEffect, useRef } from "react";
 import { useConvexAuth, useMutation } from "convex/react";
-import { useSegments } from "expo-router";
+import { useRouter, useSegments } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 import { DEFAULT_USER_PREFERENCES, useSavePreferences } from "@/hooks/dating";
 import { useTranslation } from "@/hooks/use-translation";
 import { useChatLanguage } from "@/hooks/use-chat-language";
-/**
- * Hook to sync onboarding preferences to backend after user logs in.
- * Only syncs when user comes FROM auth screens (not while on onboarding).
- */
+import { GUEST_ONBOARDING_KEY } from "@/hooks/use-finish-onboarding";
+
 export function useSyncOnboardingPreferences() {
+  const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
   const segments = useSegments();
-  const { genderPreference, appLanguage, chatLanguage, reset } =
-    useOnboardingStore();
+  const {
+    genderPreference,
+    appLanguage,
+    chatLanguage,
+    selectedCharacterId,
+    setPendingChatId,
+    setGuestOnboardingDone,
+    reset,
+  } = useOnboardingStore();
   const { language: currentAppLanguage } = useTranslation();
   const { chatLanguage: currentChatLanguage } = useChatLanguage();
   const { savePreferences } = useSavePreferences();
   const markOnboardingComplete = useMutation(api.user.markOnboardingComplete);
   const setUserLanguages = useMutation(
     api.features.preferences.queries.setUserLanguages,
+  );
+  const startConversation = useMutation(
+    api.features.ai.mutations.startConversation,
   );
   const hasSynced = useRef(false);
 
@@ -37,29 +47,39 @@ export function useSyncOnboardingPreferences() {
     }
 
     const syncPreferences = async () => {
-      try {
-        hasSynced.current = true;
+      hasSynced.current = true;
 
-        await setUserLanguages({
-          appLanguage: appLanguage ?? currentAppLanguage,
-          chatLanguage: chatLanguage ?? currentChatLanguage,
+      await setUserLanguages({
+        appLanguage: appLanguage ?? currentAppLanguage,
+        chatLanguage: chatLanguage ?? currentChatLanguage,
+      });
+
+      await savePreferences({
+        genderPreference,
+        ageMin: DEFAULT_USER_PREFERENCES.ageMin,
+        ageMax: DEFAULT_USER_PREFERENCES.ageMax,
+        zodiacPreferences: [],
+        interestPreferences: [],
+      });
+
+      if (selectedCharacterId) {
+        const conversationId = await startConversation({
+          aiProfileId: selectedCharacterId,
+          grantFreeMessages: true,
         });
-
-        await savePreferences({
-          genderPreference,
-          ageMin: DEFAULT_USER_PREFERENCES.ageMin,
-          ageMax: DEFAULT_USER_PREFERENCES.ageMax,
-          zodiacPreferences: [],
-          interestPreferences: [],
-        });
-
+        setPendingChatId(conversationId);
         await markOnboardingComplete();
-
+        await AsyncStorage.setItem(GUEST_ONBOARDING_KEY, "1");
+        setGuestOnboardingDone(true);
         reset();
-      } catch (error) {
-        console.error("Failed to sync onboarding preferences:", error);
-        hasSynced.current = false;
+        router.replace(`/(root)/(main)/chat/${conversationId}`);
+        return;
       }
+
+      await markOnboardingComplete();
+      await AsyncStorage.setItem(GUEST_ONBOARDING_KEY, "1");
+      setGuestOnboardingDone(true);
+      reset();
     };
 
     void syncPreferences();
@@ -67,6 +87,7 @@ export function useSyncOnboardingPreferences() {
     isAuthenticated,
     isOnOnboarding,
     genderPreference,
+    selectedCharacterId,
     appLanguage,
     chatLanguage,
     currentAppLanguage,
@@ -74,6 +95,10 @@ export function useSyncOnboardingPreferences() {
     savePreferences,
     markOnboardingComplete,
     setUserLanguages,
+    startConversation,
     reset,
+    router,
+    setPendingChatId,
+    setGuestOnboardingDone,
   ]);
 }

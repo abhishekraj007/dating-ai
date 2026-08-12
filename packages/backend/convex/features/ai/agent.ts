@@ -48,7 +48,7 @@ export function getAvailableAgentProviders(): AgentProvider[] {
   });
 }
 
-function getAgentLanguageModel(provider: AgentProvider) {
+export function getAgentLanguageModel(provider: AgentProvider) {
   if (provider === "gateway") {
     if (!gatewayProvider) return null;
     return gatewayProvider(AI_AGENT_MODEL);

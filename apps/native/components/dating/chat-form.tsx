@@ -4,7 +4,7 @@ import {
   View,
   type LayoutChangeEvent,
 } from "react-native";
-import type { RefObject } from "react";
+import type { ReactNode, RefObject } from "react";
 import { KeyboardComposer } from "@launchhq/react-native-keyboard-composer";
 import { Button, Spinner, useThemeColor } from "heroui-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -64,6 +64,7 @@ interface ChatFormProps {
   onStartQuiz: () => void;
   onOpenTopicsSheet: () => void;
   onOpenSuggestionsSheet: () => void;
+  leadingAccessory?: ReactNode;
 }
 
 export function ChatForm({
@@ -88,6 +89,7 @@ export function ChatForm({
   onStartQuiz,
   onOpenTopicsSheet,
   onOpenSuggestionsSheet,
+  leadingAccessory,
 }: ChatFormProps) {
   const { t } = useTranslation();
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
@@ -138,6 +140,7 @@ export function ChatForm({
         style={[styles.composerGradient, { paddingBottom: bottomOverlayInset }]}
       >
         <View pointerEvents="auto">
+          {leadingAccessory}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
