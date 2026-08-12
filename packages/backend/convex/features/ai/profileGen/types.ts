@@ -113,10 +113,10 @@ export type ShowcaseCategory =
 
 /**
  * A resolved per-slot plan: the scene has been picked and every variation axis
- * (action / setting / composition / lighting / style / accent prop / season /
- * time-of-day) has been sampled. The LLM vignette step sees this plan and
- * produces a bespoke vignette for each slot; the prompt builder then splices
- * the vignette fields back into this baseline template.
+ * (action / setting / composition / lighting / style / pose / accent prop /
+ * season / time-of-day) has been sampled. The LLM vignette step sees this plan
+ * and produces a bespoke vignette for each slot; the prompt builder then
+ * splices the vignette fields back into this baseline template.
  */
 export type ShowcaseSlotPlan = {
   sceneId: string;
@@ -126,6 +126,7 @@ export type ShowcaseSlotPlan = {
   composition: string;
   lighting: string;
   style: string;
+  poseDirective: string;
   accentProp: string;
   season: string;
   timeOfDay: string;

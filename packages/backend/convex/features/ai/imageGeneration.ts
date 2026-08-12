@@ -39,15 +39,15 @@ type FalPrimaryModel = "gpt-image-2" | "qwen-image-2-edit";
 
 export type ImageGenerationResult =
   | {
-    success: true;
-    imageUrl: string;
-    model: string;
-  }
+      success: true;
+      imageUrl: string;
+      model: string;
+    }
   | {
-    success: false;
-    error: string;
-    attempts: ImageModelAttempt[];
-  };
+      success: false;
+      error: string;
+      attempts: ImageModelAttempt[];
+    };
 
 // ---------------------------------------------------------------------------
 // fal.ai GPT-Image-2 (primary model)
@@ -109,19 +109,19 @@ async function generateWithFal(args: {
   const body: Record<string, unknown> =
     args.model === "qwen-image-2-edit"
       ? {
-        prompt: args.prompt,
-        output_format: "webp",
-        num_images: 1,
-        image_urls: args.referenceImageUrls,
-        enable_safety_checker: Boolean(args.enableSafety),
-      }
+          prompt: args.prompt,
+          output_format: "webp",
+          num_images: 1,
+          image_urls: args.referenceImageUrls,
+          enable_safety_checker: Boolean(args.enableSafety),
+        }
       : {
-        prompt: args.prompt,
-        quality: "low",
-        output_format: "webp",
-        num_images: 1,
-        image_size: "portrait_4_3",
-      };
+          prompt: args.prompt,
+          quality: "medium",
+          output_format: "webp",
+          num_images: 1,
+          image_size: "portrait_4_3",
+        };
 
   if (args.model === "gpt-image-2" && hasReference) {
     body.image_urls = args.referenceImageUrls;
@@ -168,8 +168,7 @@ const IMAGE_MODEL_CHAIN: ImageModelConfig[] = [
     buildInput: ({ prompt, aspectRatio, referenceImageUrls }) => ({
       prompt,
       image_input: referenceImageUrls,
-      aspect_ratio:
-        referenceImageUrls.length > 0 ? "match_input_image" : aspectRatio,
+      aspect_ratio: aspectRatio,
       resolution: "1K",
       output_format: "jpg",
     }),
@@ -180,8 +179,7 @@ const IMAGE_MODEL_CHAIN: ImageModelConfig[] = [
     buildInput: ({ prompt, aspectRatio, referenceImageUrls }) => ({
       prompt,
       image_input: referenceImageUrls,
-      aspect_ratio:
-        referenceImageUrls.length > 0 ? "match_input_image" : aspectRatio,
+      aspect_ratio: aspectRatio,
       size: "2K",
     }),
   },
@@ -206,11 +204,11 @@ const IMAGE_MODEL_CHAIN: ImageModelConfig[] = [
 // said "preserve body type exactly" and "only change outfit, pose, setting" -
 // which models treat as an instruction to keep the head crop, head angle,
 // silhouette, and even the clothing close to the reference. That made every
-// showcase slot mirror the avatar. We now lock only facial identity and
-// explicitly free pose / framing / outfit / setting, so per-slot prompts can
-// actually drive variation.
+// showcase slot mirror the avatar. We now lock only facial identity, explicitly
+// state that the reference is not a pose template, and free pose / framing /
+// outfit / setting so per-slot prompts can actually drive variation.
 const REFERENCE_IMAGE_CONSISTENCY_PREFIX =
-  "The person in the reference image is the same person in this image. Preserve only their facial identity: face shape, skin tone, eye color, eyebrow shape, hair color and texture. Their pose, head angle, body framing, outfit, setting, and lighting must follow the description below and intentionally differ from the reference image.";
+  "The person in the reference image is the same person in this image. Treat the reference as an identity reference only, never as a pose or composition template. Preserve only their facial identity: face shape, skin tone, eye color, eyebrow shape, hair color and texture. Do not copy the reference image's gaze direction, eye line, head angle, facial expression, crop, or camera angle. Their pose, body framing, outfit, setting, and lighting must follow the description below.";
 
 function extractImageUrl(output: unknown): string | null {
   if (typeof output === "string") {

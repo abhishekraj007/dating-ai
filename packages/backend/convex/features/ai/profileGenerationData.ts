@@ -788,11 +788,11 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
     boldness: "casual",
     buildActions: [
       () =>
-        "walking casually or sitting on a low wall, looking out or slightly away from the camera",
+        "walking casually or sitting on a low wall, relaxed posture and hands at ease",
       () =>
-        "standing near a railing with one hand resting on it, gaze toward the skyline",
+        "standing near a railing with one hand resting on it, taking in the skyline",
       () =>
-        "taking a small unhurried pause on a bench, arms relaxed, eyes soft",
+        "taking a small unhurried pause on a bench, arms relaxed and shoulders loose",
     ],
     compositions: [
       "full-body or three-quarter framing, subject slightly off-center",
@@ -819,7 +819,7 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () =>
         "sitting at a small table with a drink, mid-conversation, caught laughing softly",
       () =>
-        "leaning on a wooden bar counter, drink in hand, half-smiling at someone off-frame",
+        "leaning on a wooden bar counter, drink in hand, half-smiling mid-conversation",
       () =>
         "tucked into a corner booth, glass raised slightly, warm-lit expression",
     ],
@@ -991,7 +991,7 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
     boldness: "flirty",
     buildActions: [
       () =>
-        "holding a matcha or coffee cup mid-sip, gaze soft, off toward the window",
+        "holding a matcha or coffee cup mid-sip, shoulders relaxed and unhurried",
       () =>
         "reaching for a pastry on a small ceramic plate, hand and face both in frame",
       () =>
@@ -1020,13 +1020,12 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
     buildActions: [
       () =>
         "pausing mid-getting-ready, fixing an earring or adjusting a jacket collar",
-      () =>
-        "tying back hair at a vanity, gaze directed at the mirror rather than camera",
+      () => "tying back hair at a vanity, hands actively working",
       () =>
         "buttoning a shirt or cuff, caught in a small quiet moment of preparation",
     ],
     compositions: [
-      "chest-up candid, gaze directed at the mirror rather than camera",
+      "chest-up candid, hands and vanity details visible",
       "waist-up three-quarter framing, hands actively doing something",
       "intimate tight frame, shoulders and face, warm reflections visible",
     ],
@@ -1050,7 +1049,7 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () =>
         "sitting cross-legged on a couch, a hot drink balanced nearby, paperback open in lap",
       () =>
-        "stretched out by a window with a book face-down on the thigh, gaze drifting outside",
+        "stretched out by a window with a book face-down on the thigh, quiet absorbed expression",
     ],
     compositions: [
       "three-quarter lifestyle framing, cozy setting clearly visible",
@@ -1074,11 +1073,10 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
     boldness: "casual",
     buildActions: [
       () =>
-        "in the passenger seat with sunglasses on, wind lightly moving the hair, smiling slightly",
+        "in the passenger seat with sunglasses on, wind lightly moving the hair, soft smile",
       () =>
         "leaning against the open car door at a rest stop, horizon behind, relaxed pose",
-      () =>
-        "sitting on the hood at golden hour, legs crossed, small smile to the side",
+      () => "sitting on the hood at golden hour, legs crossed, soft smile",
     ],
     compositions: [
       "chest-up candid from the driver-side angle",
@@ -1133,7 +1131,7 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () =>
         "sitting on the edge of a wooden dock or walking barefoot on wet sand",
       () =>
-        "standing in shallow water with jeans rolled, looking down the shoreline",
+        "standing in shallow water with jeans rolled, relaxed as the waves move around their feet",
       () =>
         "on a rock near the water with legs tucked, hair catching the breeze",
     ],
@@ -1219,8 +1217,7 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
       () =>
         "hanging out with a small dog or cat, mid-laugh as the pet nudges closer",
       () => "sitting on the floor with a pet in the lap, both calm and content",
-      () =>
-        "playing gently with a pet, face turned toward it, genuine amused smile",
+      () => "playing gently with a pet, sharing a genuine amused moment",
     ],
     compositions: [
       "chest-up candid, pet clearly visible in the frame",
@@ -1243,8 +1240,7 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
     category: "creative",
     boldness: "casual",
     buildActions: [
-      () =>
-        "pulling a book from a tall shelf, eyes on the spine, expression curious",
+      () => "pulling a book from a tall shelf, expression curious",
       () => "standing in a narrow aisle with an open book, face softly lit",
       () =>
         "at a small table in the bookstore with a pile of picks, half-smiling",
@@ -1271,7 +1267,7 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
     boldness: "casual",
     buildActions: [
       () =>
-        "standing slightly off-center in a bright gallery, looking at something out of frame",
+        "standing slightly off-center in a bright gallery, taking in the artwork",
       () =>
         "reading a small wall label next to an artwork, expression thoughtful",
       () => "crossing between rooms in a gallery, doorway framing the subject",
@@ -1323,15 +1319,15 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
     boldness: "casual",
     buildActions: [
       () =>
-        "looking out a train window, one hand resting on the sill, softly smiling",
+        "seated by a train window with one hand resting on the sill, softly smiling",
       () =>
         "reading a paperback at a window seat on a train, landscape blurred past",
       () =>
-        "listening to music on a train, a small journal on the table, gaze distant",
+        "listening to music on a train, a small journal on the table, relaxed and absorbed",
     ],
     compositions: [
       "waist-up candid, window filling the frame behind",
-      "three-quarter profile shot from across the aisle",
+      "three-quarter seated shot from across the aisle",
       "close chest-up frame with the window reflection subtly doubled",
     ],
     lightings: [
@@ -1355,8 +1351,7 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
         "on a picnic blanket with a small spread of food, mid-laugh with someone off-frame",
       () =>
         "leaning back on hands on the grass, face tilted up toward soft sun",
-      () =>
-        "cross-legged on a blanket, paperback in lap, gaze off into the park",
+      () => "cross-legged on a blanket, paperback in lap, relaxed park moment",
     ],
     compositions: [
       "three-quarter environmental shot, blanket and food anchoring the lower third",
@@ -1416,10 +1411,10 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
     boldness: "flirty",
     buildActions: [
       () =>
-        "walking along a lit street at night, hands in pockets, glancing to the side",
+        "walking along a lit street at night, hands in pockets, relaxed stride",
       () =>
         "standing near a crosswalk under a warm streetlight, soft half-smile",
-      () => "leaning on a brick wall in a lit alley, relaxed, eyes soft",
+      () => "leaning on a brick wall in a lit alley, relaxed posture",
     ],
     compositions: [
       "waist-up candid, streetlights as bokeh in negative space",
@@ -1442,9 +1437,8 @@ export const SHOWCASE_SCENES: ShowcaseScene[] = [
     category: "creative",
     boldness: "casual",
     buildActions: [
-      () =>
-        "flipping through records at a record shop, head slightly tilted, focused",
-      () => "pulling a record half out of its sleeve, eyes on the cover",
+      () => "flipping through records at a record shop, focused and unhurried",
+      () => "pulling a record half out of its sleeve, studying the cover",
       () =>
         "at the listening station in a record shop, one headphone pressed to an ear",
     ],
