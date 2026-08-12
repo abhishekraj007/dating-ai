@@ -9,7 +9,11 @@ import { Header } from "@/components";
 import { CachedAvatarImage } from "@/components/cached-avatar-image";
 import { GenderTabs, LevelBadge } from "@/components/dating";
 import { parseStructuredContent } from "@/components/dating/bubbles/message-types";
-import { useConversations, useStartConversation } from "@/hooks/dating";
+import {
+  useConversations,
+  useStartConversation,
+  useChatPremiumGate,
+} from "@/hooks/dating";
 import { useLikedProfiles } from "@/hooks/dating/useForYou";
 import { formatDistanceToNow } from "date-fns";
 import { useThemeColor } from "heroui-native";
@@ -27,6 +31,7 @@ export default function ChatsScreen() {
   const { profiles: likedProfiles, isLoading: isLoadingLikes } =
     useLikedProfiles();
   const { startConversation } = useStartConversation();
+  const { requirePremiumToChat } = useChatPremiumGate();
   const mutedColor = useThemeColor("muted");
 
   // Filter liked profiles that don't have conversations yet (new matches)
@@ -42,6 +47,11 @@ export default function ChatsScreen() {
   };
 
   const handleMatchPress = async (profileId: string) => {
+    const canChat = await requirePremiumToChat();
+    if (!canChat) {
+      return;
+    }
+
     try {
       const conversationId = await startConversation({
         aiProfileId: profileId as Id<"aiProfiles">,

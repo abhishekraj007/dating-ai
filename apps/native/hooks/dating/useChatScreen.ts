@@ -14,6 +14,10 @@ import type { MediaRequestOptions } from "./useImageRequest";
 import { useChatScroll } from "./useChatScroll";
 import { useChatKeyboardList } from "./useChatKeyboardList";
 import { useCredits } from "./useCredits";
+import {
+  useChatPremiumGate,
+  isPremiumRequiredError,
+} from "./useChatPremiumGate";
 import { useTranslation } from "@/hooks/use-translation";
 
 const AI_RESPONSE_WAIT_TIMEOUT_MS = 15000;
@@ -92,6 +96,7 @@ export function useChatScreen() {
 
   // Credits for client-side checking
   const { credits, hasEnoughCredits } = useCredits();
+  const { requirePremiumToChat } = useChatPremiumGate();
 
   // Derive profile
   const profile = conversation?.profile;
@@ -268,6 +273,10 @@ export function useChatScreen() {
         return false;
       }
 
+      if (!(await requirePremiumToChat())) {
+        return false;
+      }
+
       if (!hasEnoughCredits("TEXT_MESSAGE")) {
         handleOpenCreditsModal();
         return false;
@@ -303,7 +312,9 @@ export function useChatScreen() {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
 
-        if (errorMessage.includes("Insufficient credits")) {
+        if (isPremiumRequiredError(error)) {
+          await requirePremiumToChat();
+        } else if (errorMessage.includes("Insufficient credits")) {
           handleOpenCreditsModal();
         } else {
           console.error("Failed to send message:", error);
@@ -325,6 +336,7 @@ export function useChatScreen() {
       t,
       platform,
       prepareForNewTurn,
+      requirePremiumToChat,
       sendMessage,
       sendMessageWithOptimistic,
       startPendingAssistantState,
@@ -379,6 +391,10 @@ export function useChatScreen() {
     async (options: MediaRequestOptions) => {
       if (!id) return;
 
+      if (!(await requirePremiumToChat())) {
+        return;
+      }
+
       const creditAction =
         options.mediaType === "video" ? "VIDEO_REQUEST" : "IMAGE_REQUEST";
 
@@ -393,7 +409,9 @@ export function useChatScreen() {
         setIsImageSheetOpen(false);
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
-        if (message.includes("Insufficient credits")) {
+        if (isPremiumRequiredError(error)) {
+          await requirePremiumToChat();
+        } else if (message.includes("Insufficient credits")) {
           handleOpenCreditsModal();
         } else {
           console.error("Failed to request media:", error);
@@ -402,7 +420,7 @@ export function useChatScreen() {
         setIsRequestingImage(false);
       }
     },
-    [id, requestMedia, hasEnoughCredits, handleOpenCreditsModal, platform],
+    [id, requestMedia, hasEnoughCredits, handleOpenCreditsModal, platform, requirePremiumToChat],
   );
 
   const handleOpenImageSheet = () => {

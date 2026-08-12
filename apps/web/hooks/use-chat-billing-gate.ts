@@ -3,7 +3,11 @@
 import { useQuery } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { CREDITS_PRICING } from "@dating-ai/backend/convex/features/credits/pricing";
-import { DISABLE_WEB_PAYMENT } from "@/lib/web-payment";
+import { isPremiumRequiredError } from "@dating-ai/backend/convex/features/premium/errors";
+
+export { isPremiumRequiredError };
+
+export type ChatBillingBlockReason = "premium" | "credits";
 
 export function useChatBillingGate() {
   const userData = useQuery(api.user.fetchUserAndProfile);
@@ -12,21 +16,28 @@ export function useChatBillingGate() {
   const isPremium = Boolean(userData?.profile?.isPremium);
   const hasCreditsForChat = credits >= CREDITS_PRICING.TEXT_MESSAGE;
 
-  const canStartChat = () => {
-    if (!DISABLE_WEB_PAYMENT) {
-      return true;
+  const startChatBlockReason = (): ChatBillingBlockReason | null => {
+    if (!isPremium) {
+      return "premium";
     }
 
-    return hasCreditsForChat;
+    return null;
   };
 
-  const canSendMessage = () => {
-    if (!DISABLE_WEB_PAYMENT) {
-      return true;
+  const sendMessageBlockReason = (): ChatBillingBlockReason | null => {
+    if (!isPremium) {
+      return "premium";
     }
 
-    return hasCreditsForChat;
+    if (!hasCreditsForChat) {
+      return "credits";
+    }
+
+    return null;
   };
+
+  const canStartChat = () => startChatBlockReason() === null;
+  const canSendMessage = () => sendMessageBlockReason() === null;
 
   return {
     credits,
@@ -34,5 +45,7 @@ export function useChatBillingGate() {
     hasCreditsForChat,
     canStartChat,
     canSendMessage,
+    startChatBlockReason,
+    sendMessageBlockReason,
   };
 }

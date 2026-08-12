@@ -23,7 +23,7 @@ import {
   useForYouProfiles,
   useProfileInteraction,
 } from "@/hooks/dating/useForYou";
-import { useStartConversation } from "@/hooks/dating";
+import { useStartConversation, useChatPremiumGate } from "@/hooks/dating";
 import type { Id } from "@dating-ai/backend";
 import { ForYouHeroUISkeleton } from "@/components/dating/for-you-skeleton";
 import { useForYouImagePreload } from "@/hooks/dating/useForYouImagePreload";
@@ -48,6 +48,7 @@ function ForYouContent() {
   const { likeProfile, skipProfile, isAuthenticated } = useProfileInteraction();
   const [loadingChatting, setLoadingChatting] = useState(false);
   const { startConversation } = useStartConversation();
+  const { requirePremiumToChat } = useChatPremiumGate();
   const lastPrefetchAtMs = useRef(0);
 
   const currentProfile = profiles[0];
@@ -196,22 +197,29 @@ function ForYouContent() {
   }, []);
 
   const handleStartChatting = useCallback(async () => {
-    if (matchedProfile) {
-      try {
-        setLoadingChatting(true);
-        const conversationId = await startConversation({
-          aiProfileId: matchedProfile._id as Id<"aiProfiles">,
-        });
-        setShowMatchModal(false);
-        router.push(`/chat/${conversationId}`);
-      } catch (error) {
-        console.error("Failed to start conversation:", error);
-      } finally {
-        setLoadingChatting(false);
-      }
-      setMatchedProfile(null);
+    if (!matchedProfile) {
+      return;
     }
-  }, [matchedProfile, router, startConversation]);
+
+    const canChat = await requirePremiumToChat();
+    if (!canChat) {
+      return;
+    }
+
+    try {
+      setLoadingChatting(true);
+      const conversationId = await startConversation({
+        aiProfileId: matchedProfile._id as Id<"aiProfiles">,
+      });
+      setShowMatchModal(false);
+      setMatchedProfile(null);
+      router.push(`/chat/${conversationId}`);
+    } catch (error) {
+      console.error("Failed to start conversation:", error);
+    } finally {
+      setLoadingChatting(false);
+    }
+  }, [matchedProfile, requirePremiumToChat, router, startConversation]);
 
   const handleCardPress = useCallback(() => {
     if (!currentProfile) return;

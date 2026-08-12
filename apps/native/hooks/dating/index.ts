@@ -58,3 +58,7 @@ export type {
   FilterOptions,
 } from "./useFilterOptions";
 export { useChatScreen } from "./useChatScreen";
+export {
+  useChatPremiumGate,
+  isPremiumRequiredError,
+} from "./useChatPremiumGate";

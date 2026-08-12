@@ -25,9 +25,13 @@ import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatImageRequestDialog } from "@/components/chat/chat-image-request-dialog";
 import { CreditsModal } from "@/components/credits-modal";
+import { PremiumSubscriptionModal } from "@/components/premium-subscription-modal";
 import { TypingIndicator } from "@/components/chat/typing-indicator";
 import { useConversation } from "@/hooks/use-conversations";
-import { useChatBillingGate } from "@/hooks/use-chat-billing-gate";
+import {
+  isPremiumRequiredError,
+  useChatBillingGate,
+} from "@/hooks/use-chat-billing-gate";
 import {
   useMessages,
   useSendMessage,
@@ -121,12 +125,13 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const { clearChat } = useClearChat();
   const { deleteMessage } = useDeleteMessage();
   const { requestImage } = useRequestChatImage();
-  const { canSendMessage } = useChatBillingGate();
+  const { sendMessageBlockReason } = useChatBillingGate();
 
   const [isSending, setIsSending] = useState(false);
   const [isRequestingImage, setIsRequestingImage] = useState(false);
   const [isImageRequestOpen, setIsImageRequestOpen] = useState(false);
   const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const [isClearing, startClearTransition] = useTransition();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
@@ -165,7 +170,12 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const handleSend = async (content: string) => {
     if (!conversation || isSending) return;
 
-    if (!canSendMessage()) {
+    const blockReason = sendMessageBlockReason();
+    if (blockReason === "premium") {
+      setIsPremiumModalOpen(true);
+      return;
+    }
+    if (blockReason === "credits") {
       setIsCreditsModalOpen(true);
       return;
     }
@@ -178,11 +188,15 @@ export function ChatView({ conversationId }: ChatViewProps) {
         platform: "web",
       });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Could not send message.";
+      if (isPremiumRequiredError(error)) {
+        setIsPremiumModalOpen(true);
+      } else {
+        const message =
+          error instanceof Error ? error.message : "Could not send message.";
 
-      if (message.includes("Insufficient credits")) {
-        setIsCreditsModalOpen(true);
+        if (message.includes("Insufficient credits")) {
+          setIsCreditsModalOpen(true);
+        }
       }
     } finally {
       setIsSending(false);
@@ -206,6 +220,11 @@ export function ChatView({ conversationId }: ChatViewProps) {
     }
 
     const creditsBalance = viewerProfile?.credits ?? 0;
+    if (!viewerIsPremium) {
+      setIsImageRequestOpen(false);
+      setIsPremiumModalOpen(true);
+      return;
+    }
     if (creditsBalance < 5) {
       setIsImageRequestOpen(false);
       setIsCreditsModalOpen(true);
@@ -223,7 +242,10 @@ export function ChatView({ conversationId }: ChatViewProps) {
           ? error.message
           : "Failed to request a selfie right now.";
 
-      if (message.includes("Insufficient credits")) {
+      if (isPremiumRequiredError(error)) {
+        setIsImageRequestOpen(false);
+        setIsPremiumModalOpen(true);
+      } else if (message.includes("Insufficient credits")) {
         setIsImageRequestOpen(false);
         setIsCreditsModalOpen(true);
       } else {
@@ -450,6 +472,12 @@ export function ChatView({ conversationId }: ChatViewProps) {
       <CreditsModal
         open={isCreditsModalOpen}
         onOpenChange={setIsCreditsModalOpen}
+      />
+      <PremiumSubscriptionModal
+        open={isPremiumModalOpen}
+        onOpenChange={setIsPremiumModalOpen}
+        title="Subscribe to keep chatting"
+        description="Premium members can send messages. Upgrade to continue this conversation."
       />
     </div>
   );

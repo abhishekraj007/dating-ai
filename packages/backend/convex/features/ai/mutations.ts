@@ -30,6 +30,7 @@ import {
   isReservedPublicProfileUsername,
   normalizePublicProfileUsername,
 } from "./publicProfileUsernames";
+import { requirePremium } from "../premium/guards";
 
 const TEXT_MESSAGE_CREDIT_COST = 1;
 const CHAT_IMAGE_REQUEST_CREDIT_COST = 5;
@@ -102,6 +103,7 @@ export const startConversation = mutation({
   args: {
     aiProfileId: v.id("aiProfiles"),
   },
+  returns: v.id("aiConversations"),
   handler: async (ctx, { aiProfileId }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
@@ -125,6 +127,8 @@ export const startConversation = mutation({
     if (existingConversation) {
       return existingConversation._id;
     }
+
+    await requirePremium(ctx);
 
     // Create Agent thread
     const threadId = await createThread(ctx, components.agent, {
@@ -171,6 +175,8 @@ export const sendMessage = mutation({
     if (!conversation || conversation.userId !== user._id) {
       throw new Error("Conversation not found");
     }
+
+    await requirePremium(ctx);
 
     // Get user profile to check/deduct credits
     const profile = await ctx.db
@@ -280,6 +286,8 @@ export const retryFailedResponse = mutation({
     if (!conversation || conversation.userId !== user._id) {
       throw new Error("Conversation not found");
     }
+
+    await requirePremium(ctx);
 
     const promptMessages = await ctx.runQuery(
       components.agent.messages.getMessagesByIds,
@@ -1084,6 +1092,8 @@ export const requestChatImage = mutation({
       throw new Error("Conversation not found");
     }
 
+    await requirePremium(ctx);
+
     // Get user profile to check/deduct credits
     const profile = await ctx.db
       .query("profile")
@@ -1407,6 +1417,8 @@ export const requestChatVideo = mutation({
     if (!conversation || conversation.userId !== user._id) {
       throw new Error("Conversation not found");
     }
+
+    await requirePremium(ctx);
 
     const profile = await ctx.db
       .query("profile")

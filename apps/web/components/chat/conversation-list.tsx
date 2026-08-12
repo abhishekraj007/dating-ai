@@ -5,14 +5,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CreditsModal } from "@/components/credits-modal";
+import { PremiumSubscriptionModal } from "@/components/premium-subscription-modal";
 import { cn } from "@/lib/utils";
 import {
   useConversations,
   useStartConversation,
 } from "@/hooks/use-conversations";
 import { useAIProfiles } from "@/hooks/use-ai-profiles";
-import { useChatBillingGate } from "@/hooks/use-chat-billing-gate";
+import {
+  isPremiumRequiredError,
+  useChatBillingGate,
+} from "@/hooks/use-chat-billing-gate";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import type { Id } from "@dating-ai/backend/convex/_generated/dataModel";
@@ -39,17 +42,15 @@ export function ConversationList() {
   const { profiles: newMatchProfiles, isLoading: isLoadingProfiles } =
     useAIProfiles({ limit: 12, excludeExistingConversations: true });
   const { startConversation } = useStartConversation();
-  const {
-    canStartChat,
-  } = useChatBillingGate();
+  const { startChatBlockReason } = useChatBillingGate();
   const [startingConvFor, setStartingConvFor] = useState<string | null>(null);
-  const [isCreditsOpen, setIsCreditsOpen] = useState(false);
+  const [isPremiumOpen, setIsPremiumOpen] = useState(false);
 
   const handleNewMatchClick = async (profileId: string) => {
     if (startingConvFor) return;
 
-    if (!canStartChat()) {
-      setIsCreditsOpen(true);
+    if (startChatBlockReason() === "premium") {
+      setIsPremiumOpen(true);
       return;
     }
 
@@ -59,8 +60,10 @@ export function ConversationList() {
         aiProfileId: profileId as Id<"aiProfiles">,
       });
       router.push(`/chat/${convId}`);
-    } catch {
-      // ignore
+    } catch (error) {
+      if (isPremiumRequiredError(error)) {
+        setIsPremiumOpen(true);
+      }
     } finally {
       setStartingConvFor(null);
     }
@@ -192,7 +195,12 @@ export function ConversationList() {
         </div>
       </div>
 
-      <CreditsModal open={isCreditsOpen} onOpenChange={setIsCreditsOpen} />
+      <PremiumSubscriptionModal
+        open={isPremiumOpen}
+        onOpenChange={setIsPremiumOpen}
+        title="Subscribe to start chatting"
+        description="Premium members can message matches. Upgrade to start this conversation."
+      />
     </div>
   );
 }

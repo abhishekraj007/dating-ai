@@ -6,7 +6,11 @@ import { Skeleton, Button } from "heroui-native";
 import { Plus } from "lucide-react-native";
 import { Header } from "@/components";
 import { ProfileCard, GenderTabs } from "@/components/dating";
-import { useUserCreatedProfiles, useStartConversation } from "@/hooks/dating";
+import {
+  useUserCreatedProfiles,
+  useStartConversation,
+  useChatPremiumGate,
+} from "@/hooks/dating";
 import { useTranslation } from "@/hooks/use-translation";
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -18,6 +22,7 @@ export default function MyCreationScreen() {
   const [gender, setGender] = useState<"female" | "male">("female");
   const { profiles, isLoading } = useUserCreatedProfiles(gender);
   const { startConversation } = useStartConversation();
+  const { requirePremiumToChat } = useChatPremiumGate();
 
   const femaleProfiles = useUserCreatedProfiles("female").profiles;
   const maleProfiles = useUserCreatedProfiles("male").profiles;
@@ -27,8 +32,13 @@ export default function MyCreationScreen() {
   };
 
   const handleChatPress = async (profileId: string) => {
+    const canChat = await requirePremiumToChat();
+    if (!canChat) {
+      return;
+    }
+
     const conversationId = await startConversation({
-      aiProfileId: profileId as any,
+      aiProfileId: profileId as never,
     });
     router.push(`/(root)/(main)/chat/${conversationId}`);
   };

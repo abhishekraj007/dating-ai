@@ -15,6 +15,7 @@ import {
   useCredits,
   useStartConversation,
   useConversationByProfile,
+  useChatPremiumGate,
 } from "@/hooks/dating";
 import {
   InterestChip,
@@ -45,6 +46,7 @@ export default function ProfileDetailScreen() {
   const { profile, isLoading } = useAIProfile(id);
   const { conversation } = useConversationByProfile(id);
   const { startConversation } = useStartConversation();
+  const { requirePremiumToChat } = useChatPremiumGate();
   const { isAuthenticated } = useConvexAuth();
   const { isPremium } = useCredits();
   const [isStartingChat, setIsStartingChat] = useState(false);
@@ -73,20 +75,25 @@ export default function ProfileDetailScreen() {
       return;
     }
 
-    setIsStartingChat(true);
-
     if (conversation) {
       router.push(`/(root)/(main)/chat/${conversation._id}`);
-      setIsStartingChat(false);
       return;
     }
 
-    const conversationId = await startConversation({
-      aiProfileId: id as never,
-    });
+    const canChat = await requirePremiumToChat();
+    if (!canChat) {
+      return;
+    }
 
-    router.push(`/(root)/(main)/chat/${conversationId}`);
-    setIsStartingChat(false);
+    setIsStartingChat(true);
+    try {
+      const conversationId = await startConversation({
+        aiProfileId: id as never,
+      });
+      router.push(`/(root)/(main)/chat/${conversationId}`);
+    } finally {
+      setIsStartingChat(false);
+    }
   };
 
   if (isLoading) {
