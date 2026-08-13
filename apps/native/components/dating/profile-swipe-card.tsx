@@ -105,7 +105,11 @@ export function ProfileSwipeCard({
   };
 
   const handleImageError = () => {
-    imageOpacity.value = 0;
+    imageOpacity.value = withTiming(1, { duration: 160 }, (finished) => {
+      if (finished) {
+        scheduleOnRN(hideImageSkeleton);
+      }
+    });
   };
 
   useEffect(() => {
@@ -264,13 +268,14 @@ export function ProfileSwipeCard({
               profile.avatarUrl
                 ? {
                     uri: profile.avatarUrl,
-                    cacheKey: profile.avatarImageKey ?? String(profile._id),
                   }
                 : undefined
             }
             style={styles.image}
             contentFit="cover"
+            contentPosition="top"
             cachePolicy="memory-disk"
+            recyclingKey={String(profile._id)}
             transition={260}
             onLoad={reportImageReady}
             onError={handleImageError}

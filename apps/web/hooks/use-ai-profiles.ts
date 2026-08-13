@@ -3,10 +3,11 @@
 import { useQuery } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import type { Id } from "@dating-ai/backend/convex/_generated/dataModel";
+import type { AvatarImageRequest } from "@dating-ai/backend";
 
 type Gender = "female" | "male";
 
-interface UseAIProfilesOptions {
+interface UseAIProfilesOptions extends AvatarImageRequest {
   gender?: Gender;
   limit?: number;
   excludeExistingConversations?: boolean;
@@ -25,6 +26,8 @@ export function useAIProfiles(
     gender: options.gender,
     limit: options.limit,
     excludeExistingConversations: options.excludeExistingConversations,
+    imageWidth: options.imageWidth,
+    imageQuality: options.imageQuality,
   });
 
   return {
@@ -33,10 +36,19 @@ export function useAIProfiles(
   };
 }
 
-export function useAIProfile(profileId: string | undefined) {
+export function useAIProfile(
+  profileId: string | undefined,
+  image?: AvatarImageRequest,
+) {
   const profile = useQuery(
     api.features.ai.queries.getProfile,
-    profileId ? { profileId: profileId as Id<"aiProfiles"> } : "skip"
+    profileId
+      ? {
+          profileId: profileId as Id<"aiProfiles">,
+          imageWidth: image?.imageWidth,
+          imageQuality: image?.imageQuality,
+        }
+      : "skip"
   );
 
   return {

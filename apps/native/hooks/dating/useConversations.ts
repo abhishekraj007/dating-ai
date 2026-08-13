@@ -1,13 +1,17 @@
 import { useQuery } from "convex-helpers/react/cache";
 import { useMutation } from "convex/react";
 import { api } from "@dating-ai/backend";
+import type { AvatarImageRequest, Id } from "@dating-ai/backend";
 
 /**
  * Uses convex-helpers cache - subscriptions stay alive after unmount
  * so data is instant on revisit (no skeleton loading)
  */
-export function useConversations() {
-  const conversations = useQuery(api.features.ai.queries.getUserConversations);
+export function useConversations(image?: AvatarImageRequest) {
+  const conversations = useQuery(api.features.ai.queries.getUserConversations, {
+    imageWidth: image?.imageWidth,
+    imageQuality: image?.imageQuality,
+  });
 
   return {
     conversations: conversations ?? [],
@@ -15,10 +19,19 @@ export function useConversations() {
   };
 }
 
-export function useConversation(conversationId: string | undefined) {
+export function useConversation(
+  conversationId: string | undefined,
+  image?: AvatarImageRequest,
+) {
   const conversation = useQuery(
     api.features.ai.queries.getConversation,
-    conversationId ? { conversationId: conversationId as any } : "skip"
+    conversationId
+      ? {
+          conversationId: conversationId as Id<"aiConversations">,
+          imageWidth: image?.imageWidth,
+          imageQuality: image?.imageQuality,
+        }
+      : "skip",
   );
 
   return {
@@ -30,7 +43,7 @@ export function useConversation(conversationId: string | undefined) {
 export function useConversationByProfile(aiProfileId: string | undefined) {
   const conversation = useQuery(
     api.features.ai.queries.getConversationByProfile,
-    aiProfileId ? { aiProfileId: aiProfileId as any } : "skip"
+    aiProfileId ? { aiProfileId: aiProfileId as Id<"aiProfiles"> } : "skip"
   );
 
   return {

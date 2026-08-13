@@ -272,11 +272,6 @@
     "startConversation": "Start a conversation",
     "sayHello": "Say hello to {{name}}!",
     "openingPending": "{{name}} is writing you...",
-    "firstReply": {
-      "hey": "Hey, how's your night going?",
-      "whatsUp": "What are you up to right now?",
-      "aboutYou": "Tell me something I wouldn't guess about you"
-    },
     "aiCharacter": "AI Character",
     "aiCompanion": "your AI companion",
     "selfie": "Photo",
@@ -425,6 +420,12 @@
     "keepTalkingDescription": "Your free messages with {{name}} just ran out. Subscribe to keep the conversation going.",
     "subscribeCta": "Continue with Premium",
     "orBuyCredits": "Or buy credits"
+  },
+  "buyCredits": {
+    "title": "Keep the conversation going",
+    "subtitle": "Top up credits to message, ask for selfies, and get videos.",
+    "titleWithName": "Keep talking to {{name}}",
+    "subtitleWithName": "{{name}} is waiting for your reply. Top up credits to keep chatting."
   },
   "quiz": {
     "started": "Quiz started",

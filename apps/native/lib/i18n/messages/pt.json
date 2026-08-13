@@ -393,6 +393,12 @@
     "unlockDescription": "{{name}} te enviou uma foto. Obtenha Premium e descubra o que se esconde por trás do desfoque.",
     "unlockUnlimited": "Desbloquear acesso ilimitado"
   },
+  "buyCredits": {
+    "title": "Continue a conversa",
+    "subtitle": "Recarregue créditos para mandar mensagens, pedir selfies e receber vídeos.",
+    "titleWithName": "Continue falando com {{name}}",
+    "subtitleWithName": "{{name}} está esperando sua resposta. Recarregue créditos para continuar conversando."
+  },
   "quiz": {
     "started": "Quiz iniciado",
     "letsPlay": "Vamos jogar um quiz!",

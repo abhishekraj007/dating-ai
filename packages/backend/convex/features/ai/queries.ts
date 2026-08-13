@@ -6,7 +6,10 @@ import { paginationOptsValidator } from "convex/server";
 import { listUIMessages, syncStreams, vStreamArgs } from "@convex-dev/agent";
 import { r2 } from "../../uploads";
 import { authComponent } from "../../lib/betterAuth";
-import { buildAiProfileAvatarUrl } from "../../lib/aiProfileAvatar";
+import {
+  avatarImageQueryArgs,
+  buildAiProfileAvatarUrl,
+} from "../../lib/aiProfileAvatar";
 import { getPremiumAccessSnapshot } from "../premium/guards";
 import {
   ETHNICITIES,
@@ -96,6 +99,7 @@ function isVisibleOnWeb(profile: WebVisibleProfile) {
  */
 export const getProfiles = query({
   args: {
+    ...avatarImageQueryArgs,
     gender: v.optional(v.union(v.literal("female"), v.literal("male"))),
     limit: v.optional(v.number()),
     excludeExistingConversations: v.optional(v.boolean()),
@@ -105,7 +109,14 @@ export const getProfiles = query({
   },
   handler: async (
     ctx,
-    { gender, limit, excludeExistingConversations, platform },
+    {
+      gender,
+      limit,
+      excludeExistingConversations,
+      platform,
+      imageWidth,
+      imageQuality,
+    },
   ) => {
     let profilesQuery = ctx.db
       .query("aiProfiles")
@@ -152,6 +163,7 @@ export const getProfiles = query({
         const avatarUrl = buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth, imageQuality },
         );
         return {
           ...profile,
@@ -176,6 +188,7 @@ const onboardingCharacterValidator = v.object({
 
 export const getOnboardingCharacters = query({
   args: {
+    ...avatarImageQueryArgs,
     gender: v.optional(
       v.union(v.literal("female"), v.literal("male"), v.literal("both")),
     ),
@@ -185,7 +198,7 @@ export const getOnboardingCharacters = query({
     limit: v.optional(v.number()),
   },
   returns: v.array(onboardingCharacterValidator),
-  handler: async (ctx, { gender, platform, limit }) => {
+  handler: async (ctx, { gender, platform, limit, imageWidth, imageQuality }) => {
     const takeCount = Math.min(limit ?? 6, 12);
     const genderFilter = gender === "both" ? undefined : gender;
     const profiles = await activeProfilesDiscoverQuery(ctx, genderFilter).take(
@@ -224,6 +237,7 @@ export const getOnboardingCharacters = query({
         avatarUrl: buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth, imageQuality },
         ),
         tagline: taglineSource,
         occupation: profile.occupation ?? null,
@@ -236,6 +250,7 @@ export const getOnboardingCharacters = query({
 
 export const getPublicProfiles = query({
   args: {
+    ...avatarImageQueryArgs,
     gender: v.optional(v.union(v.literal("female"), v.literal("male"))),
     limit: v.optional(v.number()),
   },
@@ -254,7 +269,7 @@ export const getPublicProfiles = query({
       zodiacSign: v.union(v.string(), v.null()),
     }),
   ),
-  handler: async (ctx, { gender, limit }) => {
+  handler: async (ctx, { gender, limit, imageWidth, imageQuality }) => {
     const profiles = await activeProfilesDiscoverQuery(ctx, gender).take(
       limit ?? 24,
     );
@@ -279,6 +294,7 @@ export const getPublicProfiles = query({
           avatarUrl: buildAiProfileAvatarUrl(
             profile._id,
             profile.avatarImageKey,
+            { imageWidth, imageQuality },
           ),
           tagline: taglineSource,
           interests: profile.interests ?? [],
@@ -327,6 +343,7 @@ export const getPublicSitemapProfiles = query({
 
 export const getPublicProfilesPaginated = query({
   args: {
+    ...avatarImageQueryArgs,
     genderPreference: v.optional(
       v.union(v.literal("female"), v.literal("male"), v.literal("both")),
     ),
@@ -347,6 +364,8 @@ export const getPublicProfilesPaginated = query({
       interestPreferences,
       ethnicityPreferences,
       paginationOpts,
+      imageWidth,
+      imageQuality,
     },
   ) => {
     const normalizedEthnicityPreferences = (ethnicityPreferences ?? []).filter(
@@ -426,6 +445,7 @@ export const getPublicProfilesPaginated = query({
             avatarUrl: buildAiProfileAvatarUrl(
               profile._id,
               profile.avatarImageKey,
+              { imageWidth, imageQuality },
             ),
             tagline: taglineSource,
             interests: profile.interests ?? [],
@@ -439,9 +459,10 @@ export const getPublicProfilesPaginated = query({
 
 export const getPublicProfileByUsername = query({
   args: {
+    ...avatarImageQueryArgs,
     username: v.string(),
   },
-  handler: async (ctx, { username }) => {
+  handler: async (ctx, { username, imageWidth, imageQuality }) => {
     const normalizedUsername = normalizePublicProfileUsername(username);
     if (isReservedPublicProfileUsername(normalizedUsername)) {
       return null;
@@ -468,6 +489,7 @@ export const getPublicProfileByUsername = query({
     const avatarUrl = buildAiProfileAvatarUrl(
       profile._id,
       profile.avatarImageKey,
+      { imageWidth, imageQuality },
     );
 
     return {
@@ -516,9 +538,10 @@ export const getProfileImageUrl = query({
  */
 export const getProfile = query({
   args: {
+    ...avatarImageQueryArgs,
     profileId: v.id("aiProfiles"),
   },
-  handler: async (ctx, { profileId }) => {
+  handler: async (ctx, { profileId, imageWidth, imageQuality }) => {
     const profile = await ctx.db.get(profileId);
     if (!profile || profile.status !== "active") {
       return null;
@@ -528,6 +551,7 @@ export const getProfile = query({
     const avatarUrl = buildAiProfileAvatarUrl(
       profile._id,
       profile.avatarImageKey,
+      { imageWidth, imageQuality },
     );
 
     const profileImageUrls = profile.profileImageKeys
@@ -547,9 +571,10 @@ export const getProfile = query({
  */
 export const getUserCreatedProfiles = query({
   args: {
+    ...avatarImageQueryArgs,
     gender: v.optional(v.union(v.literal("female"), v.literal("male"))),
   },
-  handler: async (ctx, { gender }) => {
+  handler: async (ctx, { gender, imageWidth, imageQuality }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       return null;
@@ -574,6 +599,7 @@ export const getUserCreatedProfiles = query({
         const avatarUrl = buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth, imageQuality },
         );
         return {
           ...profile,
@@ -588,8 +614,10 @@ export const getUserCreatedProfiles = query({
  * Get user's conversations (chat list).
  */
 export const getUserConversations = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    ...avatarImageQueryArgs,
+  },
+  handler: async (ctx, { imageWidth, imageQuality }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       return null;
@@ -610,6 +638,7 @@ export const getUserConversations = query({
         const avatarUrl = buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth, imageQuality },
         );
 
         // Get last message from agent thread
@@ -633,10 +662,10 @@ export const getUserConversations = query({
           },
           lastMessage: lastMessage
             ? {
-                content:
-                  typeof lastMessage.text === "string" ? lastMessage.text : "",
-                createdAt: lastMessage._creationTime,
-              }
+              content:
+                typeof lastMessage.text === "string" ? lastMessage.text : "",
+              createdAt: lastMessage._creationTime,
+            }
             : null,
         };
       }),
@@ -649,9 +678,10 @@ export const getUserConversations = query({
  */
 export const getConversation = query({
   args: {
+    ...avatarImageQueryArgs,
     conversationId: v.id("aiConversations"),
   },
-  handler: async (ctx, { conversationId }) => {
+  handler: async (ctx, { conversationId, imageWidth, imageQuality }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       return null;
@@ -670,6 +700,7 @@ export const getConversation = query({
     const avatarUrl = buildAiProfileAvatarUrl(
       profile._id,
       profile.avatarImageKey,
+      { imageWidth, imageQuality },
     );
 
     return {
@@ -905,6 +936,7 @@ async function queryAdminSystemProfiles(
  */
 export const getSystemProfiles = query({
   args: {
+    ...avatarImageQueryArgs,
     genderFilter: v.optional(v.union(v.literal("female"), v.literal("male"))),
     search: v.optional(v.string()),
     statusFilter: v.optional(
@@ -984,12 +1016,13 @@ export const getSystemProfiles = query({
         const avatarUrl = buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth: args.imageWidth, imageQuality: args.imageQuality },
         );
 
         const profileImageUrls = profile.profileImageKeys
           ? await Promise.all(
-              profile.profileImageKeys.map((key) => r2.getUrl(key)),
-            )
+            profile.profileImageKeys.map((key) => r2.getUrl(key)),
+          )
           : [];
 
         return {

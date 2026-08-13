@@ -393,6 +393,12 @@
     "unlockDescription": "{{name}} 给你发了一张照片。获取高级版，看看模糊背后的内容。",
     "unlockUnlimited": "解锁无限访问"
   },
+  "buyCredits": {
+    "title": "让对话继续",
+    "subtitle": "充值积分即可发消息、要自拍、收视频。",
+    "titleWithName": "继续和 {{name}} 聊下去",
+    "subtitleWithName": "{{name}} 正在等你回复。充值积分，继续聊天。"
+  },
   "quiz": {
     "started": "问答已开始",
     "letsPlay": "来玩问答吧！",

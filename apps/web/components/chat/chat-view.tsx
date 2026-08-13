@@ -27,7 +27,6 @@ import { ChatImageRequestDialog } from "@/components/chat/chat-image-request-dia
 import { CreditsModal } from "@/components/credits-modal";
 import { PremiumSubscriptionModal } from "@/components/premium-subscription-modal";
 import { TypingIndicator } from "@/components/chat/typing-indicator";
-import { getFirstChatSuggestions } from "@/components/onboarding/first-chat-suggestions";
 import { useConversation } from "@/hooks/use-conversations";
 import { useChatBillingGate } from "@/hooks/use-chat-billing-gate";
 import {
@@ -139,12 +138,6 @@ export function ChatView({ conversationId }: ChatViewProps) {
   const interactiveQuizQuestionId = getInteractiveQuizQuestionId(messages);
   const isOpeningPending =
     conversation?.openingMessageStatus === "pending" && messages.length === 0;
-  const hasUserMessage = messages.some((message) => message.role === "user");
-  const hasAssistantMessage = messages.some(
-    (message) => message.role === "assistant",
-  );
-  const firstChatSuggestions =
-    hasAssistantMessage && !hasUserMessage ? getFirstChatSuggestions() : [];
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -179,7 +172,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
     if (!conversation || isSending) return;
 
     if (!canSendMessage()) {
-      setIsPremiumModalOpen(true);
+      setIsCreditsModalOpen(true);
       return;
     }
 
@@ -195,7 +188,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
         error instanceof Error ? error.message : "Could not send message.";
 
       if (message.includes("Insufficient credits")) {
-        setIsPremiumModalOpen(true);
+        setIsCreditsModalOpen(true);
       }
     } finally {
       setIsSending(false);
@@ -221,7 +214,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
     const creditsBalance = viewerProfile?.credits ?? 0;
     if (creditsBalance < 5) {
       setIsImageRequestOpen(false);
-      setIsPremiumModalOpen(true);
+      setIsCreditsModalOpen(true);
       return;
     }
 
@@ -238,7 +231,7 @@ export function ChatView({ conversationId }: ChatViewProps) {
 
       if (message.includes("Insufficient credits")) {
         setIsImageRequestOpen(false);
-        setIsPremiumModalOpen(true);
+        setIsCreditsModalOpen(true);
       } else {
         toast.error(message);
       }
@@ -459,7 +452,6 @@ export function ChatView({ conversationId }: ChatViewProps) {
           characterName={profile?.name}
           // onRequestImage={() => setIsImageRequestOpen(true)}
           isRequestingImage={isRequestingImage}
-          suggestions={firstChatSuggestions}
         />
       </div>
 

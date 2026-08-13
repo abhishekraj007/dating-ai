@@ -1,6 +1,7 @@
 import type { PublicProfileCard } from "@/components/public/character-card";
 import { api, fetchQuery } from "@/lib/convex-client";
 import type { PublicSegment } from "@/lib/public-segments";
+import type { AvatarImageRequest } from "@dating-ai/backend";
 
 const INITIAL_PUBLIC_PROFILE_LIMIT = 24;
 const ADULT_DISCOVERY_TERMS = [
@@ -27,6 +28,7 @@ function genderFromSegment(segment: PublicSegment) {
 export async function getInitialPublicProfiles(
   segment: PublicSegment,
   limit = INITIAL_PUBLIC_PROFILE_LIMIT,
+  image?: AvatarImageRequest,
 ): Promise<PublicProfileCard[]> {
   const gender = genderFromSegment(segment);
 
@@ -38,6 +40,8 @@ export async function getInitialPublicProfiles(
     const profiles = await fetchQuery(api.features.ai.queries.getPublicProfiles, {
       gender,
       limit: limit * 3,
+      imageWidth: image?.imageWidth,
+      imageQuality: image?.imageQuality,
     });
 
     return profiles.filter(isBroadDiscoverySafeProfile).slice(0, limit);

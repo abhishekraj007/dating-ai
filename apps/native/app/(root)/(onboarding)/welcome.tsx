@@ -26,7 +26,7 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.container}>
       <Image
-        source={hero?.avatarUrl ? { uri: hero.avatarUrl } : FALLBACK_HERO}
+        source={hero?.avatarUrl ? { uri: hero.avatarUrl } : undefined}
         style={styles.hero}
         contentFit="cover"
         contentPosition="top"
@@ -34,12 +34,7 @@ export default function WelcomeScreen() {
         transition={300}
       />
       <LinearGradient
-        colors={[
-          "rgba(0,0,0,0.35)",
-          "transparent",
-          "rgba(0,0,0,0.45)",
-          "#000",
-        ]}
+        colors={["rgba(0,0,0,0.35)", "transparent", "rgba(0,0,0,0.45)", "#000"]}
         locations={[0, 0.18, 0.48, 0.7]}
         style={styles.gradient}
       />
@@ -156,10 +151,10 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   title: {
-    fontSize: 32,
+    fontSize: 38,
     fontWeight: "800",
     color: "#fff",
-    lineHeight: 38,
+    lineHeight: 42,
     letterSpacing: -0.7,
   },
 });

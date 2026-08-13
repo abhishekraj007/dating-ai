@@ -393,6 +393,12 @@
     "unlockDescription": "{{name}} vous a envoyé une photo. Obtenez Premium et découvrez ce qui se cache derrière le flou.",
     "unlockUnlimited": "Débloquer l'accès illimité"
   },
+  "buyCredits": {
+    "title": "Continuez la conversation",
+    "subtitle": "Rechargez des crédits pour envoyer des messages, demander des selfies et recevoir des vidéos.",
+    "titleWithName": "Continuez à parler à {{name}}",
+    "subtitleWithName": "{{name}} attend votre réponse. Rechargez des crédits pour continuer à discuter."
+  },
   "quiz": {
     "started": "Quiz lancé",
     "letsPlay": "Jouons à un quiz !",

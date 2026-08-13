@@ -393,6 +393,12 @@
     "unlockDescription": "{{name}}이(가) 사진을 보냈습니다. 프리미엄을 구매하고 블러 뒤에 숨겨진 것을 확인하세요.",
     "unlockUnlimited": "무제한 액세스 잠금 해제"
   },
+  "buyCredits": {
+    "title": "대화를 이어가세요",
+    "subtitle": "메시지, 셀피, 영상을 위해 크레딧을 충전하세요.",
+    "titleWithName": "{{name}}와 계속 대화하세요",
+    "subtitleWithName": "{{name}}이(가) 답장을 기다리고 있어요. 채팅을 이어가려면 크레딧을 충전하세요."
+  },
   "quiz": {
     "started": "퀴즈 시작",
     "letsPlay": "퀴즈를 해봅시다!",

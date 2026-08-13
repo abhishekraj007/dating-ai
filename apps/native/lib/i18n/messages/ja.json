@@ -393,6 +393,12 @@
     "unlockDescription": "{{name}}があなたに写真を送りました。プレミアムを取得して、ぼかしの向こう側を見ましょう。",
     "unlockUnlimited": "無制限アクセスをアンロック"
   },
+  "buyCredits": {
+    "title": "会話を続けましょう",
+    "subtitle": "メッセージ、セルフィー、動画のためにクレジットをチャージしましょう。",
+    "titleWithName": "{{name}}との会話を続けよう",
+    "subtitleWithName": "{{name}}が返事を待っています。チャットを続けるにはクレジットをチャージしましょう。"
+  },
   "quiz": {
     "started": "クイズ開始",
     "letsPlay": "クイズで遊びましょう！",

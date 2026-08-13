@@ -45,6 +45,7 @@ function ForYouContent() {
     removeProfile,
     restoreProfile,
   } = useForYouProfiles(20);
+
   const { likeProfile, skipProfile, isAuthenticated } = useProfileInteraction();
   const [loadingChatting, setLoadingChatting] = useState(false);
   const { startConversation } = useStartConversation();

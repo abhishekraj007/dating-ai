@@ -26,7 +26,6 @@ import {
   SuggestionsSheet,
 } from "@/components/dating";
 import { useChatScreen } from "@/hooks/dating";
-import { FirstChatSuggestions } from "@/components/onboarding/first-chat-suggestions";
 import { useThemeColor } from "heroui-native";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -128,7 +127,6 @@ export default function ChatScreen() {
     handleOpenCreditsModal,
     handleOpenBuyCredits,
     handleGoBack,
-    firstChatSuggestions,
   } = useChatScreen();
 
   return (
@@ -306,13 +304,6 @@ export default function ChatScreen() {
               onStartQuiz={handleStartQuiz}
               onOpenTopicsSheet={handleOpenTopicsSheet}
               onOpenSuggestionsSheet={handleOpenSuggestionsSheet}
-              leadingAccessory={
-                <FirstChatSuggestions
-                  suggestions={firstChatSuggestions}
-                  disabled={isSending || isResponseStreaming}
-                  onSelect={handleSend}
-                />
-              }
             />
           </KeyboardStickyView>
         </View>
@@ -323,7 +314,7 @@ export default function ChatScreen() {
         isOpen={isImageSheetOpen}
         onClose={() => setIsImageSheetOpen(false)}
         onSubmit={handleImageRequest}
-        onBuyCredits={handleOpenCreditsModal}
+        onBuyCredits={handleOpenBuyCredits}
         isLoading={isRequestingImage}
         credits={credits}
       />

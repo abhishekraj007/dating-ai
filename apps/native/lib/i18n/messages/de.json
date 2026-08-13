@@ -393,6 +393,12 @@
     "unlockDescription": "{{name}} hat dir ein Foto geschickt. Hol dir Premium und entdecke, was sich hinter dem Weichzeichner verbirgt.",
     "unlockUnlimited": "Unbegrenzten Zugang freischalten"
   },
+  "buyCredits": {
+    "title": "Halte das Gespräch am Laufen",
+    "subtitle": "Lade Credits auf, um zu schreiben, Selfies zu fragen und Videos zu bekommen.",
+    "titleWithName": "Sprich weiter mit {{name}}",
+    "subtitleWithName": "{{name}} wartet auf deine Antwort. Lade Credits auf, um weiterzuschreiben."
+  },
   "quiz": {
     "started": "Quiz gestartet",
     "letsPlay": "Lass uns ein Quiz spielen!",
