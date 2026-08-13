@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
-import { Alert, Platform } from "react-native";
+import { Alert, BackHandler, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { useConversation } from "./useConversations";
@@ -47,6 +47,28 @@ export function useChatScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+
+  const handleGoBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace("/(root)/(main)/(tabs)/chats");
+  };
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (router.canGoBack()) {
+          return false;
+        }
+        router.replace("/(root)/(main)/(tabs)/chats");
+        return true;
+      },
+    );
+    return () => subscription.remove();
+  }, [router]);
   // Map Platform.OS to the supported platform values. macOS is treated as iOS.
   const platform: "ios" | "android" | "web" =
     Platform.OS === "android"
@@ -718,6 +740,7 @@ export function useChatScreen() {
     handleOpenChatLanguage,
     handleOpenCreditsModal,
     handleOpenBuyCredits,
+    handleGoBack,
     firstChatSuggestions,
   };
 }

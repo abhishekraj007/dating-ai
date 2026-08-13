@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { useThemeColor } from "heroui-native";
 import { Text } from "@/components/ui/text";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -11,6 +12,7 @@ type CharacterPickCardProps = {
   avatarUrl: string | null;
   isTrending: boolean;
   selected: boolean;
+  cardWidth: number;
   onPress: () => void;
 };
 
@@ -21,19 +23,22 @@ export function CharacterPickCard({
   avatarUrl,
   isTrending,
   selected,
+  cardWidth,
   onPress,
 }: CharacterPickCardProps) {
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const cardWidth = Math.min(width - 48, 340);
+  const accent = useThemeColor("accent");
 
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
-        { width: cardWidth, opacity: pressed ? 0.92 : 1 },
-        selected ? styles.cardSelected : null,
+        {
+          width: cardWidth,
+          opacity: pressed ? 0.92 : 1,
+          // borderColor: selected ? accent : "transparent",
+        },
       ]}
     >
       <Image
@@ -54,15 +59,19 @@ export function CharacterPickCard({
       />
       {isTrending ? (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>{t("onboarding.character.trending")}</Text>
+          <Text style={styles.badgeText}>
+            {t("onboarding.character.trending")}
+          </Text>
         </View>
       ) : null}
       <View style={styles.meta}>
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.occupation} numberOfLines={1}>
+        <Text weight="extrabold" style={styles.name}>
+          {name}
+        </Text>
+        <Text weight="semibold" style={styles.occupation} numberOfLines={1}>
           {occupation ?? tagline}
         </Text>
-        {occupation ? (
+        {occupation && tagline && tagline !== occupation ? (
           <Text style={styles.tagline} numberOfLines={2}>
             {tagline}
           </Text>
@@ -77,11 +86,7 @@ const styles = StyleSheet.create({
     height: 460,
     borderRadius: 28,
     overflow: "hidden",
-    backgroundColor: "#111",
-  },
-  cardSelected: {
-    borderWidth: 2,
-    borderColor: "#fff",
+    borderColor: "transparent",
   },
   badge: {
     position: "absolute",

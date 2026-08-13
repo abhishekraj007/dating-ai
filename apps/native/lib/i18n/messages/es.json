@@ -67,7 +67,9 @@
       "appTitle": "Idioma de la app",
       "appDescription": "Controla menús, botones y otros textos de la app.",
       "chatTitle": "Idioma del chat",
-      "chatDescription": "Controla el idioma en el que responden tus compañeros de IA."
+      "chatDescription": "Controla el idioma en el que responden tus compañeros de IA.",
+      "chatShort": "Chat: {{language}}",
+      "appShort": "App: {{language}}"
     },
     "[object Object]": {
       "music": "Música",
@@ -98,6 +100,13 @@
     "interests": {
       "title": "¿Cuáles son tus intereses?",
       "selected": "{{count}} seleccionados"
+    },
+    "character": {
+      "title": "¿Cuál es tu tipo?",
+      "subtitle": "Estos compañeros están en tendencia ahora. Siempre puedes conocer más después.",
+      "cta": "Chatear con {{name}}",
+      "browse": "Explorar a todos primero",
+      "trending": "Tendencia"
     },
     "settingUp": "Configurando...",
     "continue": "Continuar",

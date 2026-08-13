@@ -1,24 +1,16 @@
-import { View, Pressable, StyleSheet, Dimensions } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useState } from "react";
 import { Text } from "@/components/ui/text";
 import { Button } from "heroui-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
-import {
-  useOnboardingStore,
-  GENDER_OPTIONS,
-  type GenderPreference,
-} from "@/stores/onboarding-store";
+import { useOnboardingStore, GENDER_OPTIONS } from "@/stores/onboarding-store";
 import { useTranslation } from "@/hooks/use-translation";
 import { useChatLanguage } from "@/hooks/use-chat-language";
 import { LanguageSheet } from "@/components/language/language-sheet";
 import { OnboardingLanguageRow } from "@/components/onboarding/onboarding-language-row";
-
-const { width, height } = Dimensions.get("window");
-const CARD_WIDTH = width - 48;
-const CARD_HEIGHT = height / 6.4;
+import { GenderOptionCard } from "@/components/onboarding/gender-option-card";
+import { useOnboardingCharacters } from "@/hooks/use-onboarding-characters";
 
 export default function GenderScreen() {
   const router = useRouter();
@@ -28,6 +20,7 @@ export default function GenderScreen() {
     useOnboardingStore();
   const [isAppLanguageOpen, setIsAppLanguageOpen] = useState(false);
   const [isChatLanguageOpen, setIsChatLanguageOpen] = useState(false);
+  useOnboardingCharacters(genderPreference);
 
   const handleContinue = () => {
     if (!genderPreference) return;
@@ -45,39 +38,22 @@ export default function GenderScreen() {
             onPressChat={() => setIsChatLanguageOpen(true)}
           />
 
-          <Text className="text-foreground" style={styles.title}>
+          <Text size="3xl" weight="extrabold" style={styles.title}>
             {t("onboarding.gender.title")}
           </Text>
-          <Text className="text-muted" style={styles.subtitle}>
+          <Text size="sm" variant="muted" style={styles.subtitle}>
             {t("onboarding.gender.subtitle")}
           </Text>
 
           <View style={styles.list}>
             {GENDER_OPTIONS.map((option) => (
-              <Pressable
+              <GenderOptionCard
                 key={option.value}
-                onPress={() =>
-                  setGenderPreference(option.value as GenderPreference)
-                }
-                style={[
-                  styles.card,
-                  genderPreference === option.value && styles.cardSelected,
-                ]}
-              >
-                <Image
-                  source={option.image}
-                  style={styles.cardImage}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                />
-                <LinearGradient
-                  colors={["transparent", "rgba(0,0,0,0.72)"]}
-                  style={styles.gradient}
-                />
-                <Text style={styles.label}>
-                  {t(`onboarding.gender.${option.value}`)}
-                </Text>
-              </Pressable>
+                option={option}
+                selected={genderPreference === option.value}
+                label={t(`onboarding.gender.${option.value}`)}
+                onPress={setGenderPreference}
+              />
             ))}
           </View>
         </View>
@@ -110,50 +86,16 @@ export default function GenderScreen() {
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 28,
-    fontWeight: "800",
     textAlign: "center",
-    marginTop: 28,
+    marginTop: 20,
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 15,
     textAlign: "center",
-    opacity: 0.7,
     marginTop: 8,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   list: {
     gap: 12,
-  },
-  card: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
-    borderRadius: 20,
-    overflow: "hidden",
-    position: "relative",
-  },
-  cardSelected: {
-    borderWidth: 3,
-    borderColor: "#fff",
-  },
-  cardImage: {
-    width: "100%",
-    height: "100%",
-  },
-  gradient: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: "100%",
-  },
-  label: {
-    position: "absolute",
-    bottom: 16,
-    left: 16,
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "700",
   },
 });

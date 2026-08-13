@@ -1,6 +1,10 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type { AppLanguage } from "@/lib/i18n";
 import type { Id } from "@dating-ai/backend";
+
+export const ONBOARDING_STORAGE_KEY = "feelchat_onboarding";
 
 export const GENDER_OPTIONS = [
   {
@@ -29,6 +33,7 @@ interface OnboardingState {
   selectedCharacterId: Id<"aiProfiles"> | null;
   pendingChatId: string | null;
   guestOnboardingDone: boolean;
+  forceAuthRedirect: boolean;
 
   setGenderPreference: (gender: GenderPreference) => void;
   setAppLanguage: (language: AppLanguage) => void;
@@ -36,7 +41,9 @@ interface OnboardingState {
   setSelectedCharacterId: (id: Id<"aiProfiles"> | null) => void;
   setPendingChatId: (id: string | null) => void;
   setGuestOnboardingDone: (done: boolean) => void;
+  setForceAuthRedirect: (value: boolean) => void;
   reset: () => void;
+  clearAll: () => void;
 }
 
 const initialState = {
@@ -46,21 +53,45 @@ const initialState = {
   selectedCharacterId: null as Id<"aiProfiles"> | null,
   pendingChatId: null as string | null,
   guestOnboardingDone: false,
+  forceAuthRedirect: false,
 };
 
-export const useOnboardingStore = create<OnboardingState>((set) => ({
-  ...initialState,
-
-  setGenderPreference: (gender) => set({ genderPreference: gender }),
-  setAppLanguage: (language) => set({ appLanguage: language }),
-  setChatLanguage: (language) => set({ chatLanguage: language }),
-  setSelectedCharacterId: (id) => set({ selectedCharacterId: id }),
-  setPendingChatId: (id) => set({ pendingChatId: id }),
-  setGuestOnboardingDone: (done) => set({ guestOnboardingDone: done }),
-  reset: () =>
-    set((state) => ({
+export const useOnboardingStore = create<OnboardingState>()(
+  persist(
+    (set) => ({
       ...initialState,
-      guestOnboardingDone: true,
-      pendingChatId: state.pendingChatId,
-    })),
-}));
+
+      setGenderPreference: (gender) => set({ genderPreference: gender }),
+      setAppLanguage: (language) => set({ appLanguage: language }),
+      setChatLanguage: (language) => set({ chatLanguage: language }),
+      setSelectedCharacterId: (id) => set({ selectedCharacterId: id }),
+      setPendingChatId: (id) => set({ pendingChatId: id }),
+      setGuestOnboardingDone: (done) => set({ guestOnboardingDone: done }),
+      setForceAuthRedirect: (value) => set({ forceAuthRedirect: value }),
+      reset: () =>
+        set((state) => ({
+          ...initialState,
+          guestOnboardingDone: true,
+          pendingChatId: state.pendingChatId,
+          forceAuthRedirect: state.forceAuthRedirect,
+        })),
+      clearAll: () =>
+        set((state) => ({
+          ...initialState,
+          forceAuthRedirect: state.forceAuthRedirect,
+        })),
+    }),
+    {
+      name: ONBOARDING_STORAGE_KEY,
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        genderPreference: state.genderPreference,
+        appLanguage: state.appLanguage,
+        chatLanguage: state.chatLanguage,
+        selectedCharacterId: state.selectedCharacterId,
+        pendingChatId: state.pendingChatId,
+        guestOnboardingDone: state.guestOnboardingDone,
+      }),
+    },
+  ),
+);

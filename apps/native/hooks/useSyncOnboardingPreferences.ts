@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { useConvexAuth, useMutation } from "convex/react";
-import { useRouter, useSegments } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { useOnboardingStore } from "@/stores/onboarding-store";
@@ -10,9 +9,7 @@ import { useChatLanguage } from "@/hooks/use-chat-language";
 import { GUEST_ONBOARDING_KEY } from "@/hooks/use-finish-onboarding";
 
 export function useSyncOnboardingPreferences() {
-  const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
-  const segments = useSegments();
   const {
     genderPreference,
     appLanguage,
@@ -34,33 +31,37 @@ export function useSyncOnboardingPreferences() {
   );
   const hasSynced = useRef(false);
 
-  const isOnOnboarding = (segments as string[]).includes("(onboarding)");
-
   useEffect(() => {
-    if (
-      !isAuthenticated ||
-      isOnOnboarding ||
-      !genderPreference ||
-      hasSynced.current
-    ) {
+    if (!isAuthenticated) {
+      hasSynced.current = false;
+      return;
+    }
+
+    if (hasSynced.current) {
+      return;
+    }
+
+    if (!genderPreference && !selectedCharacterId) {
       return;
     }
 
     const syncPreferences = async () => {
       hasSynced.current = true;
 
-      await setUserLanguages({
-        appLanguage: appLanguage ?? currentAppLanguage,
-        chatLanguage: chatLanguage ?? currentChatLanguage,
-      });
+      if (genderPreference) {
+        await setUserLanguages({
+          appLanguage: appLanguage ?? currentAppLanguage,
+          chatLanguage: chatLanguage ?? currentChatLanguage,
+        });
 
-      await savePreferences({
-        genderPreference,
-        ageMin: DEFAULT_USER_PREFERENCES.ageMin,
-        ageMax: DEFAULT_USER_PREFERENCES.ageMax,
-        zodiacPreferences: [],
-        interestPreferences: [],
-      });
+        await savePreferences({
+          genderPreference,
+          ageMin: DEFAULT_USER_PREFERENCES.ageMin,
+          ageMax: DEFAULT_USER_PREFERENCES.ageMax,
+          zodiacPreferences: [],
+          interestPreferences: [],
+        });
+      }
 
       if (selectedCharacterId) {
         const conversationId = await startConversation({
@@ -72,7 +73,6 @@ export function useSyncOnboardingPreferences() {
         await AsyncStorage.setItem(GUEST_ONBOARDING_KEY, "1");
         setGuestOnboardingDone(true);
         reset();
-        router.replace(`/(root)/(main)/chat/${conversationId}`);
         return;
       }
 
@@ -85,7 +85,6 @@ export function useSyncOnboardingPreferences() {
     void syncPreferences();
   }, [
     isAuthenticated,
-    isOnOnboarding,
     genderPreference,
     selectedCharacterId,
     appLanguage,
@@ -97,7 +96,6 @@ export function useSyncOnboardingPreferences() {
     setUserLanguages,
     startConversation,
     reset,
-    router,
     setPendingChatId,
     setGuestOnboardingDone,
   ]);

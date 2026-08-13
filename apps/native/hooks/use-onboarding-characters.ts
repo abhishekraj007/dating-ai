@@ -1,6 +1,10 @@
+import { useEffect } from "react";
+import { Image } from "expo-image";
 import { useQuery } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import type { GenderPreference } from "@/stores/onboarding-store";
+
+export const ONBOARDING_CHARACTER_LIMIT = 5;
 
 type AppPlatform = "web" | "ios" | "android";
 
@@ -14,17 +18,38 @@ function getCurrentPlatform(): AppPlatform {
 
 export function useOnboardingCharacters(
   gender: GenderPreference | null,
-  limit = 6,
+  limit = ONBOARDING_CHARACTER_LIMIT,
 ) {
   const platform = getCurrentPlatform();
-  const characters = useQuery(api.features.ai.queries.getOnboardingCharacters, {
-    gender: gender ?? "both",
-    platform,
-    limit,
-  });
+  const characters = useQuery(
+    api.features.ai.queries.getOnboardingCharacters,
+    gender
+      ? {
+          gender,
+          platform,
+          limit,
+        }
+      : "skip",
+  );
+
+  useEffect(() => {
+    if (!characters) {
+      return;
+    }
+
+    const urls = characters
+      .map((character) => character.avatarUrl)
+      .filter((url): url is string => Boolean(url));
+
+    if (urls.length === 0) {
+      return;
+    }
+
+    void Image.prefetch(urls, { cachePolicy: "memory-disk" });
+  }, [characters]);
 
   return {
     characters: characters ?? [],
-    isLoading: characters === undefined,
+    isLoading: gender !== null && characters === undefined,
   };
 }

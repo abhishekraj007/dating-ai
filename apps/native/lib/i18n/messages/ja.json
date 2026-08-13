@@ -67,7 +67,9 @@
       "appTitle": "アプリの言語",
       "appDescription": "メニュー、ボタン、その他のアプリ内テキストを制御します。",
       "chatTitle": "チャットの言語",
-      "chatDescription": "AIコンパニオンが返信する言語を制御します。"
+      "chatDescription": "AIコンパニオンが返信する言語を制御します。",
+      "chatShort": "チャット: {{language}}",
+      "appShort": "アプリ: {{language}}"
     },
     "[object Object]": {
       "music": "音楽",
@@ -98,6 +100,13 @@
     "interests": {
       "title": "あなたの興味は？",
       "selected": "{{count}}件選択済み"
+    },
+    "character": {
+      "title": "あなたのタイプは？",
+      "subtitle": "今トレンドのコンパニオンです。後からいつでも他の人に会えます。",
+      "cta": "{{name}}とチャット",
+      "browse": "まず全員を見る",
+      "trending": "トレンド"
     },
     "settingUp": "設定中...",
     "continue": "続ける",

@@ -75,7 +75,6 @@ export function useFinishOnboarding() {
     await markGuestDone();
     setPendingChatId(conversationId);
     reset();
-    router.replace(`/(root)/(main)/chat/${conversationId}`);
   };
 
   const browseWithoutChat = async () => {

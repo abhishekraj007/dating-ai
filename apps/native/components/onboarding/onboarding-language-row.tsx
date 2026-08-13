@@ -34,7 +34,9 @@ export function OnboardingLanguageRow({
       >
         <Globe size={14} color={foreground} />
         <Text style={[styles.label, { color: foreground }]}>
-          {getLanguageLabel(language)}
+          {t("onboarding.languages.appShort", {
+            language: getLanguageLabel(language),
+          })}
         </Text>
         <ChevronRight size={14} color={muted} />
       </Pressable>

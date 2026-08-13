@@ -11,90 +11,80 @@ import { useOnboardingCharacters } from "@/hooks/use-onboarding-characters";
 import { SampleChatPreview } from "@/components/onboarding/sample-chat-preview";
 
 const { width, height } = Dimensions.get("window");
+const FALLBACK_HERO = require("@/assets/images/onboarding/female.webp");
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const { characters } = useOnboardingCharacters("both", 4);
-  const hero = characters[0];
-  const stacked = characters.slice(0, 3);
+  const hero =
+    characters.find((character) => character.avatarUrl) ?? characters[0];
+  const stacked = characters
+    .filter((character) => character.avatarUrl)
+    .slice(0, 3);
 
   return (
     <View style={styles.container}>
       <Image
-        source={
-          hero?.avatarUrl
-            ? { uri: hero.avatarUrl }
-            : require("@/assets/images/welcome.png")
-        }
+        source={hero?.avatarUrl ? { uri: hero.avatarUrl } : FALLBACK_HERO}
         style={styles.hero}
         contentFit="cover"
+        contentPosition="top"
         cachePolicy="memory-disk"
         transition={300}
       />
       <LinearGradient
-        colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.55)", "#000"]}
-        locations={[0, 0.38, 1]}
+        colors={[
+          "rgba(0,0,0,0.35)",
+          "transparent",
+          "rgba(0,0,0,0.45)",
+          "#000",
+        ]}
+        locations={[0, 0.18, 0.48, 0.7]}
         style={styles.gradient}
       />
 
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-        <View>
-          <Animated.View entering={FadeIn.duration(500)} style={styles.avatars}>
-            {stacked.map((character, index) => (
-              <Image
-                key={character._id}
-                source={
-                  character.avatarUrl
-                    ? { uri: character.avatarUrl }
-                    : require("@/assets/images/welcome.png")
-                }
-                style={[
-                  styles.stackAvatar,
-                  { marginLeft: index === 0 ? 0 : -16, zIndex: 3 - index },
-                ]}
-                contentFit="cover"
-                cachePolicy="memory-disk"
-              />
-            ))}
-          </Animated.View>
-          {stacked.length > 0 ? (
-            <Text style={styles.online}>
-              {stacked.map((character) => character.name).join(", ")}{" "}
-              {t("welcome.online")}
-            </Text>
-          ) : null}
-        </View>
+        <Animated.View entering={FadeIn.duration(400)} style={styles.liveRow}>
+          {stacked.map((character, index) => (
+            <Image
+              key={character._id}
+              source={{ uri: character.avatarUrl ?? "" }}
+              style={[
+                styles.stackAvatar,
+                { marginLeft: index === 0 ? 0 : -12, zIndex: 3 - index },
+              ]}
+              contentFit="cover"
+              contentPosition="top"
+              cachePolicy="memory-disk"
+            />
+          ))}
+          <View style={styles.livePill}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>{t("welcome.live")}</Text>
+          </View>
+        </Animated.View>
 
         <View style={styles.content}>
           <SampleChatPreview
             bubbles={[
-              {
-                from: "them",
-                text: t("welcome.sample.them"),
-                avatarUrl: hero?.avatarUrl,
-              },
+              { from: "them", text: t("welcome.sample.them") },
               { from: "you", text: t("welcome.sample.you") },
-              {
-                from: "them",
-                text: t("welcome.sample.themTwo"),
-                avatarUrl: hero?.avatarUrl,
-              },
+              { from: "them", text: t("welcome.sample.themTwo") },
             ]}
           />
 
-          <Animated.View entering={FadeInDown.delay(700).duration(450)}>
+          <Animated.View entering={FadeInDown.delay(640).duration(420)}>
             <Text style={styles.title}>{t("welcome.title")}</Text>
-            <Text style={styles.subtitle}>{t("welcome.subtitle")}</Text>
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(900).duration(450)}>
+          <Animated.View entering={FadeInDown.delay(820).duration(420)}>
             <Button
               size="lg"
               onPress={() => router.push("/(root)/(onboarding)/gender")}
               className="w-full"
             >
-              <Button.Label className="font-semibold">
+              <Button.Label className="font-semibold text-accent-foreground">
                 {t("welcome.cta")}
               </Button.Label>
             </Button>
@@ -115,7 +105,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     width,
-    height: height * 0.62,
+    height,
   },
   gradient: {
     ...StyleSheet.absoluteFillObject,
@@ -124,43 +114,52 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "space-between",
   },
-  avatars: {
+  liveRow: {
     flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 24,
-    paddingTop: 12,
-  },
-  online: {
-    paddingHorizontal: 24,
-    marginTop: 10,
-    color: "rgba(255,255,255,0.78)",
-    fontSize: 13,
-    fontWeight: "600",
-    letterSpacing: 0.2,
+    paddingTop: 8,
   },
   stackAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 2,
     borderColor: "#000",
   },
+  livePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginLeft: 10,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  liveDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: "#4ADE80",
+  },
+  liveText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+  },
   content: {
     paddingHorizontal: 24,
-    paddingBottom: 24,
-    gap: 18,
+    paddingBottom: 18,
+    gap: 16,
   },
   title: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: "800",
     color: "#fff",
-    lineHeight: 40,
-    letterSpacing: -0.8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "rgba(255,255,255,0.78)",
-    lineHeight: 24,
-    marginTop: 8,
-    marginBottom: 8,
+    lineHeight: 38,
+    letterSpacing: -0.7,
   },
 });

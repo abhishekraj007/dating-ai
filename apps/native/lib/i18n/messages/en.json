@@ -59,14 +59,13 @@
     "privacy": "privacy policy"
   },
   "welcome": {
-    "title": "They're already waiting to text you",
-    "subtitle": "Meet trending companions who actually start the conversation — and stay for it.",
-    "cta": "Meet them",
-    "online": "are live now",
+    "title": "Someone here is already into you",
+    "cta": "Start chatting",
+    "live": "Live",
     "sample": {
-      "them": "Hey... I was hoping you'd show up.",
-      "you": "Hi. Who are you?",
-      "themTwo": "Stay a minute. I saved you a seat."
+      "them": "Hey. I've been waiting to talk to you.",
+      "you": "Hi. What's up?",
+      "themTwo": "I'm bored. You free?"
     }
   },
   "onboarding": {
@@ -77,7 +76,8 @@
       "appDescription": "Controls menus, buttons, and other app text.",
       "chatTitle": "Chat language",
       "chatDescription": "Controls the language your AI companions reply in.",
-      "chatShort": "Chat: {{language}}"
+      "chatShort": "Chat: {{language}}",
+      "appShort": "App: {{language}}"
     },
     "[object Object]": {
       "music": "Music",
@@ -107,7 +107,7 @@
       "both": "All"
     },
     "character": {
-      "title": "Pick who texts you first",
+      "title": "Who's your type?",
       "subtitle": "These companions are trending right now. You can always meet more later.",
       "cta": "Chat with {{name}}",
       "browse": "Browse everyone first",

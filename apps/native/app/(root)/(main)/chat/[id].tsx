@@ -1,4 +1,5 @@
 import { View, Text, Pressable, useWindowDimensions } from "react-native";
+import { Stack } from "expo-router";
 import {
   KeyboardGestureArea,
   KeyboardStickyView,
@@ -126,11 +127,13 @@ export default function ChatScreen() {
     handleOpenChatLanguage,
     handleOpenCreditsModal,
     handleOpenBuyCredits,
+    handleGoBack,
     firstChatSuggestions,
   } = useChatScreen();
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+      <Stack.Screen options={{ gestureEnabled: router.canGoBack() }} />
       <View style={{ flex: 1 }}>
         {/* Header */}
         <View className="flex-row items-center justify-between px-2 py-2 border-b border-border bg-transparent">
@@ -139,7 +142,7 @@ export default function ChatScreen() {
               variant="tertiary"
               size="sm"
               isIconOnly
-              onPress={() => router.back()}
+              onPress={handleGoBack}
               className="rounded-full"
             >
               <ChevronLeft size={24} color={foregroundColor} />
@@ -259,7 +262,7 @@ export default function ChatScreen() {
               onScroll={handleScroll}
               onScrollBeginDrag={handleScrollBeginDrag}
               onScrollEnd={handleScrollEnd}
-              onGoBack={() => router.back()}
+              onGoBack={handleGoBack}
               onSendGreeting={() => handleSend("Hi")}
               onQuizAnswer={handleQuizAnswer}
               onEndQuiz={handleEndQuiz}

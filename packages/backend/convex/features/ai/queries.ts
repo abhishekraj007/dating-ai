@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { query } from "../../_generated/server";
+import { query, type QueryCtx } from "../../_generated/server";
+import type { Doc } from "../../_generated/dataModel";
 import { components } from "../../_generated/api";
 import { paginationOptsValidator } from "convex/server";
 import { listUIMessages, syncStreams, vStreamArgs } from "@convex-dev/agent";
@@ -201,7 +202,13 @@ export const getOnboardingCharacters = query({
       return profile.visibleOn.includes(platform);
     });
 
-    return visibleProfiles.slice(0, takeCount).map((profile) => {
+    const trendingProfiles = visibleProfiles.filter(
+      (profile) => profile.isTrending === true,
+    );
+    const pool =
+      trendingProfiles.length > 0 ? trendingProfiles : visibleProfiles;
+
+    return pool.slice(0, takeCount).map((profile) => {
       const taglineSource =
         profile.occupation ??
         profile.bio ??
@@ -805,6 +812,93 @@ export const listThreadMessages = query({
   },
 });
 
+const ADMIN_PROFILE_STATUSES = ["active", "pending", "archived"] as const;
+
+async function queryAdminSystemProfiles(
+  ctx: QueryCtx,
+  args: {
+    statusFilter?: (typeof ADMIN_PROFILE_STATUSES)[number];
+    genderFilter?: "female" | "male";
+    trendingOnly: boolean;
+    scanLimit: number;
+  },
+) {
+  const { statusFilter, genderFilter, trendingOnly, scanLimit } = args;
+
+  if (trendingOnly) {
+    const statuses = statusFilter
+      ? [statusFilter]
+      : [...ADMIN_PROFILE_STATUSES];
+    const pages: Doc<"aiProfiles">[][] = [];
+
+    for (const status of statuses) {
+      if (genderFilter) {
+        pages.push(
+          await ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_gender_trending_created", (q) =>
+              q
+                .eq("status", status)
+                .eq("gender", genderFilter)
+                .eq("isTrending", true),
+            )
+            .order("desc")
+            .take(scanLimit),
+        );
+      } else {
+        pages.push(
+          await ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_trending_created", (q) =>
+              q.eq("status", status).eq("isTrending", true),
+            )
+            .order("desc")
+            .take(scanLimit),
+        );
+      }
+    }
+
+    return pages
+      .flat()
+      .sort((left, right) => right._creationTime - left._creationTime)
+      .slice(0, scanLimit);
+  }
+
+  if (statusFilter && genderFilter) {
+    return await ctx.db
+      .query("aiProfiles")
+      .withIndex("by_status_and_gender", (q) =>
+        q.eq("status", statusFilter).eq("gender", genderFilter),
+      )
+      .order("desc")
+      .take(scanLimit);
+  }
+
+  if (statusFilter) {
+    return await ctx.db
+      .query("aiProfiles")
+      .withIndex("by_system_status_created_at", (q) =>
+        q.eq("isUserCreated", false).eq("status", statusFilter),
+      )
+      .order("desc")
+      .take(scanLimit);
+  }
+
+  if (genderFilter) {
+    return await ctx.db
+      .query("aiProfiles")
+      .withIndex("by_gender", (q) => q.eq("gender", genderFilter))
+      .order("desc")
+      .take(scanLimit);
+  }
+
+  return await ctx.db
+    .query("aiProfiles")
+    .withIndex("by_system_created_at", (q) => q.eq("isUserCreated", false))
+    .order("desc")
+    .take(scanLimit);
+}
+
 /**
  * Admin: Get all system-created AI profiles (not user-created).
  * Returns profiles with signed image URLs.
@@ -816,6 +910,7 @@ export const getSystemProfiles = query({
     statusFilter: v.optional(
       v.union(v.literal("active"), v.literal("pending"), v.literal("archived")),
     ),
+    trendingFilter: v.optional(v.boolean()),
     recentOnly: v.optional(v.boolean()),
     limit: v.optional(v.number()),
   },
@@ -840,45 +935,25 @@ export const getSystemProfiles = query({
     const recentCutoff = Date.now() - 24 * 60 * 60 * 1000;
     const scanLimit = Math.max(limit * (hasSearch ? 8 : 2), 160);
 
-    const profiles =
-      args.statusFilter && args.genderFilter
-        ? await ctx.db
-            .query("aiProfiles")
-            .withIndex("by_status_and_gender", (q) =>
-              q
-                .eq("status", args.statusFilter!)
-                .eq("gender", args.genderFilter!),
-            )
-            .order("desc")
-            .take(scanLimit)
-        : args.statusFilter
-          ? await ctx.db
-              .query("aiProfiles")
-              .withIndex("by_system_status_created_at", (q) =>
-                q.eq("isUserCreated", false).eq("status", args.statusFilter!),
-              )
-              .order("desc")
-              .take(scanLimit)
-          : args.genderFilter
-            ? await ctx.db
-                .query("aiProfiles")
-                .withIndex("by_gender", (q) =>
-                  q.eq("gender", args.genderFilter!),
-                )
-                .order("desc")
-                .take(scanLimit)
-            : await ctx.db
-                .query("aiProfiles")
-                .withIndex("by_system_created_at", (q) =>
-                  q.eq("isUserCreated", false),
-                )
-                .order("desc")
-                .take(scanLimit);
+    const profiles = await queryAdminSystemProfiles(ctx, {
+      statusFilter: args.statusFilter,
+      genderFilter: args.genderFilter,
+      trendingOnly: args.trendingFilter === true,
+      scanLimit,
+    });
 
     const filteredProfiles = profiles.filter((profile) => {
       if (profile.isUserCreated) return false;
 
       if (args.genderFilter && profile.gender !== args.genderFilter) {
+        return false;
+      }
+
+      if (args.trendingFilter === true && profile.isTrending !== true) {
+        return false;
+      }
+
+      if (args.trendingFilter === false && profile.isTrending === true) {
         return false;
       }
 

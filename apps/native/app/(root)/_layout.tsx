@@ -31,18 +31,35 @@ export default function RootLayout() {
     useState(false);
   const [hasLoadedGuestOnboarding, setHasLoadedGuestOnboarding] =
     useState(false);
+  const [hasHydratedOnboarding, setHasHydratedOnboarding] = useState(
+    () => useOnboardingStore.persist.hasHydrated(),
+  );
+
+  useEffect(() => {
+    if (hasHydratedOnboarding) {
+      return;
+    }
+
+    return useOnboardingStore.persist.onFinishHydration(() => {
+      setHasHydratedOnboarding(true);
+    });
+  }, [hasHydratedOnboarding]);
+
   const useLegacyHeaderBlur =
     Platform.OS === "ios" && Number.parseInt(String(Platform.Version), 10) < 26;
 
   const isOnOnboarding = (segments as string[]).includes("(onboarding)");
   const isOnMain = (segments as string[]).includes("(main)");
   const isOnChat = (segments as string[]).includes("chat");
+  const isOnAuth = (segments as string[]).includes("(auth)");
   const {
     pendingChatId,
     selectedCharacterId,
     guestOnboardingDone,
+    forceAuthRedirect,
     setGuestOnboardingDone,
     setPendingChatId,
+    setForceAuthRedirect,
   } = useOnboardingStore();
 
   // Fetch user data when authenticated
@@ -91,11 +108,22 @@ export default function RootLayout() {
   }, [isOnChat, pendingChatId, setPendingChatId]);
 
   useEffect(() => {
+    if (isOnAuth && forceAuthRedirect) {
+      setForceAuthRedirect(false);
+    }
+  }, [forceAuthRedirect, isOnAuth, setForceAuthRedirect]);
+
+  useEffect(() => {
     if (hasFinishedInitialBootstrap) {
       return;
     }
 
-    if (!isLoading && !isUserBootstrapPending && hasLoadedGuestOnboarding) {
+    if (
+      !isLoading &&
+      !isUserBootstrapPending &&
+      hasLoadedGuestOnboarding &&
+      hasHydratedOnboarding
+    ) {
       setHasFinishedInitialBootstrap(true);
     }
   }, [
@@ -103,24 +131,44 @@ export default function RootLayout() {
     isLoading,
     isUserBootstrapPending,
     hasLoadedGuestOnboarding,
+    hasHydratedOnboarding,
   ]);
 
-  const showSplash = !hasFinishedInitialBootstrap;
+  const hasPendingCharacter = Boolean(selectedCharacterId);
+  const isCompletingPendingChat =
+    isAuthenticated && hasPendingCharacter && !hasCompletedOnboarding;
+  const isOpeningPendingChat = Boolean(pendingChatId) && !isOnChat;
+  const showSplash =
+    !hasFinishedInitialBootstrap ||
+    (isCompletingPendingChat && !isOnChat) ||
+    isOpeningPendingChat;
+
   let nextRoute: Href | null = null;
   const skipForcedOnboarding =
-    Boolean(selectedCharacterId) || guestOnboardingDone || isOnMain;
+    hasPendingCharacter || guestOnboardingDone || isOnMain;
 
-  if (!showSplash && !isUserStatePending) {
+  if (!isUserStatePending && hasFinishedInitialBootstrap) {
     if (pendingChatId && !isOnChat) {
       nextRoute = `/(root)/(main)/chat/${pendingChatId}`;
-    } else if (!isAuthenticated && !guestOnboardingDone && !isOnOnboarding) {
-      nextRoute = "/(root)/(onboarding)/welcome";
-    } else if (needsOnboarding && !isOnOnboarding && !skipForcedOnboarding) {
-      nextRoute = "/(root)/(onboarding)/welcome";
-    } else if (!needsOnboarding && isOnOnboarding) {
-      nextRoute = pendingChatId
-        ? `/(root)/(main)/chat/${pendingChatId}`
-        : "/(root)/(main)";
+    } else if (!isAuthenticated && forceAuthRedirect && !isOnAuth) {
+      nextRoute = "/(root)/(auth)";
+    } else if (!showSplash) {
+      if (
+        !isAuthenticated &&
+        !guestOnboardingDone &&
+        !isOnOnboarding &&
+        !isOnAuth &&
+        !hasPendingCharacter
+      ) {
+        nextRoute = "/(root)/(onboarding)/welcome";
+      } else if (needsOnboarding && !isOnOnboarding && !skipForcedOnboarding) {
+        nextRoute = "/(root)/(onboarding)/welcome";
+      } else if (
+        isOnOnboarding &&
+        (guestOnboardingDone || (isAuthenticated && !needsOnboarding))
+      ) {
+        nextRoute = "/(root)/(main)";
+      }
     }
   }
 

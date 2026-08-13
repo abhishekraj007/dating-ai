@@ -29,6 +29,7 @@ export function SampleChatPreview({ bubbles }: SampleChatPreviewProps) {
                 source={{ uri: bubble.avatarUrl }}
                 style={styles.avatar}
                 contentFit="cover"
+                contentPosition="top"
                 cachePolicy="memory-disk"
                 transition={200}
               />
@@ -47,7 +48,7 @@ export function SampleChatPreview({ bubbles }: SampleChatPreviewProps) {
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: 10,
+    gap: 8,
     width: "100%",
   },
   row: {

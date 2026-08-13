@@ -67,7 +67,9 @@
       "appTitle": "应用语言",
       "appDescription": "控制菜单、按钮及其他应用文本。",
       "chatTitle": "聊天语言",
-      "chatDescription": "控制 AI 伴侣回复时使用的语言。"
+      "chatDescription": "控制 AI 伴侣回复时使用的语言。",
+      "chatShort": "聊天: {{language}}",
+      "appShort": "应用: {{language}}"
     },
     "[object Object]": {
       "music": "音乐",
@@ -98,6 +100,13 @@
     "interests": {
       "title": "你的兴趣是什么？",
       "selected": "已选择 {{count}} 个"
+    },
+    "character": {
+      "title": "你的理想型是谁？",
+      "subtitle": "这些伙伴正在流行。你随时可以认识更多人。",
+      "cta": "和 {{name}} 聊天",
+      "browse": "先浏览所有人",
+      "trending": "热门"
     },
     "settingUp": "设置中...",
     "continue": "继续",

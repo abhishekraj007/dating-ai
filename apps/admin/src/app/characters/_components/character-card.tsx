@@ -28,87 +28,69 @@ export function CharacterCard({
   const [avatarLightboxOpen, setAvatarLightboxOpen] = useState(false);
 
   return (
-    <div className="group rounded-xl border border-border/70 bg-card/60 p-4 transition-colors hover:border-primary/50">
-      <div className="mb-3 flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          {profile.avatarUrl ? (
-            <button
-              type="button"
-              className="group relative h-12 w-12 shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              onClick={() => setAvatarLightboxOpen(true)}
-              aria-label="View avatar in full size"
-            >
-              <Avatar className="h-12 w-12 border border-border/60">
-                <AvatarImage
-                  className="object-cover position-top"
-                  src={profile.avatarUrl}
-                />
-                <AvatarFallback>
-                  {profile.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                <ZoomIn className="h-4 w-4 text-white" />
-              </div>
-            </button>
-          ) : (
+    <div className="flex h-full flex-col rounded-xl border border-border/70 bg-card/60 p-4 transition-colors hover:border-primary/50">
+      <div className="mb-3 flex items-start gap-3">
+        {profile.avatarUrl ? (
+          <button
+            type="button"
+            className="group relative h-12 w-12 shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            onClick={() => setAvatarLightboxOpen(true)}
+            aria-label="View avatar in full size"
+          >
             <Avatar className="h-12 w-12 border border-border/60">
               <AvatarImage
                 className="object-cover position-top"
-                src={undefined}
+                src={profile.avatarUrl}
               />
               <AvatarFallback>
                 {profile.name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-          )}
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-2xl font-semibold leading-none">
-                {profile.name}
-              </h3>
-              {isNew ? (
-                <Badge
-                  variant="outline"
-                  className="h-6 border-primary/40 px-2 text-[11px] text-primary"
-                >
-                  new
-                </Badge>
-              ) : null}
-              {profile.isTrending ? (
-                <Badge
-                  variant="outline"
-                  className="h-6 border-amber-500/40 px-2 text-[11px] text-amber-600 dark:text-amber-400"
-                >
-                  Trending
-                </Badge>
-              ) : null}
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+              <ZoomIn className="h-4 w-4 text-white" />
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{profile.gender === "female" ? "♀" : "♂"}</span>
-              {profile.age && <span>{profile.age}</span>}
-              {profile.zodiacSign && <span>• {profile.zodiacSign}</span>}
-            </div>
+          </button>
+        ) : (
+          <Avatar className="h-12 w-12 border border-border/60">
+            <AvatarImage
+              className="object-cover position-top"
+              src={undefined}
+            />
+            <AvatarFallback>
+              {profile.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        )}
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-2xl font-semibold leading-none">
+            {profile.name}
+          </h3>
+          <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+            <span>{profile.gender === "female" ? "♀" : "♂"}</span>
+            {profile.age && <span>{profile.age}</span>}
+            {profile.zodiacSign && <span>• {profile.zodiacSign}</span>}
           </div>
         </div>
-        <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="View character"
-            onClick={() => onView(profile)}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Edit character"
-            onClick={() => onEdit(profile)}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-        </div>
+        {isNew || profile.isTrending ? (
+          <div className="flex shrink-0 items-center gap-1.5">
+            {isNew ? (
+              <Badge
+                variant="outline"
+                className="h-6 border-primary/40 px-2 text-[11px] text-primary"
+              >
+                new
+              </Badge>
+            ) : null}
+            {profile.isTrending ? (
+              <Badge
+                variant="outline"
+                className="h-6 border-amber-500/40 px-2 text-[11px] text-amber-600 dark:text-amber-400"
+              >
+                Trending
+              </Badge>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {profile.occupation && (
@@ -123,26 +105,21 @@ export function CharacterCard({
         </p>
       )}
 
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-wrap gap-1.5">
-          {visibleInterests.map((interest) => (
-            <Badge
-              key={interest}
-              variant="secondary"
-              className="h-6 px-2 text-[12px]"
-            >
-              {interest}
-            </Badge>
-          ))}
-          {remainingInterests > 0 && (
-            <Badge variant="outline" className="h-6 px-2 text-[12px]">
-              +{remainingInterests}
-            </Badge>
-          )}
-        </div>
-        <div className="flex justify-end">
-          <StatusBadge status={profile.status} />
-        </div>
+      <div className="flex flex-wrap gap-1.5">
+        {visibleInterests.map((interest) => (
+          <Badge
+            key={interest}
+            variant="secondary"
+            className="h-6 px-2 text-[12px]"
+          >
+            {interest}
+          </Badge>
+        ))}
+        {remainingInterests > 0 && (
+          <Badge variant="outline" className="h-6 px-2 text-[12px]">
+            +{remainingInterests}
+          </Badge>
+        )}
       </div>
 
       {profile.profileImageUrls.length > 0 && (
@@ -170,6 +147,28 @@ export function CharacterCard({
           )}
         </div>
       )}
+
+      <div className="mt-auto flex items-center justify-between pt-3">
+        <StatusBadge status={profile.status} />
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="View character"
+            onClick={() => onView(profile)}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Edit character"
+            onClick={() => onEdit(profile)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
       <ImageLightbox
         images={profile.profileImageUrls}

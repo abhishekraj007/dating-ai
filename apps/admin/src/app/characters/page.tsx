@@ -5,9 +5,14 @@ import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { CharacterCard } from "./_components/character-card";
 import { EditCharacterSheet } from "./_components/edit-character-sheet";
+import {
+  CharacterFilters,
+  type GenderFilter,
+  type ProfileFilter,
+  type TrendingFilter,
+} from "./_components/character-filters";
 import { useCharacterEdit, type AIProfile } from "./_hooks/use-character-edit";
 import { ProtectedRoute } from "@/components/protected-route";
 import { useCharacterGeneration } from "./_hooks/use-character-generation";
@@ -24,12 +29,9 @@ export default function CharactersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
   const [resolvedProfiles, setResolvedProfiles] = useState<AIProfile[]>([]);
-  const [profileFilter, setProfileFilter] = useState<
-    "all" | "active" | "pending" | "new"
-  >("all");
-  const [genderFilter, setGenderFilter] = useState<"all" | "female" | "male">(
-    "all",
-  );
+  const [profileFilter, setProfileFilter] = useState<ProfileFilter>("all");
+  const [genderFilter, setGenderFilter] = useState<GenderFilter>("all");
+  const [trendingFilter, setTrendingFilter] = useState<TrendingFilter>("all");
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const userData = useQuery(
@@ -47,15 +49,18 @@ export default function CharactersPage() {
     return () => clearTimeout(handle);
   }, [searchQuery]);
 
-  const updateProfileFilter = (
-    nextFilter: "all" | "active" | "pending" | "new",
-  ) => {
+  const updateProfileFilter = (nextFilter: ProfileFilter) => {
     setProfileFilter(nextFilter);
     setVisibleLimit(PAGE_SIZE);
   };
 
-  const updateGenderFilter = (nextFilter: "all" | "female" | "male") => {
+  const updateGenderFilter = (nextFilter: GenderFilter) => {
     setGenderFilter(nextFilter);
+    setVisibleLimit(PAGE_SIZE);
+  };
+
+  const updateTrendingFilter = (nextFilter: TrendingFilter) => {
+    setTrendingFilter(nextFilter);
     setVisibleLimit(PAGE_SIZE);
   };
 
@@ -69,6 +74,10 @@ export default function CharactersPage() {
             profileFilter === "active" || profileFilter === "pending"
               ? profileFilter
               : undefined,
+          trendingFilter:
+            trendingFilter === "all"
+              ? undefined
+              : trendingFilter === "trending",
           recentOnly: profileFilter === "new" ? true : undefined,
           limit: visibleLimit,
         }
@@ -236,67 +245,14 @@ export default function CharactersPage() {
                 onChange={(event) => setSearchQuery(event.target.value)}
               />
             </div>
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground">
-                  Status
-                </span>
-                <Button
-                  size="sm"
-                  variant={profileFilter === "all" ? "default" : "outline"}
-                  onClick={() => updateProfileFilter("all")}
-                >
-                  All
-                </Button>
-                <Button
-                  size="sm"
-                  variant={profileFilter === "active" ? "default" : "outline"}
-                  onClick={() => updateProfileFilter("active")}
-                >
-                  Active
-                </Button>
-                <Button
-                  size="sm"
-                  variant={profileFilter === "pending" ? "default" : "outline"}
-                  onClick={() => updateProfileFilter("pending")}
-                >
-                  Pending
-                </Button>
-                <Button
-                  size="sm"
-                  variant={profileFilter === "new" ? "default" : "outline"}
-                  onClick={() => updateProfileFilter("new")}
-                >
-                  New (24h)
-                </Button>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground">
-                  Gender
-                </span>
-                <Button
-                  size="sm"
-                  variant={genderFilter === "all" ? "default" : "outline"}
-                  onClick={() => updateGenderFilter("all")}
-                >
-                  All
-                </Button>
-                <Button
-                  size="sm"
-                  variant={genderFilter === "female" ? "default" : "outline"}
-                  onClick={() => updateGenderFilter("female")}
-                >
-                  Female
-                </Button>
-                <Button
-                  size="sm"
-                  variant={genderFilter === "male" ? "default" : "outline"}
-                  onClick={() => updateGenderFilter("male")}
-                >
-                  Male
-                </Button>
-              </div>
-            </div>
+            <CharacterFilters
+              profileFilter={profileFilter}
+              genderFilter={genderFilter}
+              trendingFilter={trendingFilter}
+              onProfileFilterChange={updateProfileFilter}
+              onGenderFilterChange={updateGenderFilter}
+              onTrendingFilterChange={updateTrendingFilter}
+            />
           </div>
 
           {isProfilesLoading ? (
