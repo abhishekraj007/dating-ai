@@ -86,16 +86,9 @@ export function ProfileSwipeCard({
     onPress();
   };
 
-  const hideImageSkeleton = () => {
-    setIsImageReady(true);
-  };
-
   const reportImageReady = () => {
-    imageOpacity.value = withTiming(1, { duration: 260 }, (finished) => {
-      if (finished) {
-        scheduleOnRN(hideImageSkeleton);
-      }
-    });
+    imageOpacity.value = withTiming(1, { duration: 260 });
+    setIsImageReady(true);
 
     if (!isFirst || !onImageReady || hasReportedImageReadyRef.current) {
       return;
@@ -105,11 +98,8 @@ export function ProfileSwipeCard({
   };
 
   const handleImageError = () => {
-    imageOpacity.value = withTiming(1, { duration: 160 }, (finished) => {
-      if (finished) {
-        scheduleOnRN(hideImageSkeleton);
-      }
-    });
+    imageOpacity.value = withTiming(1, { duration: 160 });
+    setIsImageReady(true);
   };
 
   useEffect(() => {

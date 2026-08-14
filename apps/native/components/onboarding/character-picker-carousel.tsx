@@ -1,14 +1,19 @@
 import { useRef } from "react";
 import {
-  FlatList,
   StyleSheet,
   View,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
 } from "react-native";
+import {
+  LegendList,
+  type LegendListRef,
+} from "@legendapp/list/react-native";
 import { CharacterPickCard } from "@/components/onboarding/character-pick-card";
 
 const CARD_GAP = 14;
+const CARD_HEIGHT = 460;
+const LIST_HEIGHT = CARD_HEIGHT + 12;
 const LOOP_COPIES = 3;
 const MIDDLE_COPY = 1;
 
@@ -41,7 +46,7 @@ export function CharacterPickerCarousel({
   screenWidth,
   onIndexChange,
 }: CharacterPickerCarouselProps) {
-  const listRef = useRef<FlatList<CharacterPickerItem>>(null);
+  const listRef = useRef<LegendListRef>(null);
   const hasPositionedRef = useRef(false);
   const isJumpingRef = useRef(false);
   const isDraggingRef = useRef(false);
@@ -76,7 +81,7 @@ export function CharacterPickerCarousel({
 
   const jumpToIndex = (index: number, animated: boolean) => {
     isJumpingRef.current = true;
-    listRef.current?.scrollToOffset({
+    void listRef.current?.scrollToOffset({
       offset: offsetForIndex(index),
       animated,
     });
@@ -102,26 +107,29 @@ export function CharacterPickerCarousel({
     }
   };
 
+  if (count === 0) {
+    return null;
+  }
+
   return (
-    <FlatList
+    <LegendList
       ref={listRef}
       data={looped}
+      dataKey={profilesKey}
       extraData={safeIndex}
       keyExtractor={(item, index) => `${item._id}-${index}`}
       horizontal
+      recycleItems
+      estimatedItemSize={pageWidth}
+      estimatedListSize={{ width: screenWidth, height: LIST_HEIGHT }}
+      getFixedItemSize={() => pageWidth}
       showsHorizontalScrollIndicator={false}
       decelerationRate="fast"
       snapToInterval={pageWidth}
       snapToAlignment="start"
       disableIntervalMomentum
-      initialNumToRender={looped.length}
-      windowSize={looped.length}
+      style={{ height: LIST_HEIGHT }}
       contentContainerStyle={[styles.list, { paddingHorizontal: sidePadding }]}
-      getItemLayout={(_, index) => ({
-        length: pageWidth,
-        offset: offsetForIndex(index),
-        index,
-      })}
       onLayout={() => {
         if (hasPositionedRef.current || !canLoop) {
           return;

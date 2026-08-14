@@ -109,12 +109,12 @@ export default function BuyCreditsScreen() {
           </Animated.View>
         </View>
 
-        <View className="items-center gap-2">
+        <View className="gap-2">
           <Text className="text-4xl font-bold text-foreground pr-12">
             {title}
           </Text>
           <Text
-            className="text-base  leading-6 pr-18"
+            className="text-base leading-6 pr-18"
             style={{ color: mutedColor }}
           >
             {subtitle}
