@@ -38,9 +38,7 @@ const sceneVignetteSchema = z.object({
     .string()
     .min(3)
     .max(120)
-    .describe(
-      "A small, scene-appropriate prop the subject holds or carries.",
-    )
+    .describe("A small, scene-appropriate prop the subject holds or carries.")
     .optional(),
   outfit: z
     .string()
@@ -98,6 +96,7 @@ function buildVignetteBatchPrompt(
         `  baseline_setting: (none — invent the main location in settingDetail)`,
         `  composition: ${plan.composition}`,
         `  lighting: ${plan.lighting}`,
+        `  assigned_pose: ${plan.poseDirective}`,
         `  season: ${plan.season}`,
         `  time_of_day: ${plan.timeOfDay}`,
         `  baseline_prop: ${plan.accentProp}`,
@@ -126,7 +125,8 @@ For EACH slot below, produce a bespoke vignette so the photo feels specific to T
 
 Hard rules:
 - The vignette must stay photorealistic and contemporary.
-- The subject's face, skin tone, hair, and body are fixed by a reference image - DO NOT describe those. Only change outfit, pose, setting, props, and light.
+- The subject's face, skin tone, hair, body, and pose are fixed by the image prompt - DO NOT describe those. Only change outfit, setting, props, and light.
+- The assigned pose is already supplied below and enforced by the final image prompt. Do not mention or contradict gaze direction, eye direction, head angle, profile, or facial pose in "action"; make the action compatible without describing the face.
 - "action" must be one short sentence (<= 240 chars).
 - "settingDetail" is required for every slot and becomes the main location (there is no fixed baseline setting). Invent a concrete, grounded place from the scene category, interests, bio, occupation, and city archetype — neighborhood name, venue type, visible landmark, or specific room detail. Keep it plausible for ${candidate.location}. Vary settings across slots; do not repeat the same venue type twice in one batch.
 - Activity slots: match the person's actual interests (weight room, yoga studio, outdoor run, tennis court, dance studio, etc.). Only use climbing/bouldering gyms when "Bouldering" or "Rock Climbing" is listed. No chalk bags or carabiners unless bouldering/climbing is explicit.
@@ -173,7 +173,7 @@ export async function generateShowcaseVignettes(
     maxRetries: 1,
     temperature: 1.0,
     system:
-      "You are a concise visual art director. You produce compact, concrete, culturally grounded scene vignettes for photorealistic portraits. Never describe face/body/skin. Return valid structured output only.",
+      "You are a concise visual art director. You produce compact, concrete, culturally grounded scene vignettes for photorealistic portraits. Never describe face/body/skin or gaze/head pose. Return valid structured output only.",
     prompt,
   } as const;
 

@@ -23,6 +23,8 @@ interface MessageBubbleProps {
   onQuizAnswer?: (answer: string) => void;
   onEndQuiz?: () => void;
   onDelete?: (order: number) => void;
+  onSubscribe?: () => void;
+  onBuyCredits?: () => void;
 }
 
 type StructuredPayload = {
@@ -118,6 +120,15 @@ function parseContent(content: string) {
     };
   }
 
+  if (structured.type === "credits_required") {
+    return {
+      kind: "credits_required" as const,
+      text:
+        structured.message ||
+        "Your free messages just ran out. Subscribe to keep the conversation going.",
+    };
+  }
+
   if (structured.type === "chat_error") {
     return {
       kind: "error" as const,
@@ -207,6 +218,8 @@ export function MessageBubble({
   onQuizAnswer,
   onEndQuiz,
   onDelete,
+  onSubscribe,
+  onBuyCredits,
 }: MessageBubbleProps) {
   const isUser = role === "user";
   const parsed = parseContent(content);
@@ -320,6 +333,31 @@ export function MessageBubble({
         ) : parsed.kind === "error" ? (
           <div className="rounded-3xl rounded-bl-lg bg-destructive/10 px-4 py-2.5 text-sm text-destructive shadow-sm">
             {renderTextContent(parsed.text, isUser)}
+          </div>
+        ) : parsed.kind === "credits_required" ? (
+          <div className={cn(bubbleClassName, "flex max-w-sm flex-col gap-3")}>
+            <p className="font-semibold">
+              Keep talking to {profileName ?? "them"}
+            </p>
+            <p>{parsed.text}</p>
+            {onSubscribe ? (
+              <button
+                type="button"
+                onClick={onSubscribe}
+                className="inline-flex h-9 items-center justify-center rounded-full bg-primary px-3 text-sm font-medium text-primary-foreground"
+              >
+                Continue with Premium
+              </button>
+            ) : null}
+            {onBuyCredits ? (
+              <button
+                type="button"
+                onClick={onBuyCredits}
+                className="text-left text-sm text-muted-foreground underline-offset-4 hover:underline"
+              >
+                Or buy credits
+              </button>
+            ) : null}
           </div>
         ) : parsed.kind === "quiz_question" ? (
           <div className={bubbleClassName}>

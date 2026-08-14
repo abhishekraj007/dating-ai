@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
-import { Alert, Platform } from "react-native";
+import { Alert, BackHandler, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Id } from "@dating-ai/backend/convex/_generated/dataModel";
 import { useConversation } from "./useConversations";
@@ -15,6 +15,7 @@ import { useChatScroll } from "./useChatScroll";
 import { useChatKeyboardList } from "./useChatKeyboardList";
 import { useCredits } from "./useCredits";
 import { useTranslation } from "@/hooks/use-translation";
+import { usePurchases } from "@/contexts/purchases-context";
 
 const AI_RESPONSE_WAIT_TIMEOUT_MS = 15000;
 const openedCreditsRequiredMessageIds = new Set<string>();
@@ -45,6 +46,28 @@ export function useChatScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+
+  const handleGoBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace("/(root)/(main)/(tabs)/chats");
+  };
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (router.canGoBack()) {
+          return false;
+        }
+        router.replace("/(root)/(main)/(tabs)/chats");
+        return true;
+      },
+    );
+    return () => subscription.remove();
+  }, [router]);
   // Map Platform.OS to the supported platform values. macOS is treated as iOS.
   const platform: "ios" | "android" | "web" =
     Platform.OS === "android"
@@ -92,6 +115,7 @@ export function useChatScreen() {
 
   // Credits for client-side checking
   const { credits, hasEnoughCredits } = useCredits();
+  const { presentPaywall } = usePurchases();
 
   // Derive profile
   const profile = conversation?.profile;
@@ -182,15 +206,34 @@ export function useChatScreen() {
     !isAITyping &&
     !hasAIResponseAfterSend;
 
+  const isOpeningPending =
+    conversation?.openingMessageStatus === "pending" && messages.length === 0;
+  const hasFreeTextMessages = (conversation?.freeMessagesRemaining ?? 0) > 0;
+
   const isResponseStreaming =
     !isStopRequested && (isAITyping || isWaitingForAI);
   const showTypingIndicator =
-    !isStopRequested && (hasInvisibleStreamingMessage || isWaitingForAI);
+    isOpeningPending ||
+    (!isStopRequested && (hasInvisibleStreamingMessage || isWaitingForAI));
 
   const handleOpenCreditsModal = useCallback(() => {
     setIsImageSheetOpen(false);
+    void presentPaywall();
+  }, [presentPaywall]);
+
+  const handleOpenBuyCredits = useCallback(() => {
+    setIsImageSheetOpen(false);
+
+    if (profile?.name) {
+      router.push({
+        pathname: "/buy-credits",
+        params: { name: profile.name },
+      });
+      return;
+    }
+
     router.push("/buy-credits");
-  }, [router]);
+  }, [profile?.name, router]);
 
   // Chat scroll behavior
   const {
@@ -259,8 +302,8 @@ export function useChatScreen() {
     }
 
     openedCreditsRequiredMessageIds.add(latestCreditsRequiredMessageId);
-    handleOpenCreditsModal();
-  }, [handleOpenCreditsModal, latestCreditsRequiredMessageId]);
+    handleOpenBuyCredits();
+  }, [handleOpenBuyCredits, latestCreditsRequiredMessageId]);
 
   const sendConversationMessage = useCallback(
     async (content: string, options?: { optimistic?: boolean }) => {
@@ -268,8 +311,8 @@ export function useChatScreen() {
         return false;
       }
 
-      if (!hasEnoughCredits("TEXT_MESSAGE")) {
-        handleOpenCreditsModal();
+      if (!hasFreeTextMessages && !hasEnoughCredits("TEXT_MESSAGE")) {
+        handleOpenBuyCredits();
         return false;
       }
 
@@ -304,7 +347,7 @@ export function useChatScreen() {
           error instanceof Error ? error.message : String(error);
 
         if (errorMessage.includes("Insufficient credits")) {
-          handleOpenCreditsModal();
+          handleOpenBuyCredits();
         } else {
           console.error("Failed to send message:", error);
           Alert.alert(t("alerts.error"), t("alerts.tryAgainMoment"));
@@ -318,7 +361,8 @@ export function useChatScreen() {
     [
       clearPendingAssistantState,
       hasEnoughCredits,
-      handleOpenCreditsModal,
+      hasFreeTextMessages,
+      handleOpenBuyCredits,
       id,
       isSending,
       markUserInteraction,
@@ -383,7 +427,7 @@ export function useChatScreen() {
         options.mediaType === "video" ? "VIDEO_REQUEST" : "IMAGE_REQUEST";
 
       if (!hasEnoughCredits(creditAction)) {
-        handleOpenCreditsModal();
+        handleOpenBuyCredits();
         return;
       }
 
@@ -394,7 +438,7 @@ export function useChatScreen() {
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
         if (message.includes("Insufficient credits")) {
-          handleOpenCreditsModal();
+          handleOpenBuyCredits();
         } else {
           console.error("Failed to request media:", error);
         }
@@ -402,7 +446,7 @@ export function useChatScreen() {
         setIsRequestingImage(false);
       }
     },
-    [id, requestMedia, hasEnoughCredits, handleOpenCreditsModal, platform],
+    [id, requestMedia, hasEnoughCredits, handleOpenBuyCredits, platform],
   );
 
   const handleOpenImageSheet = () => {
@@ -695,5 +739,7 @@ export function useChatScreen() {
     handleClearChat,
     handleOpenChatLanguage,
     handleOpenCreditsModal,
+    handleOpenBuyCredits,
+    handleGoBack,
   };
 }

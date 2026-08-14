@@ -67,7 +67,9 @@
       "appTitle": "アプリの言語",
       "appDescription": "メニュー、ボタン、その他のアプリ内テキストを制御します。",
       "chatTitle": "チャットの言語",
-      "chatDescription": "AIコンパニオンが返信する言語を制御します。"
+      "chatDescription": "AIコンパニオンが返信する言語を制御します。",
+      "chatShort": "チャット: {{language}}",
+      "appShort": "アプリ: {{language}}"
     },
     "[object Object]": {
       "music": "音楽",
@@ -98,6 +100,13 @@
     "interests": {
       "title": "あなたの興味は？",
       "selected": "{{count}}件選択済み"
+    },
+    "character": {
+      "title": "あなたのタイプは？",
+      "subtitle": "今トレンドのコンパニオンです。後からいつでも他の人に会えます。",
+      "cta": "{{name}}とチャット",
+      "browse": "まず全員を見る",
+      "trending": "トレンド"
     },
     "settingUp": "設定中...",
     "continue": "続ける",
@@ -192,7 +201,8 @@
       "terms": "利用規約",
       "privacy": "プライバシーポリシー",
       "rateUs": "評価する",
-      "shareApp": "アプリを共有"
+      "shareApp": "アプリを共有",
+      "about": "情報"
     },
     "helpCenterMissing": "ヘルプセンターのURLがまだ設定されていません。",
     "supportMissing": "サポートURLがまだ設定されていません。",
@@ -274,7 +284,8 @@
     "personality": "性格",
     "interests": "興味",
     "photos": "写真",
-    "compatibility": "相性"
+    "compatibility": "相性",
+    "chatWith": "%{name}とチャット"
   },
   "myCreation": {
     "emptyTitle": "まだキャラクターがいません",
@@ -382,6 +393,12 @@
     "unlockDescription": "{{name}}があなたに写真を送りました。プレミアムを取得して、ぼかしの向こう側を見ましょう。",
     "unlockUnlimited": "無制限アクセスをアンロック"
   },
+  "buyCredits": {
+    "title": "会話を続けましょう",
+    "subtitle": "メッセージ、セルフィー、動画のためにクレジットをチャージしましょう。",
+    "titleWithName": "{{name}}との会話を続けよう",
+    "subtitleWithName": "{{name}}が返事を待っています。チャットを続けるにはクレジットをチャージしましょう。"
+  },
   "quiz": {
     "started": "クイズ開始",
     "letsPlay": "クイズで遊びましょう！",
@@ -413,9 +430,8 @@
     "notificationsDescription": "重要なアップデートの通知を受け取る"
   },
   "updates": {
-    "title": "アップデート可能",
-    "description": "アプリの新バージョンが利用可能です。最新の機能と改善を取得するには今すぐ再起動してください。",
-    "relaunch": "再起動",
-    "dismiss": "後で"
+    "title": "新しいアップデートがあります",
+    "description": "最新の改善とバグ修正を利用するにはアプリを更新してください。",
+    "refresh": "更新"
   }
 }

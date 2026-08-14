@@ -67,7 +67,9 @@
       "appTitle": "Langue de l'app",
       "appDescription": "Contrôle les menus, boutons et textes de l'application.",
       "chatTitle": "Langue du chat",
-      "chatDescription": "Contrôle la langue dans laquelle vos compagnons IA répondent."
+      "chatDescription": "Contrôle la langue dans laquelle vos compagnons IA répondent.",
+      "chatShort": "Chat : {{language}}",
+      "appShort": "App : {{language}}"
     },
     "[object Object]": {
       "music": "Musique",
@@ -98,6 +100,13 @@
     "interests": {
       "title": "Quels sont vos centres d'intérêt ?",
       "selected": "{{count}} sélectionnés"
+    },
+    "character": {
+      "title": "Quel est ton type ?",
+      "subtitle": "Ces compagnons sont tendance en ce moment. Tu pourras toujours en rencontrer d'autres plus tard.",
+      "cta": "Discuter avec {{name}}",
+      "browse": "Parcourir tout le monde d'abord",
+      "trending": "Tendance"
     },
     "settingUp": "Configuration...",
     "continue": "Continuer",
@@ -192,7 +201,8 @@
       "terms": "Conditions d'utilisation",
       "privacy": "Politique de confidentialité",
       "rateUs": "Évaluez-nous",
-      "shareApp": "Partager l'app"
+      "shareApp": "Partager l'app",
+      "about": "A propos"
     },
     "helpCenterMissing": "L'URL du centre d'aide n'est pas encore configurée.",
     "supportMissing": "L'URL du support n'est pas encore configurée.",
@@ -274,7 +284,8 @@
     "personality": "Personnalité",
     "interests": "Centres d'intérêt",
     "photos": "Photos",
-    "compatibility": "Compatibilité"
+    "compatibility": "Compatibilité",
+    "chatWith": "Discuter avec %{name}"
   },
   "myCreation": {
     "emptyTitle": "Pas encore de personnages",
@@ -382,6 +393,12 @@
     "unlockDescription": "{{name}} vous a envoyé une photo. Obtenez Premium et découvrez ce qui se cache derrière le flou.",
     "unlockUnlimited": "Débloquer l'accès illimité"
   },
+  "buyCredits": {
+    "title": "Continuez la conversation",
+    "subtitle": "Rechargez des crédits pour envoyer des messages, demander des selfies et recevoir des vidéos.",
+    "titleWithName": "Continuez à parler à {{name}}",
+    "subtitleWithName": "{{name}} attend votre réponse. Rechargez des crédits pour continuer à discuter."
+  },
   "quiz": {
     "started": "Quiz lancé",
     "letsPlay": "Jouons à un quiz !",
@@ -413,9 +430,8 @@
     "notificationsDescription": "Recevez des notifications sur les mises à jour importantes"
   },
   "updates": {
-    "title": "Mise a Jour Disponible",
-    "description": "Une nouvelle version de l'application est disponible. Relancez maintenant pour profiter des dernieres fonctionnalites et ameliorations.",
-    "relaunch": "Relancer",
-    "dismiss": "Plus Tard"
+    "title": "Une nouvelle mise a jour est disponible",
+    "description": "Actualisez l'app pour obtenir les dernieres ameliorations et corrections de bugs.",
+    "refresh": "Actualiser"
   }
 }

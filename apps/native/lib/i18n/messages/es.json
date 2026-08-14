@@ -67,7 +67,9 @@
       "appTitle": "Idioma de la app",
       "appDescription": "Controla menús, botones y otros textos de la app.",
       "chatTitle": "Idioma del chat",
-      "chatDescription": "Controla el idioma en el que responden tus compañeros de IA."
+      "chatDescription": "Controla el idioma en el que responden tus compañeros de IA.",
+      "chatShort": "Chat: {{language}}",
+      "appShort": "App: {{language}}"
     },
     "[object Object]": {
       "music": "Música",
@@ -98,6 +100,13 @@
     "interests": {
       "title": "¿Cuáles son tus intereses?",
       "selected": "{{count}} seleccionados"
+    },
+    "character": {
+      "title": "¿Cuál es tu tipo?",
+      "subtitle": "Estos compañeros están en tendencia ahora. Siempre puedes conocer más después.",
+      "cta": "Chatear con {{name}}",
+      "browse": "Explorar a todos primero",
+      "trending": "Tendencia"
     },
     "settingUp": "Configurando...",
     "continue": "Continuar",
@@ -192,7 +201,8 @@
       "terms": "Términos de servicio",
       "privacy": "Política de privacidad",
       "rateUs": "Califícanos",
-      "shareApp": "Compartir app"
+      "shareApp": "Compartir app",
+      "about": "Acerca de"
     },
     "helpCenterMissing": "La URL del centro de ayuda aún no está configurada.",
     "supportMissing": "La URL de soporte aún no está configurada.",
@@ -274,7 +284,8 @@
     "personality": "Personalidad",
     "interests": "Intereses",
     "photos": "Fotos",
-    "compatibility": "Compatibilidad"
+    "compatibility": "Compatibilidad",
+    "chatWith": "Chatea con %{name}"
   },
   "myCreation": {
     "emptyTitle": "Aún no hay personajes",
@@ -382,6 +393,12 @@
     "unlockDescription": "{{name}} te ha enviado una foto. Obtén Premium y descubre lo que se oculta tras el desenfoque.",
     "unlockUnlimited": "Desbloquear acceso ilimitado"
   },
+  "buyCredits": {
+    "title": "Sigue la conversación",
+    "subtitle": "Recarga créditos para enviar mensajes, pedir selfies y recibir videos.",
+    "titleWithName": "Sigue hablando con {{name}}",
+    "subtitleWithName": "{{name}} está esperando tu respuesta. Recarga créditos para seguir chateando."
+  },
   "quiz": {
     "started": "Quiz iniciado",
     "letsPlay": "¡Juguemos un quiz!",
@@ -413,9 +430,8 @@
     "notificationsDescription": "Recibe notificaciones sobre actualizaciones importantes"
   },
   "updates": {
-    "title": "Actualizacion Disponible",
-    "description": "Una nueva version de la app esta disponible. Reinicia ahora para obtener las ultimas funciones y mejoras.",
-    "relaunch": "Reiniciar",
-    "dismiss": "Ahora No"
+    "title": "Hay una nueva actualizacion disponible",
+    "description": "Actualiza la app para obtener las ultimas mejoras y correcciones de errores.",
+    "refresh": "Actualizar"
   }
 }

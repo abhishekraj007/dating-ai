@@ -42,6 +42,60 @@ const CATEGORY_SOFT_CAP = 1;
  */
 const BOLD_FLIRTY_MIN_RATIO = 0.4;
 
+type ShowcasePoseVariant = {
+  id: string;
+  directive: string;
+};
+
+/**
+ * The reference image anchors identity, but it also strongly anchors the
+ * subject's head angle and eye line unless the new pose is concrete. Each
+ * gallery gets a shuffled, non-repeating subset so the model has an explicit
+ * target instead of the vague instruction to "be different".
+ */
+const SHOWCASE_POSE_VARIANTS: ShowcasePoseVariant[] = [
+  {
+    id: "direct-camera",
+    directive:
+      "Face the camera with a relaxed direct gaze into the lens; keep the head level, shoulders slightly angled, and expression natural.",
+  },
+  {
+    id: "three-quarter-viewer-left",
+    directive:
+      "Turn the face about 30 degrees toward the viewer's left (the subject's right); look just past the lens in that same direction and keep both eyes visible.",
+  },
+  {
+    id: "three-quarter-viewer-right",
+    directive:
+      "Turn the face about 30 degrees toward the viewer's right (the subject's left); look just past the lens in that same direction and keep both eyes visible.",
+  },
+  {
+    id: "down-at-prop",
+    directive:
+      "Keep the face mostly toward the camera, lower the chin slightly, and look at the hands or scene prop with a naturally absorbed expression.",
+  },
+  {
+    id: "over-shoulder",
+    directive:
+      "Turn the torso slightly away and look back over one shoulder toward the camera; make the head and shoulders form a natural over-the-shoulder pose.",
+  },
+  {
+    id: "up-toward-light",
+    directive:
+      "Tilt the head slightly upward toward the light and look above the camera line; keep the jaw relaxed and avoid a full profile.",
+  },
+  {
+    id: "side-conversation",
+    directive:
+      "Turn the head about 25 degrees toward the viewer's right as if listening to someone off-frame; let the eyes follow that person and keep the expression relaxed.",
+  },
+  {
+    id: "natural-profile",
+    directive:
+      "Use a natural three-quarter profile toward the viewer's left, with the nose pointing left and the gaze following the scene; keep facial features undistorted.",
+  },
+];
+
 function isBoldOrFlirty(scene: ShowcaseScene): boolean {
   return scene.boldness === "bold" || scene.boldness === "flirty";
 }
@@ -190,13 +244,14 @@ export function randomShowcaseCount(): number {
 }
 
 /**
- * Samples the scene's variation arrays and rolls a rotating accent prop,
- * season, and time-of-day. Produces a fully-resolved `ShowcaseSlotPlan` that
- * can later be enriched by an LLM vignette.
+ * Samples the scene's variation arrays and rolls a non-repeating pose, accent
+ * prop, season, and time-of-day. Produces a fully-resolved
+ * `ShowcaseSlotPlan` that can later be enriched by an LLM vignette.
  */
 function sampleSlotPlan(
   scene: ShowcaseScene,
   candidate: ProfileCandidate,
+  poseVariant: ShowcasePoseVariant,
 ): ShowcaseSlotPlan {
   const actionBuilder = randomItem(scene.buildActions) ?? scene.buildActions[0];
   const action = actionBuilder({ interests: candidate.interests });
@@ -210,6 +265,7 @@ function sampleSlotPlan(
     composition: randomItem(scene.compositions) ?? scene.compositions[0] ?? "",
     lighting: randomItem(scene.lightings) ?? scene.lightings[0] ?? "",
     style: randomItem(scene.styles) ?? scene.styles[0] ?? "",
+    poseDirective: poseVariant.directive,
     accentProp: randomItem(SHOWCASE_ACCENT_PROPS) ?? "",
     season: randomItem(SHOWCASE_SEASONS) ?? "",
     timeOfDay: randomItem(SHOWCASE_TIMES_OF_DAY) ?? "",
@@ -230,7 +286,13 @@ export function planShowcaseSlots(
   excludeIds: Set<string> = new Set(),
 ): ShowcaseSlotPlan[] {
   const scenes = pickShowcaseScenes(candidate, appearance, count, excludeIds);
-  return scenes.map((scene) => sampleSlotPlan(scene, candidate));
+  const poseVariants = shuffle(SHOWCASE_POSE_VARIANTS);
+  return scenes.map((scene, index) => {
+    const poseVariant =
+      poseVariants[index % poseVariants.length] ??
+      randomItem(SHOWCASE_POSE_VARIANTS);
+    return sampleSlotPlan(scene, candidate, poseVariant);
+  });
 }
 
 /**

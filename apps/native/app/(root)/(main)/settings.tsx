@@ -27,6 +27,7 @@ import {
 } from "lucide-react-native";
 import { router } from "expo-router";
 import { useNotificationSettings } from "@/hooks/useNotificationSettings";
+import { useDeleteAccount } from "@/hooks/use-delete-account";
 import { useTranslation } from "@/hooks/use-translation";
 
 type ThemeOption = {
@@ -87,7 +88,7 @@ const availableThemes: ThemeOption[] = [
 export default function SettingsRoute() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const { isDeletingUser, deleteAccount } = useDeleteAccount();
   const userData = useQuery(api.user.fetchUserAndProfile);
   const { currentTheme, toggleTheme, isLight, isDark, setTheme } =
     useAppTheme();
@@ -146,28 +147,6 @@ export default function SettingsRoute() {
       router.replace("/(root)/(auth)");
     }
   }, [isAuthenticated]);
-
-  const handleDeleteUser = async () => {
-    const { error, data } = await authClient.deleteUser(
-      {},
-      {
-        onRequest: () => {
-          setIsDeletingUser(true);
-        },
-        onSuccess: () => {
-          setIsDeletingUser(false);
-        },
-        onError: (ctx) => {
-          setIsDeletingUser(false);
-          console.error(ctx.error);
-          Alert.alert(
-            t("alerts.error"),
-            ctx.error.message || t("account.actions.delete"),
-          );
-        },
-      },
-    );
-  };
 
   if (!userData || !userData.userMetadata) {
     return (
@@ -329,7 +308,9 @@ export default function SettingsRoute() {
                   {
                     text: t("alerts.delete"),
                     style: "destructive",
-                    onPress: handleDeleteUser,
+                    onPress: () => {
+                      void deleteAccount();
+                    },
                   },
                 ]);
               }}

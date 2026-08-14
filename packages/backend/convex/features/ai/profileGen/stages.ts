@@ -247,7 +247,7 @@ export async function generateAvatarForJob(
   const avatarPrompt =
     overridePrompt?.trim() ||
     (isReferenceMode
-      ? `Create a different person photo inspired by given reference image, face should be slightly different, Change the outfit color (and pattern style if present).\n\n${buildAvatarPrompt(candidate, appearance, subjectDescriptor)}`
+      ? `Create a new avatar photo inspired by the reference image. Keep the overall appearance recognizable but use a clearly different head angle, eye line, facial expression, and crop; do not copy the reference pose or gaze. Change the outfit color (and pattern style if present).\n\n${buildAvatarPrompt(candidate, appearance, subjectDescriptor)}`
       : buildAvatarPrompt(candidate, appearance, subjectDescriptor));
 
   const avatarImageKey = await createAndStoreGeneratedImage(

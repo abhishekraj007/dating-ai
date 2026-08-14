@@ -28,3 +28,9 @@ export { ChatInputBox } from "./chat-input-box";
 export { ChatForm, KEYBOARD_GAP } from "./chat-form";
 export { TypingIndicator } from "./bubbles";
 export { BlurredPremiumImage } from "./blurred-premium-image";
+export {
+  DetailParallaxScroll,
+  getDetailParallaxHeaderHeight,
+  DETAIL_PARALLAX_HEADER_HEIGHT_RATIO,
+} from "./detail-parallax-scroll";
+export { ProfileChatButton } from "./profile-chat-button";

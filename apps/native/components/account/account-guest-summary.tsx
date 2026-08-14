@@ -6,9 +6,7 @@ type AccountGuestSummaryProps = {
   onLogin: () => void;
 };
 
-export const AccountGuestSummary = ({
-  onLogin,
-}: AccountGuestSummaryProps) => {
+export const AccountGuestSummary = ({ onLogin }: AccountGuestSummaryProps) => {
   const { t } = useTranslation();
 
   return (

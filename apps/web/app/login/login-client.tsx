@@ -4,13 +4,9 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useConvexAuth } from "convex/react";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { DownloadAppModal } from "@/components/download-app-modal";
+import { DISABLE_WEB_LOGIN } from "@/lib/web-payment";
+import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -28,10 +24,26 @@ export function LoginClient({ redirectTo }: LoginClientProps) {
     }
   }, [isLoading, isAuthenticated, redirectTo, router]);
 
-  if (isLoading) {
+  if (isLoading || isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
+
+  if (DISABLE_WEB_LOGIN) {
+    return (
+      <div className="min-h-screen bg-background">
+        <DownloadAppModal
+          open
+          onOpenChange={(open) => {
+            if (!open) {
+              router.replace("/");
+            }
+          }}
+          reason="login"
+        />
       </div>
     );
   }

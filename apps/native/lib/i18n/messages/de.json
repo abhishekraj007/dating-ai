@@ -67,7 +67,9 @@
       "appTitle": "App-Sprache",
       "appDescription": "Steuert Menüs, Schaltflächen und anderen App-Text.",
       "chatTitle": "Chat-Sprache",
-      "chatDescription": "Steuert die Sprache, in der deine KI-Begleiter antworten."
+      "chatDescription": "Steuert die Sprache, in der deine KI-Begleiter antworten.",
+      "chatShort": "Chat: {{language}}",
+      "appShort": "App: {{language}}"
     },
     "[object Object]": {
       "music": "Musik",
@@ -98,6 +100,13 @@
     "interests": {
       "title": "Was sind deine Interessen?",
       "selected": "{{count}} ausgewählt"
+    },
+    "character": {
+      "title": "Was ist dein Typ?",
+      "subtitle": "Diese Begleiter sind gerade im Trend. Du kannst später jederzeit mehr kennenlernen.",
+      "cta": "Mit {{name}} chatten",
+      "browse": "Erst alle durchstöbern",
+      "trending": "Im Trend"
     },
     "settingUp": "Einrichten...",
     "continue": "Weiter",
@@ -192,7 +201,8 @@
       "terms": "Nutzungsbedingungen",
       "privacy": "Datenschutzrichtlinie",
       "rateUs": "Bewerte uns",
-      "shareApp": "App teilen"
+      "shareApp": "App teilen",
+      "about": "Uber"
     },
     "helpCenterMissing": "Die Hilfecenter-URL ist noch nicht konfiguriert.",
     "supportMissing": "Die Support-URL ist noch nicht konfiguriert.",
@@ -274,7 +284,8 @@
     "personality": "Persönlichkeit",
     "interests": "Interessen",
     "photos": "Fotos",
-    "compatibility": "Kompatibilität"
+    "compatibility": "Kompatibilität",
+    "chatWith": "Chat mit %{name}"
   },
   "myCreation": {
     "emptyTitle": "Noch keine Charaktere",
@@ -382,6 +393,12 @@
     "unlockDescription": "{{name}} hat dir ein Foto geschickt. Hol dir Premium und entdecke, was sich hinter dem Weichzeichner verbirgt.",
     "unlockUnlimited": "Unbegrenzten Zugang freischalten"
   },
+  "buyCredits": {
+    "title": "Halte das Gespräch am Laufen",
+    "subtitle": "Lade Credits auf, um zu schreiben, Selfies zu fragen und Videos zu bekommen.",
+    "titleWithName": "Sprich weiter mit {{name}}",
+    "subtitleWithName": "{{name}} wartet auf deine Antwort. Lade Credits auf, um weiterzuschreiben."
+  },
   "quiz": {
     "started": "Quiz gestartet",
     "letsPlay": "Lass uns ein Quiz spielen!",
@@ -413,9 +430,8 @@
     "notificationsDescription": "Erhalte Benachrichtigungen über wichtige Updates"
   },
   "updates": {
-    "title": "Update Verfugbar",
-    "description": "Eine neue Version der App ist verfugbar. Starte jetzt neu, um die neuesten Funktionen und Verbesserungen zu erhalten.",
-    "relaunch": "Neu Starten",
-    "dismiss": "Spater"
+    "title": "Ein neues Update ist verfugbar",
+    "description": "Aktualisiere die App, um die neuesten Verbesserungen und Fehlerbehebungen zu erhalten.",
+    "refresh": "Aktualisieren"
   }
 }

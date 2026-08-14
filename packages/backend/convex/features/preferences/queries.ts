@@ -2,13 +2,31 @@ import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { query, mutation } from "../../_generated/server";
 import { authComponent } from "../../lib/betterAuth";
-import { buildAiProfileAvatarUrl } from "../../lib/aiProfileAvatar";
+import {
+  avatarImageQueryArgs,
+  buildAiProfileAvatarUrl,
+} from "../../lib/aiProfileAvatar";
 import {
   appLanguageValidator,
   type AppLanguage,
 } from "../../lib/languages";
 import type { MutationCtx, QueryCtx } from "../../_generated/server";
+import type { Doc } from "../../_generated/dataModel";
 import { activeProfilesDiscoverQuery } from "../ai/discoverQuery";
+
+function toForYouCardProfile(
+  profile: Doc<"aiProfiles">,
+  avatarUrl: string | null,
+) {
+  return {
+    _id: profile._id,
+    name: profile.name,
+    age: profile.age,
+    bio: profile.bio,
+    interests: (profile.interests ?? []).slice(0, 5),
+    avatarUrl,
+  };
+}
 
 async function getPreferencesForUser(
   ctx: QueryCtx | MutationCtx,
@@ -256,12 +274,13 @@ export const recordProfileInteraction = mutation({
  */
 export const getForYouProfiles = query({
   args: {
+    ...avatarImageQueryArgs,
     limit: v.optional(v.number()),
     platform: v.optional(
       v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
     ),
   },
-  handler: async (ctx, { limit = 20, platform }) => {
+  handler: async (ctx, { limit = 20, platform, imageWidth, imageQuality }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
 
     // Default preferences
@@ -386,12 +405,10 @@ export const getForYouProfiles = query({
         const avatarUrl = buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth, imageQuality },
         );
 
-        return {
-          ...profile,
-          avatarUrl,
-        };
+        return toForYouCardProfile(profile, avatarUrl);
       }),
     );
   },
@@ -401,8 +418,10 @@ export const getForYouProfiles = query({
  * Get user's liked profiles.
  */
 export const getLikedProfiles = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    ...avatarImageQueryArgs,
+  },
+  handler: async (ctx, { imageWidth, imageQuality }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       return null;
@@ -423,6 +442,7 @@ export const getLikedProfiles = query({
         const avatarUrl = buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth, imageQuality },
         );
 
         return {
@@ -444,6 +464,7 @@ export const getLikedProfiles = query({
  */
 export const getExploreProfiles = query({
   args: {
+    ...avatarImageQueryArgs,
     limit: v.optional(v.number()),
     platform: v.optional(
       v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
@@ -466,6 +487,8 @@ export const getExploreProfiles = query({
       ageMax: overrideAgeMax,
       zodiacPreferences: overrideZodiac,
       interestPreferences: overrideInterests,
+      imageWidth,
+      imageQuality,
     },
   ) => {
     const user = await authComponent.safeGetAuthUser(ctx);
@@ -596,6 +619,7 @@ export const getExploreProfiles = query({
         const avatarUrl = buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth, imageQuality },
         );
 
         return {
@@ -613,6 +637,7 @@ export const getExploreProfiles = query({
  */
 export const getExploreProfilesPaginated = query({
   args: {
+    ...avatarImageQueryArgs,
     paginationOpts: paginationOptsValidator,
     viewerKind: v.optional(
       v.union(v.literal("authenticated"), v.literal("anonymous")),
@@ -639,6 +664,8 @@ export const getExploreProfilesPaginated = query({
       ageMax: overrideAgeMax,
       zodiacPreferences: overrideZodiac,
       interestPreferences: overrideInterests,
+      imageWidth,
+      imageQuality,
     },
   ) => {
     const user = await authComponent.safeGetAuthUser(ctx);
@@ -733,6 +760,7 @@ export const getExploreProfilesPaginated = query({
         const avatarUrl = buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth, imageQuality },
         );
         return { ...profile, avatarUrl };
       }),
@@ -752,6 +780,7 @@ export const getExploreProfilesPaginated = query({
  */
 export const getForYouProfilesPaginated = query({
   args: {
+    ...avatarImageQueryArgs,
     paginationOpts: paginationOptsValidator,
     platform: v.optional(
       v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
@@ -774,6 +803,8 @@ export const getForYouProfilesPaginated = query({
       ageMax: requestedAgeMax,
       zodiacPreferences: requestedZodiacPreferences,
       interestPreferences: requestedInterestPreferences,
+      imageWidth,
+      imageQuality,
     },
   ) => {
     const user = await authComponent.safeGetAuthUser(ctx);
@@ -865,8 +896,9 @@ export const getForYouProfilesPaginated = query({
         const avatarUrl = buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth, imageQuality },
         );
-        return { ...profile, avatarUrl };
+        return toForYouCardProfile(profile, avatarUrl);
       }),
     );
 

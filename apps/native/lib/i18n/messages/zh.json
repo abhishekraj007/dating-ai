@@ -67,7 +67,9 @@
       "appTitle": "应用语言",
       "appDescription": "控制菜单、按钮及其他应用文本。",
       "chatTitle": "聊天语言",
-      "chatDescription": "控制 AI 伴侣回复时使用的语言。"
+      "chatDescription": "控制 AI 伴侣回复时使用的语言。",
+      "chatShort": "聊天: {{language}}",
+      "appShort": "应用: {{language}}"
     },
     "[object Object]": {
       "music": "音乐",
@@ -98,6 +100,13 @@
     "interests": {
       "title": "你的兴趣是什么？",
       "selected": "已选择 {{count}} 个"
+    },
+    "character": {
+      "title": "你的理想型是谁？",
+      "subtitle": "这些伙伴正在流行。你随时可以认识更多人。",
+      "cta": "和 {{name}} 聊天",
+      "browse": "先浏览所有人",
+      "trending": "热门"
     },
     "settingUp": "设置中...",
     "continue": "继续",
@@ -192,7 +201,8 @@
       "terms": "服务条款",
       "privacy": "隐私政策",
       "rateUs": "给我们评分",
-      "shareApp": "分享应用"
+      "shareApp": "分享应用",
+      "about": "关于"
     },
     "helpCenterMissing": "帮助中心 URL 尚未配置。",
     "supportMissing": "支持 URL 尚未配置。",
@@ -274,7 +284,8 @@
     "personality": "性格",
     "interests": "兴趣",
     "photos": "照片",
-    "compatibility": "兼容性"
+    "compatibility": "兼容性",
+    "chatWith": "与%{name}聊天"
   },
   "myCreation": {
     "emptyTitle": "还没有角色",
@@ -382,6 +393,12 @@
     "unlockDescription": "{{name}} 给你发了一张照片。获取高级版，看看模糊背后的内容。",
     "unlockUnlimited": "解锁无限访问"
   },
+  "buyCredits": {
+    "title": "让对话继续",
+    "subtitle": "充值积分即可发消息、要自拍、收视频。",
+    "titleWithName": "继续和 {{name}} 聊下去",
+    "subtitleWithName": "{{name}} 正在等你回复。充值积分，继续聊天。"
+  },
   "quiz": {
     "started": "问答已开始",
     "letsPlay": "来玩问答吧！",
@@ -413,9 +430,8 @@
     "notificationsDescription": "接收重要更新的通知"
   },
   "updates": {
-    "title": "更新可用",
-    "description": "应用新版本已可用。立即重新启动以获取最新功能和改进。",
-    "relaunch": "重新启动",
-    "dismiss": "稍后"
+    "title": "有新的更新可用",
+    "description": "刷新应用以获取最新改进和错误修复。",
+    "refresh": "刷新"
   }
 }

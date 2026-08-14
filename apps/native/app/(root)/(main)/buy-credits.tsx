@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { ScrollView, Text, View, Pressable } from "react-native";
 import { Coins, Check, Sparkles, Zap } from "lucide-react-native";
 import { usePurchases } from "@/contexts/purchases-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { PurchasesStoreProduct } from "react-native-purchases";
+import { useTranslation } from "@/hooks/use-translation";
 import Animated, {
   FadeInDown,
   FadeInUp,
@@ -14,10 +15,20 @@ import Animated, {
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function BuyCreditsScreen() {
+  const { t } = useTranslation();
+  const { name } = useLocalSearchParams<{ name?: string | string[] }>();
+  const companionName = Array.isArray(name) ? name[0] : name;
+  const title = companionName
+    ? t("buyCredits.titleWithName", { name: companionName })
+    : t("buyCredits.title");
+  const subtitle = companionName
+    ? t("buyCredits.subtitleWithName", { name: companionName })
+    : t("buyCredits.subtitle");
   const accentColor = useThemeColor("accent");
   const surfaceColor = useThemeColor("surface");
   const foregroundColor = useThemeColor("foreground");
   const accentForeground = useThemeColor("accent-foreground");
+  const mutedColor = useThemeColor("muted");
 
   const router = useRouter();
   const { creditPackages, isLoading, purchaseStoreProduct } = usePurchases();
@@ -98,7 +109,17 @@ export default function BuyCreditsScreen() {
           </Animated.View>
         </View>
 
-        <Text className="text-3xl font-bold text-foreground">Buy Credits</Text>
+        <View className="gap-2">
+          <Text className="text-4xl font-bold text-foreground pr-12">
+            {title}
+          </Text>
+          <Text
+            className="text-base leading-6 pr-18"
+            style={{ color: mutedColor }}
+          >
+            {subtitle}
+          </Text>
+        </View>
       </Animated.View>
 
       {/* Scrollable Packages */}

@@ -178,9 +178,9 @@ export function buildShowcasePromptFromPlan(
     withReferenceClause: true,
   });
 
-  // Explicit pose directive: without this the edit model tends to inherit
-  // the reference image's head angle and framing. The identity prefix in
-  // `imageGeneration.ts` already frees pose globally; this reinforces it
-  // per slot with scene-natural variation.
-  return `${core} Pose, head angle, body language, and framing must be distinct from the reference image and feel natural for this scene.`;
+  // The edit model tends to inherit the reference image's head angle and eye
+  // line unless the replacement pose is concrete. A per-slot directive is
+  // stronger than the old generic "be distinct" instruction and prevents the
+  // whole gallery from settling on the same safe three-quarter gaze.
+  return `${core} Required pose and gaze for this slot: ${plan.poseDirective} This pose instruction has priority over the reference image. Do not copy the reference image's head angle, eye direction, facial expression, or camera-facing direction.`;
 }

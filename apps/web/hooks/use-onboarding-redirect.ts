@@ -25,7 +25,7 @@ export function useOnboardingRedirect() {
     }
 
     if (!hasCompletedOnboarding && !isOnOnboarding) {
-      router.replace("/onboarding/languages");
+      router.replace("/onboarding");
       return;
     }
 

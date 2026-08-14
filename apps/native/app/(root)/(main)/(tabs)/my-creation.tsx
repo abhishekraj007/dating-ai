@@ -1,4 +1,5 @@
-import { View, Text, FlatList, Dimensions, Pressable } from "react-native";
+import { View, Text, Dimensions } from "react-native";
+import { LegendList } from "@legendapp/list/react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -103,11 +104,14 @@ export default function MyCreationScreen() {
             </Button>
           </View>
         ) : (
-          <FlatList
+          <LegendList
             data={profiles}
             renderItem={renderProfile}
             keyExtractor={(item) => item._id}
             numColumns={2}
+            recycleItems
+            estimatedItemSize={(cardWidth * 4) / 3 + 12}
+            style={{ flex: 1 }}
             contentContainerStyle={{
               paddingHorizontal: 16,
               paddingBottom: 100,

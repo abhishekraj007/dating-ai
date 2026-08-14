@@ -1,8 +1,11 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type { AppLanguage } from "@/lib/i18n";
+import type { Id } from "@dating-ai/backend";
 
-// Static options - no need to fetch from backend for onboarding
-// TODO: Replace placeholder images with actual assets
+export const ONBOARDING_STORAGE_KEY = "feelchat_onboarding";
+
 export const GENDER_OPTIONS = [
   {
     value: "female",
@@ -21,85 +24,74 @@ export const GENDER_OPTIONS = [
   },
 ] as const;
 
-export const INTEREST_OPTIONS = [
-  { value: "music", label: "Music", emoji: "🎵" },
-  { value: "movies", label: "Movies", emoji: "🎬" },
-  { value: "travel", label: "Travel", emoji: "✈️" },
-  { value: "fitness", label: "Fitness", emoji: "💪" },
-  { value: "cooking", label: "Cooking", emoji: "🍳" },
-  { value: "reading", label: "Reading", emoji: "📚" },
-  { value: "gaming", label: "Gaming", emoji: "🎮" },
-  { value: "photography", label: "Photography", emoji: "📷" },
-  { value: "art", label: "Art", emoji: "🎨" },
-  { value: "dancing", label: "Dancing", emoji: "💃" },
-  { value: "sports", label: "Sports", emoji: "⚽" },
-  { value: "nature", label: "Nature", emoji: "🌿" },
-  { value: "pets", label: "Pets", emoji: "🐕" },
-  { value: "fashion", label: "Fashion", emoji: "👗" },
-  { value: "technology", label: "Technology", emoji: "💻" },
-  { value: "yoga", label: "Yoga", emoji: "🧘" },
-  { value: "coffee", label: "Coffee", emoji: "☕" },
-  { value: "wine", label: "Wine", emoji: "🍷" },
-] as const;
-
 export type GenderPreference = (typeof GENDER_OPTIONS)[number]["value"];
-export type Interest = (typeof INTEREST_OPTIONS)[number]["value"];
 
 interface OnboardingState {
-  // Selections
   genderPreference: GenderPreference | null;
-  interests: string[];
   appLanguage: AppLanguage | null;
   chatLanguage: AppLanguage | null;
+  selectedCharacterId: Id<"aiProfiles"> | null;
+  pendingChatId: string | null;
+  guestOnboardingDone: boolean;
+  forceAuthRedirect: boolean;
 
-  // Actions
   setGenderPreference: (gender: GenderPreference) => void;
-  toggleInterest: (interest: string) => void;
   setAppLanguage: (language: AppLanguage) => void;
   setChatLanguage: (language: AppLanguage) => void;
+  setSelectedCharacterId: (id: Id<"aiProfiles"> | null) => void;
+  setPendingChatId: (id: string | null) => void;
+  setGuestOnboardingDone: (done: boolean) => void;
+  setForceAuthRedirect: (value: boolean) => void;
   reset: () => void;
-
-  // Getters
-  getPreferences: () => {
-    genderPreference: GenderPreference | null;
-    interests: string[];
-    appLanguage: AppLanguage | null;
-    chatLanguage: AppLanguage | null;
-  };
+  clearAll: () => void;
 }
 
-export const useOnboardingStore = create<OnboardingState>((set, get) => ({
-  // Initial state
-  genderPreference: null,
-  interests: [],
-  appLanguage: null,
-  chatLanguage: null,
+const initialState = {
+  genderPreference: null as GenderPreference | null,
+  appLanguage: null as AppLanguage | null,
+  chatLanguage: null as AppLanguage | null,
+  selectedCharacterId: null as Id<"aiProfiles"> | null,
+  pendingChatId: null as string | null,
+  guestOnboardingDone: false,
+  forceAuthRedirect: false,
+};
 
-  // Actions
-  setGenderPreference: (gender) => set({ genderPreference: gender }),
+export const useOnboardingStore = create<OnboardingState>()(
+  persist(
+    (set) => ({
+      ...initialState,
 
-  toggleInterest: (interest) =>
-    set((state) => ({
-      interests: state.interests.includes(interest)
-        ? state.interests.filter((i) => i !== interest)
-        : [...state.interests, interest],
-    })),
-
-  setAppLanguage: (language) => set({ appLanguage: language }),
-  setChatLanguage: (language) => set({ chatLanguage: language }),
-
-  reset: () =>
-    set({
-      genderPreference: null,
-      interests: [],
-      appLanguage: null,
-      chatLanguage: null,
+      setGenderPreference: (gender) => set({ genderPreference: gender }),
+      setAppLanguage: (language) => set({ appLanguage: language }),
+      setChatLanguage: (language) => set({ chatLanguage: language }),
+      setSelectedCharacterId: (id) => set({ selectedCharacterId: id }),
+      setPendingChatId: (id) => set({ pendingChatId: id }),
+      setGuestOnboardingDone: (done) => set({ guestOnboardingDone: done }),
+      setForceAuthRedirect: (value) => set({ forceAuthRedirect: value }),
+      reset: () =>
+        set((state) => ({
+          ...initialState,
+          guestOnboardingDone: true,
+          pendingChatId: state.pendingChatId,
+          forceAuthRedirect: state.forceAuthRedirect,
+        })),
+      clearAll: () =>
+        set((state) => ({
+          ...initialState,
+          forceAuthRedirect: state.forceAuthRedirect,
+        })),
     }),
-
-  getPreferences: () => ({
-    genderPreference: get().genderPreference,
-    interests: get().interests,
-    appLanguage: get().appLanguage,
-    chatLanguage: get().chatLanguage,
-  }),
-}));
+    {
+      name: ONBOARDING_STORAGE_KEY,
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        genderPreference: state.genderPreference,
+        appLanguage: state.appLanguage,
+        chatLanguage: state.chatLanguage,
+        selectedCharacterId: state.selectedCharacterId,
+        pendingChatId: state.pendingChatId,
+        guestOnboardingDone: state.guestOnboardingDone,
+      }),
+    },
+  ),
+);

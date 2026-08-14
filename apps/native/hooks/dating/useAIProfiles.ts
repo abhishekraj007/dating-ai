@@ -1,11 +1,12 @@
 import { useQuery, usePaginatedQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend";
+import type { AvatarImageRequest, Id } from "@dating-ai/backend";
 import { useConvexAuth } from "convex/react";
 import { useEffectiveUserPreferences } from "./useForYou";
 
 type Gender = "female" | "male";
 
-interface UseAIProfilesOptions {
+interface UseAIProfilesOptions extends AvatarImageRequest {
   gender?: Gender;
   limit?: number;
   excludeExistingConversations?: boolean;
@@ -37,6 +38,8 @@ export function useAIProfiles(
     limit: options.limit,
     excludeExistingConversations: options.excludeExistingConversations,
     platform,
+    imageWidth: options.imageWidth,
+    imageQuality: options.imageQuality,
   });
 
   return {
@@ -49,7 +52,10 @@ export function useAIProfiles(
  * Hook to get profiles for the Explore screen with user preference filtering.
  * Uses paginated query for infinite scroll.
  */
-export function useExploreProfiles(initialNumItems: number = 20) {
+export function useExploreProfiles(
+  initialNumItems: number = 20,
+  image?: AvatarImageRequest,
+) {
   const { isAuthenticated } = useConvexAuth();
   const { preferences } = useEffectiveUserPreferences();
   const platform = getCurrentPlatform();
@@ -71,6 +77,8 @@ export function useExploreProfiles(initialNumItems: number = 20) {
       ageMax,
       zodiacPreferences,
       interestPreferences,
+      imageWidth: image?.imageWidth,
+      imageQuality: image?.imageQuality,
     },
     { initialNumItems },
   );
@@ -83,10 +91,19 @@ export function useExploreProfiles(initialNumItems: number = 20) {
   };
 }
 
-export function useAIProfile(profileId: string | undefined) {
+export function useAIProfile(
+  profileId: string | undefined,
+  image?: AvatarImageRequest,
+) {
   const profile = useQuery(
     api.features.ai.queries.getProfile,
-    profileId ? { profileId: profileId as any } : "skip",
+    profileId
+      ? {
+          profileId: profileId as Id<"aiProfiles">,
+          imageWidth: image?.imageWidth,
+          imageQuality: image?.imageQuality,
+        }
+      : "skip",
   );
 
   return {

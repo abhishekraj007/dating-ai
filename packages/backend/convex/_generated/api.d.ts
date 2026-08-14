@@ -24,6 +24,7 @@ import type * as features_ai_imageGeneration from "../features/ai/imageGeneratio
 import type * as features_ai_index from "../features/ai/index.js";
 import type * as features_ai_internalQueries from "../features/ai/internalQueries.js";
 import type * as features_ai_mutations from "../features/ai/mutations.js";
+import type * as features_ai_openingMessage from "../features/ai/openingMessage.js";
 import type * as features_ai_profileGen_adminGuards from "../features/ai/profileGen/adminGuards.js";
 import type * as features_ai_profileGen_appearance from "../features/ai/profileGen/appearance.js";
 import type * as features_ai_profileGen_blueprintSchema from "../features/ai/profileGen/blueprintSchema.js";
@@ -113,6 +114,7 @@ declare const fullApi: ApiFromModules<{
   "features/ai/index": typeof features_ai_index;
   "features/ai/internalQueries": typeof features_ai_internalQueries;
   "features/ai/mutations": typeof features_ai_mutations;
+  "features/ai/openingMessage": typeof features_ai_openingMessage;
   "features/ai/profileGen/adminGuards": typeof features_ai_profileGen_adminGuards;
   "features/ai/profileGen/appearance": typeof features_ai_profileGen_appearance;
   "features/ai/profileGen/blueprintSchema": typeof features_ai_profileGen_blueprintSchema;

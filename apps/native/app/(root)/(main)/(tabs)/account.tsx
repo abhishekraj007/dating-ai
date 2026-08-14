@@ -1,16 +1,15 @@
-import { Fragment } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Spinner, Surface, useThemeColor } from "heroui-native";
+import { Button, Spinner, useThemeColor } from "heroui-native";
 import { api, useQuery } from "@dating-ai/backend";
 import { useRouter } from "expo-router";
 import { useConvexAuth } from "convex/react";
 import { LogOut } from "lucide-react-native";
 import {
+  AccountAboutSheet,
   AccountActionsSheet,
   AccountAppearanceSheet,
   AccountGuestSummary,
-  AccountLinkItem,
   AccountNotificationSheet,
   AccountProfileSummary,
   AccountSectionCard,
@@ -20,6 +19,7 @@ import { authClient } from "@/lib/betterAuth/client";
 import { usePurchases } from "@/contexts/purchases-context";
 import { useAccountSections } from "@/hooks/use-account-sections";
 import { useClearAppCache } from "@/hooks/use-clear-app-cache";
+import { useDeleteAccount } from "@/hooks/use-delete-account";
 import { useState } from "react";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -35,14 +35,16 @@ export default function AccountScreen() {
   const [isAppLanguageOpen, setIsAppLanguageOpen] = useState(false);
   const [isChatLanguageOpen, setIsChatLanguageOpen] = useState(false);
   const [isAccountActionsOpen, setIsAccountActionsOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const { isDeletingUser, deleteAccount } = useDeleteAccount();
   const { sections } = useAccountSections({
     onOpenAppearance: () => setIsAppearanceOpen(true),
     onOpenNotifications: () => setIsNotificationSheetOpen(true),
     onOpenAppLanguage: () => setIsAppLanguageOpen(true),
     onOpenChatLanguage: () => setIsChatLanguageOpen(true),
     onOpenAccountActions: () => setIsAccountActionsOpen(true),
+    onOpenAbout: () => setIsAboutOpen(true),
     isAuthenticated,
   });
   const userData = useQuery(
@@ -72,8 +74,6 @@ export default function AccountScreen() {
   };
 
   const handleClearCache = async () => {
-    setIsAccountActionsOpen(false);
-
     try {
       await clearAppCache();
       Alert.alert(t("alerts.success"), t("alerts.clearCacheSuccess"));
@@ -81,27 +81,6 @@ export default function AccountScreen() {
       console.error("Failed to clear app cache", error);
       Alert.alert(t("alerts.error"), t("alerts.clearCacheFailed"));
     }
-  };
-
-  const handleDeleteUser = async () => {
-    await authClient.deleteUser(
-      {},
-      {
-        onRequest: () => {
-          setIsDeletingUser(true);
-        },
-        onSuccess: () => {
-          setIsDeletingUser(false);
-        },
-        onError: (ctx) => {
-          setIsDeletingUser(false);
-          Alert.alert(
-            t("alerts.error"),
-            ctx.error.message || "Failed to delete user",
-          );
-        },
-      },
-    );
   };
 
   if (isAuthLoading || (isAuthenticated && userData === undefined)) {
@@ -148,21 +127,42 @@ export default function AccountScreen() {
             <AccountSectionCard
               key={section.id}
               title={section.title}
-              description={section.description || ""}
-            >
-              {section.items.map((item) => (
-                <Fragment key={item.id}>
-                  <AccountLinkItem
-                    title={item.title}
-                    description={item.description || ""}
-                    icon={item.icon}
-                    onPress={item.onPress}
-                  />
-                  {/* {index < section.items.length - 1 ? <Separator /> : null} */}
-                </Fragment>
-              ))}
-            </AccountSectionCard>
+              description={section.description}
+              items={section.items}
+            />
           ))}
+
+          <Button
+            variant="tertiary"
+            isDisabled={isClearingCache}
+            onPress={() => {
+              Alert.alert(
+                t("alerts.clearCacheTitle"),
+                t("alerts.clearCacheBody"),
+                [
+                  {
+                    text: t("alerts.cancel"),
+                    style: "cancel",
+                  },
+                  {
+                    text: t("chat.clear"),
+                    onPress: () => {
+                      void handleClearCache();
+                    },
+                  },
+                ],
+              );
+            }}
+          >
+            <View className="w-full flex-row items-center justify-center gap-3">
+              {isClearingCache ? <Spinner size="sm" /> : null}
+              <Text className="text-md font-medium text-foreground">
+                {isClearingCache
+                  ? t("account.actions.clearingCache")
+                  : t("account.actions.clearCache")}
+              </Text>
+            </View>
+          </Button>
 
           {isAuthenticated ? (
             <Button
@@ -205,6 +205,7 @@ export default function AccountScreen() {
           isOpen={isAppearanceOpen}
           onOpenChange={setIsAppearanceOpen}
         />
+        <AccountAboutSheet isOpen={isAboutOpen} onOpenChange={setIsAboutOpen} />
         {isAuthenticated ? (
           <AccountNotificationSheet
             isOpen={isNotificationSheetOpen}
@@ -221,44 +222,29 @@ export default function AccountScreen() {
           isOpen={isChatLanguageOpen}
           onOpenChange={setIsChatLanguageOpen}
         />
+
         {isAuthenticated ? (
           <AccountActionsSheet
             isOpen={isAccountActionsOpen}
             onOpenChange={setIsAccountActionsOpen}
-            isClearingCache={isClearingCache}
             isDeletingUser={isDeletingUser}
-            onClearCache={() => {
-              Alert.alert(
-                t("alerts.clearCacheTitle"),
-                t("alerts.clearCacheBody"),
-                [
+            onDeleteAccount={() => {
+              setIsAccountActionsOpen(false);
+              setTimeout(() => {
+                Alert.alert(t("alerts.deleteTitle"), t("alerts.deleteBody"), [
                   {
                     text: t("alerts.cancel"),
                     style: "cancel",
                   },
                   {
-                    text: t("chat.clear"),
+                    text: t("alerts.delete"),
+                    style: "destructive",
                     onPress: () => {
-                      void handleClearCache();
+                      void deleteAccount();
                     },
                   },
-                ],
-              );
-            }}
-            onDeleteAccount={() => {
-              Alert.alert(t("alerts.deleteTitle"), t("alerts.deleteBody"), [
-                {
-                  text: t("alerts.cancel"),
-                  style: "cancel",
-                },
-                {
-                  text: t("alerts.delete"),
-                  style: "destructive",
-                  onPress: () => {
-                    void handleDeleteUser();
-                  },
-                },
-              ]);
+                ]);
+              }, 300);
             }}
           />
         ) : null}
