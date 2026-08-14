@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port=3005",
+    "dev": "(lsof -ti tcp:3005 | xargs kill -9) 2>/dev/null || true; next dev --port=3005",
     "build": "next build",
     "start": "next start"
   },
@@ -35,7 +35,7 @@
     "clsx": "^2.1.1",
     "convex": "catalog:",
     "lucide-react": "^0.546.0",
-    "next": "16.0.10",
+    "next": "16.3.1",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.4.3",
     "react": "19.2.0",

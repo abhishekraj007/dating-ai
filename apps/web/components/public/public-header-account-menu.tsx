@@ -7,6 +7,8 @@ import { ChevronDown, FileText, LogOut, Settings } from "lucide-react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { OpenAuthModalButton } from "@/components/auth/open-auth-modal-button";
+import { AppStoreDownloadButton } from "@/components/store-download-button";
+import { DISABLE_WEB_LOGIN } from "@/lib/web-payment";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -90,6 +92,10 @@ export function PublicHeaderAccountMenu({
   }
 
   if (!isAuthenticated) {
+    if (DISABLE_WEB_LOGIN && isSidebar) {
+      return <AppStoreDownloadButton />;
+    }
+
     return (
       <OpenAuthModalButton
         variant="outline"
@@ -98,7 +104,7 @@ export function PublicHeaderAccountMenu({
           "bg-primary hover:bg-primary/85 rounded-3xl  text-primary-foreground hover:text-primary-foreground/85",
         )}
       >
-        Login
+        {DISABLE_WEB_LOGIN ? "Get the app" : "Login"}
       </OpenAuthModalButton>
     );
   }
