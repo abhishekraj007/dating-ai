@@ -1,4 +1,5 @@
 import { View, Text, Pressable, useWindowDimensions } from "react-native";
+import { Stack } from "expo-router";
 import {
   KeyboardGestureArea,
   KeyboardStickyView,
@@ -11,7 +12,6 @@ import { Button, Avatar, Skeleton, Spinner, Popover } from "heroui-native";
 import { CachedAvatarImage } from "@/components/cached-avatar-image";
 import {
   ChevronLeft,
-  Hand,
   MessageCircle,
   MoreVertical,
   Trash2,
@@ -125,10 +125,13 @@ export default function ChatScreen() {
     handleClearChat,
     handleOpenChatLanguage,
     handleOpenCreditsModal,
+    handleOpenBuyCredits,
+    handleGoBack,
   } = useChatScreen();
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+      <Stack.Screen options={{ gestureEnabled: router.canGoBack() }} />
       <View style={{ flex: 1 }}>
         {/* Header */}
         <View className="flex-row items-center justify-between px-2 py-2 border-b border-border bg-transparent">
@@ -137,7 +140,7 @@ export default function ChatScreen() {
               variant="tertiary"
               size="sm"
               isIconOnly
-              onPress={() => router.back()}
+              onPress={handleGoBack}
               className="rounded-full"
             >
               <ChevronLeft size={24} color={foregroundColor} />
@@ -257,12 +260,13 @@ export default function ChatScreen() {
               onScroll={handleScroll}
               onScrollBeginDrag={handleScrollBeginDrag}
               onScrollEnd={handleScrollEnd}
-              onGoBack={() => router.back()}
+              onGoBack={handleGoBack}
               onSendGreeting={() => handleSend("Hi")}
               onQuizAnswer={handleQuizAnswer}
               onEndQuiz={handleEndQuiz}
               onRetryChatError={handleRetryFailedResponse}
-              onBuyCredits={handleOpenCreditsModal}
+              onBuyCredits={handleOpenBuyCredits}
+              onSubscribe={handleOpenCreditsModal}
               onOpenMessageActions={handleOpenMessageActions}
             />
           </KeyboardGestureArea>
@@ -310,7 +314,7 @@ export default function ChatScreen() {
         isOpen={isImageSheetOpen}
         onClose={() => setIsImageSheetOpen(false)}
         onSubmit={handleImageRequest}
-        onBuyCredits={handleOpenCreditsModal}
+        onBuyCredits={handleOpenBuyCredits}
         isLoading={isRequestingImage}
         credits={credits}
       />

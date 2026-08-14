@@ -130,6 +130,7 @@ export const LanguageProvider = ({
 
   const setLanguage = useCallback(
     async (nextLanguage: AppLanguage) => {
+      i18n.locale = nextLanguage;
       setLanguageState(nextLanguage);
       try {
         await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);

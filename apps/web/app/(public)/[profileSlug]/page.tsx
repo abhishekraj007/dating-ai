@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PublicProfilePage } from "@/components/public/public-profile-page";
 import { api, fetchQuery } from "@/lib/convex-client";
+import type { AvatarImageRequest } from "@dating-ai/backend";
 import {
   isReservedPublicUsername,
   normalizePublicUsername,
@@ -16,7 +17,10 @@ type ProfileRouteProps = {
   params: Promise<{ profileSlug: string }>;
 };
 
-async function getPublicProfile(profileSlug: string) {
+async function getPublicProfile(
+  profileSlug: string,
+  image?: AvatarImageRequest,
+) {
   const normalizedUsername = normalizePublicUsername(profileSlug);
   if (isReservedPublicUsername(normalizedUsername)) {
     return null;
@@ -26,6 +30,8 @@ async function getPublicProfile(profileSlug: string) {
     api.features.ai.queries.getPublicProfileByUsername,
     {
       username: normalizedUsername,
+      imageWidth: image?.imageWidth,
+      imageQuality: image?.imageQuality,
     },
   );
 

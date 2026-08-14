@@ -7,9 +7,12 @@ import { useThemeColor } from "heroui-native";
 import { Platform, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SplashScreen } from "@/components/splash-screen";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useSyncOnboardingPreferences } from "@/hooks/useSyncOnboardingPreferences";
+import { GUEST_ONBOARDING_KEY } from "@/hooks/use-finish-onboarding";
+import { useOnboardingStore } from "@/stores/onboarding-store";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 
 export const unstable_settings = {
@@ -26,11 +29,38 @@ export default function RootLayout() {
   const lastNavigationTarget = useRef<string | null>(null);
   const [hasFinishedInitialBootstrap, setHasFinishedInitialBootstrap] =
     useState(false);
+  const [hasLoadedGuestOnboarding, setHasLoadedGuestOnboarding] =
+    useState(false);
+  const [hasHydratedOnboarding, setHasHydratedOnboarding] = useState(
+    () => useOnboardingStore.persist.hasHydrated(),
+  );
+
+  useEffect(() => {
+    if (hasHydratedOnboarding) {
+      return;
+    }
+
+    return useOnboardingStore.persist.onFinishHydration(() => {
+      setHasHydratedOnboarding(true);
+    });
+  }, [hasHydratedOnboarding]);
+
   const useLegacyHeaderBlur =
     Platform.OS === "ios" && Number.parseInt(String(Platform.Version), 10) < 26;
 
-  // Check if we're already on onboarding screens
   const isOnOnboarding = (segments as string[]).includes("(onboarding)");
+  const isOnMain = (segments as string[]).includes("(main)");
+  const isOnChat = (segments as string[]).includes("chat");
+  const isOnAuth = (segments as string[]).includes("(auth)");
+  const {
+    pendingChatId,
+    selectedCharacterId,
+    guestOnboardingDone,
+    forceAuthRedirect,
+    setGuestOnboardingDone,
+    setPendingChatId,
+    setForceAuthRedirect,
+  } = useOnboardingStore();
 
   // Fetch user data when authenticated
   const userData = useQuery(
@@ -60,25 +90,85 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    const loadGuestFlag = async () => {
+      const stored = await AsyncStorage.getItem(GUEST_ONBOARDING_KEY);
+      if (stored === "1") {
+        setGuestOnboardingDone(true);
+      }
+      setHasLoadedGuestOnboarding(true);
+    };
+
+    void loadGuestFlag();
+  }, [setGuestOnboardingDone]);
+
+  useEffect(() => {
+    if (pendingChatId && isOnChat) {
+      setPendingChatId(null);
+    }
+  }, [isOnChat, pendingChatId, setPendingChatId]);
+
+  useEffect(() => {
+    if (isOnAuth && forceAuthRedirect) {
+      setForceAuthRedirect(false);
+    }
+  }, [forceAuthRedirect, isOnAuth, setForceAuthRedirect]);
+
+  useEffect(() => {
     if (hasFinishedInitialBootstrap) {
       return;
     }
 
-    if (!isLoading && !isUserBootstrapPending) {
+    if (
+      !isLoading &&
+      !isUserBootstrapPending &&
+      hasLoadedGuestOnboarding &&
+      hasHydratedOnboarding
+    ) {
       setHasFinishedInitialBootstrap(true);
     }
-  }, [hasFinishedInitialBootstrap, isLoading, isUserBootstrapPending]);
+  }, [
+    hasFinishedInitialBootstrap,
+    isLoading,
+    isUserBootstrapPending,
+    hasLoadedGuestOnboarding,
+    hasHydratedOnboarding,
+  ]);
 
-  // Only block the UI during the initial app bootstrap.
-  // Re-showing this overlay during OAuth handoffs causes visible flicker.
-  const showSplash = !hasFinishedInitialBootstrap;
+  const hasPendingCharacter = Boolean(selectedCharacterId);
+  const isCompletingPendingChat =
+    isAuthenticated && hasPendingCharacter && !hasCompletedOnboarding;
+  const isOpeningPendingChat = Boolean(pendingChatId) && !isOnChat;
+  const showSplash =
+    !hasFinishedInitialBootstrap ||
+    (isCompletingPendingChat && !isOnChat) ||
+    isOpeningPendingChat;
+
   let nextRoute: Href | null = null;
+  const skipForcedOnboarding =
+    hasPendingCharacter || guestOnboardingDone || isOnMain;
 
-  if (!showSplash && !isUserStatePending) {
-    if (needsOnboarding && !isOnOnboarding) {
-      nextRoute = "/(root)/(onboarding)/welcome";
-    } else if (!needsOnboarding && isOnOnboarding) {
-      nextRoute = "/(root)/(main)";
+  if (!isUserStatePending && hasFinishedInitialBootstrap) {
+    if (pendingChatId && !isOnChat) {
+      nextRoute = `/(root)/(main)/chat/${pendingChatId}`;
+    } else if (!isAuthenticated && forceAuthRedirect && !isOnAuth) {
+      nextRoute = "/(root)/(auth)";
+    } else if (!showSplash) {
+      if (
+        !isAuthenticated &&
+        !guestOnboardingDone &&
+        !isOnOnboarding &&
+        !isOnAuth &&
+        !hasPendingCharacter
+      ) {
+        nextRoute = "/(root)/(onboarding)/welcome";
+      } else if (needsOnboarding && !isOnOnboarding && !skipForcedOnboarding) {
+        nextRoute = "/(root)/(onboarding)/welcome";
+      } else if (
+        isOnOnboarding &&
+        (guestOnboardingDone || (isAuthenticated && !needsOnboarding))
+      ) {
+        nextRoute = "/(root)/(main)";
+      }
     }
   }
 

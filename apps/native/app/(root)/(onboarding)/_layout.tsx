@@ -18,6 +18,7 @@ export default function OnboardingLayout() {
       <Stack.Screen name="welcome" />
       <Stack.Screen name="languages" />
       <Stack.Screen name="gender" />
+      <Stack.Screen name="pick-character" />
       <Stack.Screen name="interests" />
     </Stack>
   );

@@ -5,12 +5,13 @@ import { api } from "@dating-ai/backend/convex/_generated/api";
 import { CREDITS_PRICING } from "@dating-ai/backend/convex/features/credits/pricing";
 import { DISABLE_WEB_PAYMENT } from "@/lib/web-payment";
 
-export function useChatBillingGate() {
+export function useChatBillingGate(freeMessagesRemaining = 0) {
   const userData = useQuery(api.user.fetchUserAndProfile);
 
   const credits = userData?.profile?.credits ?? 0;
   const isPremium = Boolean(userData?.profile?.isPremium);
-  const hasCreditsForChat = credits >= CREDITS_PRICING.TEXT_MESSAGE;
+  const hasCreditsForChat =
+    freeMessagesRemaining > 0 || credits >= CREDITS_PRICING.TEXT_MESSAGE;
 
   const canStartChat = () => {
     if (!DISABLE_WEB_PAYMENT) {

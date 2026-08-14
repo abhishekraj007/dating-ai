@@ -2,6 +2,7 @@ import {
   Text as RNText,
   TextProps as RNTextProps,
   TextStyle,
+  StyleSheet,
 } from "react-native";
 import { useThemeColor } from "heroui-native";
 
@@ -25,15 +26,17 @@ interface TextProps extends RNTextProps {
   children: React.ReactNode;
 }
 
+const LINE_HEIGHT_RATIO = 1.35;
+
 const sizeStyles: Record<TextSize, { fontSize: number; lineHeight: number }> = {
   xs: { fontSize: 12, lineHeight: 16 },
   sm: { fontSize: 14, lineHeight: 20 },
-  base: { fontSize: 16, lineHeight: 24 },
-  lg: { fontSize: 18, lineHeight: 28 },
+  base: { fontSize: 16, lineHeight: 22 },
+  lg: { fontSize: 18, lineHeight: 26 },
   xl: { fontSize: 20, lineHeight: 28 },
   "2xl": { fontSize: 24, lineHeight: 32 },
-  "3xl": { fontSize: 30, lineHeight: 36 },
-  "4xl": { fontSize: 36, lineHeight: 40 },
+  "3xl": { fontSize: 30, lineHeight: 40 },
+  "4xl": { fontSize: 36, lineHeight: 48 },
 };
 
 const weightStyles: Record<TextWeight, TextStyle["fontWeight"]> = {
@@ -72,13 +75,30 @@ export function Text({
   const color = variantColors[variant];
   const sizeStyle = sizeStyles[size];
   const fontWeight = weightStyles[weight];
+  const flattened = style ? StyleSheet.flatten(style) : undefined;
+  const fontSize =
+    typeof flattened?.fontSize === "number"
+      ? flattened.fontSize
+      : sizeStyle.fontSize;
+  const lineHeight =
+    typeof flattened?.lineHeight === "number"
+      ? flattened.lineHeight
+      : typeof flattened?.fontSize === "number"
+        ? Math.round(fontSize * LINE_HEIGHT_RATIO)
+        : sizeStyle.lineHeight;
 
   return (
     <RNText
       style={[
-        { color, fontWeight, opacity: variant === "semi-muted" ? 0.9 : 1 },
-        sizeStyle,
+        {
+          color,
+          fontWeight,
+          opacity: variant === "semi-muted" ? 0.9 : 1,
+          fontSize: sizeStyle.fontSize,
+          lineHeight: sizeStyle.lineHeight,
+        },
         style,
+        { fontSize, lineHeight },
       ]}
       {...props}
     >

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePaginatedQuery } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
+import type { AvatarImageRequest } from "@dating-ai/backend";
 import {
   CharacterCard,
   type PublicProfileCard,
@@ -23,7 +24,7 @@ type CharacterGridProps = {
   segment: PublicSegment;
   initialProfiles?: PublicProfileCard[];
   variant?: "home" | "category";
-};
+} & AvatarImageRequest;
 
 const PAGE_SIZE = 24;
 
@@ -88,11 +89,13 @@ function PublicProfileGrid({
   genderPreference,
   initialProfiles,
   resolvedSegment,
+  imageWidth,
+  imageQuality,
 }: {
   genderPreference: DiscoverGenderPreference;
   initialProfiles: PublicProfileCard[];
   resolvedSegment: PublicSegment;
-}) {
+} & AvatarImageRequest) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const { effectivePreferences } = useDiscoverPreferences();
 
@@ -102,6 +105,8 @@ function PublicProfileGrid({
       genderPreference,
       interestPreferences: effectivePreferences.interestPreferences,
       ethnicityPreferences: effectivePreferences.ethnicityPreferences,
+      imageWidth,
+      imageQuality,
     },
     { initialNumItems: PAGE_SIZE },
   );
@@ -170,6 +175,8 @@ export function CharacterGrid({
   initialProfiles = [],
   segment,
   variant = "category",
+  imageWidth,
+  imageQuality,
 }: CharacterGridProps) {
   const { effectivePreferences } = useDiscoverPreferences();
 
@@ -192,6 +199,8 @@ export function CharacterGrid({
       genderPreference={genderPreference}
       initialProfiles={initialProfiles}
       resolvedSegment={resolvedSegment}
+      imageWidth={imageWidth}
+      imageQuality={imageQuality}
     />
   );
 }

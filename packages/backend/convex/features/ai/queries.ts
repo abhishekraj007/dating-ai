@@ -1,11 +1,15 @@
 import { v } from "convex/values";
-import { query } from "../../_generated/server";
+import { query, type QueryCtx } from "../../_generated/server";
+import type { Doc } from "../../_generated/dataModel";
 import { components } from "../../_generated/api";
 import { paginationOptsValidator } from "convex/server";
 import { listUIMessages, syncStreams, vStreamArgs } from "@convex-dev/agent";
 import { r2 } from "../../uploads";
 import { authComponent } from "../../lib/betterAuth";
-import { buildAiProfileAvatarUrl } from "../../lib/aiProfileAvatar";
+import {
+  avatarImageQueryArgs,
+  buildAiProfileAvatarUrl,
+} from "../../lib/aiProfileAvatar";
 import { getPremiumAccessSnapshot } from "../premium/guards";
 import {
   ETHNICITIES,
@@ -95,6 +99,7 @@ function isVisibleOnWeb(profile: WebVisibleProfile) {
  */
 export const getProfiles = query({
   args: {
+    ...avatarImageQueryArgs,
     gender: v.optional(v.union(v.literal("female"), v.literal("male"))),
     limit: v.optional(v.number()),
     excludeExistingConversations: v.optional(v.boolean()),
@@ -104,7 +109,14 @@ export const getProfiles = query({
   },
   handler: async (
     ctx,
-    { gender, limit, excludeExistingConversations, platform },
+    {
+      gender,
+      limit,
+      excludeExistingConversations,
+      platform,
+      imageWidth,
+      imageQuality,
+    },
   ) => {
     let profilesQuery = ctx.db
       .query("aiProfiles")
@@ -151,6 +163,7 @@ export const getProfiles = query({
         const avatarUrl = buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth, imageQuality },
         );
         return {
           ...profile,
@@ -161,8 +174,83 @@ export const getProfiles = query({
   },
 });
 
+const onboardingCharacterValidator = v.object({
+  _id: v.id("aiProfiles"),
+  name: v.string(),
+  gender: v.union(v.literal("female"), v.literal("male")),
+  age: v.union(v.number(), v.null()),
+  avatarUrl: v.union(v.string(), v.null()),
+  tagline: v.string(),
+  occupation: v.union(v.string(), v.null()),
+  personalityTraits: v.array(v.string()),
+  isTrending: v.boolean(),
+});
+
+export const getOnboardingCharacters = query({
+  args: {
+    ...avatarImageQueryArgs,
+    gender: v.optional(
+      v.union(v.literal("female"), v.literal("male"), v.literal("both")),
+    ),
+    platform: v.optional(
+      v.union(v.literal("web"), v.literal("ios"), v.literal("android")),
+    ),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(onboardingCharacterValidator),
+  handler: async (ctx, { gender, platform, limit, imageWidth, imageQuality }) => {
+    const takeCount = Math.min(limit ?? 6, 12);
+    const genderFilter = gender === "both" ? undefined : gender;
+    const profiles = await activeProfilesDiscoverQuery(ctx, genderFilter).take(
+      40,
+    );
+
+    const visibleProfiles = profiles.filter((profile) => {
+      if (!platform) {
+        return true;
+      }
+      if (!profile.visibleOn || profile.visibleOn.length === 0) {
+        return true;
+      }
+      return profile.visibleOn.includes(platform);
+    });
+
+    const trendingProfiles = visibleProfiles.filter(
+      (profile) => profile.isTrending === true,
+    );
+    const pool =
+      trendingProfiles.length > 0 ? trendingProfiles : visibleProfiles;
+
+    return pool.slice(0, takeCount).map((profile) => {
+      const taglineSource =
+        profile.occupation ??
+        profile.bio ??
+        profile.relationshipGoal ??
+        profile.personalityTraits?.[0] ??
+        "Ready to talk whenever you are.";
+
+      return {
+        _id: profile._id,
+        name: profile.name,
+        gender: profile.gender,
+        age: profile.age ?? null,
+        avatarUrl: buildAiProfileAvatarUrl(
+          profile._id,
+          profile.avatarImageKey,
+          { imageWidth, imageQuality },
+        ),
+        tagline: taglineSource,
+        occupation: profile.occupation ?? null,
+        personalityTraits: profile.personalityTraits ?? [],
+        isTrending: profile.isTrending === true,
+      };
+    });
+  },
+});
+
 export const getPublicProfiles = query({
   args: {
+    ...avatarImageQueryArgs,
     gender: v.optional(v.union(v.literal("female"), v.literal("male"))),
     limit: v.optional(v.number()),
   },
@@ -181,7 +269,7 @@ export const getPublicProfiles = query({
       zodiacSign: v.union(v.string(), v.null()),
     }),
   ),
-  handler: async (ctx, { gender, limit }) => {
+  handler: async (ctx, { gender, limit, imageWidth, imageQuality }) => {
     const profiles = await activeProfilesDiscoverQuery(ctx, gender).take(
       limit ?? 24,
     );
@@ -206,6 +294,7 @@ export const getPublicProfiles = query({
           avatarUrl: buildAiProfileAvatarUrl(
             profile._id,
             profile.avatarImageKey,
+            { imageWidth, imageQuality },
           ),
           tagline: taglineSource,
           interests: profile.interests ?? [],
@@ -254,6 +343,7 @@ export const getPublicSitemapProfiles = query({
 
 export const getPublicProfilesPaginated = query({
   args: {
+    ...avatarImageQueryArgs,
     genderPreference: v.optional(
       v.union(v.literal("female"), v.literal("male"), v.literal("both")),
     ),
@@ -274,6 +364,8 @@ export const getPublicProfilesPaginated = query({
       interestPreferences,
       ethnicityPreferences,
       paginationOpts,
+      imageWidth,
+      imageQuality,
     },
   ) => {
     const normalizedEthnicityPreferences = (ethnicityPreferences ?? []).filter(
@@ -353,6 +445,7 @@ export const getPublicProfilesPaginated = query({
             avatarUrl: buildAiProfileAvatarUrl(
               profile._id,
               profile.avatarImageKey,
+              { imageWidth, imageQuality },
             ),
             tagline: taglineSource,
             interests: profile.interests ?? [],
@@ -366,9 +459,10 @@ export const getPublicProfilesPaginated = query({
 
 export const getPublicProfileByUsername = query({
   args: {
+    ...avatarImageQueryArgs,
     username: v.string(),
   },
-  handler: async (ctx, { username }) => {
+  handler: async (ctx, { username, imageWidth, imageQuality }) => {
     const normalizedUsername = normalizePublicProfileUsername(username);
     if (isReservedPublicProfileUsername(normalizedUsername)) {
       return null;
@@ -395,6 +489,7 @@ export const getPublicProfileByUsername = query({
     const avatarUrl = buildAiProfileAvatarUrl(
       profile._id,
       profile.avatarImageKey,
+      { imageWidth, imageQuality },
     );
 
     return {
@@ -443,9 +538,10 @@ export const getProfileImageUrl = query({
  */
 export const getProfile = query({
   args: {
+    ...avatarImageQueryArgs,
     profileId: v.id("aiProfiles"),
   },
-  handler: async (ctx, { profileId }) => {
+  handler: async (ctx, { profileId, imageWidth, imageQuality }) => {
     const profile = await ctx.db.get(profileId);
     if (!profile || profile.status !== "active") {
       return null;
@@ -455,6 +551,7 @@ export const getProfile = query({
     const avatarUrl = buildAiProfileAvatarUrl(
       profile._id,
       profile.avatarImageKey,
+      { imageWidth, imageQuality },
     );
 
     const profileImageUrls = profile.profileImageKeys
@@ -474,9 +571,10 @@ export const getProfile = query({
  */
 export const getUserCreatedProfiles = query({
   args: {
+    ...avatarImageQueryArgs,
     gender: v.optional(v.union(v.literal("female"), v.literal("male"))),
   },
-  handler: async (ctx, { gender }) => {
+  handler: async (ctx, { gender, imageWidth, imageQuality }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       return null;
@@ -501,6 +599,7 @@ export const getUserCreatedProfiles = query({
         const avatarUrl = buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth, imageQuality },
         );
         return {
           ...profile,
@@ -515,8 +614,10 @@ export const getUserCreatedProfiles = query({
  * Get user's conversations (chat list).
  */
 export const getUserConversations = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    ...avatarImageQueryArgs,
+  },
+  handler: async (ctx, { imageWidth, imageQuality }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       return null;
@@ -537,6 +638,7 @@ export const getUserConversations = query({
         const avatarUrl = buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth, imageQuality },
         );
 
         // Get last message from agent thread
@@ -560,10 +662,10 @@ export const getUserConversations = query({
           },
           lastMessage: lastMessage
             ? {
-                content:
-                  typeof lastMessage.text === "string" ? lastMessage.text : "",
-                createdAt: lastMessage._creationTime,
-              }
+              content:
+                typeof lastMessage.text === "string" ? lastMessage.text : "",
+              createdAt: lastMessage._creationTime,
+            }
             : null,
         };
       }),
@@ -576,9 +678,10 @@ export const getUserConversations = query({
  */
 export const getConversation = query({
   args: {
+    ...avatarImageQueryArgs,
     conversationId: v.id("aiConversations"),
   },
-  handler: async (ctx, { conversationId }) => {
+  handler: async (ctx, { conversationId, imageWidth, imageQuality }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       return null;
@@ -597,6 +700,7 @@ export const getConversation = query({
     const avatarUrl = buildAiProfileAvatarUrl(
       profile._id,
       profile.avatarImageKey,
+      { imageWidth, imageQuality },
     );
 
     return {
@@ -739,17 +843,106 @@ export const listThreadMessages = query({
   },
 });
 
+const ADMIN_PROFILE_STATUSES = ["active", "pending", "archived"] as const;
+
+async function queryAdminSystemProfiles(
+  ctx: QueryCtx,
+  args: {
+    statusFilter?: (typeof ADMIN_PROFILE_STATUSES)[number];
+    genderFilter?: "female" | "male";
+    trendingOnly: boolean;
+    scanLimit: number;
+  },
+) {
+  const { statusFilter, genderFilter, trendingOnly, scanLimit } = args;
+
+  if (trendingOnly) {
+    const statuses = statusFilter
+      ? [statusFilter]
+      : [...ADMIN_PROFILE_STATUSES];
+    const pages: Doc<"aiProfiles">[][] = [];
+
+    for (const status of statuses) {
+      if (genderFilter) {
+        pages.push(
+          await ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_gender_trending_created", (q) =>
+              q
+                .eq("status", status)
+                .eq("gender", genderFilter)
+                .eq("isTrending", true),
+            )
+            .order("desc")
+            .take(scanLimit),
+        );
+      } else {
+        pages.push(
+          await ctx.db
+            .query("aiProfiles")
+            .withIndex("by_status_trending_created", (q) =>
+              q.eq("status", status).eq("isTrending", true),
+            )
+            .order("desc")
+            .take(scanLimit),
+        );
+      }
+    }
+
+    return pages
+      .flat()
+      .sort((left, right) => right._creationTime - left._creationTime)
+      .slice(0, scanLimit);
+  }
+
+  if (statusFilter && genderFilter) {
+    return await ctx.db
+      .query("aiProfiles")
+      .withIndex("by_status_and_gender", (q) =>
+        q.eq("status", statusFilter).eq("gender", genderFilter),
+      )
+      .order("desc")
+      .take(scanLimit);
+  }
+
+  if (statusFilter) {
+    return await ctx.db
+      .query("aiProfiles")
+      .withIndex("by_system_status_created_at", (q) =>
+        q.eq("isUserCreated", false).eq("status", statusFilter),
+      )
+      .order("desc")
+      .take(scanLimit);
+  }
+
+  if (genderFilter) {
+    return await ctx.db
+      .query("aiProfiles")
+      .withIndex("by_gender", (q) => q.eq("gender", genderFilter))
+      .order("desc")
+      .take(scanLimit);
+  }
+
+  return await ctx.db
+    .query("aiProfiles")
+    .withIndex("by_system_created_at", (q) => q.eq("isUserCreated", false))
+    .order("desc")
+    .take(scanLimit);
+}
+
 /**
  * Admin: Get all system-created AI profiles (not user-created).
  * Returns profiles with signed image URLs.
  */
 export const getSystemProfiles = query({
   args: {
+    ...avatarImageQueryArgs,
     genderFilter: v.optional(v.union(v.literal("female"), v.literal("male"))),
     search: v.optional(v.string()),
     statusFilter: v.optional(
       v.union(v.literal("active"), v.literal("pending"), v.literal("archived")),
     ),
+    trendingFilter: v.optional(v.boolean()),
     recentOnly: v.optional(v.boolean()),
     limit: v.optional(v.number()),
   },
@@ -774,45 +967,25 @@ export const getSystemProfiles = query({
     const recentCutoff = Date.now() - 24 * 60 * 60 * 1000;
     const scanLimit = Math.max(limit * (hasSearch ? 8 : 2), 160);
 
-    const profiles =
-      args.statusFilter && args.genderFilter
-        ? await ctx.db
-            .query("aiProfiles")
-            .withIndex("by_status_and_gender", (q) =>
-              q
-                .eq("status", args.statusFilter!)
-                .eq("gender", args.genderFilter!),
-            )
-            .order("desc")
-            .take(scanLimit)
-        : args.statusFilter
-          ? await ctx.db
-              .query("aiProfiles")
-              .withIndex("by_system_status_created_at", (q) =>
-                q.eq("isUserCreated", false).eq("status", args.statusFilter!),
-              )
-              .order("desc")
-              .take(scanLimit)
-          : args.genderFilter
-            ? await ctx.db
-                .query("aiProfiles")
-                .withIndex("by_gender", (q) =>
-                  q.eq("gender", args.genderFilter!),
-                )
-                .order("desc")
-                .take(scanLimit)
-            : await ctx.db
-                .query("aiProfiles")
-                .withIndex("by_system_created_at", (q) =>
-                  q.eq("isUserCreated", false),
-                )
-                .order("desc")
-                .take(scanLimit);
+    const profiles = await queryAdminSystemProfiles(ctx, {
+      statusFilter: args.statusFilter,
+      genderFilter: args.genderFilter,
+      trendingOnly: args.trendingFilter === true,
+      scanLimit,
+    });
 
     const filteredProfiles = profiles.filter((profile) => {
       if (profile.isUserCreated) return false;
 
       if (args.genderFilter && profile.gender !== args.genderFilter) {
+        return false;
+      }
+
+      if (args.trendingFilter === true && profile.isTrending !== true) {
+        return false;
+      }
+
+      if (args.trendingFilter === false && profile.isTrending === true) {
         return false;
       }
 
@@ -843,12 +1016,13 @@ export const getSystemProfiles = query({
         const avatarUrl = buildAiProfileAvatarUrl(
           profile._id,
           profile.avatarImageKey,
+          { imageWidth: args.imageWidth, imageQuality: args.imageQuality },
         );
 
         const profileImageUrls = profile.profileImageKeys
           ? await Promise.all(
-              profile.profileImageKeys.map((key) => r2.getUrl(key)),
-            )
+            profile.profileImageKeys.map((key) => r2.getUrl(key)),
+          )
           : [];
 
         return {

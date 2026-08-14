@@ -241,6 +241,14 @@ export default defineSchema({
     lastMessageRole: v.optional(v.string()),
     profileAvatarImageKey: v.optional(v.string()), // Denormalized for convenience
     profileName: v.optional(v.string()), // Denormalized for convenience
+    openingMessageStatus: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("ready"),
+        v.literal("failed"),
+      ),
+    ),
+    freeMessagesRemaining: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_profile", ["userId", "aiProfileId"])

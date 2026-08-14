@@ -76,6 +76,7 @@ interface ChatMessageListProps {
   onEndQuiz: () => void;
   onRetryChatError: (promptMessageId: string) => void;
   onBuyCredits: () => void;
+  onSubscribe?: () => void;
   onOpenMessageActions: (messageId: string, messageOrder: number) => void;
 }
 
@@ -171,6 +172,7 @@ export function ChatMessageList({
   onEndQuiz,
   onRetryChatError,
   onBuyCredits,
+  onSubscribe,
   onOpenMessageActions,
 }: ChatMessageListProps) {
   const { t } = useTranslation();
@@ -262,6 +264,7 @@ export function ChatMessageList({
           onRetryChatError={onRetryChatError}
           isRetrying={isSending}
           onBuyCredits={onBuyCredits}
+          onSubscribe={onSubscribe}
           onLongPress={
             isUser
               ? () => onOpenMessageActions(item._id, item.order)
@@ -274,6 +277,7 @@ export function ChatMessageList({
       interactiveQuizQuestionId,
       isSending,
       onBuyCredits,
+      onSubscribe,
       onEndQuiz,
       onOpenMessageActions,
       onQuizAnswer,

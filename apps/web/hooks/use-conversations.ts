@@ -3,9 +3,13 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import type { Id } from "@dating-ai/backend/convex/_generated/dataModel";
+import type { AvatarImageRequest } from "@dating-ai/backend";
 
-export function useConversations() {
-  const conversations = useQuery(api.features.ai.queries.getUserConversations);
+export function useConversations(image?: AvatarImageRequest) {
+  const conversations = useQuery(api.features.ai.queries.getUserConversations, {
+    imageWidth: image?.imageWidth,
+    imageQuality: image?.imageQuality,
+  });
 
   return {
     conversations: conversations ?? [],
@@ -13,11 +17,18 @@ export function useConversations() {
   };
 }
 
-export function useConversation(conversationId: string | undefined) {
+export function useConversation(
+  conversationId: string | undefined,
+  image?: AvatarImageRequest,
+) {
   const conversation = useQuery(
     api.features.ai.queries.getConversation,
     conversationId
-      ? { conversationId: conversationId as Id<"aiConversations"> }
+      ? {
+          conversationId: conversationId as Id<"aiConversations">,
+          imageWidth: image?.imageWidth,
+          imageQuality: image?.imageQuality,
+        }
       : "skip"
   );
 

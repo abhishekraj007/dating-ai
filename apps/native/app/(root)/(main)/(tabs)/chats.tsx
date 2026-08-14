@@ -1,8 +1,9 @@
-import { View, Text, FlatList, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
+import { LegendList } from "@legendapp/list/react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Avatar, ScrollShadow, Skeleton } from "heroui-native";
+import { Avatar, Skeleton } from "heroui-native";
 import { Image } from "lucide-react-native";
 import { Image as ExpoImage } from "expo-image";
 import { Header } from "@/components";
@@ -273,32 +274,29 @@ export default function ChatsScreen() {
         edges={["top"]}
       >
         <Header title={t("tabs.chats")} showSettings={false} />
-        <ScrollShadow
-          size={20}
-          LinearGradientComponent={LinearGradient}
-          style={{ flex: 1 }}
-        >
-          {isLoading ? (
-            renderSkeleton()
-          ) : conversations.length === 0 && newMatches.length === 0 ? (
-            <View className="flex-1 items-center justify-center px-6">
-              <Text className="text-foreground text-xl font-semibold mb-2">
-                {t("chats.emptyTitle")}
-              </Text>
-              <Text className="text-muted text-center">
-                {t("chats.emptyDescription")}
-              </Text>
-            </View>
-          ) : (
-            <FlatList
-              data={conversations}
-              renderItem={renderConversation}
-              keyExtractor={(item) => item?._id ?? ""}
-              showsVerticalScrollIndicator={false}
-              ListHeaderComponent={renderNewMatches}
-            />
-          )}
-        </ScrollShadow>
+        {isLoading ? (
+          renderSkeleton()
+        ) : conversations.length === 0 && newMatches.length === 0 ? (
+          <View className="flex-1 items-center justify-center px-6">
+            <Text className="text-foreground text-xl font-semibold mb-2">
+              {t("chats.emptyTitle")}
+            </Text>
+            <Text className="text-muted text-center">
+              {t("chats.emptyDescription")}
+            </Text>
+          </View>
+        ) : (
+          <LegendList
+            data={conversations}
+            renderItem={renderConversation}
+            keyExtractor={(item) => item?._id ?? ""}
+            estimatedItemSize={76}
+            recycleItems
+            style={{ flex: 1 }}
+            showsVerticalScrollIndicator={false}
+            ListHeaderComponent={renderNewMatches}
+          />
+        )}
       </SafeAreaView>
     </View>
   );

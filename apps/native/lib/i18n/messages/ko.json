@@ -67,7 +67,9 @@
       "appTitle": "앱 언어",
       "appDescription": "메뉴, 버튼 및 기타 앱 텍스트를 제어합니다.",
       "chatTitle": "채팅 언어",
-      "chatDescription": "AI 동반자가 답장하는 언어를 제어합니다."
+      "chatDescription": "AI 동반자가 답장하는 언어를 제어합니다.",
+      "chatShort": "채팅: {{language}}",
+      "appShort": "앱: {{language}}"
     },
     "[object Object]": {
       "music": "음악",
@@ -98,6 +100,13 @@
     "interests": {
       "title": "관심사는 무엇인가요?",
       "selected": "{{count}}개 선택됨"
+    },
+    "character": {
+      "title": "당신의 타입은?",
+      "subtitle": "지금 트렌드 중인 컴패니언입니다. 나중에 언제든 더 만나볼 수 있어요.",
+      "cta": "{{name}}와 채팅하기",
+      "browse": "먼저 모두 둘러보기",
+      "trending": "트렌딩"
     },
     "settingUp": "설정 중...",
     "continue": "계속",
@@ -383,6 +392,12 @@
     "getCloser": "{{name}}에게 더 가까이",
     "unlockDescription": "{{name}}이(가) 사진을 보냈습니다. 프리미엄을 구매하고 블러 뒤에 숨겨진 것을 확인하세요.",
     "unlockUnlimited": "무제한 액세스 잠금 해제"
+  },
+  "buyCredits": {
+    "title": "대화를 이어가세요",
+    "subtitle": "메시지, 셀피, 영상을 위해 크레딧을 충전하세요.",
+    "titleWithName": "{{name}}와 계속 대화하세요",
+    "subtitleWithName": "{{name}}이(가) 답장을 기다리고 있어요. 채팅을 이어가려면 크레딧을 충전하세요."
   },
   "quiz": {
     "started": "퀴즈 시작",

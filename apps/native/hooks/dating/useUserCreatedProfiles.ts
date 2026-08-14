@@ -1,12 +1,18 @@
 import { useQuery } from "convex-helpers/react/cache";
 import { useMutation } from "convex/react";
 import { api } from "@dating-ai/backend";
+import type { AvatarImageRequest } from "@dating-ai/backend";
 
 type Gender = "female" | "male";
 
-export function useUserCreatedProfiles(gender?: Gender) {
+export function useUserCreatedProfiles(
+  gender?: Gender,
+  image?: AvatarImageRequest,
+) {
   const profiles = useQuery(api.features.ai.queries.getUserCreatedProfiles, {
     gender,
+    imageWidth: image?.imageWidth,
+    imageQuality: image?.imageQuality,
   });
 
   return {

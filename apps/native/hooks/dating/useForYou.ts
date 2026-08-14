@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { usePaginatedQuery } from "convex-helpers/react/cache";
 import { api } from "@dating-ai/backend";
-import type { Id } from "@dating-ai/backend";
+import type { AvatarImageRequest, Id } from "@dating-ai/backend";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -30,11 +30,8 @@ export interface ForYouProfile {
   _id: Id<"aiProfiles">;
   name: string;
   age?: number;
-  gender: "female" | "male";
-  zodiacSign?: string;
   bio?: string;
   interests?: string[];
-  avatarImageKey?: string;
   avatarUrl: string | null;
 }
 
@@ -66,7 +63,10 @@ function getCurrentPlatform(): AppPlatform {
  * Hook to get profiles for the For You feed.
  * Uses paginated query for infinite loading.
  */
-export function useForYouProfiles(initialNumItems: number = 20) {
+export function useForYouProfiles(
+  initialNumItems: number = 20,
+  image?: AvatarImageRequest,
+) {
   const platform = getCurrentPlatform();
   const { preferences } = useEffectiveUserPreferences();
   const genderPreference = preferences.genderPreference;
@@ -90,6 +90,8 @@ export function useForYouProfiles(initialNumItems: number = 20) {
       ageMax,
       zodiacPreferences,
       interestPreferences,
+      imageWidth: image?.imageWidth,
+      imageQuality: image?.imageQuality,
     },
     { initialNumItems },
   );
@@ -314,8 +316,11 @@ export function useProfileInteraction() {
 /**
  * Hook to get liked profiles.
  */
-export function useLikedProfiles() {
-  const profiles = useQuery(api.features.preferences.queries.getLikedProfiles);
+export function useLikedProfiles(image?: AvatarImageRequest) {
+  const profiles = useQuery(api.features.preferences.queries.getLikedProfiles, {
+    imageWidth: image?.imageWidth,
+    imageQuality: image?.imageQuality,
+  });
 
   return {
     profiles: profiles ?? [],

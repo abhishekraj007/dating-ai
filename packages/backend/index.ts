@@ -25,3 +25,8 @@ export {
   resolveChatLanguage,
   type AppLanguage,
 } from "./convex/lib/languages";
+export {
+  DEFAULT_AVATAR_IMAGE_WIDTH,
+  DEFAULT_AVATAR_IMAGE_QUALITY,
+  type AvatarImageRequest,
+} from "./convex/lib/aiProfileAvatar";

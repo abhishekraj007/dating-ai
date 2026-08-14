@@ -51,6 +51,7 @@ interface MessageBubbleProps {
   isRetrying?: boolean;
   isStreaming?: boolean;
   onBuyCredits?: () => void;
+  onSubscribe?: () => void;
   onLongPress?: () => void;
 }
 
@@ -71,6 +72,7 @@ export const MessageBubble = ({
   isRetrying = false,
   isStreaming = false,
   onBuyCredits,
+  onSubscribe,
   onLongPress,
 }: MessageBubbleProps) => {
   const time = format(new Date(timestamp), "HH:mm");
@@ -221,6 +223,7 @@ export const MessageBubble = ({
           <CreditsRequiredBubble
             data={structuredContent as CreditsRequiredData}
             onBuyCredits={onBuyCredits}
+            onSubscribe={onSubscribe}
             {...bubbleProps}
           />
         );

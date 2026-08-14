@@ -24,6 +24,7 @@ import {
   calculateCompatibilityScore,
   createAIProfileAgent,
 } from "./agent";
+import { CREDITS_PRICING } from "../credits/pricing";
 import { r2 } from "../../uploads";
 import { rateLimiter } from "../../lib/rateLimit";
 import {
@@ -101,20 +102,20 @@ async function saveMediaCreditsRequiredMessage(
 export const startConversation = mutation({
   args: {
     aiProfileId: v.id("aiProfiles"),
+    grantFreeMessages: v.optional(v.boolean()),
   },
-  handler: async (ctx, { aiProfileId }) => {
+  returns: v.id("aiConversations"),
+  handler: async (ctx, { aiProfileId, grantFreeMessages }) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new Error("Not authenticated");
     }
 
-    // Check if profile exists and is active
     const profile = await ctx.db.get(aiProfileId);
     if (!profile || profile.status !== "active") {
       throw new Error("Profile not found");
     }
 
-    // Check if conversation already exists
     const existingConversation = await ctx.db
       .query("aiConversations")
       .withIndex("by_user_and_profile", (q) =>
@@ -126,14 +127,12 @@ export const startConversation = mutation({
       return existingConversation._id;
     }
 
-    // Create Agent thread
     const threadId = await createThread(ctx, components.agent, {
       userId: user._id,
       title: `Chat with ${profile.name}`,
       summary: `Conversation with AI profile ${profile.name}`,
     });
 
-    // Create conversation record
     const conversationId = await ctx.db.insert("aiConversations", {
       threadId,
       userId: user._id,
@@ -142,9 +141,44 @@ export const startConversation = mutation({
       compatibilityScore: 60,
       messageCount: 0,
       lastMessageAt: Date.now(),
+      profileName: profile.name,
+      profileAvatarImageKey: profile.avatarImageKey,
+      openingMessageStatus: "pending",
+      ...(grantFreeMessages
+        ? { freeMessagesRemaining: CREDITS_PRICING.ONBOARDING_FREE_MESSAGES }
+        : {}),
     });
 
+    await ctx.scheduler.runAfter(
+      0,
+      internal.features.ai.actions.generateOpeningMessage,
+      { conversationId },
+    );
+
     return conversationId;
+  },
+});
+
+export const finalizeOpeningMessage = internalMutation({
+  args: {
+    conversationId: v.id("aiConversations"),
+    preview: v.string(),
+    status: v.union(v.literal("ready"), v.literal("failed")),
+  },
+  returns: v.null(),
+  handler: async (ctx, { conversationId, preview, status }) => {
+    const conversation = await ctx.db.get(conversationId);
+    if (!conversation) {
+      return null;
+    }
+
+    await ctx.db.patch(conversationId, {
+      openingMessageStatus: status,
+      lastMessageAt: Date.now(),
+      lastMessagePreview: preview,
+      lastMessageRole: "assistant",
+    });
+    return null;
   },
 });
 
@@ -190,8 +224,10 @@ export const sendMessage = mutation({
     const isImageRequest = isLikelyChatImageRequest(content);
     const isMediaRequest = isVideoRequest || isImageRequest;
     const mediaCost = isVideoRequest ? videoCost : imageCost;
+    const freeMessagesRemaining = conversation.freeMessagesRemaining ?? 0;
+    const usesFreeMessage = !isMediaRequest && freeMessagesRemaining > 0;
 
-    if (currentCredits < messageCost) {
+    if (!usesFreeMessage && currentCredits < messageCost) {
       throw new Error("Insufficient credits");
     }
 
@@ -221,8 +257,13 @@ export const sendMessage = mutation({
       lastMessageAt: Date.now(),
       relationshipLevel: newLevel,
       compatibilityScore: newScore,
+      lastMessagePreview: content,
+      lastMessageRole: "user",
       pendingPromptMessageId:
         isMediaRequest && currentCredits < mediaCost ? null : messageId,
+      ...(usesFreeMessage
+        ? { freeMessagesRemaining: freeMessagesRemaining - 1 }
+        : {}),
     });
 
     if (isMediaRequest && currentCredits < mediaCost) {
@@ -239,7 +280,7 @@ export const sendMessage = mutation({
       return { messageId };
     }
 
-    if (!isMediaRequest) {
+    if (!isMediaRequest && !usesFreeMessage) {
       await ctx.db.patch(profile._id, {
         credits: currentCredits - messageCost,
       });

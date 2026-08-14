@@ -59,9 +59,14 @@
     "privacy": "privacy policy"
   },
   "welcome": {
-    "title": "Find your new AI bestfriend & more!",
-    "subtitle": "Feeling alone? You're not the only one. Come meet characters who actually listen and understand you.",
-    "cta": "Get Started"
+    "title": "Someone here is already into you",
+    "cta": "Start chatting",
+    "live": "Live",
+    "sample": {
+      "them": "Hey. I've been waiting to talk to you.",
+      "you": "Hi. What's up?",
+      "themTwo": "I'm bored. You free?"
+    }
   },
   "onboarding": {
     "languages": {
@@ -70,7 +75,9 @@
       "appTitle": "App language",
       "appDescription": "Controls menus, buttons, and other app text.",
       "chatTitle": "Chat language",
-      "chatDescription": "Controls the language your AI companions reply in."
+      "chatDescription": "Controls the language your AI companions reply in.",
+      "chatShort": "Chat: {{language}}",
+      "appShort": "App: {{language}}"
     },
     "[object Object]": {
       "music": "Music",
@@ -94,9 +101,17 @@
     },
     "gender": {
       "title": "Who are you interested in?",
+      "subtitle": "We'll match you with people you'll actually want to talk to.",
       "female": "Females",
       "male": "Males",
       "both": "All"
+    },
+    "character": {
+      "title": "Who's your type?",
+      "subtitle": "These companions are trending right now. You can always meet more later.",
+      "cta": "Chat with {{name}}",
+      "browse": "Browse everyone first",
+      "trending": "Trending"
     },
     "interests": {
       "title": "What are your interests?",
@@ -256,6 +271,7 @@
     "conversationNotFound": "Conversation not found",
     "startConversation": "Start a conversation",
     "sayHello": "Say hello to {{name}}!",
+    "openingPending": "{{name}} is writing you...",
     "aiCharacter": "AI Character",
     "aiCompanion": "your AI companion",
     "selfie": "Photo",
@@ -399,7 +415,17 @@
     "tapToSeePhoto": "Tap to See Photo",
     "getCloser": "Get closer to {{name}}",
     "unlockDescription": "Get FeelChat Pro and find out what {{name}} sent you!",
-    "unlockUnlimited": "Unlock Premium Content"
+    "unlockUnlimited": "Unlock Premium Content",
+    "keepTalking": "Keep talking to {{name}}",
+    "keepTalkingDescription": "Your free messages with {{name}} just ran out. Subscribe to keep the conversation going.",
+    "subscribeCta": "Continue with Premium",
+    "orBuyCredits": "Or buy credits"
+  },
+  "buyCredits": {
+    "title": "Keep the conversation going",
+    "subtitle": "Top up credits to message, ask for selfies, and get videos.",
+    "titleWithName": "Keep talking to {{name}}",
+    "subtitleWithName": "{{name}} is waiting for your reply. Top up credits to keep chatting."
   },
   "quiz": {
     "started": "Quiz started",
