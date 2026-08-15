@@ -32,14 +32,10 @@ export const metadata: Metadata = {
     "virtual companion",
     "roleplay chat",
   ],
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     title: "FeelAI - AI Dating App for Virtual Companions",
     description:
       "Discover AI girlfriends, AI boyfriends, and virtual companions built for dating, roleplay, and always-on chats.",
-    url: "/",
     siteName: "FeelAI",
     type: "website",
     images: [

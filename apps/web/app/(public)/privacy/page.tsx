@@ -1,11 +1,12 @@
-import type { Metadata } from "next";
 import { PublicInfoPage } from "@/components/public/public-info-page";
+import { buildPublicPageMetadata } from "@/lib/public-metadata";
 
-export const metadata: Metadata = {
+export const metadata = buildPublicPageMetadata({
   title: "Privacy Policy",
   description:
     "How FeelAI handles account, profile, preference, chat, and billing data on web.",
-};
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (

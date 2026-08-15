@@ -5,19 +5,19 @@ import { PUBLIC_SEGMENTS } from "@/lib/public-segments";
 import { buildPublicProfileHref } from "@/lib/public-profile-routes";
 import { PUBLIC_SEO_PAGE_LIST } from "@/lib/public-seo-pages";
 
-const STATIC_LAST_MODIFIED = new Date("2026-05-26T00:00:00.000Z");
+const STATIC_LAST_MODIFIED = new Date("2026-08-16T00:00:00.000Z");
+
+export const revalidate = 3600;
 
 const STATIC_PUBLIC_PATHS = [
+  "/about",
+  "/safety",
+  "/pricing",
   "/help",
   "/support",
-  "/contact",
   "/privacy",
   "/terms",
-  "/llms.txt",
-  "/llms-full.txt",
 ];
-
-export const dynamic = "force-dynamic";
 
 type SitemapProfile = {
   gender: "female" | "male";
@@ -101,7 +101,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...STATIC_PUBLIC_PATHS.map((path) => ({
       url: `${siteUrl}${path}`,
       changeFrequency: "monthly" as const,
-      priority: path.startsWith("/llms") ? 0.4 : 0.5,
+      priority: 0.5,
       lastModified: STATIC_LAST_MODIFIED,
     })),
     ...profileEntries,

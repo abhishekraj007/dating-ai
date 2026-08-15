@@ -1,12 +1,11 @@
 import { buildPrivatePageMetadata } from "@/lib/public-metadata";
 
 export const metadata = buildPrivatePageMetadata({
-  title: "Store Screenshots",
-  description:
-    "Export App Store and Google Play marketing screenshots for FeelAI.",
+  title: "Checkout",
+  description: "Complete your FeelAI purchase.",
 });
 
-export default function StoreScreenshotsLayout({
+export default function CheckoutLayout({
   children,
 }: {
   children: React.ReactNode;
