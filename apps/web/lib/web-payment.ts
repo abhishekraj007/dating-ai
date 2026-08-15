@@ -14,7 +14,7 @@ function readEnvBoolean(
  * iOS app for credits and subscription purchases.
  *
  * Defaults to `true` (App Store download flow). Set
- * `NEXT_PUBLIC_DISABLE_WEB_PAYMENT=false` to enable Polar checkout on web.
+ * `NEXT_PUBLIC_DISABLE_WEB_PAYMENT=false` to enable Dodo checkout on web.
  */
 export const DISABLE_WEB_PAYMENT = readEnvBoolean(
   process.env.NEXT_PUBLIC_DISABLE_WEB_PAYMENT,

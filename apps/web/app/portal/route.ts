@@ -1,5 +1,7 @@
+import { NextRequest, NextResponse } from "next/server";
 import { CustomerPortal } from "@polar-sh/nextjs";
-import { NextRequest } from "next/server";
+import { fetchAction, api } from "@/lib/convex-client";
+import { getToken } from "@/lib/auth-server";
 
 function resolveAppOrigin(request: NextRequest) {
   const configuredAppUrl =
@@ -30,14 +32,21 @@ function resolveSafeReturnUrl(request: NextRequest, appOrigin: string) {
     return new URL("/chat", appOrigin).toString();
   }
 
-  try {
-    return new URL(requestedReturnPath, appOrigin).toString();
-  } catch {
-    return new URL("/chat", appOrigin).toString();
-  }
+  return new URL(requestedReturnPath, appOrigin).toString();
 }
 
-export function GET(request: NextRequest) {
+export async function GET(request: NextRequest) {
+  const token = await getToken();
+  const portal = await fetchAction(
+    api.features.dodo.actions.getCustomerPortal,
+    {},
+    { token },
+  );
+
+  if (portal?.portal_url) {
+    return NextResponse.redirect(portal.portal_url);
+  }
+
   const appOrigin = resolveAppOrigin(request);
   const returnUrl = resolveSafeReturnUrl(request, appOrigin);
 

@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useAction } from "convex/react";
 import { toast } from "sonner";
+import { api } from "@dating-ai/backend/convex/_generated/api";
 
 type EmbedCheckoutOptions = {
   productId: string;
@@ -11,134 +13,41 @@ type EmbedCheckoutOptions = {
   customerName?: string | null;
 };
 
-type PolarCheckoutEvent = Event & {
-  preventDefault: () => void;
-  detail?: {
-    redirect?: boolean;
-  };
-};
-
-type PolarCheckoutInstance = {
-  close: () => void;
-  addEventListener: (
-    type: "success" | "close" | "confirmed",
-    listener: (event: PolarCheckoutEvent) => void,
-  ) => void;
-};
-
-let polarEmbedCheckoutModulePromise: Promise<
-  typeof import("@polar-sh/checkout/embed")
-> | null = null;
-
-function loadPolarEmbedCheckoutModule() {
-  if (!polarEmbedCheckoutModulePromise) {
-    polarEmbedCheckoutModulePromise = import("@polar-sh/checkout/embed");
-  }
-
-  return polarEmbedCheckoutModulePromise;
-}
-
-function shouldUseRedirectCheckout() {
-  const { hostname, protocol } = window.location;
-
-  if (protocol !== "https:") {
-    return true;
-  }
-
-  return (
-    hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]"
-  );
-}
-
 export function usePolarEmbedCheckout() {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const checkoutRef = useRef<PolarCheckoutInstance | null>(null);
+  const createCheckout = useAction(api.features.dodo.actions.createCheckout);
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
 
   const currentPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
   useEffect(() => {
     return () => {
-      checkoutRef.current?.close();
-      checkoutRef.current = null;
+      setLoadingProductId(null);
     };
   }, []);
 
   const preloadCheckout = () => {
-    if (shouldUseRedirectCheckout()) {
-      return;
-    }
-
-    void loadPolarEmbedCheckoutModule();
+    return;
   };
 
-  const openCheckout = async ({
-    productId,
-    customerExternalId,
-    customerEmail,
-    customerName,
-  }: EmbedCheckoutOptions) => {
+  const openCheckout = async ({ productId }: EmbedCheckoutOptions) => {
     setLoadingProductId(productId);
 
+    const returnPath =
+      currentPath.startsWith("/") && !currentPath.startsWith("//")
+        ? currentPath
+        : "/";
+
     try {
-      checkoutRef.current?.close();
-
-      const params = new URLSearchParams({
-        products: productId,
-        customerExternalId,
+      const session = await createCheckout({
+        productId,
+        returnUrl: `${window.location.origin}${returnPath}`,
       });
-
-      if (customerEmail) {
-        params.set("customerEmail", customerEmail);
-      }
-
-      if (customerName) {
-        params.set("customerName", customerName);
-      }
-
-      params.set("returnPath", currentPath);
-
-      const checkoutUrl = `${window.location.origin}/checkout?${params.toString()}`;
-
-      if (shouldUseRedirectCheckout()) {
-        window.location.assign(checkoutUrl);
-        return;
-      }
-
-      const { PolarEmbedCheckout } = await loadPolarEmbedCheckoutModule();
-
-      const theme = document.documentElement.classList.contains("dark")
-        ? "dark"
-        : "light";
-
-      const checkout = (await PolarEmbedCheckout.create(checkoutUrl, {
-        theme,
-        onLoaded: () => {
-          setLoadingProductId(null);
-        },
-      })) as PolarCheckoutInstance;
-
-      checkoutRef.current = checkout;
-
-      checkout.addEventListener("success", (event) => {
-        event.preventDefault();
-        checkoutRef.current?.close();
-        checkoutRef.current = null;
-        setLoadingProductId(null);
-        toast.success("Purchase completed. Your account will update shortly.");
-        router.refresh();
-      });
-
-      checkout.addEventListener("close", () => {
-        checkoutRef.current = null;
-        setLoadingProductId(null);
-        router.refresh();
-      });
+      window.location.assign(session.checkout_url);
     } catch (error) {
       setLoadingProductId(null);
-      console.error("Failed to open Polar checkout:", error);
+      console.error("Failed to open Dodo checkout:", error);
       toast.error("Failed to open checkout. Please try again.");
     }
   };

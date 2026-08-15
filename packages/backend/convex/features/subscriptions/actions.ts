@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { action } from "../../_generated/server";
 import { internal } from "../../_generated/api";
 import type { Id } from "../../_generated/dataModel";
+import { billingPlatformValidator } from "../../lib/billingPlatform";
 
 /**
  * Server-side actions for webhook handlers
@@ -16,7 +17,7 @@ import type { Id } from "../../_generated/dataModel";
 export const upsertSubscriptionFromWebhook = action({
   args: {
     userId: v.string(),
-    platform: v.union(v.literal("polar"), v.literal("revenuecat")),
+    platform: billingPlatformValidator,
     platformCustomerId: v.string(),
     platformSubscriptionId: v.string(),
     platformProductId: v.string(),
@@ -139,7 +140,7 @@ export const addCreditsFromWebhook = action({
 export const insertOrderFromWebhook = action({
   args: {
     userId: v.string(),
-    platform: v.union(v.literal("polar"), v.literal("revenuecat")),
+    platform: billingPlatformValidator,
     platformOrderId: v.string(),
     platformProductId: v.string(),
     amount: v.number(),
@@ -173,7 +174,7 @@ export const getSubscriptionByPlatformId = action({
       _id: v.id("subscriptions"),
       _creationTime: v.number(),
       userId: v.string(),
-      platform: v.union(v.literal("polar"), v.literal("revenuecat")),
+      platform: billingPlatformValidator,
       platformCustomerId: v.string(),
       platformSubscriptionId: v.string(),
       platformProductId: v.string(),
@@ -202,7 +203,7 @@ export const getSubscriptionByPlatformId = action({
     _id: Id<"subscriptions">;
     _creationTime: number;
     userId: string;
-    platform: "polar" | "revenuecat";
+    platform: "polar" | "revenuecat" | "dodo";
     platformCustomerId: string;
     platformSubscriptionId: string;
     platformProductId: string;
@@ -237,7 +238,7 @@ export const getOrderByPlatformId = action({
       _id: v.id("orders"),
       _creationTime: v.number(),
       userId: v.string(),
-      platform: v.union(v.literal("polar"), v.literal("revenuecat")),
+      platform: billingPlatformValidator,
       platformOrderId: v.string(),
       platformProductId: v.string(),
       amount: v.number(),
@@ -258,7 +259,7 @@ export const getOrderByPlatformId = action({
     _id: Id<"orders">;
     _creationTime: number;
     userId: string;
-    platform: "polar" | "revenuecat";
+    platform: "polar" | "revenuecat" | "dodo";
     platformOrderId: string;
     platformProductId: string;
     amount: number;

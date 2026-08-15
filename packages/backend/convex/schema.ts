@@ -21,6 +21,7 @@ export default defineSchema({
     ),
     premiumGrantedAt: v.optional(v.number()),
     premiumExpiresAt: v.optional(v.number()), // null = lifetime/subscription-based
+    dodoCustomerId: v.optional(v.string()),
     // Onboarding status
     hasCompletedOnboarding: v.optional(v.boolean()),
     // Storage quota tracking (enforced in onSyncMetadata)
@@ -28,7 +29,8 @@ export default defineSchema({
     uploadCount: v.optional(v.number()),
   })
     .index("by_auth_user_id", ["authUserId"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_dodo_customer_id", ["dodoCustomerId"]),
 
   // User preferences for AI profile matching (from onboarding)
   userPreferences: defineTable({
@@ -67,15 +69,19 @@ export default defineSchema({
     .index("by_user_and_profile", ["userId", "aiProfileId"])
     .index("by_user_and_action", ["userId", "action"]),
 
-  // Unified subscriptions table for both Polar (web) and RevenueCat (native)
+  // Unified subscriptions table for Polar/Dodo (web) and RevenueCat (native)
   // Single source of truth for all subscription and premium status data
   subscriptions: defineTable({
     userId: v.string(), // Better Auth user ID (stored as string)
-    platform: v.union(v.literal("polar"), v.literal("revenuecat")),
+    platform: v.union(
+      v.literal("polar"),
+      v.literal("revenuecat"),
+      v.literal("dodo"),
+    ),
 
     // Customer and subscription identifiers (required for tracking)
-    platformCustomerId: v.string(), // Polar/RevenueCat customer ID
-    platformSubscriptionId: v.string(), // Polar/RevenueCat subscription ID
+    platformCustomerId: v.string(), // Polar/Dodo/RevenueCat customer ID
+    platformSubscriptionId: v.string(), // Polar/Dodo/RevenueCat subscription ID
     platformProductId: v.string(), // Product ID from platform
 
     // Subscription details
@@ -112,7 +118,11 @@ export default defineSchema({
   // Orders table for tracking one-time purchases (credit purchases)
   orders: defineTable({
     userId: v.string(), // Better Auth user ID (stored as string)
-    platform: v.union(v.literal("polar"), v.literal("revenuecat")),
+    platform: v.union(
+      v.literal("polar"),
+      v.literal("revenuecat"),
+      v.literal("dodo"),
+    ),
     platformOrderId: v.string(), // Unique order ID from platform
     platformProductId: v.string(), // Product ID that was purchased
     amount: v.number(), // Credit amount purchased

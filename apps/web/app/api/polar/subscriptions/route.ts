@@ -1,21 +1,18 @@
-import { api } from "@/lib/polar-client";
 import { NextResponse } from "next/server";
+import { fetchAction, api } from "@/lib/convex-client";
 
 export async function GET() {
   try {
-    const result = await api.products.list({
-      organizationId: process.env.POLAR_ORGANIZATION_ID!,
-      isRecurring: true,
+    const products = await fetchAction(api.features.dodo.actions.listCatalog, {
+      recurring: true,
     });
-
-    const products = result.result?.items || [];
 
     return NextResponse.json(products);
   } catch (error) {
-    console.error("Error fetching Polar subscription products:", error);
+    console.error("Error fetching Dodo subscription products:", error);
     return NextResponse.json(
       { error: "Failed to fetch products" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

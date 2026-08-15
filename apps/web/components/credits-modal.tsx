@@ -170,7 +170,7 @@ function CreditsCheckoutModal({ open, onOpenChange }: CreditsModalProps) {
                   {errorMessage}
                 </div>
               ) : (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-5">
                   {creditProducts.map((item, index) => {
                     const priceAmount = item.product.prices?.[0]?.priceAmount;
                     const price = priceAmount
@@ -182,12 +182,12 @@ function CreditsCheckoutModal({ open, onOpenChange }: CreditsModalProps) {
                         key={item.product.id}
                         className={
                           item.badge === "Popular"
-                            ? "relative border-primary shadow-lg py-1"
-                            : "relative py-1"
+                            ? "relative overflow-visible border-primary py-1 shadow-lg"
+                            : "relative overflow-visible py-1"
                         }
                       >
                         {item.badge ? (
-                          <div className="absolute -top-3.5 left-3">
+                          <div className="absolute -top-3 left-3 z-10">
                             <span className="rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
                               {item.badge}
                             </span>
