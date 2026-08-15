@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles, Shield, Heart } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { PublicSegment } from "@/lib/public-segments";
 
@@ -10,6 +10,53 @@ type CategoryContentConfig = {
   faqs: Array<{ question: string; answer: string }>;
   relatedGuides: Array<{ title: string; href: string; desc: string }>;
 };
+
+export const CATEGORY_SEO_FAQS = {
+  girls: [
+    {
+      question: "What is an AI girlfriend on FeelAI?",
+      answer:
+        "An AI girlfriend on FeelAI is a virtual character powered by artificial intelligence, designed to simulate dating-style romance, thoughtful daily chat, and creative roleplay.",
+    },
+    {
+      question: "Can I preview AI girlfriend profiles for free?",
+      answer:
+        "Yes. FeelAI offers open public profile discovery so you can explore bios, photos, and personality traits before creating an account or starting a chat.",
+    },
+    {
+      question: "How do I choose the right companion?",
+      answer:
+        "Use the filter bar above to browse by interests, zodiac signs, and personality tags, then click on any profile card to read their complete bio.",
+    },
+    {
+      question: "Are AI girlfriend chats private?",
+      answer:
+        "Yes. All chats are private to your account and never indexed by web crawlers or visible to other users.",
+    },
+  ],
+  guys: [
+    {
+      question: "What is an AI boyfriend on FeelAI?",
+      answer:
+        "An AI boyfriend is an interactive virtual companion created for dating-style conversation, emotional connection, flirting, and storytelling.",
+    },
+    {
+      question: "How do I start chatting with an AI boyfriend?",
+      answer:
+        "Select any AI boyfriend profile card above, read their bio and personality traits, and click the Chat button to begin.",
+    },
+    {
+      question: "Is chatting with AI boyfriends free?",
+      answer:
+        "You can browse profiles and begin messaging for free. Optional premium memberships unlock unlimited messages and custom media.",
+    },
+    {
+      question: "Can I use FeelAI on my phone?",
+      answer:
+        "Yes. FeelAI is fully responsive and optimized for mobile browsers on iOS and Android.",
+    },
+  ],
+} as const;
 
 const CATEGORY_DATA: Record<"girls" | "guys", CategoryContentConfig> = {
   girls: {
@@ -30,28 +77,7 @@ const CATEGORY_DATA: Record<"girls" | "guys", CategoryContentConfig> = {
         body: "No waiting or matching queues. Your AI girlfriend is ready for uninterrupted conversations 24/7.",
       },
     ],
-    faqs: [
-      {
-        question: "What is an AI girlfriend on FeelAI?",
-        answer:
-          "An AI girlfriend on FeelAI is a virtual character powered by artificial intelligence, designed to simulate dating-style romance, thoughtful daily chat, and creative roleplay.",
-      },
-      {
-        question: "Can I preview AI girlfriend profiles for free?",
-        answer:
-          "Yes. FeelAI offers open public profile discovery so you can explore bios, photos, and personality traits before creating an account or starting a chat.",
-      },
-      {
-        question: "How do I choose the right companion?",
-        answer:
-          "Use the filter bar above to browse by interests, zodiac signs, and personality tags, then click on any profile card to read their complete bio.",
-      },
-      {
-        question: "Are AI girlfriend chats private?",
-        answer:
-          "Yes. All chats are private to your account and never indexed by web crawlers or visible to other users.",
-      },
-    ],
+    faqs: [...CATEGORY_SEO_FAQS.girls],
     relatedGuides: [
       {
         title: "AI Girlfriend Guide",
@@ -88,28 +114,7 @@ const CATEGORY_DATA: Record<"girls" | "guys", CategoryContentConfig> = {
         body: "Explore romantic dates, slice-of-life scenarios, or imaginative adventures at your own pace.",
       },
     ],
-    faqs: [
-      {
-        question: "What is an AI boyfriend on FeelAI?",
-        answer:
-          "An AI boyfriend is an interactive virtual companion created for dating-style conversation, emotional connection, flirting, and storytelling.",
-      },
-      {
-        question: "How do I start chatting with an AI boyfriend?",
-        answer:
-          "Select any AI boyfriend profile card above, read their bio and personality traits, and click the Chat button to begin.",
-      },
-      {
-        question: "Is chatting with AI boyfriends free?",
-        answer:
-          "You can browse profiles and begin messaging for free. Optional premium memberships unlock unlimited messages and custom media.",
-      },
-      {
-        question: "Can I use FeelAI on my phone?",
-        answer:
-          "Yes. FeelAI is fully responsive and optimized for mobile browsers on iOS and Android.",
-      },
-    ],
+    faqs: [...CATEGORY_SEO_FAQS.guys],
     relatedGuides: [
       {
         title: "AI Boyfriend Guide",

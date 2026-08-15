@@ -1,15 +1,12 @@
-import type { Metadata } from "next";
 import { PublicInfoPage } from "@/components/public/public-info-page";
-import { getSiteUrl } from "@/lib/site";
+import { buildPublicPageMetadata } from "@/lib/public-metadata";
 
-export const metadata: Metadata = {
+export const metadata = buildPublicPageMetadata({
   title: "Pricing & Membership Plans",
   description:
     "Explore FeelAI pricing, free browsing, credits for media requests, and premium membership benefits.",
-  alternates: {
-    canonical: `${getSiteUrl()}/pricing`,
-  },
-};
+  path: "/pricing",
+});
 
 export default function PricingPage() {
   return (

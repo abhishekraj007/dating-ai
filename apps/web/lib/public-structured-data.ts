@@ -17,6 +17,53 @@ type PublicProfileStructuredData = {
   image?: string | null;
 };
 
+export type StructuredFaq = {
+  name: string;
+  text: string;
+};
+
+type StructuredDataNode = Record<string, unknown>;
+
+function websiteNode(siteUrl: string) {
+  return {
+    "@type": "WebSite",
+    "@id": `${siteUrl}#website`,
+    name: "FeelAI",
+    url: siteUrl,
+    description:
+      "AI dating homepage for discovering AI companions, AI friends, and immersive chat experiences.",
+  };
+}
+
+function buildFaqPage(faqs: StructuredFaq[]) {
+  if (faqs.length === 0) {
+    return null;
+  }
+
+  return {
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.name,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.text,
+      },
+    })),
+  };
+}
+
+function buildStructuredDataGraph(nodes: Array<StructuredDataNode | null>) {
+  return {
+    "@context": "https://schema.org",
+    "@graph": nodes.filter(Boolean),
+  };
+}
+
+export function serializeJsonLd(data: unknown) {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
 function buildProfileItemListStructuredData(
   siteUrl: string,
   segment: PublicSegment,
@@ -27,7 +74,6 @@ function buildProfileItemListStructuredData(
   }
 
   return {
-    "@context": "https://schema.org",
     "@type": "ItemList",
     name:
       segment === "guys"
@@ -55,31 +101,17 @@ function buildProfileItemListStructuredData(
 export function buildHomeStructuredData(
   siteUrl: string,
   profiles: PublicProfileListItem[] = [],
+  faqs: StructuredFaq[] = [],
 ) {
-  const profileItemList = buildProfileItemListStructuredData(
-    siteUrl,
-    "girls",
-    profiles,
-  );
-  return [
+  return buildStructuredDataGraph([
+    websiteNode(siteUrl),
     {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      name: "FeelAI",
-      url: siteUrl,
-      description:
-        "AI dating homepage for discovering AI companions, AI friends, and immersive chat experiences.",
-    },
-    {
-      "@context": "https://schema.org",
       "@type": "Organization",
       name: "FeelAI",
       url: siteUrl,
       logo: `${siteUrl}/app-logo.png`,
-      sameAs: [],
     },
     {
-      "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
         {
@@ -91,7 +123,6 @@ export function buildHomeStructuredData(
       ],
     },
     {
-      "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       name: "FeelAI",
       applicationCategory: "DatingApplication",
@@ -105,73 +136,30 @@ export function buildHomeStructuredData(
         priceCurrency: "USD",
       },
     },
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: [
-        {
-          "@type": "Question",
-          name: "What is FeelAI?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "FeelAI is an AI dating platform where users discover AI companions, AI friends, and immersive chat experiences built for always-on conversations.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Can I browse AI companion profiles before signing in?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes. FeelAI shows public AI companion profiles before sign-in so visitors can browse featured personalities and choose who they want to chat with.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "How do I find the right AI companion on FeelAI?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Start with public AI companion profiles, then use filters to find personalities and interests that match the conversation you want.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Can I switch between dark and light mode?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes. FeelAI opens in dark mode by default, and visitors can switch to light mode from the public header.",
-          },
-        },
-      ],
-    },
-    profileItemList,
-  ].filter(Boolean);
+    buildFaqPage(faqs),
+    buildProfileItemListStructuredData(siteUrl, "girls", profiles),
+  ]);
 }
 
 export function buildCategoryStructuredData(
   siteUrl: string,
   segment: PublicSegment,
   profiles: PublicProfileListItem[] = [],
+  faqs: StructuredFaq[] = [],
 ) {
   const config = getSegmentConfig(segment);
   const categoryUrl = `${siteUrl}${config.href}`;
-  const profileItemList = buildProfileItemListStructuredData(
-    siteUrl,
-    segment,
-    profiles,
-  );
 
-  return [
+  return buildStructuredDataGraph([
     {
-      "@context": "https://schema.org",
       "@type": "CollectionPage",
       name: `FeelAI ${config.metaTitle}`,
       url: categoryUrl,
       description: config.metaDescription,
       abstract: config.heroDescription,
-      isPartOf: siteUrl,
+      isPartOf: websiteNode(siteUrl),
     },
     {
-      "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
         {
@@ -188,8 +176,9 @@ export function buildCategoryStructuredData(
         },
       ],
     },
-    profileItemList,
-  ].filter(Boolean);
+    buildFaqPage(faqs),
+    buildProfileItemListStructuredData(siteUrl, segment, profiles),
+  ]);
 }
 
 export function buildPublicProfileStructuredData(
@@ -197,21 +186,17 @@ export function buildPublicProfileStructuredData(
   segment: PublicSegment,
   profileUrl: string,
   profile: PublicProfileStructuredData,
+  faqs: StructuredFaq[] = [],
 ) {
   const config = getSegmentConfig(segment);
   const companionRole = segment === "guys" ? "AI Boyfriend" : "AI Girlfriend";
 
-  return [
+  return buildStructuredDataGraph([
     {
-      "@context": "https://schema.org",
       "@type": "ProfilePage",
       name: `${profile.name} – ${companionRole} | FeelAI`,
       url: profileUrl,
-      isPartOf: {
-        "@type": "WebSite",
-        name: "FeelAI",
-        url: siteUrl,
-      },
+      isPartOf: websiteNode(siteUrl),
       description:
         profile.bio ??
         `${profile.name} is a virtual ${companionRole.toLowerCase()} companion profile on FeelAI.`,
@@ -259,7 +244,6 @@ export function buildPublicProfileStructuredData(
       },
     },
     {
-      "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
         {
@@ -282,5 +266,42 @@ export function buildPublicProfileStructuredData(
         },
       ],
     },
-  ];
+    buildFaqPage(faqs),
+  ]);
+}
+
+export function buildSeoGuideStructuredData(
+  siteUrl: string,
+  pageUrl: string,
+  title: string,
+  description: string,
+  faqs: StructuredFaq[],
+) {
+  return buildStructuredDataGraph([
+    {
+      "@type": "WebPage",
+      name: `${title} - FeelAI`,
+      url: pageUrl,
+      description,
+      isPartOf: websiteNode(siteUrl),
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: siteUrl,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: title,
+          item: pageUrl,
+        },
+      ],
+    },
+    buildFaqPage(faqs),
+  ]);
 }

@@ -1,15 +1,12 @@
-import type { Metadata } from "next";
 import { PublicInfoPage } from "@/components/public/public-info-page";
-import { getSiteUrl } from "@/lib/site";
+import { buildPublicPageMetadata } from "@/lib/public-metadata";
 
-export const metadata: Metadata = {
+export const metadata = buildPublicPageMetadata({
   title: "Safety & Ethics Policy – 18+ AI Platform",
   description:
     "Read about FeelAI's safety commitments, adult-only 18+ policy, transparent AI character disclosures, and privacy standards.",
-  alternates: {
-    canonical: `${getSiteUrl()}/safety`,
-  },
-};
+  path: "/safety",
+});
 
 export default function SafetyPage() {
   return (

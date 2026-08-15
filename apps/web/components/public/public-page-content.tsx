@@ -30,7 +30,7 @@ export function PublicPageContent({
   // const heroBackground = heroBackgrounds["anime"];
 
   return (
-    <main className="flex min-w-0 flex-1 flex-col gap-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-8">
       {isHome ? <DiscoverPreferenceDialog /> : null}
 
       <section className="relative overflow-hidden rounded-[calc(var(--radius)*1.75)] border border-border/70 bg-card shadow-[0_28px_70px_-44px_rgba(0,0,0,0.45)]">
@@ -76,6 +76,6 @@ export function PublicPageContent({
       {variant === "category" ? (
         <CategorySeoContent segment={segment} />
       ) : null}
-    </main>
+    </div>
   );
 }

@@ -1,14 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PublicProfilePage } from "@/components/public/public-profile-page";
-import { api, fetchQuery } from "@/lib/convex-client";
 import type { AvatarImageRequest } from "@dating-ai/backend";
+import { JsonLd } from "@/components/public/json-ld";
+import {
+  PublicProfilePage,
+  buildPublicProfileFaqs,
+} from "@/components/public/public-profile-page";
+import { api, fetchQuery } from "@/lib/convex-client";
 import {
   isReservedPublicUsername,
   normalizePublicUsername,
 } from "@/lib/public-profile-routes";
-import { buildPublicProfileStructuredData } from "@/lib/public-structured-data";
 import { getInitialPublicProfiles } from "@/lib/public-profiles.server";
+import {
+  buildPublicPageMetadata,
+  noIndexRobots,
+} from "@/lib/public-metadata";
+import { buildPublicProfileStructuredData } from "@/lib/public-structured-data";
 import { getSiteUrl } from "@/lib/site";
 
 export const revalidate = 60;
@@ -55,10 +63,7 @@ export async function generateMetadata({
   if (!profile) {
     return {
       title: "Profile Not Found",
-      robots: {
-        index: false,
-        follow: false,
-      },
+      robots: noIndexRobots,
     };
   }
 
@@ -66,38 +71,14 @@ export async function generateMetadata({
   const ageString = profile.age ? `, ${profile.age}` : "";
   const title = `${profile.name}${ageString} – ${role} Chat`;
   const description = profile.bio
-    ? `${profile.bio.slice(0, 150)}... Chat with ${profile.name} on FeelAI.`
+    ? `${profile.bio.slice(0, 150).trimEnd()} Chat with ${profile.name} on FeelAI.`
     : `Meet ${profile.name}, a virtual ${role.toLowerCase()} on FeelAI for dating-style chat, roleplay, and companionship.`;
-  const canonicalPath = `/${profile.username}`;
-  const siteUrl = getSiteUrl();
-  const pageUrl = `${siteUrl}${canonicalPath}`;
 
-  return {
+  return buildPublicPageMetadata({
     title,
     description,
-    alternates: {
-      canonical: canonicalPath,
-    },
-    openGraph: {
-      title: `${title} | FeelAI`,
-      description,
-      url: pageUrl,
-      images: profile.avatarUrl
-        ? [
-            {
-              url: profile.avatarUrl,
-              alt: `${profile.name} – ${role}`,
-            },
-          ]
-        : undefined,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${title} | FeelAI`,
-      description,
-      images: profile.avatarUrl ? [profile.avatarUrl] : undefined,
-    },
-  };
+    path: `/${profile.username}`,
+  });
 }
 
 export default async function PublicProfileRoute({ params }: ProfileRouteProps) {
@@ -109,31 +90,34 @@ export default async function PublicProfileRoute({ params }: ProfileRouteProps) 
   }
 
   const segment = getProfileSegment(profile.gender);
-  const canonicalPath = `/${profile.username}`;
   const siteUrl = getSiteUrl();
-  const pageUrl = `${siteUrl}${canonicalPath}`;
-
+  const pageUrl = `${siteUrl}/${profile.username}`;
   const allRelated = await getInitialPublicProfiles(segment, 8);
   const relatedProfiles = allRelated
-    .filter((p) => p.username !== profile.username)
+    .filter((relatedProfile) => relatedProfile.username !== profile.username)
     .slice(0, 4);
+  const profileFaqs = buildPublicProfileFaqs(profile, segment);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            buildPublicProfileStructuredData(siteUrl, segment, pageUrl, {
-              name: profile.name,
-              age: profile.age,
-              bio: profile.bio,
-              interests: profile.interests,
-              occupation: profile.occupation,
-              image: profile.avatarUrl,
-            }),
-          ),
-        }}
+      <JsonLd
+        data={buildPublicProfileStructuredData(
+          siteUrl,
+          segment,
+          pageUrl,
+          {
+            name: profile.name,
+            age: profile.age,
+            bio: profile.bio,
+            interests: profile.interests,
+            occupation: profile.occupation,
+            image: profile.avatarUrl,
+          },
+          profileFaqs.map((faq) => ({
+            name: faq.question,
+            text: faq.answer,
+          })),
+        )}
       />
       <PublicProfilePage
         profile={profile}

@@ -1,15 +1,12 @@
-import type { Metadata } from "next";
 import { PublicInfoPage } from "@/components/public/public-info-page";
-import { getSiteUrl } from "@/lib/site";
+import { buildPublicPageMetadata } from "@/lib/public-metadata";
 
-export const metadata: Metadata = {
+export const metadata = buildPublicPageMetadata({
   title: "About Us – AI Companions & Virtual Dating",
   description:
     "Learn about FeelAI, our mission to create immersive virtual AI companions, and how our interactive dating and roleplay platform works.",
-  alternates: {
-    canonical: `${getSiteUrl()}/about`,
-  },
-};
+  path: "/about",
+});
 
 export default function AboutPage() {
   return (

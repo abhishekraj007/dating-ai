@@ -29,16 +29,14 @@ type PublicProfilePageProps = {
   relatedProfiles?: PublicProfileCard[];
 };
 
-export function PublicProfilePage({
-  segment,
-  profile,
-  relatedProfiles = [],
-}: PublicProfilePageProps) {
-  const config = getSegmentConfig(segment);
-  const placeholderImageUrl = "/placeholder.jpg";
-  const categoryLabel = segment === "guys" ? "AI Boyfriends" : "AI Girlfriends";
-
-  const profileFaqs = [
+export function buildPublicProfileFaqs(
+  profile: Pick<
+    PublicProfileDetails,
+    "name" | "occupation" | "interests"
+  >,
+  segment: PublicSegment,
+) {
+  return [
     {
       question: `Who is ${profile.name}?`,
       answer: `${profile.name} is a virtual AI ${segment === "guys" ? "boyfriend" : "girlfriend"} companion on FeelAI${profile.occupation ? `, characterized as a ${profile.occupation}` : ""}. You can explore their personality, interests, and start private chat conversations.`,
@@ -49,9 +47,20 @@ export function PublicProfilePage({
     },
     {
       question: `How do I start chatting with ${profile.name}?`,
-      answer: `Click the "Chat with ${profile.name}" button to sign in or create a free account and begin your private conversation.`,
+      answer: `Click the Chat button to sign in or create a free account and begin your private conversation.`,
     },
   ];
+}
+
+export function PublicProfilePage({
+  segment,
+  profile,
+  relatedProfiles = [],
+}: PublicProfilePageProps) {
+  const config = getSegmentConfig(segment);
+  const placeholderImageUrl = "/placeholder.jpg";
+  const categoryLabel = segment === "guys" ? "AI Boyfriends" : "AI Girlfriends";
+  const profileFaqs = buildPublicProfileFaqs(profile, segment);
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-8">
