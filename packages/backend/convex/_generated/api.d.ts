@@ -11,6 +11,7 @@
 import type * as aiProfiles_seedProfiles from "../aiProfiles/seedProfiles.js";
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
+import type * as dodo from "../dodo.js";
 import type * as features_ai_actions from "../features/ai/actions.js";
 import type * as features_ai_agent from "../features/ai/agent.js";
 import type * as features_ai_aiProviders from "../features/ai/aiProviders.js";
@@ -59,6 +60,12 @@ import type * as features_credits_index from "../features/credits/index.js";
 import type * as features_credits_mutations from "../features/credits/mutations.js";
 import type * as features_credits_pricing from "../features/credits/pricing.js";
 import type * as features_credits_queries from "../features/credits/queries.js";
+import type * as features_dodo_actions from "../features/dodo/actions.js";
+import type * as features_dodo_catalog from "../features/dodo/catalog.js";
+import type * as features_dodo_env from "../features/dodo/env.js";
+import type * as features_dodo_mutations from "../features/dodo/mutations.js";
+import type * as features_dodo_queries from "../features/dodo/queries.js";
+import type * as features_dodo_webhooks from "../features/dodo/webhooks.js";
 import type * as features_filters_queries from "../features/filters/queries.js";
 import type * as features_preferences_queries from "../features/preferences/queries.js";
 import type * as features_premium_admin from "../features/premium/admin.js";
@@ -76,6 +83,7 @@ import type * as lib_aiProfileAvatar from "../lib/aiProfileAvatar.js";
 import type * as lib_betterAuth_component from "../lib/betterAuth/component.js";
 import type * as lib_betterAuth_createAuth from "../lib/betterAuth/createAuth.js";
 import type * as lib_betterAuth_index from "../lib/betterAuth/index.js";
+import type * as lib_billingPlatform from "../lib/billingPlatform.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_languages from "../lib/languages.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
@@ -101,6 +109,7 @@ declare const fullApi: ApiFromModules<{
   "aiProfiles/seedProfiles": typeof aiProfiles_seedProfiles;
   auth: typeof auth;
   crons: typeof crons;
+  dodo: typeof dodo;
   "features/ai/actions": typeof features_ai_actions;
   "features/ai/agent": typeof features_ai_agent;
   "features/ai/aiProviders": typeof features_ai_aiProviders;
@@ -149,6 +158,12 @@ declare const fullApi: ApiFromModules<{
   "features/credits/mutations": typeof features_credits_mutations;
   "features/credits/pricing": typeof features_credits_pricing;
   "features/credits/queries": typeof features_credits_queries;
+  "features/dodo/actions": typeof features_dodo_actions;
+  "features/dodo/catalog": typeof features_dodo_catalog;
+  "features/dodo/env": typeof features_dodo_env;
+  "features/dodo/mutations": typeof features_dodo_mutations;
+  "features/dodo/queries": typeof features_dodo_queries;
+  "features/dodo/webhooks": typeof features_dodo_webhooks;
   "features/filters/queries": typeof features_filters_queries;
   "features/preferences/queries": typeof features_preferences_queries;
   "features/premium/admin": typeof features_premium_admin;
@@ -166,6 +181,7 @@ declare const fullApi: ApiFromModules<{
   "lib/betterAuth/component": typeof lib_betterAuth_component;
   "lib/betterAuth/createAuth": typeof lib_betterAuth_createAuth;
   "lib/betterAuth/index": typeof lib_betterAuth_index;
+  "lib/billingPlatform": typeof lib_billingPlatform;
   "lib/constants": typeof lib_constants;
   "lib/languages": typeof lib_languages;
   "lib/rateLimit": typeof lib_rateLimit;
@@ -211,6 +227,7 @@ export declare const internal: FilterApi<
 export declare const components: {
   betterAuth: import("@convex-dev/better-auth/_generated/component.js").ComponentApi<"betterAuth">;
   polar: import("@convex-dev/polar/_generated/component.js").ComponentApi<"polar">;
+  dodopayments: import("@dodopayments/convex/_generated/component.js").ComponentApi<"dodopayments">;
   agent: import("@convex-dev/agent/_generated/component.js").ComponentApi<"agent">;
   r2: import("@convex-dev/r2/_generated/component.js").ComponentApi<"r2">;
   pushNotifications: import("@convex-dev/expo-push-notifications/_generated/component.js").ComponentApi<"pushNotifications">;

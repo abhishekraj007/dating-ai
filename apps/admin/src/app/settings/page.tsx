@@ -203,9 +203,10 @@ export default function SettingsPage() {
                       {subscriptions?.subscriptions?.[0] && (
                         <p className="text-xs text-muted-foreground mt-1">
                           Platform:{" "}
-                          {subscriptions.subscriptions[0].platform === "polar"
-                            ? "Web"
-                            : "Mobile"}
+                          {subscriptions.subscriptions[0].platform ===
+                            "revenuecat"
+                            ? "Mobile"
+                            : "Web"}
                         </p>
                       )}
                     </div>

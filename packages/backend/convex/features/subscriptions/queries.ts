@@ -1,6 +1,10 @@
 import { v } from "convex/values";
 import { query, internalQuery } from "../../_generated/server";
 import * as Users from "../../model/user";
+import {
+  billingPlatformValidator,
+  isWebBillingPlatform,
+} from "../../lib/billingPlatform";
 
 /**
  * Get user's active subscriptions across all platforms
@@ -23,7 +27,9 @@ export const getUserSubscriptions = query({
       subscriptions,
       hasActiveSubscription: subscriptions.length > 0,
       platforms: subscriptions.map((s) => s.platform),
-      hasWebSubscription: subscriptions.some((s) => s.platform === "polar"),
+      hasWebSubscription: subscriptions.some((s) =>
+        isWebBillingPlatform(s.platform),
+      ),
       hasNativeSubscription: subscriptions.some(
         (s) => s.platform === "revenuecat"
       ),
@@ -36,7 +42,7 @@ export const getUserSubscriptions = query({
  */
 export const canPurchaseSubscription = query({
   args: {
-    platform: v.union(v.literal("polar"), v.literal("revenuecat")),
+    platform: billingPlatformValidator,
   },
   handler: async (ctx, args) => {
     const userData = await Users.getUserAndProfile(ctx);
@@ -56,7 +62,7 @@ export const canPurchaseSubscription = query({
       const existingPlatform = activeSubscriptions[0].platform;
       return {
         canPurchase: false,
-        reason: `You already have an active subscription on ${existingPlatform === "polar" ? "web" : "mobile"}`,
+        reason: `You already have an active subscription on ${isWebBillingPlatform(existingPlatform) ? "web" : "mobile"}`,
         existingPlatform,
       };
     }
@@ -70,7 +76,7 @@ export const canPurchaseSubscription = query({
  */
 export const getPlatformCustomerId = query({
   args: {
-    platform: v.union(v.literal("polar"), v.literal("revenuecat")),
+    platform: billingPlatformValidator,
   },
   handler: async (ctx, args) => {
     const userData = await Users.getUserAndProfile(ctx);
@@ -103,7 +109,7 @@ export const getSubscriptionByPlatformSubscriptionId = internalQuery({
       _id: v.id("subscriptions"),
       _creationTime: v.number(),
       userId: v.string(), // Better Auth user ID (stored as string)
-      platform: v.union(v.literal("polar"), v.literal("revenuecat")),
+      platform: billingPlatformValidator,
       platformCustomerId: v.string(),
       platformSubscriptionId: v.string(),
       platformProductId: v.string(),
@@ -149,7 +155,7 @@ export const getOrderByPlatformOrderId = internalQuery({
       _id: v.id("orders"),
       _creationTime: v.number(),
       userId: v.string(), // Better Auth user ID (stored as string)
-      platform: v.union(v.literal("polar"), v.literal("revenuecat")),
+      platform: billingPlatformValidator,
       platformOrderId: v.string(),
       platformProductId: v.string(),
       amount: v.number(),

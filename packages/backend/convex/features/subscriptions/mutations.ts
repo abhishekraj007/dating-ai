@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation } from "../../_generated/server";
+import { billingPlatformValidator } from "../../lib/billingPlatform";
 
 const REVENUECAT_ANONYMOUS_ID_PREFIX = "$RCAnonymousID:";
 
@@ -14,7 +15,7 @@ function isRevenueCatAnonymousId(userId: string): boolean {
 export const upsertSubscription = internalMutation({
   args: {
     userId: v.string(),
-    platform: v.union(v.literal("polar"), v.literal("revenuecat")),
+    platform: billingPlatformValidator,
     platformCustomerId: v.string(),
     platformSubscriptionId: v.string(),
     platformProductId: v.string(),
@@ -119,7 +120,7 @@ export const upsertSubscription = internalMutation({
 export const insertOrder = internalMutation({
   args: {
     userId: v.string(),
-    platform: v.union(v.literal("polar"), v.literal("revenuecat")),
+    platform: billingPlatformValidator,
     platformOrderId: v.string(),
     platformProductId: v.string(),
     amount: v.number(),

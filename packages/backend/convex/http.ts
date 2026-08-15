@@ -5,6 +5,11 @@ import type { Id } from "./_generated/dataModel";
 import { authComponent, createAuth } from "./lib/betterAuth";
 import { r2 } from "./uploads";
 import { isAllowedImageMime } from "./lib/uploadValidation";
+import { createDodoWebhookHandler } from "@dodopayments/convex";
+import {
+  processDodoPaymentSucceeded,
+  processDodoSubscriptionEvent,
+} from "./features/dodo/webhooks";
 // import * as PolarWebhooks from "./lib/polarWebhooks";
 import { handleRevenueCatWebhook } from "./lib/revenuecatWebhooks";
 
@@ -13,6 +18,37 @@ const avatarCacheControl = "public, max-age=31536000, immutable";
 
 // Register Better Auth routes
 authComponent.registerRoutes(http, createAuth, { cors: true });
+
+http.route({
+  path: "/dodopayments-webhook",
+  method: "POST",
+  handler: createDodoWebhookHandler({
+    onPaymentSucceeded: async (ctx, payload) => {
+      await processDodoPaymentSucceeded(ctx, payload.data);
+    },
+    onSubscriptionActive: async (ctx, payload) => {
+      await processDodoSubscriptionEvent(ctx, payload.data, "active");
+    },
+    onSubscriptionRenewed: async (ctx, payload) => {
+      await processDodoSubscriptionEvent(ctx, payload.data, "renewed");
+    },
+    onSubscriptionUpdated: async (ctx, payload) => {
+      await processDodoSubscriptionEvent(ctx, payload.data, "updated");
+    },
+    onSubscriptionCancelled: async (ctx, payload) => {
+      await processDodoSubscriptionEvent(ctx, payload.data, "cancelled");
+    },
+    onSubscriptionExpired: async (ctx, payload) => {
+      await processDodoSubscriptionEvent(ctx, payload.data, "expired");
+    },
+    onSubscriptionFailed: async (ctx, payload) => {
+      await processDodoSubscriptionEvent(ctx, payload.data, "failed");
+    },
+    onSubscriptionOnHold: async (ctx, payload) => {
+      await processDodoSubscriptionEvent(ctx, payload.data, "on_hold");
+    },
+  }),
+});
 
 // Register Polar webhook routes
 // polar.registerRoutes(http, {
