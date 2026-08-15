@@ -6,7 +6,6 @@ import { buildCategoryStructuredData } from "@/lib/public-structured-data";
 import { getInitialPublicProfiles } from "@/lib/public-profiles.server";
 
 export const revalidate = 60;
-export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = getSiteUrl();

@@ -7,17 +7,19 @@ import { PUBLIC_SEO_PAGE_LIST } from "@/lib/public-seo-pages";
 
 const STATIC_LAST_MODIFIED = new Date("2026-05-26T00:00:00.000Z");
 
+export const revalidate = 3600;
+
 const STATIC_PUBLIC_PATHS = [
+  "/about",
+  "/safety",
+  "/pricing",
   "/help",
   "/support",
-  "/contact",
   "/privacy",
   "/terms",
   "/llms.txt",
   "/llms-full.txt",
 ];
-
-export const dynamic = "force-dynamic";
 
 type SitemapProfile = {
   gender: "female" | "male";

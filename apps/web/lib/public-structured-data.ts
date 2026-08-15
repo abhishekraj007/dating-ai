@@ -75,7 +75,8 @@ export function buildHomeStructuredData(
       "@type": "Organization",
       name: "FeelAI",
       url: siteUrl,
-      logo: `${siteUrl}/favicon.ico`,
+      logo: `${siteUrl}/app-logo.png`,
+      sameAs: [],
     },
     {
       "@context": "https://schema.org",
@@ -198,37 +199,64 @@ export function buildPublicProfileStructuredData(
   profile: PublicProfileStructuredData,
 ) {
   const config = getSegmentConfig(segment);
+  const companionRole = segment === "guys" ? "AI Boyfriend" : "AI Girlfriend";
 
   return [
     {
       "@context": "https://schema.org",
       "@type": "ProfilePage",
-      name: `${profile.name} | FeelAI`,
+      name: `${profile.name} – ${companionRole} | FeelAI`,
       url: profileUrl,
-      isPartOf: `${siteUrl}${config.href}`,
+      isPartOf: {
+        "@type": "WebSite",
+        name: "FeelAI",
+        url: siteUrl,
+      },
       description:
-        profile.bio ?? `${profile.name} is an AI companion profile on FeelAI.`,
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "Person",
-      name: profile.name,
-      description: profile.bio
-        ? `${profile.bio} This is an AI companion profile on FeelAI.`
-        : `${profile.name} is an AI companion profile on FeelAI.`,
-      disambiguatingDescription: "AI companion profile",
-      image: profile.image ?? undefined,
-      jobTitle: profile.occupation ?? undefined,
-      knowsAbout: profile.interests ?? undefined,
-      additionalProperty: profile.age
-        ? [
-            {
-              "@type": "PropertyValue",
-              name: "Profile age",
-              value: profile.age,
-            },
-          ]
-        : undefined,
+        profile.bio ??
+        `${profile.name} is a virtual ${companionRole.toLowerCase()} companion profile on FeelAI.`,
+      mainEntity: {
+        "@type": "Thing",
+        name: profile.name,
+        description: profile.bio
+          ? `${profile.bio} (Virtual ${companionRole} profile on FeelAI)`
+          : `${profile.name} is a virtual ${companionRole.toLowerCase()} profile on FeelAI.`,
+        image: profile.image ?? undefined,
+        additionalProperty: [
+          {
+            "@type": "PropertyValue",
+            name: "Companion Type",
+            value: companionRole,
+          },
+          ...(profile.age
+            ? [
+                {
+                  "@type": "PropertyValue",
+                  name: "Profile age",
+                  value: profile.age,
+                },
+              ]
+            : []),
+          ...(profile.occupation
+            ? [
+                {
+                  "@type": "PropertyValue",
+                  name: "Occupation",
+                  value: profile.occupation,
+                },
+              ]
+            : []),
+          ...(profile.interests && profile.interests.length > 0
+            ? [
+                {
+                  "@type": "PropertyValue",
+                  name: "Interests",
+                  value: profile.interests.join(", "),
+                },
+              ]
+            : []),
+        ],
+      },
     },
     {
       "@context": "https://schema.org",

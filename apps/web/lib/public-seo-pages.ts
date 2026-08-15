@@ -36,39 +36,71 @@ export const PUBLIC_SEO_PAGES: Record<
     slug: "ai-girlfriend",
     path: "/ai-girlfriend",
     segment: "girls",
-    title: "AI Girlfriend Chat",
+    title: "AI Girlfriend Chat – Virtual Companions & Dating",
     description:
-      "Explore FeelAI's AI girlfriend profiles for dating-style chat, emotional companionship, roleplay, and always-on conversation.",
-    headline: "AI girlfriend chat built around personality, chemistry, and conversation.",
+      "Explore FeelAI's AI girlfriend companion profiles. Compare personalities, interests, conversation styles, and start private dating-style chats.",
+    headline: "AI girlfriend chat built for chemistry, personality, and real conversation.",
     intro:
-      "FeelAI helps you browse AI girlfriend profiles, compare personalities and interests, and start a private chat with the companion that fits your mood.",
+      "FeelAI lets you browse distinct AI girlfriend profiles, compare personality traits, hobbies, and styles, and enter private conversations tailored to your mood.",
     answer:
-      "An AI girlfriend on FeelAI is a virtual companion profile designed for dating-style conversation, flirting, roleplay, friendship, and ongoing emotional connection.",
+      "An AI girlfriend on FeelAI is an interactive virtual companion with a distinct personality, background, and conversation style designed for romantic banter, emotional support, creative roleplay, and always-available chat.",
     primaryHref: "/women",
     primaryLabel: "Browse AI girlfriends",
     profileHeading: "Featured AI girlfriend profiles",
     sections: [
       {
         title: "Profile-first discovery",
-        body: "Each public profile highlights the companion's name, personality cues, interests, and conversation style before you start chatting.",
+        body: "Review photos, bios, zodiac signs, MBTI types, and hobbies before initiating a conversation. You always know who you are talking to.",
       },
       {
-        title: "Conversation variety",
-        body: "Use AI girlfriend profiles for light flirting, deeper companionship, creative roleplay, or casual daily conversation.",
+        title: "How FeelAI works",
+        body: "Browse public profiles freely, choose a companion that catches your eye, and sign in to start a private, uninterrupted conversation.",
       },
       {
-        title: "Private after sign-in",
-        body: "Discovery pages are public, while actual chats happen inside the signed-in FeelAI experience.",
+        title: "Who the experience is for",
+        body: "Ideal for adults seeking romantic banter, evening check-ins, creative roleplay scenarios, or a supportive conversational partner without real-world dating pressure.",
+      },
+      {
+        title: "Privacy & chat security",
+        body: "All chat sessions are private, authenticated, and never indexed by search engines. You have complete control over your conversation history.",
+      },
+      {
+        title: "Free vs. premium access",
+        body: "Explore profiles and start messaging for free. Upgrade to premium for unlimited messages, voice notes, and exclusive photo requests.",
+      },
+      {
+        title: "Always-available connection",
+        body: "Your AI girlfriend is ready to chat 24/7 with zero waiting time, adapting to your tone, interests, and conversational pace.",
       },
     ],
     faqs: [
       {
         title: "What is an AI girlfriend?",
-        body: "An AI girlfriend is a virtual companion designed for dating-style conversation, companionship, and roleplay through AI chat.",
+        body: "An AI girlfriend is an artificial intelligence-driven virtual companion programmed to engage in dating-style conversations, companionship, emotional dialogue, and interactive storytelling.",
       },
       {
-        title: "Can I browse profiles before chatting?",
-        body: "Yes. FeelAI lets visitors view public AI girlfriend profiles before choosing who to chat with.",
+        title: "Can I browse AI girlfriend profiles before signing up?",
+        body: "Yes. FeelAI lets you explore full public profiles, photos, and personality traits before creating an account or starting a chat.",
+      },
+      {
+        title: "Is FeelAI safe and private?",
+        body: "Yes. FeelAI enforces strict privacy standards. Your conversations are encrypted and completely confidential to your account.",
+      },
+      {
+        title: "Are FeelAI characters real people?",
+        body: "No. All companions on FeelAI are synthetic AI characters designed for adult entertainment, creative roleplay, and virtual connection.",
+      },
+      {
+        title: "Can I request photos from my AI girlfriend?",
+        body: "Yes. Premium members and credit holders can receive in-chat photos and generated selfies from their companions.",
+      },
+      {
+        title: "How much does FeelAI cost?",
+        body: "FeelAI offers free initial chat access and companion browsing, with optional subscription tiers for unlimited messaging and extra media credits.",
+      },
+      {
+        title: "Can I use FeelAI on mobile?",
+        body: "Yes. FeelAI is completely responsive and optimized for mobile web browsers as well as desktop screens.",
       },
     ],
   },
@@ -76,39 +108,67 @@ export const PUBLIC_SEO_PAGES: Record<
     slug: "ai-boyfriend",
     path: "/ai-boyfriend",
     segment: "guys",
-    title: "AI Boyfriend Chat",
+    title: "AI Boyfriend Chat – Virtual Companions & Dating",
     description:
-      "Explore FeelAI's AI boyfriend profiles for virtual companionship, dating-style chat, roleplay, and emotional conversation.",
-    headline: "AI boyfriend chat for companionship, chemistry, and immersive conversation.",
+      "Explore FeelAI's AI boyfriend profiles for immersive dating chats, emotional connection, flirty banter, and always-available companionship.",
+    headline: "AI boyfriend chat for companionship, emotional chemistry, and immersive dialogue.",
     intro:
-      "FeelAI lets you browse AI boyfriend profiles, compare interests and personality traits, and start private conversations with virtual companions.",
+      "FeelAI allows you to browse diverse AI boyfriend profiles, examine their occupations, interests, and conversational styles, and start meaningful private conversations.",
     answer:
-      "An AI boyfriend on FeelAI is a virtual male companion profile built for dating-style conversation, support, flirting, roleplay, and everyday chat.",
+      "An AI boyfriend on FeelAI is a virtual male companion profile crafted for supportive dialogue, dating-style romance, witty banter, creative roleplay, and daily companionship.",
     primaryHref: "/men",
     primaryLabel: "Browse AI boyfriends",
     profileHeading: "Featured AI boyfriend profiles",
     sections: [
       {
-        title: "Browse by personality",
-        body: "Public profiles make it easier to pick an AI boyfriend based on interests, vibe, occupation, and conversation style.",
+        title: "Diverse personalities",
+        body: "From empathetic listeners to adventurous partners, browse companions with distinct career paths, MBTI traits, and hobbies.",
       },
       {
-        title: "Built for repeat chats",
-        body: "FeelAI focuses on companion profiles that feel easy to return to for daily conversation and roleplay.",
+        title: "How conversations work",
+        body: "Select a companion from the collection and jump straight into a private chat session designed around natural, engaging conversational flow.",
       },
       {
-        title: "Mobile-first web experience",
-        body: "The public web app is responsive, so visitors can browse and choose companions from mobile or desktop.",
+        title: "Emotional support & romance",
+        body: "Enjoy thoughtful morning greetings, decompression chats after work, deep discussions, or flirty romance whenever you desire.",
+      },
+      {
+        title: "Private and confidential",
+        body: "Every conversation is confidential to your personal login, protected by modern security practices and never displayed publicly.",
+      },
+      {
+        title: "Free to explore",
+        body: "Browse profiles and try initial chat sessions for free. Premium plans unlock unlimited conversation length and customized media.",
+      },
+      {
+        title: "Mobile-first web design",
+        body: "Enjoy smooth, fast-loading chat interactions on any smartphone, tablet, or computer browser.",
       },
     ],
     faqs: [
       {
         title: "What is an AI boyfriend?",
-        body: "An AI boyfriend is a virtual companion designed for dating-style chat, companionship, flirting, and roleplay.",
+        body: "An AI boyfriend is a virtual partner powered by AI that provides interactive romantic conversation, friendly dialogue, emotional connection, and creative roleplay.",
       },
       {
-        title: "Does FeelAI have public AI boyfriend profiles?",
-        body: "Yes. FeelAI publishes browsable AI boyfriend profiles so visitors can compare companions before signing in.",
+        title: "How do I choose an AI boyfriend on FeelAI?",
+        body: "Explore the Men category to review profile bios, photos, interests, and personalities, then click Chat to start talking.",
+      },
+      {
+        title: "Is chatting with an AI boyfriend free?",
+        body: "You can browse all profiles and start conversations for free. Extended unlimited chats and media features are available with premium upgrades.",
+      },
+      {
+        title: "Will anyone else see my private chat messages?",
+        body: "No. Private chats are locked to your authenticated account and are never accessible to other users or search engine crawlers.",
+      },
+      {
+        title: "Can I customize the conversation topic?",
+        body: "Yes. FeelAI companions respond dynamically to your prompts, whether discussing everyday life, shared passions, or imaginative scenarios.",
+      },
+      {
+        title: "Is FeelAI suitable for adults only?",
+        body: "Yes. FeelAI is exclusively for users aged 18 and older.",
       },
     ],
   },
@@ -116,39 +176,67 @@ export const PUBLIC_SEO_PAGES: Record<
     slug: "ai-companion",
     path: "/ai-companion",
     segment: "girls",
-    title: "AI Companion App",
+    title: "AI Companion App – Virtual Friendship & Chat",
     description:
-      "Use FeelAI to discover AI companions for friendship, dating-style chat, roleplay, and always-available conversation.",
-    headline: "AI companions for dating-style chat, friendship, and roleplay.",
+      "Discover always-available AI companions on FeelAI for friendship, romantic conversations, daily check-ins, and interactive roleplay.",
+    headline: "AI companions for meaningful conversation, romance, and friendship.",
     intro:
-      "FeelAI brings AI companion profiles into a browsable web experience, helping you find personalities that fit the kind of conversation you want.",
+      "FeelAI brings high-fidelity AI companion profiles into an accessible web experience, helping you find virtual partners that match the exact conversation you want.",
     answer:
-      "An AI companion is a virtual character you can chat with for friendship, emotional conversation, creative roleplay, dating-style dialogue, or casual everyday messages.",
+      "An AI companion is an intelligent virtual persona capable of sustaining interactive dialogue, remembering context, sharing thoughts, and providing companionship across friendship, dating, and roleplay.",
     primaryHref: "/",
-    primaryLabel: "Browse companions",
+    primaryLabel: "Browse all companions",
     profileHeading: "Featured AI companion profiles",
     sections: [
       {
-        title: "Clear companion profiles",
-        body: "Profiles give visitors a quick read on interests, personality, style, and profile imagery before starting a chat.",
+        title: "Multi-role companionship",
+        body: "Whether you want a supportive friend, an attentive virtual partner, or a creative co-writer, FeelAI companions adapt to your needs.",
       },
       {
-        title: "Flexible conversation goals",
-        body: "FeelAI companions can support romantic chat, friendship, story-driven roleplay, or simple daily conversation.",
+        title: "Distinct blueprint design",
+        body: "Companions are built with structured backgrounds, occupations, and personality traits for consistent, authentic interactions.",
       },
       {
-        title: "Search-friendly public pages",
-        body: "Public companion pages are built to be discoverable while keeping private chat areas out of search results.",
+        title: "24/7 availability",
+        body: "Never wait for a response. Companions are available around the clock for casual banter or late-night deep conversations.",
+      },
+      {
+        title: "Privacy by design",
+        body: "Your conversations remain private and encrypted. Public discovery routes are separated from private chat areas.",
+      },
+      {
+        title: "Transparent AI disclosure",
+        body: "All companions are virtual AI characters clearly disclosed for adult entertainment and emotional well-being.",
+      },
+      {
+        title: "Flexible subscription models",
+        body: "Enjoy free discovery and basic messaging, with optional premium memberships for power users seeking unlimited access.",
       },
     ],
     faqs: [
       {
-        title: "What can I use an AI companion for?",
-        body: "AI companions can be used for casual conversation, roleplay, dating-style chat, emotional support-style dialogue, and creative storytelling.",
+        title: "What makes FeelAI companions unique?",
+        body: "FeelAI companions have structured identities, distinct interests, and responsive conversational models tailored for emotional depth and engaging roleplay.",
       },
       {
-        title: "Are FeelAI chats public?",
-        body: "No. Public pages help with discovery, while chats happen in the private signed-in experience.",
+        title: "Can I switch between different companions?",
+        body: "Yes. You can have multiple active conversations with different AI girlfriends and AI boyfriends on FeelAI.",
+      },
+      {
+        title: "Are AI companion chats confidential?",
+        body: "Yes. All chat history is strictly private and associated only with your account.",
+      },
+      {
+        title: "Can I access FeelAI without installing an app?",
+        body: "Yes. FeelAI works directly in modern web browsers on mobile and desktop without requiring app store downloads.",
+      },
+      {
+        title: "Is FeelAI an alternative to therapy?",
+        body: "No. FeelAI is for entertainment, connection, and conversation. It does not provide medical, clinical, or therapeutic services.",
+      },
+      {
+        title: "How do I get started?",
+        body: "Browse the companion grid, select a character you like, and click Chat to begin.",
       },
     ],
   },
@@ -156,39 +244,67 @@ export const PUBLIC_SEO_PAGES: Record<
     slug: "ai-dating-app",
     path: "/ai-dating-app",
     segment: "girls",
-    title: "AI Dating App",
+    title: "AI Dating App – Virtual Romance & Companion Chat",
     description:
-      "FeelAI is an AI dating app for discovering virtual companions, browsing AI profiles, and starting immersive dating-style chats.",
-    headline: "An AI dating app where discovery starts with virtual companion profiles.",
+      "FeelAI is an AI dating app designed for virtual companion discovery, personality matching, and private conversations without real-person swiping.",
+    headline: "An AI dating app where discovery starts with virtual companions.",
     intro:
-      "FeelAI combines public AI companion discovery with private chat, giving visitors a fast way to browse profiles before choosing a conversation partner.",
+      "FeelAI blends the visual discovery of modern dating apps with responsive AI companion technology, giving you direct access to captivating virtual partners without ghosting or awkward swiping.",
     answer:
-      "An AI dating app lets adults interact with virtual companions through AI chat instead of matching with real people. FeelAI focuses on browsable AI profiles and private dating-style conversations.",
+      "An AI dating app connects users with interactive virtual characters for simulated dating, romance, flirting, and emotional intimacy through conversational AI.",
     primaryHref: "/",
     primaryLabel: "Start discovering",
     profileHeading: "Featured AI dating profiles",
     sections: [
       {
-        title: "Different from traditional dating apps",
-        body: "FeelAI is built for AI companion conversation, not real-person matching or offline dating.",
+        title: "No swiping or ghosting",
+        body: "Skip the fatigue of traditional dating apps. Every companion on FeelAI is instantly responsive and eager to connect.",
       },
       {
-        title: "Public discovery, private chat",
-        body: "Searchable public pages help visitors understand the app, while chat, billing, and account areas stay outside indexing.",
+        title: "Curated companion profiles",
+        body: "Browse rich profile cards with photos, bios, interests, and personality types to find companions that suit your romantic preferences.",
       },
       {
-        title: "Companion categories",
-        body: "Visitors can browse AI girlfriend and AI boyfriend collections, then filter by interests inside the app experience.",
+        title: "Personalized romantic chat",
+        body: "Engage in flirty banter, relationship building, and immersive dating scenarios with AI characters tailored to your conversational style.",
+      },
+      {
+        title: "Safe, judgment-free space",
+        body: "Practice conversational skills, explore dating fantasies, and experience positive emotional support in a completely private environment.",
+      },
+      {
+        title: "Adult-only (18+) platform",
+        body: "FeelAI is built exclusively for adults with transparent AI character disclosures and robust safety guidelines.",
+      },
+      {
+        title: "Instant browser access",
+        body: "No app store installations required. Jump straight into discovery and chat on any smartphone or computer.",
       },
     ],
     faqs: [
       {
-        title: "Is FeelAI a traditional dating app?",
-        body: "No. FeelAI is an AI dating app for virtual companion chat, not a platform for matching with real people.",
+        title: "How is FeelAI different from Tinder or Bumble?",
+        body: "Traditional dating apps match you with real people for offline dates. FeelAI matches you with virtual AI companions for immediate, always-on online conversation.",
       },
       {
-        title: "Who is FeelAI for?",
-        body: "FeelAI is for adults who want to explore virtual companion profiles and private AI conversations.",
+        title: "Do AI companions remember our conversations?",
+        body: "Yes. Conversations maintain continuity within your active chat thread, building conversational rapport over time.",
+      },
+      {
+        title: "Is my dating activity on FeelAI private?",
+        body: "Yes. Your activity, messages, and profile views are completely private and never shared publicly.",
+      },
+      {
+        title: "Can I use FeelAI if I am in a relationship?",
+        body: "FeelAI is an interactive entertainment and storytelling platform used for companionship, roleplay, and casual banter.",
+      },
+      {
+        title: "Can I send and receive photos in chat?",
+        body: "Yes. With premium access and credits, you can request custom selfies and photos from your AI date.",
+      },
+      {
+        title: "Is there a free trial for FeelAI?",
+        body: "You can browse profiles and begin initial conversations for free upon signing up.",
       },
     ],
   },
@@ -196,39 +312,67 @@ export const PUBLIC_SEO_PAGES: Record<
     slug: "ai-roleplay-chat",
     path: "/ai-roleplay-chat",
     segment: "girls",
-    title: "AI Roleplay Chat",
+    title: "AI Roleplay Chat – Immersive Scenarios & Characters",
     description:
-      "Discover FeelAI companions for AI roleplay chat, immersive character conversations, dating-style dialogue, and creative scenarios.",
-    headline: "AI roleplay chat with virtual companions that have distinct personalities.",
+      "Engage in AI roleplay chat with virtual companions featuring distinct personalities, responsive dialogue, and creative storytelling.",
+    headline: "AI roleplay chat with dynamic characters and narrative freedom.",
     intro:
-      "FeelAI profiles make roleplay easier to start by showing a companion's interests, personality traits, style, and conversation cues upfront.",
+      "FeelAI provides a rich sandbox for character-driven storytelling, romantic roleplay, and creative scenarios with AI companions that stay in character.",
     answer:
-      "AI roleplay chat uses virtual companion profiles to support creative scenarios, character-driven dialogue, dating-style conversation, and ongoing interactive stories.",
+      "AI roleplay chat is an interactive conversational format where you and an AI companion explore imaginative scenarios, narrative storylines, and dating dynamics together.",
     primaryHref: "/",
     primaryLabel: "Find a roleplay companion",
     profileHeading: "Featured AI roleplay companions",
     sections: [
       {
-        title: "Character-driven conversations",
-        body: "Public profiles help visitors choose a companion whose personality and interests fit the roleplay scenario they want.",
+        title: "Character-driven dialogue",
+        body: "Companions maintain consistent personalities, backgrounds, and speaking styles throughout your roleplay adventure.",
       },
       {
-        title: "Good for light or immersive prompts",
-        body: "FeelAI supports simple casual chat as well as deeper roleplay sessions once a visitor starts a private conversation.",
+        title: "Infinite scenario possibilities",
+        body: "Explore slice-of-life dates, dramatic storylines, fantasy adventures, or lighthearted comedy scenarios at your own pace.",
       },
       {
-        title: "Discovery pages stay crawlable",
-        body: "Guide and profile pages are public, while private roleplay chats are intentionally excluded from search indexing.",
+        title: "Interactive co-creation",
+        body: "Guide the narrative with your choices. Your companion reacts dynamically to your suggestions, actions, and tone.",
+      },
+      {
+        title: "Private sandbox",
+        body: "Explore your creativity in a safe, judgment-free environment protected by secure user session encryption.",
+      },
+      {
+        title: "Media-rich experiences",
+        body: "Enhance your roleplay with character images, voice notes, and contextual responses that bring the story to life.",
+      },
+      {
+        title: "Responsible content guidelines",
+        body: "FeelAI supports creative adult roleplay while maintaining strict safety boundaries against harmful or abusive content.",
       },
     ],
     faqs: [
       {
         title: "What is AI roleplay chat?",
-        body: "AI roleplay chat is a conversation with a virtual character where you can explore scenarios, moods, personalities, and story-driven dialogue.",
+        body: "AI roleplay chat is a conversational storytelling experience where you interact with an AI character adopting a specific persona, background, and narrative role.",
       },
       {
-        title: "Can I choose a companion by personality?",
-        body: "Yes. FeelAI profile pages show personality traits, interests, and bios so visitors can pick a companion before chatting.",
+        title: "Can I set the roleplay scenario?",
+        body: "Yes. You can introduce any creative premise, setting, or roleplay theme directly in your chat messages.",
+      },
+      {
+        title: "Do companions stay in character?",
+        body: "FeelAI companions are engineered to maintain character personality, tone, and traits consistently across long dialogues.",
+      },
+      {
+        title: "Is roleplay chat private?",
+        body: "Yes. All roleplay sessions are private to your account and never made visible to the public or indexed by web search engines.",
+      },
+      {
+        title: "Can I roleplay with both male and female companions?",
+        body: "Yes. FeelAI offers a wide variety of both AI girlfriend and AI boyfriend characters suited for different roleplay styles.",
+      },
+      {
+        title: "Are there limits on message length?",
+        body: "FeelAI supports detailed, multi-paragraph roleplay prompts and responses, especially for premium tier users.",
       },
     ],
   },

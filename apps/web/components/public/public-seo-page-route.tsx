@@ -15,10 +15,10 @@ export function generatePublicSeoMetadata(slug: PublicSeoPageSlug): Metadata {
     title: config.title,
     description: config.description,
     alternates: {
-      canonical: config.path,
+      canonical: `${siteUrl}${config.path}`,
     },
     openGraph: {
-      title: `${config.title} - FeelAI`,
+      title: `${config.title} | FeelAI`,
       description: config.description,
       url: `${siteUrl}${config.path}`,
       type: "website",
@@ -31,7 +31,7 @@ export function generatePublicSeoMetadata(slug: PublicSeoPageSlug): Metadata {
     },
     twitter: {
       card: "summary_large_image",
-      title: `${config.title} - FeelAI`,
+      title: `${config.title} | FeelAI`,
       description: config.description,
       images: ["/app-logo.png"],
     },

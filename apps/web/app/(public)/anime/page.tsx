@@ -6,7 +6,6 @@ import { ANIME_ENABLED, getSegmentConfig } from "@/lib/public-segments";
 import { buildCategoryStructuredData } from "@/lib/public-structured-data";
 
 export const revalidate = 60;
-export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   if (!ANIME_ENABLED) return {};

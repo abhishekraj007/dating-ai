@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { MobileBottomNav } from "@/components/navigation/mobile-bottom-nav";
 import { PublicHeader } from "@/components/public/public-header";
 import { PublicSidebar } from "@/components/public/public-sidebar";
+import { PublicFooter } from "@/components/public/public-footer";
 
 export default function PublicLayout({
   children,
@@ -23,6 +24,7 @@ export default function PublicLayout({
         </Suspense>
         <main className="flex min-w-0 flex-1 flex-col gap-8 px-4 py-6 md:min-h-0 md:overflow-y-auto md:px-6 lg:px-8">
           {children}
+          <PublicFooter />
         </main>
       </div>
       <Suspense fallback={null}>

@@ -9,7 +9,9 @@ import { SidebarProvider } from "@/components/public/sidebar-context";
 import { ThemeProvider } from "./theme-provider";
 import { Toaster } from "./ui/sonner";
 
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+const convex = new ConvexReactClient(
+  process.env.NEXT_PUBLIC_CONVEX_URL || "https://dummy.convex.cloud",
+);
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

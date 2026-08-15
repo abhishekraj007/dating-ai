@@ -3,6 +3,7 @@ import { CharacterGrid } from "@/components/public/character-grid";
 import type { PublicProfileCard } from "@/components/public/character-card";
 import { DiscoverPreferenceDialog } from "@/components/public/discover-preference-dialog";
 import { HomeSeoContent } from "@/components/public/home-seo-content";
+import { CategorySeoContent } from "@/components/public/category-seo-content";
 import { PublicFilterBar } from "@/components/public/public-filter-bar";
 import { getSegmentConfig, type PublicSegment } from "@/lib/public-segments";
 
@@ -72,6 +73,9 @@ export function PublicPageContent({
       </section>
 
       {isHome ? <HomeSeoContent /> : null}
+      {variant === "category" ? (
+        <CategorySeoContent segment={segment} />
+      ) : null}
     </main>
   );
 }
