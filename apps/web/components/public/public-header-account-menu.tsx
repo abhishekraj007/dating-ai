@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
+import { SidebarRailItem } from "@/components/public/sidebar-flyout-label";
+import { useSidebar } from "@/components/public/sidebar-context";
 
 const policyLinks = [
   {
@@ -78,13 +80,18 @@ export function PublicHeaderAccountMenu({
   }, []);
 
   const isSidebar = placement === "sidebar";
+  const { isCollapsed } = useSidebar();
+  const collapsed = isSidebar && isCollapsed;
 
   if (!mounted || isLoading || isPending) {
     return (
       <Button
         disabled
         variant="outline"
-        className={cn(isSidebar && "h-12 w-full justify-start rounded-3xl")}
+        className={cn(
+          isSidebar && "h-12 w-full justify-start rounded-3xl",
+          collapsed && "size-11 rounded-full p-0 justify-center",
+        )}
       >
         <Skeleton className="h-8 w-8 rounded-full" />
       </Button>
@@ -120,41 +127,56 @@ export function PublicHeaderAccountMenu({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          className={cn(
-            "gap-2 rounded-full pl-1.5 pr-2",
-            isSidebar && "h-auto w-full justify-between rounded-full px-3 py-3",
-          )}
-          variant="outline"
-        >
-          <div className="flex min-w-0 items-center gap-3">
-            <Avatar size="sm">
-              {session?.user.image ? (
-                <AvatarImage alt={user.title} src={session.user.image} />
-              ) : null}
-              <AvatarFallback>{user.initials}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 text-left">
-              <span
-                className={cn(
-                  "hidden max-w-28 truncate sm:inline-block",
-                  isSidebar && "block max-w-full text-sm font-medium",
-                )}
-              >
-                {user.title}
-              </span>
-              {isSidebar ? (
-                <div className="text-xs text-muted-foreground">
-                  {sidebarSubtitle}
+      <SidebarRailItem showLabel={collapsed} label={user.title}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            aria-label={user.title}
+            className={cn(
+              "gap-2 rounded-full pl-1.5 pr-2",
+              isSidebar &&
+                "h-auto w-full justify-between rounded-full px-3 py-3",
+              collapsed &&
+                "size-11 rounded-full p-0 justify-center transition-transform duration-200 hover:scale-[1.04]",
+            )}
+            variant="outline"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <Avatar size={collapsed ? "default" : "sm"}>
+                {session?.user.image ? (
+                  <AvatarImage alt={user.title} src={session.user.image} />
+                ) : null}
+                <AvatarFallback>{user.initials}</AvatarFallback>
+              </Avatar>
+              {collapsed ? null : (
+                <div className="min-w-0 text-left">
+                  <span
+                    className={cn(
+                      "hidden max-w-28 truncate sm:inline-block",
+                      isSidebar && "block max-w-full text-sm font-medium",
+                    )}
+                  >
+                    {user.title}
+                  </span>
+                  {isSidebar ? (
+                    <div className="text-xs text-muted-foreground">
+                      {sidebarSubtitle}
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
+              )}
             </div>
-          </div>
-          <ChevronDown className="size-4 text-muted-foreground" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+            {collapsed ? null : (
+              <ChevronDown className="size-4 text-muted-foreground" />
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+      </SidebarRailItem>
+      <DropdownMenuContent
+        align={collapsed ? "start" : "end"}
+        side={collapsed ? "right" : "bottom"}
+        sideOffset={collapsed ? 12 : 4}
+        className="w-56"
+      >
         <DropdownMenuLabel className="space-y-1 px-2 py-2">
           <div className="truncate text-sm font-medium text-foreground">
             {user.title}

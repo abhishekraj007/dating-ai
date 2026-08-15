@@ -5,6 +5,7 @@ import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 import { AuthModalProvider } from "@/components/auth/auth-modal-provider";
+import { SidebarProvider } from "@/components/public/sidebar-context";
 import { ThemeProvider } from "./theme-provider";
 import { Toaster } from "./ui/sonner";
 
@@ -22,12 +23,15 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider
       attribute="class"
       defaultTheme="dark"
-      enableSystem
+      forcedTheme="dark"
+      enableSystem={false}
       disableTransitionOnChange
     >
       <QueryClientProvider client={queryClient}>
         <ConvexBetterAuthProvider client={convex} authClient={authClient}>
-          <AuthModalProvider>{children}</AuthModalProvider>
+          <AuthModalProvider>
+            <SidebarProvider>{children}</SidebarProvider>
+          </AuthModalProvider>
         </ConvexBetterAuthProvider>
       </QueryClientProvider>
       <Toaster richColors />

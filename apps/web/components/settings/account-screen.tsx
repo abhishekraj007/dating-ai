@@ -14,8 +14,6 @@ import {
   MessageCircle,
   LogOut,
   MailQuestion,
-  Monitor,
-  Palette,
   Settings2,
   Share2,
   Star,
@@ -141,34 +139,6 @@ function ActionRow({
   );
 }
 
-function ThemeOptionButton({
-  active,
-  icon: Icon,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  icon: LucideIcon;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "flex min-h-20 flex-col items-center justify-center gap-2 rounded-[1.5rem] border border-border/70 px-4 py-3 text-sm font-medium transition-[transform,background-color,color,box-shadow] active:scale-[0.96]",
-        active
-          ? "bg-primary text-primary-foreground shadow-[0_20px_36px_-28px_rgba(0,0,0,0.85)]"
-          : "bg-muted/55 text-foreground hover:bg-muted",
-      )}
-    >
-      <Icon className="size-5" />
-      <span>{label}</span>
-    </button>
-  );
-}
-
 function AccountScreenSkeleton() {
   return (
     <div
@@ -219,10 +189,8 @@ export function AccountScreen() {
     handleShare,
     handleSignOut,
     handleSubmitRating,
-    handleThemeChange,
     identity,
     isAccountDetailsOpen,
-    isAppearanceOpen,
     isAppLanguageOpen,
     isChatLanguageOpen,
     isCreditsOpen,
@@ -244,7 +212,6 @@ export function AccountScreen() {
     selectedRating,
     sendTestNotification,
     setIsAccountDetailsOpen,
-    setIsAppearanceOpen,
     setIsAppLanguageOpen,
     setIsChatLanguageOpen,
     setIsCreditsOpen,
@@ -253,8 +220,6 @@ export function AccountScreen() {
     setIsRateDialogOpen,
     setSelectedRating,
     supportedLanguages,
-    themeLabel,
-    themePreference,
   } = useAccountScreen();
 
   if (isLoading) {
@@ -348,12 +313,6 @@ export function AccountScreen() {
         <SectionCard title="Quick Actions">
           <div className="space-y-3 border-t border-border/70 pt-5">
             <ActionRow
-              icon={Palette}
-              label="Appearance"
-              onClick={() => setIsAppearanceOpen(true)}
-              value={themeLabel}
-            />
-            <ActionRow
               icon={Bell}
               label="Notifications"
               onClick={() => setIsNotificationsOpen(true)}
@@ -428,38 +387,6 @@ export function AccountScreen() {
         open={isPremiumOpen}
         onOpenChange={setIsPremiumOpen}
       />
-
-      <Dialog open={isAppearanceOpen} onOpenChange={setIsAppearanceOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Appearance</DialogTitle>
-            <DialogDescription>
-              Choose how FeelAI looks across the web app.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-3 gap-3">
-            <ThemeOptionButton
-              active={themePreference === "light"}
-              icon={Palette}
-              label="Light"
-              onClick={() => handleThemeChange("light")}
-            />
-            <ThemeOptionButton
-              active={themePreference === "dark"}
-              icon={Palette}
-              label="Dark"
-              onClick={() => handleThemeChange("dark")}
-            />
-            <ThemeOptionButton
-              active={themePreference === "system"}
-              icon={Monitor}
-              label="System"
-              onClick={() => handleThemeChange("system")}
-            />
-          </div>
-          <DialogFooter showCloseButton />
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
         <DialogContent>

@@ -49,14 +49,8 @@ export function PublicHeader() {
                 alt="FeelAI logo"
                 width={32}
                 height={32}
-                className="block dark:hidden"
-              />
-              <Image
-                src="/logo-transparent.png"
-                alt="FeelAI logo"
-                width={32}
-                height={32}
-                className="hidden dark:block"
+                priority
+                loading="eager"
               />
               <span className="text-lg font-bold italic">FEELAI</span>
             </Link>

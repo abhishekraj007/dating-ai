@@ -83,7 +83,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("font-sans", inter.variable, interHeading.variable)}
+      className={cn("dark font-sans", inter.variable, interHeading.variable)}
       suppressHydrationWarning
     >
       <body className="antialiased">
