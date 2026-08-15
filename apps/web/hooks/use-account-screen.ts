@@ -3,7 +3,6 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useConvexAuth, useQuery } from "convex/react";
-import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
@@ -51,7 +50,6 @@ export function useAccountScreen() {
   const publicConfig = useQuery(
     api.features.appConfig.queries.getPublicAppConfig,
   );
-  const { resolvedTheme, setTheme, theme } = useTheme();
   const {
     appLanguage,
     chatLanguage,
@@ -64,7 +62,6 @@ export function useAccountScreen() {
   } = useLanguagePreferences();
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
   const [isPremiumOpen, setIsPremiumOpen] = useState(false);
-  const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAppLanguageOpen, setIsAppLanguageOpen] = useState(false);
   const [isChatLanguageOpen, setIsChatLanguageOpen] = useState(false);
@@ -84,14 +81,6 @@ export function useAccountScreen() {
     !isLanguageLoaded;
   const credits = userData?.profile?.credits ?? 0;
   const isPremium = Boolean(userData?.profile?.isPremium);
-  const themePreference =
-    theme === "light" || theme === "dark" ? theme : "system";
-  const themeLabel =
-    themePreference === "system"
-      ? `System (${resolvedTheme === "light" ? "Light" : "Dark"})`
-      : themePreference === "light"
-        ? "Light"
-        : "Dark";
   const notificationLabel =
     notificationStatus === "granted"
       ? "Enabled"
@@ -156,11 +145,6 @@ export function useAccountScreen() {
     } catch {
       toast.error("Unable to share right now.");
     }
-  };
-
-  const handleThemeChange = (nextTheme: "light" | "dark" | "system") => {
-    setTheme(nextTheme);
-    toast.success(`Theme updated to ${nextTheme}.`);
   };
 
   const handleAppLanguageChange = async (nextLanguage: AppLanguage) => {
@@ -258,10 +242,8 @@ export function useAccountScreen() {
     handleShare,
     handleSignOut,
     handleSubmitRating,
-    handleThemeChange,
     identity,
     isAccountDetailsOpen,
-    isAppearanceOpen,
     isAppLanguageOpen,
     isChatLanguageOpen,
     isCreditsOpen,
@@ -283,7 +265,6 @@ export function useAccountScreen() {
     selectedRating,
     sendTestNotification,
     setIsAccountDetailsOpen,
-    setIsAppearanceOpen,
     setIsAppLanguageOpen,
     setIsChatLanguageOpen,
     setIsCreditsOpen,
@@ -292,7 +273,5 @@ export function useAccountScreen() {
     setIsRateDialogOpen,
     setSelectedRating,
     supportedLanguages,
-    themeLabel,
-    themePreference,
   };
 }

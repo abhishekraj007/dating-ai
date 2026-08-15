@@ -27,15 +27,8 @@ export default function NotFound() {
             width={120}
             height={36}
             priority
-            className="block h-9 w-auto dark:hidden"
-          />
-          <Image
-            src="/logo-transparent.png"
-            alt="FeelAI"
-            width={120}
-            height={36}
-            priority
-            className="hidden h-9 w-auto dark:block"
+            loading="eager"
+            className="h-9 w-auto"
           />
         </Link>
 
