@@ -3,6 +3,7 @@ import { CharacterGrid } from "@/components/public/character-grid";
 import type { PublicProfileCard } from "@/components/public/character-card";
 import { DiscoverPreferenceDialog } from "@/components/public/discover-preference-dialog";
 import { HomeSeoContent } from "@/components/public/home-seo-content";
+import { CategorySeoContent } from "@/components/public/category-seo-content";
 import { PublicFilterBar } from "@/components/public/public-filter-bar";
 import { getSegmentConfig, type PublicSegment } from "@/lib/public-segments";
 
@@ -29,7 +30,7 @@ export function PublicPageContent({
   // const heroBackground = heroBackgrounds["anime"];
 
   return (
-    <main className="flex min-w-0 flex-1 flex-col gap-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-8">
       {isHome ? <DiscoverPreferenceDialog /> : null}
 
       <section className="relative overflow-hidden rounded-[calc(var(--radius)*1.75)] border border-border/70 bg-card shadow-[0_28px_70px_-44px_rgba(0,0,0,0.45)]">
@@ -72,6 +73,9 @@ export function PublicPageContent({
       </section>
 
       {isHome ? <HomeSeoContent /> : null}
-    </main>
+      {variant === "category" ? (
+        <CategorySeoContent segment={segment} />
+      ) : null}
+    </div>
   );
 }

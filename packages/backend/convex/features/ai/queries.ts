@@ -319,7 +319,7 @@ export const getPublicSitemapProfiles = query({
       .query("aiProfiles")
       .withIndex("by_status_and_gender", (q) => q.eq("status", "active"))
       .order("desc")
-      .collect();
+      .take(2000);
 
     return profiles
       .filter(isVisibleOnWeb)

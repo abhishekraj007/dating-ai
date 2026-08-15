@@ -1,5 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import { noIndexRobots } from "@/lib/public-metadata";
+
+export const metadata = {
+  title: "Page Not Found",
+  robots: noIndexRobots,
+};
 
 export default function NotFound() {
   return (
@@ -43,7 +49,7 @@ export default function NotFound() {
             Page not found
           </h1>
           <p className="max-w-xs text-sm text-muted-foreground text-pretty leading-6">
-            The page you're looking for doesn't exist or has been moved.
+            The page you are looking for does not exist or has been moved.
           </p>
         </div>
 
