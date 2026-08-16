@@ -10,6 +10,7 @@ import {
   ChevronUp,
   Upload,
   Users,
+  UserRound,
   SlidersHorizontal,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
@@ -44,6 +45,11 @@ const menuItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Users",
+    url: "/users",
+    icon: UserRound,
   },
   {
     title: "Characters",
