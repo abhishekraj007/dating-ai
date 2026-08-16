@@ -31,13 +31,15 @@ export function AuthenticatedLayout({
   const sectionTitle =
     pathname === "/dashboard"
       ? "Dashboard"
-      : pathname === "/characters"
-        ? "Characters"
-        : pathname === "/uploads"
-          ? "Uploads"
-          : pathname === "/app-config"
-            ? "App Config"
-            : "Admin";
+      : pathname === "/users"
+        ? "Users"
+        : pathname === "/characters"
+          ? "Characters"
+          : pathname === "/uploads"
+            ? "Uploads"
+            : pathname === "/app-config"
+              ? "App Config"
+              : "Admin";
 
   // Show loading skeleton while checking auth - keeps layout stable
   const isLoading = userData === undefined;
