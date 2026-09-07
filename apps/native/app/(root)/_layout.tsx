@@ -136,7 +136,10 @@ export default function RootLayout() {
 
   const hasPendingCharacter = Boolean(selectedCharacterId);
   const isCompletingPendingChat =
-    isAuthenticated && hasPendingCharacter && !hasCompletedOnboarding;
+    isAuthenticated &&
+    hasPendingCharacter &&
+    !hasCompletedOnboarding &&
+    !isOnOnboarding;
   const isOpeningPendingChat = Boolean(pendingChatId) && !isOnChat;
   const showSplash =
     !hasFinishedInitialBootstrap ||
@@ -144,8 +147,7 @@ export default function RootLayout() {
     isOpeningPendingChat;
 
   let nextRoute: Href | null = null;
-  const skipForcedOnboarding =
-    hasPendingCharacter || guestOnboardingDone || isOnMain;
+  const skipForcedOnboarding = hasPendingCharacter || guestOnboardingDone;
 
   if (!isUserStatePending && hasFinishedInitialBootstrap) {
     if (pendingChatId && !isOnChat) {

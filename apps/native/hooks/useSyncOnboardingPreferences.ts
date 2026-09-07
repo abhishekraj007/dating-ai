@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useConvexAuth, useMutation } from "convex/react";
+import { useSegments } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "@dating-ai/backend/convex/_generated/api";
 import { useOnboardingStore } from "@/stores/onboarding-store";
@@ -10,11 +11,14 @@ import { GUEST_ONBOARDING_KEY } from "@/hooks/use-finish-onboarding";
 
 export function useSyncOnboardingPreferences() {
   const { isAuthenticated } = useConvexAuth();
+  const segments = useSegments();
+  const isOnOnboarding = (segments as string[]).includes("(onboarding)");
   const {
     genderPreference,
     appLanguage,
     chatLanguage,
     selectedCharacterId,
+    guestOnboardingDone,
     setPendingChatId,
     setGuestOnboardingDone,
     reset,
@@ -37,11 +41,14 @@ export function useSyncOnboardingPreferences() {
       return;
     }
 
-    if (hasSynced.current) {
+    if (hasSynced.current || isOnOnboarding) {
       return;
     }
 
-    if (!genderPreference && !selectedCharacterId) {
+    const shouldFinishPendingGuestOnboarding =
+      Boolean(selectedCharacterId) || guestOnboardingDone;
+
+    if (!shouldFinishPendingGuestOnboarding) {
       return;
     }
 
@@ -85,8 +92,10 @@ export function useSyncOnboardingPreferences() {
     void syncPreferences();
   }, [
     isAuthenticated,
+    isOnOnboarding,
     genderPreference,
     selectedCharacterId,
+    guestOnboardingDone,
     appLanguage,
     chatLanguage,
     currentAppLanguage,
