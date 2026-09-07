@@ -16,7 +16,7 @@ export default function PickCharacterScreen() {
   const { width } = useWindowDimensions();
   const foreground = useThemeColor("foreground");
   const muted = useThemeColor("muted");
-  const { genderPreference, setSelectedCharacterId } = useOnboardingStore();
+  const { genderPreference } = useOnboardingStore();
   const { characters, isLoading } = useOnboardingCharacters(genderPreference);
   const { isFinishing, finishWithCharacter, browseWithoutChat } =
     useFinishOnboarding();
@@ -31,11 +31,7 @@ export default function PickCharacterScreen() {
     if (index === activeIndex) {
       return;
     }
-    const next = profiles[index];
     setActiveIndex(index);
-    if (next) {
-      setSelectedCharacterId(next._id as Id<"aiProfiles">);
-    }
   };
 
   const handleChat = () => {
