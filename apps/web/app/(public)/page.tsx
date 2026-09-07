@@ -1,50 +1,36 @@
-import type { Metadata } from "next";
+import { JsonLd } from "@/components/public/json-ld";
 import { PublicPageContent } from "@/components/public/public-page-content";
-import { getSiteUrl } from "@/lib/site";
-import { buildHomeStructuredData } from "@/lib/public-structured-data";
+import { HOME_SEO_FAQS } from "@/components/public/home-seo-content";
+import { buildPublicPageMetadata } from "@/lib/public-metadata";
 import { getInitialPublicProfiles } from "@/lib/public-profiles.server";
+import { buildHomeStructuredData } from "@/lib/public-structured-data";
+import { getSiteUrl } from "@/lib/site";
 
 export const revalidate = 60;
 
-export async function generateMetadata(): Promise<Metadata> {
-  const siteUrl = getSiteUrl();
+const HOME_TITLE = "FeelAI - AI Girlfriend & AI Boyfriend Chat";
+const HOME_DESCRIPTION =
+  "Browse AI girlfriends, AI boyfriends, and virtual companions for dating-style chat, roleplay, friendship, and immersive conversations.";
 
-  return {
-    title: "FeelAI - AI Girlfriend & AI Boyfriend Chat for Virtual Companions",
-    description:
-      "Browse AI girlfriends, AI boyfriends, and virtual companions for dating-style chat, roleplay, friendship, and immersive conversations. Start chatting with AI companions on FeelAI.",
-    alternates: {
-      canonical: siteUrl,
-    },
-    openGraph: {
-      title:
-        "FeelAI - AI Girlfriend & AI Boyfriend Chat for Virtual Companions",
-      description:
-        "Browse AI companion profiles and start immersive dating-style chat with virtual companions on FeelAI.",
-      url: siteUrl,
-      siteName: "FeelAI",
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: "FeelAI - AI Girlfriend & AI Boyfriend Chat",
-      description:
-        "Discover AI girlfriends, AI boyfriends, and virtual companions for dating-style chat, roleplay, and friendship.",
-    },
-  };
-}
+export const metadata = buildPublicPageMetadata({
+  title: HOME_TITLE,
+  description: HOME_DESCRIPTION,
+  path: "/",
+  absoluteTitle: HOME_TITLE,
+});
 
 export default async function HomePage() {
   const siteUrl = getSiteUrl();
   const initialProfiles = await getInitialPublicProfiles("girls");
-  const structuredData = buildHomeStructuredData(siteUrl, initialProfiles);
+  const structuredData = buildHomeStructuredData(
+    siteUrl,
+    initialProfiles,
+    HOME_SEO_FAQS.map((faq) => ({ name: faq.question, text: faq.answer })),
+  );
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
+      <JsonLd data={structuredData} />
       <PublicPageContent
         initialProfiles={initialProfiles}
         segment="girls"

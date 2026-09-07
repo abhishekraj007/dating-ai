@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+import { buildPrivatePageMetadata } from "@/lib/public-metadata";
 
-export const metadata: Metadata = {
-  title: "Store Screenshots - FeelChat",
+export const metadata = buildPrivatePageMetadata({
+  title: "Store Screenshots",
   description:
-    "Export App Store and Google Play marketing screenshots for FeelChat.",
-};
+    "Export App Store and Google Play marketing screenshots for FeelAI.",
+});
 
 export default function StoreScreenshotsLayout({
   children,

@@ -51,7 +51,7 @@ const features = [
   },
 ];
 
-const faqs = [
+export const HOME_SEO_FAQS = [
   {
     question: "What is FeelAI?",
     answer:
@@ -186,7 +186,7 @@ export function HomeSeoContent() {
           Frequently asked questions
         </h2>
         <div className="grid gap-4 md:grid-cols-2">
-          {faqs.map((faq) => (
+          {HOME_SEO_FAQS.map((faq) => (
             <Card
               key={faq.question}
               className="space-y-2 border-border/70 bg-card/70 p-5"

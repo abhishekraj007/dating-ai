@@ -1,82 +1,15 @@
-"use client";
+import { MainAppShell } from "@/components/main-app-shell";
+import { buildPrivatePageMetadata } from "@/lib/public-metadata";
 
-import { Suspense, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { useConvexAuth } from "convex/react";
-import { MobileBottomNav } from "@/components/navigation/mobile-bottom-nav";
-import { PublicSidebar } from "@/components/public/public-sidebar";
-import { PublicHeader } from "@/components/public/public-header";
-import { cn } from "@/lib/utils";
-import { useOnboardingRedirect } from "@/hooks/use-onboarding-redirect";
+export const metadata = buildPrivatePageMetadata({
+  title: "Account",
+  description: "Private FeelAI chats, settings, and account pages.",
+});
 
 export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const { isAuthenticated, isLoading } = useConvexAuth();
-  useOnboardingRedirect();
-
-  // Hide bottom nav padding when inside a chat conversation on mobile
-  const isChatConversation =
-    pathname.startsWith("/chat/") && pathname !== "/chat";
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isLoading, isAuthenticated, router]);
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-svh items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  return (
-    <div
-      className={cn(
-        "flex flex-col bg-background md:h-screen",
-        isChatConversation ? "h-svh overflow-hidden" : "min-h-svh",
-      )}
-    >
-      {!isChatConversation && (
-        <Suspense
-          fallback={
-            <div className="h-[60px] border-b border-border/70 bg-background/90 md:hidden" />
-          }
-        >
-          <PublicHeader />
-        </Suspense>
-      )}
-
-      <div
-        className={cn(
-          "mx-auto flex w-full flex-1 min-h-0 md:h-screen md:pb-0",
-          isChatConversation ? "pb-0" : "pb-24",
-        )}
-      >
-        {/* Sidebar — hidden on mobile, visible md+ */}
-
-        <PublicSidebar />
-
-        {/* Main Content Area */}
-        <main className="flex min-h-0 flex-1 overflow-hidden">
-          {children}
-        </main>
-      </div>
-      <MobileBottomNav />
-    </div>
-  );
+  return <MainAppShell>{children}</MainAppShell>;
 }

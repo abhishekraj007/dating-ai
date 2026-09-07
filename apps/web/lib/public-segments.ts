@@ -25,9 +25,9 @@ const ALL_SEGMENTS: Record<PublicSegment, SegmentConfig> = {
     heroDescription:
       "Explore AI girlfriends designed for flirting, companionship, roleplay, and always-on conversation.",
     sectionTitle: "Featured AI girlfriends",
-    metaTitle: "AI Girlfriends",
+    metaTitle: "AI Girlfriends – Virtual Companions & Dating Chat",
     metaDescription:
-      "Browse AI girlfriend profiles built for immersive dating, roleplay, and always-on companionship.",
+      "Browse AI girlfriend profiles built for immersive dating, roleplay, and always-on companionship on FeelAI.",
   },
   guys: {
     label: "Male",
@@ -36,9 +36,9 @@ const ALL_SEGMENTS: Record<PublicSegment, SegmentConfig> = {
     heroDescription:
       "Browse AI boyfriend profiles created for emotional connection, flirty chat, and always-available companionship.",
     sectionTitle: "Featured AI boyfriends",
-    metaTitle: "AI Boyfriends",
+    metaTitle: "AI Boyfriends – Virtual Companions & Dating Chat",
     metaDescription:
-      "Explore AI boyfriend profiles for immersive dating chats, roleplay, and virtual companionship.",
+      "Explore AI boyfriend profiles for immersive dating chats, roleplay, and virtual companionship on FeelAI.",
   },
   anime: {
     label: "Anime",
@@ -47,9 +47,9 @@ const ALL_SEGMENTS: Record<PublicSegment, SegmentConfig> = {
     heroDescription:
       "Discover anime-inspired AI companions built for stylized conversation, roleplay, and immersive chats.",
     sectionTitle: "Anime AI companions",
-    metaTitle: "AI Anime",
+    metaTitle: "AI Anime Companions – Virtual Chat & Roleplay",
     metaDescription:
-      "Discover anime AI companions designed for fantasy chat, roleplay, and immersive AI conversations.",
+      "Discover anime AI companions designed for fantasy chat, roleplay, and immersive AI conversations on FeelAI.",
   },
 };
 

@@ -1,4 +1,10 @@
+import { buildPrivatePageMetadata } from "@/lib/public-metadata";
 import { LoginClient } from "./login-client";
+
+export const metadata = buildPrivatePageMetadata({
+  title: "Sign in",
+  description: "Sign in to FeelAI to start private companion chats.",
+});
 
 type LoginPageProps = {
   searchParams: Promise<{

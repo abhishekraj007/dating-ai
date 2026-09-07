@@ -27,6 +27,9 @@ FeelAI is a web AI dating app for discovering virtual companions and starting im
 - ${siteUrl}/ai-companion - Guide to virtual AI companions.
 - ${siteUrl}/ai-dating-app - Guide to FeelAI as an AI dating app.
 - ${siteUrl}/ai-roleplay-chat - Guide to AI roleplay chat and conversation styles.
+- ${siteUrl}/about - About FeelAI and product mission.
+- ${siteUrl}/safety - Safety, transparency, and ethics policies.
+- ${siteUrl}/pricing - Clear information about free access, credits, and premium features.
 - ${siteUrl}/help - Product help and troubleshooting.
 - ${siteUrl}/support - Support contact information.
 - ${siteUrl}/privacy - Privacy policy.

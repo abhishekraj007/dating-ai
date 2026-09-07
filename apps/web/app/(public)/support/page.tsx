@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
 import { PublicInfoPage } from "@/components/public/public-info-page";
+import { buildPublicPageMetadata } from "@/lib/public-metadata";
 
-export const metadata: Metadata = {
+export const metadata = buildPublicPageMetadata({
   title: "Support",
   description: "Support steps and troubleshooting guidance for FeelAI web.",
-};
+  path: "/support",
+});
 
 export default function SupportPage() {
   return (

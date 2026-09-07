@@ -1,35 +1,21 @@
-import type { Metadata } from "next";
+import { CATEGORY_SEO_FAQS } from "@/components/public/category-seo-content";
+import { JsonLd } from "@/components/public/json-ld";
 import { PublicPageContent } from "@/components/public/public-page-content";
-import { getSiteUrl } from "@/lib/site";
+import { buildPublicPageMetadata } from "@/lib/public-metadata";
+import { getInitialPublicProfiles } from "@/lib/public-profiles.server";
 import { getSegmentConfig } from "@/lib/public-segments";
 import { buildCategoryStructuredData } from "@/lib/public-structured-data";
-import { getInitialPublicProfiles } from "@/lib/public-profiles.server";
+import { getSiteUrl } from "@/lib/site";
 
 export const revalidate = 60;
-export const dynamic = "force-dynamic";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const siteUrl = getSiteUrl();
-  const config = getSegmentConfig("guys");
+const config = getSegmentConfig("guys");
 
-  return {
-    title: config.metaTitle,
-    description: config.metaDescription,
-    alternates: {
-      canonical: config.href,
-    },
-    openGraph: {
-      title: `FeelAI | ${config.metaTitle}`,
-      description: config.metaDescription,
-      url: `${siteUrl}${config.href}`,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `FeelAI | ${config.metaTitle}`,
-      description: config.metaDescription,
-    },
-  };
-}
+export const metadata = buildPublicPageMetadata({
+  title: config.metaTitle,
+  description: config.metaDescription,
+  path: config.href,
+});
 
 export default async function AIBoyfriendsPage() {
   const siteUrl = getSiteUrl();
@@ -37,13 +23,16 @@ export default async function AIBoyfriendsPage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            buildCategoryStructuredData(siteUrl, "guys", initialProfiles),
-          ),
-        }}
+      <JsonLd
+        data={buildCategoryStructuredData(
+          siteUrl,
+          "guys",
+          initialProfiles,
+          CATEGORY_SEO_FAQS.guys.map((faq) => ({
+            name: faq.question,
+            text: faq.answer,
+          })),
+        )}
       />
       <PublicPageContent
         initialProfiles={initialProfiles}

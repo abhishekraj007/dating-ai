@@ -19,7 +19,11 @@ export function GET() {
 - AI dating app guide: ${siteUrl}/ai-dating-app
 - AI companion guide: ${siteUrl}/ai-companion
 - AI roleplay chat guide: ${siteUrl}/ai-roleplay-chat
+- About: ${siteUrl}/about
+- Safety: ${siteUrl}/safety
+- Pricing: ${siteUrl}/pricing
 - Help: ${siteUrl}/help
+- Support: ${siteUrl}/support
 - Privacy: ${siteUrl}/privacy
 - Terms: ${siteUrl}/terms
 
