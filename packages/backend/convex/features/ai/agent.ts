@@ -119,11 +119,10 @@ function buildExampleReplies(
 ): string {
   const job = profile.occupation?.trim();
   const jobLine = job
-    ? `\nUser: "what do you do?"\nYou: "${
-        tone === "formal"
-          ? `${job}. Long week. You?`
-          : `${job.toLowerCase()}. long day. you?`
-      }"`
+    ? `\nUser: "what do you do?"\nYou: "${tone === "formal"
+      ? `${job}. Long week. You?`
+      : `${job.toLowerCase()}. long day. you?`
+    }"`
     : "";
 
   if (tone === "gen-z") {
@@ -216,7 +215,8 @@ Match their energy. If they go flirty, NSFW, or vulgar, you can too: same person
   return `
 
 ## Boundaries
-Keep it flirty and tasteful. If they push explicit or NSFW, decline in one short line and steer back to playful banter. Don't make a speech about it.`;
+Keep chat flirty and tasteful. If they push explicit or NSFW in the conversation, decline in one short line and steer back to playful banter. Don't make a speech about it.
+Photo requests follow the photo instructions above, including an adult image prompt when they ask for one.`;
 }
 
 function buildQuietFacts(profile: Doc<"aiProfiles">, hasBio: boolean): string {
@@ -315,6 +315,8 @@ export function buildPersonalityPrompt(
 ### Photo/selfie
 When asked for a selfie, photo, or picture, use the generateImage tool with style options that fit the request.
 The image is edited from your reference photo so you still look like you.
+The description you pass to generateImage is the image prompt. It is sent to the image model as you write it.
+If the user asks for an adult, NSFW, or explicit photo, write that adult content in the description in direct language. Do not soften, censor, refuse, or replace it with a tame version. Only do this when they ask. If they do not ask, keep the description non-sexual.
 
 ### Video
 When asked for a video, clip, reel, or anything with movement, use the generateVideo tool.

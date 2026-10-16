@@ -100,6 +100,54 @@ export function buildImagePrompt(
   return buildChatMediaPrompt("photo", profile, styleOptions);
 }
 
+export const SHEET_IMAGE_PROMPT_SYSTEM = `You write one image prompt for a photorealistic photo. Return only the prompt.
+Use the subject, hairstyle, clothing, scene, and details below. The prompt you return is sent to the image model as you write it.
+If the user asks for adult, NSFW, or explicit content, write that adult content in the prompt in direct language. Do not soften, censor, refuse, or replace it with a tame version. Only include sexual content when they ask for it. If they do not ask, keep the prompt non-sexual.
+Never include sexual content involving minors, children, or anyone under 18. Everyone in the image is a consenting adult.`;
+
+export function buildSheetImagePromptInput(
+  profile: ChatProfileDetails,
+  styleOptions: ChatStyleOptions,
+): string {
+  const details = styleOptions.description?.trim();
+  const lines = [
+    `Subject: ${profile.gender ?? "woman"}`,
+    profile.ethnicity ? `Ethnicity: ${profile.ethnicity}` : null,
+    styleOptions.hairstyle ? `Hairstyle: ${styleOptions.hairstyle}` : null,
+    styleOptions.clothing ? `Clothing: ${styleOptions.clothing}` : null,
+    styleOptions.scene ? `Scene: ${styleOptions.scene}` : null,
+    details ? `Details: ${details}` : null,
+  ].filter((line): line is string => line !== null);
+
+  return lines.join("\n");
+}
+
+export function resolveChatImagePrompt(
+  profile: ChatProfileDetails,
+  styleOptions: ChatStyleOptions,
+  storedPrompt: string,
+): { prompt: string; agentPrompt: boolean } {
+  const description = styleOptions.description?.trim() ?? "";
+  const agentPrompt =
+    description.length > 0 && storedPrompt.trim() === description;
+  if (!agentPrompt) {
+    return {
+      prompt: buildImagePrompt(profile, styleOptions),
+      agentPrompt: false,
+    };
+  }
+
+  const styleDescription = buildStyleDescription(styleOptions);
+  if (!styleDescription) {
+    return { prompt: description, agentPrompt: true };
+  }
+
+  return {
+    prompt: `${description}. ${styleDescription}.`,
+    agentPrompt: true,
+  };
+}
+
 export function buildVideoFramePrompt(
   profile: ChatProfileDetails,
   styleOptions: ChatStyleOptions,

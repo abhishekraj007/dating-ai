@@ -13,15 +13,19 @@ import { r2 } from "../../uploads";
 import { saveMessage } from "@convex-dev/agent";
 import { generateVideoWithFallback } from "./videoGeneration";
 import {
-  buildImagePrompt,
   buildVideoFramePrompt,
   buildVideoPrompt,
   buildChatImageKey,
   buildChatVideoKey,
   buildChatVideoPosterKey,
   fetchRemoteImageAsset,
+  buildSheetImagePromptInput,
   generateChatReferenceImage,
   isNsfwEnabledForPlatform,
+  resolveChatImagePrompt,
+  SHEET_IMAGE_PROMPT_SYSTEM,
+  type ChatProfileDetails,
+  type ChatStyleOptions,
   storeRemoteVideoAsset,
   toChatProfileDetails,
 } from "./chatMediaGeneration";
@@ -525,6 +529,40 @@ export const generateResponse = internalAction({
   },
 });
 
+async function writeSheetImagePrompt(
+  profile: ChatProfileDetails,
+  styleOptions: ChatStyleOptions,
+): Promise<string | null> {
+  const providers = getAvailableAgentProviders();
+  const prompt = buildSheetImagePromptInput(profile, styleOptions);
+
+  for (const provider of providers) {
+    const model = getAgentLanguageModel(provider);
+    if (!model) {
+      continue;
+    }
+
+    try {
+      const result = await generateText({
+        model,
+        system: SHEET_IMAGE_PROMPT_SYSTEM,
+        prompt,
+      });
+      const text = result.text.trim();
+      if (text.length > 0) {
+        return text;
+      }
+    } catch (error) {
+      console.warn(
+        `Sheet image prompt provider "${provider}" failed:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
+
+  return null;
+}
+
 /**
  * Generate a custom chat image.
  * Uses Nekos API in development (fast, free) and Replicate Flux in production.
@@ -585,7 +623,15 @@ export const generateChatImage = internalAction({
 
       const styleOptions = request.styleOptions ?? {};
       const profileDetails = toChatProfileDetails(profile);
-      const prompt = buildImagePrompt(profileDetails, styleOptions);
+      const resolvedPrompt = resolveChatImagePrompt(
+        profileDetails,
+        styleOptions,
+        request.prompt,
+      );
+      const sheetPrompt = resolvedPrompt.agentPrompt
+        ? null
+        : await writeSheetImagePrompt(profileDetails, styleOptions);
+      const prompt = sheetPrompt ?? resolvedPrompt.prompt;
 
       console.log("Generating image with prompt:", prompt);
       console.log(
@@ -598,7 +644,10 @@ export const generateChatImage = internalAction({
       const imageResult = await generateChatReferenceImage({
         prompt,
         avatarImageKey: profile.avatarImageKey,
-        enableSafety: !nsfwEnabled,
+        enableSafety:
+          nsfwEnabled || resolvedPrompt.agentPrompt || sheetPrompt !== null
+            ? false
+            : true,
       });
 
       if (!imageResult.success) {
