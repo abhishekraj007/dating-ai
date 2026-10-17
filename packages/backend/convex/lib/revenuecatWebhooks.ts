@@ -112,6 +112,13 @@ function getProductKey(productId: string): string | undefined {
   return undefined;
 }
 
+function getSubscriptionBonusCredits(productId: string | undefined): number {
+  if (productId && getProductKey(productId) === "yearly") {
+    return 5000;
+  }
+  return 1000;
+}
+
 /**
  * Determine if product is a subscription
  */
@@ -372,14 +379,17 @@ async function handleInitialPurchase(
     );
 
     if (result.isNew) {
+      const bonusCredits = getSubscriptionBonusCredits(event.product_id);
       await ctx.runMutation(
         internal.features.credits.mutations.addBonusCredits,
         {
           userId,
-          bonusCredits: 1000,
+          bonusCredits,
         },
       );
-      console.log("[REVENUECAT] Added 1000 bonus credits for new subscription");
+      console.log(
+        `[REVENUECAT] Added ${bonusCredits} bonus credits for new subscription`,
+      );
     }
   } else {
     // Handle one-time credit purchase
@@ -412,11 +422,12 @@ async function handleRenewal(
   );
 
   if (result.isRenewal) {
+    const bonusCredits = getSubscriptionBonusCredits(event.product_id);
     await ctx.runMutation(internal.features.credits.mutations.addBonusCredits, {
       userId,
-      bonusCredits: 1000,
+      bonusCredits,
     });
-    console.log("[REVENUECAT] Added 1000 bonus credits for renewal");
+    console.log(`[REVENUECAT] Added ${bonusCredits} bonus credits for renewal`);
   } else {
     console.log("[REVENUECAT] Renewal already processed, skipping credits");
   }

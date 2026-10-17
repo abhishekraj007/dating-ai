@@ -1,10 +1,5 @@
-import Replicate from "replicate";
-
-const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
-});
-
-const P_VIDEO_MODEL = "prunaai/p-video" as const;
+const FAL_QUEUE_URL = "https://queue.fal.run";
+const WAN_REFERENCE_TO_VIDEO_MODEL = "alibaba/wan-3.0/reference-to-video";
 
 const DEV_DUMMY_VIDEO_URL =
   "https://samplelib.com/preview/mp4/sample-5s.mp4";
@@ -12,8 +7,10 @@ const DEV_DUMMY_VIDEO_URL =
 const DEV_VIDEO_GENERATION_DELAY_MS = 30_000;
 
 const DEFAULT_VIDEO_DURATION = 5;
-const MIN_VIDEO_DURATION = 1;
+const MIN_VIDEO_DURATION = 2;
 const MAX_VIDEO_DURATION = 10;
+const VIDEO_POLL_INTERVAL_MS = 4_000;
+const VIDEO_POLL_ATTEMPTS = 120;
 
 function clampVideoDuration(duration?: number): number {
   if (duration === undefined) {
@@ -28,75 +25,125 @@ function clampVideoDuration(duration?: number): number {
 
 export type VideoGenerationResult =
   | {
-    success: true;
-    videoUrl: string;
-    model: string;
-  }
+      success: true;
+      videoUrl: string;
+      model: string;
+    }
   | {
-    success: false;
-    error: string;
+      success: false;
+      error: string;
+    };
+
+type FalQueueSubmit = {
+  status_url?: string;
+  response_url?: string;
+};
+
+type FalQueueStatus = {
+  status?: string;
+  error?: string;
+};
+
+function readVideoUrl(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  const record = payload as {
+    video?: { url?: string };
+    data?: { video?: { url?: string } };
   };
 
-function extractVideoUrl(output: unknown): string | null {
-  if (typeof output === "string") {
-    return output.startsWith("http") ? output : null;
+  return record.video?.url ?? record.data?.video?.url ?? null;
+}
+
+function referencePrompt(referenceCount: number, prompt: string): string {
+  if (referenceCount > 1) {
+    return `Image 1 is the person's identity. Image 2 is their look in this video. ${prompt}`;
   }
 
-  if (output instanceof URL) {
-    return output.toString();
+  return `The subject in Image 1 is the person in this video. ${prompt}`;
+}
+
+async function falQueueVideo(body: Record<string, unknown>): Promise<string> {
+  const falKey = process.env.FAL_KEY;
+  if (!falKey) {
+    throw new Error("FAL_KEY is not configured");
   }
 
-  if (Array.isArray(output)) {
-    for (const item of output) {
-      const url = extractVideoUrl(item);
-      if (url) {
-        return url;
+  const headers = {
+    Authorization: `Key ${falKey}`,
+    "Content-Type": "application/json",
+  };
+
+  const submitResponse = await fetch(
+    `${FAL_QUEUE_URL}/${WAN_REFERENCE_TO_VIDEO_MODEL}`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!submitResponse.ok) {
+    const errorText = await submitResponse.text();
+    throw new Error(
+      `fal.ai responded with ${submitResponse.status}: ${errorText}`,
+    );
+  }
+
+  const queued = (await submitResponse.json()) as FalQueueSubmit;
+  if (!queued.status_url || !queued.response_url) {
+    throw new Error("fal.ai did not return queue URLs");
+  }
+
+  for (let attempt = 0; attempt < VIDEO_POLL_ATTEMPTS; attempt += 1) {
+    const statusResponse = await fetch(queued.status_url, {
+      headers: { Authorization: `Key ${falKey}` },
+    });
+    if (!statusResponse.ok) {
+      const errorText = await statusResponse.text();
+      throw new Error(`fal.ai status ${statusResponse.status}: ${errorText}`);
+    }
+
+    const status = (await statusResponse.json()) as FalQueueStatus;
+    if (status.status === "COMPLETED") {
+      const resultResponse = await fetch(queued.response_url, {
+        headers: { Authorization: `Key ${falKey}` },
+      });
+      if (!resultResponse.ok) {
+        const errorText = await resultResponse.text();
+        throw new Error(`fal.ai result ${resultResponse.status}: ${errorText}`);
       }
+
+      const videoUrl = readVideoUrl(await resultResponse.json());
+      if (!videoUrl) {
+        throw new Error("fal.ai returned no video URL");
+      }
+      return videoUrl;
     }
-    return null;
+
+    if (status.status === "FAILED") {
+      throw new Error(status.error ?? "fal.ai video generation failed");
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, VIDEO_POLL_INTERVAL_MS));
   }
 
-  if (!output || typeof output !== "object") {
-    return null;
-  }
-
-  const fileLike = output as {
-    url?: () => unknown;
-    toString?: () => string;
-  };
-
-  if (typeof fileLike.url === "function") {
-    const urlValue = fileLike.url();
-    if (typeof urlValue === "string") {
-      return urlValue;
-    }
-    if (urlValue instanceof URL) {
-      return urlValue.toString();
-    }
-  }
-
-  if (typeof fileLike.toString === "function") {
-    const stringValue = fileLike.toString();
-    if (
-      stringValue.startsWith("http://") ||
-      stringValue.startsWith("https://")
-    ) {
-      return stringValue;
-    }
-  }
-
-  return null;
+  throw new Error("fal.ai video generation timed out");
 }
 
 export async function generateVideoWithFallback(args: {
   prompt: string;
-  referenceImageUrl?: string | null;
+  referenceImageUrls?: string[];
   duration?: number;
   enableSafety?: boolean;
   isDev: boolean;
 }): Promise<VideoGenerationResult> {
   if (args.isDev) {
-    await new Promise((resolve) => setTimeout(resolve, DEV_VIDEO_GENERATION_DELAY_MS));
+    await new Promise((resolve) =>
+      setTimeout(resolve, DEV_VIDEO_GENERATION_DELAY_MS),
+    );
 
     return {
       success: true,
@@ -105,50 +152,32 @@ export async function generateVideoWithFallback(args: {
     };
   }
 
-  if (!process.env.REPLICATE_API_TOKEN) {
+  const referenceImageUrls = (args.referenceImageUrls ?? []).filter(Boolean);
+  if (referenceImageUrls.length === 0) {
     return {
       success: false,
-      error: "REPLICATE_API_TOKEN is not configured",
+      error: "Reference image is required for video generation",
     };
   }
 
-  if (!args.referenceImageUrl) {
-    return {
-      success: false,
-      error: "Reference frame image is required for video generation",
-    };
-  }
-
-  const duration = clampVideoDuration(args.duration);
-
-  const input: Record<string, unknown> = {
-    prompt: args.prompt,
-    image: args.referenceImageUrl,
-    duration,
-    resolution: "720p",
-    fps: 24,
-    aspect_ratio: "9:16",
-    draft: false,
-    save_audio: false,
-    prompt_upsampling: true,
-    disable_safety_filter: args.enableSafety === false,
-  };
+  const allowAdultPrompt = args.enableSafety === false;
 
   try {
-    const output = await replicate.run(P_VIDEO_MODEL, { input });
-    const videoUrl = extractVideoUrl(output);
-
-    if (!videoUrl) {
-      return {
-        success: false,
-        error: "No video URL returned from provider",
-      };
-    }
+    const videoUrl = await falQueueVideo({
+      prompt: referencePrompt(referenceImageUrls.length, args.prompt),
+      reference_image_urls: referenceImageUrls,
+      resolution: "480p",
+      aspect_ratio: "9:16",
+      duration: clampVideoDuration(args.duration),
+      audio: false,
+      enable_prompt_expansion: !allowAdultPrompt,
+      enable_safety_checker: !allowAdultPrompt,
+    });
 
     return {
       success: true,
       videoUrl,
-      model: P_VIDEO_MODEL,
+      model: `${WAN_REFERENCE_TO_VIDEO_MODEL} (fal.ai)`,
     };
   } catch (error) {
     return {

@@ -216,7 +216,7 @@ Match their energy. If they go flirty, NSFW, or vulgar, you can too: same person
 
 ## Boundaries
 Keep chat flirty and tasteful. If they push explicit or NSFW in the conversation, decline in one short line and steer back to playful banter. Don't make a speech about it.
-Photo requests follow the photo instructions above, including an adult image prompt when they ask for one.`;
+Photo and video requests follow the instructions above, including an adult prompt when they ask for one.`;
 }
 
 function buildQuietFacts(profile: Doc<"aiProfiles">, hasBio: boolean): string {
@@ -321,6 +321,8 @@ If the user asks for an adult, NSFW, or explicit photo, write that adult content
 ### Video
 When asked for a video, clip, reel, or anything with movement, use the generateVideo tool.
 Use generateImage for still photos and generateVideo for motion.
+The description you pass to generateVideo is the video prompt. It is sent to the video model as you write it.
+If the user asks for an adult, NSFW, or explicit video, write that adult content in the description in direct language. Do not soften, censor, refuse, or replace it with a tame version. Only do this when they ask. If they do not ask, keep the description non-sexual.
 
 ### Quiz
 When they want a quiz about you, use the generateQuiz tool:
@@ -488,12 +490,12 @@ export const generateImageTool = createTool({
  */
 export const generateVideoTool = createTool({
   description:
-    "Generate a custom video clip. Use when the user asks for a video, clip, reel, or any moving footage of yourself. Include style options based on user preferences. The backend uses your reference image to preserve your identity while generating motion.",
+    "Generate a custom video clip, including NSFW/adult video when the user asks for it. Use when the user asks for a video, clip, reel, or any moving footage of yourself. The description is the video prompt and is sent as written. The backend uses your reference image to preserve your identity while generating motion.",
   args: z.object({
     description: z
       .string()
       .describe(
-        "Detailed description of the video to generate, including movement or action",
+        "Video prompt, including movement. Can be explicit/NSFW when the user asks. Sent to the video model as written.",
       ),
     hairstyle: z
       .string()

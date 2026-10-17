@@ -13,17 +13,19 @@ import { r2 } from "../../uploads";
 import { saveMessage } from "@convex-dev/agent";
 import { generateVideoWithFallback } from "./videoGeneration";
 import {
-  buildVideoFramePrompt,
-  buildVideoPrompt,
   buildChatImageKey,
   buildChatVideoKey,
   buildChatVideoPosterKey,
   fetchRemoteImageAsset,
   buildSheetImagePromptInput,
+  buildVideoFramePrompt,
   generateChatReferenceImage,
+  getProfileAvatarUrl,
   isNsfwEnabledForPlatform,
   resolveChatImagePrompt,
+  resolveChatVideoPrompt,
   SHEET_IMAGE_PROMPT_SYSTEM,
+  SHEET_VIDEO_PROMPT_SYSTEM,
   type ChatProfileDetails,
   type ChatStyleOptions,
   storeRemoteVideoAsset,
@@ -529,9 +531,10 @@ export const generateResponse = internalAction({
   },
 });
 
-async function writeSheetImagePrompt(
+async function writeMediaPrompt(
   profile: ChatProfileDetails,
   styleOptions: ChatStyleOptions,
+  system: string,
 ): Promise<string | null> {
   const providers = getAvailableAgentProviders();
   const prompt = buildSheetImagePromptInput(profile, styleOptions);
@@ -545,7 +548,7 @@ async function writeSheetImagePrompt(
     try {
       const result = await generateText({
         model,
-        system: SHEET_IMAGE_PROMPT_SYSTEM,
+        system,
         prompt,
       });
       const text = result.text.trim();
@@ -554,7 +557,7 @@ async function writeSheetImagePrompt(
       }
     } catch (error) {
       console.warn(
-        `Sheet image prompt provider "${provider}" failed:`,
+        `Media prompt provider "${provider}" failed:`,
         error instanceof Error ? error.message : error,
       );
     }
@@ -630,7 +633,11 @@ export const generateChatImage = internalAction({
       );
       const sheetPrompt = resolvedPrompt.agentPrompt
         ? null
-        : await writeSheetImagePrompt(profileDetails, styleOptions);
+        : await writeMediaPrompt(
+            profileDetails,
+            styleOptions,
+            SHEET_IMAGE_PROMPT_SYSTEM,
+          );
       const prompt = sheetPrompt ?? resolvedPrompt.prompt;
 
       console.log("Generating image with prompt:", prompt);
@@ -754,8 +761,23 @@ export const generateChatVideo = internalAction({
 
       const styleOptions = request.styleOptions ?? {};
       const profileDetails = toChatProfileDetails(profile);
-      const framePrompt = buildVideoFramePrompt(profileDetails, styleOptions);
-      const videoPrompt = buildVideoPrompt(profileDetails, styleOptions);
+      const resolvedPrompt = resolveChatVideoPrompt(
+        profileDetails,
+        styleOptions,
+        request.prompt,
+      );
+      const sheetPrompt = resolvedPrompt.agentPrompt
+        ? null
+        : await writeMediaPrompt(
+            profileDetails,
+            styleOptions,
+            SHEET_VIDEO_PROMPT_SYSTEM,
+          );
+      const videoPrompt = sheetPrompt ?? resolvedPrompt.prompt;
+      const framePrompt =
+        sheetPrompt || resolvedPrompt.agentPrompt
+          ? videoPrompt
+          : buildVideoFramePrompt(profileDetails, styleOptions);
 
       console.log("Generating video frame with prompt:", framePrompt);
       console.log(
@@ -764,11 +786,13 @@ export const generateChatVideo = internalAction({
       );
 
       const nsfwEnabled = await isNsfwEnabledForPlatform(ctx, request.platform);
+      const allowAdultPrompt =
+        nsfwEnabled || resolvedPrompt.agentPrompt || sheetPrompt !== null;
 
       const frameResult = await generateChatReferenceImage({
         prompt: framePrompt,
         avatarImageKey: profile.avatarImageKey,
-        enableSafety: !nsfwEnabled,
+        enableSafety: !allowAdultPrompt,
       });
 
       if (!frameResult.success) {
@@ -791,11 +815,16 @@ export const generateChatVideo = internalAction({
       console.log("Video poster saved:", posterKey);
       console.log("Generating video with prompt:", videoPrompt);
 
+      const avatarUrl = await getProfileAvatarUrl(profile.avatarImageKey);
+      const referenceImageUrls = [avatarUrl, frameResult.imageUrl].filter(
+        (url): url is string => url !== null && url.length > 0,
+      );
+
       const videoResult = await generateVideoWithFallback({
         prompt: videoPrompt,
-        referenceImageUrl: frameResult.imageUrl,
+        referenceImageUrls,
         duration: styleOptions.duration,
-        enableSafety: !nsfwEnabled,
+        enableSafety: !allowAdultPrompt,
         isDev: IS_DEV,
       });
 
