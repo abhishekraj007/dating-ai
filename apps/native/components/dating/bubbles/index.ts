@@ -13,7 +13,7 @@ export {
   UserImageRequestBubble,
   UserVideoRequestBubble,
 } from "./TextBubble";
-export { TypingIndicator } from "./TypingIndicator";
+export { TypingDots } from "./TypingIndicator";
 
 // Types and utilities
 export * from "./message-types";

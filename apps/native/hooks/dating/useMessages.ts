@@ -11,11 +11,42 @@ type OptimisticMessage = ProcessedMessage & { isOptimistic: true };
 
 export interface ProcessedMessage {
   _id: string;
+  renderKey: string;
   _creationTime: number;
   role: string;
   content: string;
   order: number;
   isStreaming: boolean;
+}
+
+function buildRenderKey(role: string, order: number, stepOrder: number) {
+  return `${role}-${order}-${stepOrder}`;
+}
+
+export function getReplyRenderKey(messages: ProcessedMessage[]) {
+  const last = messages[messages.length - 1];
+
+  if (!last) {
+    return buildRenderKey("assistant", 0, 0);
+  }
+
+  const lastOrder = Math.floor(last.order);
+  return buildRenderKey(
+    "assistant",
+    last.role === "user" ? lastOrder : lastOrder + 1,
+    1,
+  );
+}
+
+function isOptimisticResolved(
+  optimistic: ProcessedMessage,
+  realMessages: ProcessedMessage[],
+) {
+  return realMessages.some(
+    (message) =>
+      message.renderKey === optimistic.renderKey ||
+      (message.role === "user" && message.content === optimistic.content),
+  );
 }
 
 // Global cache for messages - persists across component remounts
@@ -287,6 +318,7 @@ function applyAuthoritativeMediaDeliveries(
 
     result.push({
       _id: delivery.responseMessageId,
+      renderKey: delivery.responseMessageId,
       _creationTime: delivery.createdAt,
       role: "assistant",
       content: delivery.content,
@@ -516,6 +548,7 @@ function hasVisibleAssistantContent(msg: any): boolean {
  */
 function processMessage(msg: any, index: number): ProcessedMessage[] {
   const baseId = msg._id || msg.id || msg.key || `msg-${index}`;
+  const renderKey = buildRenderKey(msg.role, msg.order, msg.stepOrder);
   const messageText = extractMessageText(msg, msg.role !== "user");
 
   // For user messages, just use text
@@ -523,6 +556,7 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
     return [
       {
         _id: baseId,
+        renderKey,
         _creationTime: msg._creationTime,
         role: msg.role,
         content: messageText,
@@ -539,6 +573,7 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
   if (toolOutputs.length > 0) {
     return toolOutputs.map((output, i) => ({
       _id: `${baseId}-tool-${i}`,
+      renderKey: `${renderKey}-tool-${i}`,
       _creationTime: msg._creationTime + i, // Slight offset for ordering
       role: msg.role,
       content: output,
@@ -551,6 +586,7 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
   return [
     {
       _id: baseId,
+      renderKey,
       _creationTime: msg._creationTime,
       role: msg.role,
       content: messageText,
@@ -705,11 +741,10 @@ export function useMessages(
     const optimistic = getOptimisticMessages(threadId);
     if (optimistic.length === 0) return;
 
-    // Check if any optimistic message content now exists in real messages
-    const realContents = new Set(
-      processedMessages.filter((m) => m.role === "user").map((m) => m.content),
+    // Check if any optimistic message now exists in real messages
+    const hasMatchingReal = optimistic.some((o) =>
+      isOptimisticResolved(o, processedMessages),
     );
-    const hasMatchingReal = optimistic.some((o) => realContents.has(o.content));
 
     if (hasMatchingReal) {
       clearOptimisticMessages(threadId);
@@ -741,13 +776,10 @@ export function useMessages(
       baseMessages = [...olderFromCache, ...processedMessages];
     }
 
-    // Filter out optimistic messages whose content already exists in real messages
+    // Filter out optimistic messages whose real counterpart already exists
     // This prevents a transient double-count (real + optimistic) that causes scroll jitter
-    const realUserContents = new Set(
-      baseMessages.filter((m) => m.role === "user").map((m) => m.content),
-    );
     const activeOptimistic = optimisticMessages.filter(
-      (o) => !realUserContents.has(o.content),
+      (o) => !isOptimisticResolved(o, baseMessages),
     );
 
     const allMessages = [...baseMessages, ...activeOptimistic];
@@ -821,11 +853,12 @@ export function useSendMessage() {
       const cachedMessages = getCachedMessages(threadId) ?? [];
       const maxOrder =
         cachedMessages.length > 0
-          ? Math.max(...cachedMessages.map((m) => m.order)) + 1
+          ? Math.floor(Math.max(...cachedMessages.map((m) => m.order))) + 1
           : 0;
 
       const optimisticMessage: ProcessedMessage = {
         _id: `optimistic-${Date.now()}`,
+        renderKey: buildRenderKey("user", maxOrder, 0),
         _creationTime: Date.now(),
         role: "user",
         content: args.content,

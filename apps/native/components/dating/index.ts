@@ -26,7 +26,7 @@ export { ForYouSkeleton } from "./for-you-skeleton";
 export { MatchModal } from "./match-modal";
 export { ChatInputBox } from "./chat-input-box";
 export { ChatForm, KEYBOARD_GAP } from "./chat-form";
-export { TypingIndicator } from "./bubbles";
+export { TypingDots } from "./bubbles";
 export { BlurredPremiumImage } from "./blurred-premium-image";
 export {
   DetailParallaxScroll,

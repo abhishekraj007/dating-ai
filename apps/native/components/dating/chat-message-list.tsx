@@ -14,8 +14,10 @@ import type { SharedValue } from "react-native-reanimated";
 import { Button, Skeleton } from "heroui-native";
 import { Hand } from "lucide-react-native";
 import { MessageBubble } from "./message-bubble";
-import { TypingIndicator } from "./bubbles/TypingIndicator";
-import type { ProcessedMessage } from "@/hooks/dating/useMessages";
+import {
+  getReplyRenderKey,
+  type ProcessedMessage,
+} from "@/hooks/dating/useMessages";
 import { useTranslation } from "@/hooks/use-translation";
 
 const ESTIMATED_MESSAGE_HEIGHT = 60;
@@ -26,23 +28,18 @@ const MAINTAIN_SCROLL_AT_END = {
   animated: false,
   on: { dataChange: true },
 } as const;
-const ACTIVE_ASSISTANT_KEY = "active-assistant-response";
 
-interface TypingIndicatorMessage extends ProcessedMessage {
-  isTypingIndicator: true;
+function createTypingMessage(renderKey: string): ProcessedMessage {
+  return {
+    _id: "typing-indicator",
+    renderKey,
+    _creationTime: 0,
+    role: "assistant",
+    content: "",
+    order: Number.MAX_SAFE_INTEGER,
+    isStreaming: true,
+  };
 }
-
-type ChatListMessage = ProcessedMessage | TypingIndicatorMessage;
-
-const TYPING_INDICATOR_MESSAGE: TypingIndicatorMessage = {
-  _id: ACTIVE_ASSISTANT_KEY,
-  _creationTime: 0,
-  role: "assistant",
-  content: "",
-  order: Number.MAX_SAFE_INTEGER,
-  isStreaming: true,
-  isTypingIndicator: true,
-};
 
 interface ChatMessageListProps {
   listRef: RefObject<LegendListRef | null>;
@@ -80,32 +77,18 @@ interface ChatMessageListProps {
   onOpenMessageActions: (messageId: string, messageOrder: number) => void;
 }
 
-function isTypingIndicatorMessage(
-  item: ChatListMessage,
-): item is TypingIndicatorMessage {
-  return "isTypingIndicator" in item;
+function getMessageRenderKey(item: ProcessedMessage) {
+  return item.renderKey;
 }
 
-function getMessageRenderKey(item: ChatListMessage) {
-  if (
-    isTypingIndicatorMessage(item) ||
-    (item.role === "assistant" && item.isStreaming)
-  ) {
-    return ACTIVE_ASSISTANT_KEY;
-  }
-
-  return item._id;
-}
-
-function getMessageContentType(item: ChatListMessage) {
-  if (isTypingIndicatorMessage(item)) {
-    return "typing";
-  }
-
+function getMessageContentType(item: ProcessedMessage) {
   return item.content.match(/"type":"([^"]+)"/)?.[1] ?? "text";
 }
 
-function messagesAreEqual(previous: ChatListMessage, current: ChatListMessage) {
+function messagesAreEqual(
+  previous: ProcessedMessage,
+  current: ProcessedMessage,
+) {
   return (
     previous._id === current._id &&
     previous._creationTime === current._creationTime &&
@@ -178,7 +161,9 @@ export function ChatMessageList({
   const { t } = useTranslation();
   const displayMessages = useMemo(
     () =>
-      showTypingIndicator ? [...messages, TYPING_INDICATOR_MESSAGE] : messages,
+      showTypingIndicator
+        ? [...messages, createTypingMessage(getReplyRenderKey(messages))]
+        : messages,
     [messages, showTypingIndicator],
   );
   const latestUserMessageIndex = displayMessages.findLastIndex(
@@ -236,18 +221,7 @@ export function ChatMessageList({
       anchorSpaceStatus.hasSpace);
 
   const renderMessage = useCallback(
-    ({ item }: LegendListRenderItemProps<ChatListMessage>) => {
-      if (isTypingIndicatorMessage(item)) {
-        return (
-          <View className="pt-2">
-            <TypingIndicator
-              avatarUrl={profile?.avatarUrl}
-              profileName={profile?.name}
-            />
-          </View>
-        );
-      }
-
+    ({ item }: LegendListRenderItemProps<ProcessedMessage>) => {
       const isUser = item.role === "user";
 
       return (

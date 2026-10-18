@@ -2,6 +2,7 @@ import { View, Text, Pressable } from "react-native";
 import { Camera } from "lucide-react-native";
 import Markdown from "react-native-markdown-display";
 import { AIBubbleWrapper } from "./AIBubbleWrapper";
+import { TypingDots } from "./TypingIndicator";
 import { useMarkdownStyles } from "./useMarkdownStyles";
 import type {
   AIBubbleProps,
@@ -32,6 +33,7 @@ export function AITextBubble({
 }: AITextProps) {
   const markdownStyles = useMarkdownStyles();
   const renderMarkdown = !isStreaming && shouldRenderAsMarkdown(content);
+  const isTyping = isStreaming && content === "";
 
   return (
     <AIBubbleWrapper
@@ -40,7 +42,9 @@ export function AITextBubble({
       time={time}
     >
       <View className="bg-surface rounded-2xl rounded-tl-sm px-4 py-3">
-        {renderMarkdown ? (
+        {isTyping ? (
+          <TypingDots />
+        ) : renderMarkdown ? (
           <Markdown style={markdownStyles}>{content}</Markdown>
         ) : (
           <Text

@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -8,10 +8,6 @@ import Animated, {
   withTiming,
   withDelay,
 } from "react-native-reanimated";
-import { AIBubbleWrapper } from "./AIBubbleWrapper";
-import type { AIBubbleProps } from "./message-types";
-
-interface TypingIndicatorProps extends Omit<AIBubbleProps, "time"> {}
 
 function Dot({ delay }: { delay: number }) {
   const opacity = useSharedValue(0.3);
@@ -42,17 +38,12 @@ function Dot({ delay }: { delay: number }) {
   );
 }
 
-export function TypingIndicator({
-  avatarUrl,
-  profileName,
-}: TypingIndicatorProps) {
+export function TypingDots() {
   return (
-    <AIBubbleWrapper avatarUrl={avatarUrl} profileName={profileName} time="">
-      <View className="bg-surface rounded-2xl rounded-tl-sm px-4 py-4 flex-row items-center">
-        <Dot delay={0} />
-        <Dot delay={150} />
-        <Dot delay={300} />
-      </View>
-    </AIBubbleWrapper>
+    <View className="h-[22px] flex-row items-center">
+      <Dot delay={0} />
+      <Dot delay={150} />
+      <Dot delay={300} />
+    </View>
   );
 }
