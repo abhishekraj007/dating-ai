@@ -108,7 +108,11 @@ export function useChatScreen() {
     loadMore,
     isAITyping,
     hasInvisibleStreamingMessage,
-  } = useMessages(threadId, id as Id<"aiConversations">);
+  } = useMessages(
+    threadId,
+    id as Id<"aiConversations">,
+    Boolean(conversation?.pendingPromptMessageId),
+  );
 
   const { sendMessage, sendMessageWithOptimistic, retryMessage, stopResponse } =
     useSendMessage();
@@ -485,6 +489,12 @@ export function useChatScreen() {
 
   const handleDeleteMessage = useCallback(async () => {
     if (!selectedMessage) return;
+    if (
+      pendingAssistantState &&
+      selectedMessage.order > pendingAssistantState.baselineOrder
+    ) {
+      clearPendingAssistantState();
+    }
     try {
       await deleteMessage(
         id as string,
@@ -495,7 +505,13 @@ export function useChatScreen() {
       console.error("Failed to delete message:", error);
     }
     setSelectedMessage(null);
-  }, [deleteMessage, id, selectedMessage]);
+  }, [
+    clearPendingAssistantState,
+    deleteMessage,
+    id,
+    pendingAssistantState,
+    selectedMessage,
+  ]);
 
   const handleQuizAnswer = useCallback(
     async (answer: string) => {

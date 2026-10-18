@@ -38,6 +38,15 @@ export function getReplyRenderKey(messages: ProcessedMessage[]) {
   );
 }
 
+function selectLiveResults<T extends { id: string }>(
+  results: T[],
+  isGenerating: boolean,
+) {
+  return isGenerating
+    ? results
+    : results.filter((message) => !message.id.startsWith("stream:"));
+}
+
 function isOptimisticResolved(
   optimistic: ProcessedMessage,
   realMessages: ProcessedMessage[],
@@ -433,6 +442,10 @@ function filterRedundantMediaRequests(
   messages: ProcessedMessage[],
 ): ProcessedMessage[] {
   return messages.filter((message) => {
+    if (message.role !== "user") {
+      return true;
+    }
+
     const parsed = parseMediaPayload(message.content);
     if (!parsed?.type.endsWith("_request")) {
       return true;
@@ -573,7 +586,7 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
   if (toolOutputs.length > 0) {
     return toolOutputs.map((output, i) => ({
       _id: `${baseId}-tool-${i}`,
-      renderKey: `${renderKey}-tool-${i}`,
+      renderKey: i === 0 ? renderKey : `${renderKey}-tool-${i}`,
       _creationTime: msg._creationTime + i, // Slight offset for ordering
       role: msg.role,
       content: output,
@@ -632,10 +645,12 @@ function getOptimisticMessages(threadId: string): ProcessedMessage[] {
  *
  * @param threadId - The thread ID from the conversation
  * @param conversationId - Conversation ID for authoritative media delivery state
+ * @param isGenerating - Whether the server has a reply in flight for this conversation
  */
 export function useMessages(
   threadId: string | undefined,
-  conversationId?: Id<"aiConversations">,
+  conversationId: Id<"aiConversations"> | undefined,
+  isGenerating: boolean,
 ) {
   const mediaDeliveries = useQuery(
     api.features.ai.queries.listConversationMediaDeliveries,
@@ -686,9 +701,10 @@ export function useMessages(
       };
     }
 
+    const liveResults = selectLiveResults(results, isGenerating);
     const allMessages: ProcessedMessage[] = [];
 
-    results.forEach((msg: any, index: number) => {
+    liveResults.forEach((msg: any, index: number) => {
       const hasVisibleContent =
         msg.role !== "assistant" || hasVisibleAssistantContent(msg);
 
@@ -714,8 +730,9 @@ export function useMessages(
       ),
     );
 
-    const lastRawMessage = results[results.length - 1];
+    const lastRawMessage = liveResults[liveResults.length - 1];
     const hasStreamingTail =
+      isGenerating &&
       lastRawMessage?.role === "assistant" &&
       (lastRawMessage.status === "streaming" ||
         lastRawMessage.status === "pending");
@@ -726,7 +743,7 @@ export function useMessages(
       hasInvisibleStreamingMessage:
         hasStreamingTail && !hasVisibleAssistantContent(lastRawMessage),
     };
-  }, [results, mediaDeliveries]);
+  }, [results, mediaDeliveries, isGenerating]);
 
   // Get optimistic messages for this thread
   const optimisticMessages = useMemo(() => {

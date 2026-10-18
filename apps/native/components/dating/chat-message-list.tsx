@@ -14,6 +14,7 @@ import type { SharedValue } from "react-native-reanimated";
 import { Button, Skeleton } from "heroui-native";
 import { Hand } from "lucide-react-native";
 import { MessageBubble } from "./message-bubble";
+import { MEDIA_ROW_HEIGHT } from "./bubbles/MediaPlaceholder";
 import {
   getReplyRenderKey,
   type ProcessedMessage,
@@ -28,6 +29,13 @@ const MAINTAIN_SCROLL_AT_END = {
   animated: false,
   on: { dataChange: true },
 } as const;
+
+const FIXED_HEIGHT_MEDIA_TYPES = new Set([
+  "image_processing",
+  "image_response",
+  "video_processing",
+  "video_response",
+]);
 
 function createTypingMessage(renderKey: string): ProcessedMessage {
   return {
@@ -83,6 +91,18 @@ function getMessageRenderKey(item: ProcessedMessage) {
 
 function getMessageContentType(item: ProcessedMessage) {
   return item.content.match(/"type":"([^"]+)"/)?.[1] ?? "text";
+}
+
+function getFixedMediaItemSize(
+  item: ProcessedMessage,
+  _index: number,
+  type: string | undefined,
+) {
+  return item.role === "assistant" &&
+    type !== undefined &&
+    FIXED_HEIGHT_MEDIA_TYPES.has(type)
+    ? MEDIA_ROW_HEIGHT
+    : undefined;
 }
 
 function messagesAreEqual(
@@ -279,6 +299,7 @@ export function ChatMessageList({
       renderItem={renderMessage}
       keyExtractor={getMessageRenderKey}
       getItemType={getMessageContentType}
+      getFixedItemSize={getFixedMediaItemSize}
       itemsAreEqual={messagesAreEqual}
       estimatedItemSize={ESTIMATED_MESSAGE_HEIGHT}
       recycleItems={false}

@@ -3,8 +3,16 @@ export { AIBubbleWrapper } from "./AIBubbleWrapper";
 export { QuizQuestionBubble } from "./QuizQuestionBubble";
 export { QuizResultBubble } from "./QuizResultBubble";
 export { QuizStartBubble } from "./QuizStartBubble";
-export { ImageRequestBubble, ImageResponseBubble, ImageProcessingBubble, ImageFailedBubble } from "./ImageBubble";
-export { VideoRequestBubble, VideoResponseBubble, VideoProcessingBubble, VideoFailedBubble } from "./VideoBubble";
+export {
+  ImageResponseBubble,
+  ImageProcessingBubble,
+  ImageFailedBubble,
+} from "./ImageBubble";
+export {
+  VideoResponseBubble,
+  VideoProcessingBubble,
+  VideoFailedBubble,
+} from "./VideoBubble";
 export { ChatErrorBubble } from "./ChatErrorBubble";
 export { CreditsRequiredBubble } from "./CreditsRequiredBubble";
 export {

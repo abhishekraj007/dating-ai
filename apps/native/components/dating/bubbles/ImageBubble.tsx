@@ -8,44 +8,13 @@ import { ZoomableImage } from "@/components/zoomable-image";
 import { BlurredPremiumImage } from "../blurred-premium-image";
 import { useCredits } from "@/hooks/dating/useCredits";
 import { useTranslation } from "@/hooks/use-translation";
-import { MediaPlaceholder } from "./MediaPlaceholder";
+import { MediaPlaceholder, MEDIA_PREVIEW_SIZE } from "./MediaPlaceholder";
 import type {
   AIBubbleProps,
-  ImageRequestData,
   ImageResponseData,
   ImageProcessingData,
   ImageFailedData,
 } from "./message-types";
-
-interface RequestProps extends AIBubbleProps {
-  data: ImageRequestData;
-}
-
-/**
- * AI image request bubble (pending/generating state).
- */
-export function ImageRequestBubble({
-  data,
-  avatarUrl,
-  profileName,
-  time,
-}: RequestProps) {
-  const markdownStyles = useMarkdownStyles();
-
-  return (
-    <AIBubbleWrapper
-      avatarUrl={avatarUrl}
-      profileName={profileName}
-      time={time}
-    >
-      <View className="bg-surface rounded-2xl rounded-tl-sm px-4 py-3">
-        <Markdown style={markdownStyles}>
-          {data.message || "Let me send you a photo..."}
-        </Markdown>
-      </View>
-    </AIBubbleWrapper>
-  );
-}
 
 interface ProcessingProps extends AIBubbleProps {
   data: ImageProcessingData;
@@ -57,8 +26,6 @@ export function ImageProcessingBubble({
   time,
 }: ProcessingProps) {
   const { t } = useTranslation();
-  const markdownStyles = useMarkdownStyles();
-  const previewSize = { width: 250, height: 300 };
 
   return (
     <AIBubbleWrapper
@@ -67,10 +34,11 @@ export function ImageProcessingBubble({
       time={time}
     >
       <View className="bg-surface rounded-2xl rounded-tl-sm overflow-hidden">
-        <MediaPlaceholder {...previewSize} showSpinner />
-        <View className="px-4 py-3">
-          <Markdown style={markdownStyles}>{t("media.takingPhoto")}</Markdown>
-        </View>
+        <MediaPlaceholder
+          {...MEDIA_PREVIEW_SIZE}
+          showSpinner
+          label={t("media.takingPhoto")}
+        />
       </View>
     </AIBubbleWrapper>
   );
@@ -126,7 +94,7 @@ export function ImageResponseBubble({
   );
 
   const imageUrl = freshUrl ?? data.imageUrl;
-  const previewSize = { width: 250, height: 350 };
+  const previewSize = MEDIA_PREVIEW_SIZE;
 
   return (
     <AIBubbleWrapper
@@ -140,14 +108,16 @@ export function ImageResponseBubble({
         ) : !imageUrl ? (
           <MediaPlaceholder {...previewSize} showSpinner />
         ) : !isPremium ? (
-          <BlurredPremiumImage
-            imageUrl={imageUrl}
-            width={previewSize.width}
-            height={previewSize.height}
-            profileName={profileName}
-            profileAvatar={avatarUrl}
-            borderRadius={0}
-          />
+          <View style={previewSize}>
+            <BlurredPremiumImage
+              imageUrl={imageUrl}
+              width={previewSize.width}
+              height={previewSize.height}
+              profileName={profileName}
+              profileAvatar={avatarUrl}
+              borderRadius={0}
+            />
+          </View>
         ) : (
           <ZoomableImage
             source={{ uri: imageUrl }}

@@ -1695,6 +1695,18 @@ export const deleteMessage = mutation({
         typeof promptMessage.message?.content === "string"
           ? promptMessage.message.content
           : "";
+
+      if (conversation.pendingPromptMessageId === messageId) {
+        await ctx.db.patch(conversationId, {
+          pendingPromptMessageId: null,
+          cancelledPromptMessageIds: Array.from(
+            new Set([
+              ...(conversation.cancelledPromptMessageIds ?? []),
+              messageId,
+            ]),
+          ),
+        });
+      }
     }
 
     // Get the AI profile to create the agent

@@ -8,41 +8,13 @@ import { InlineVideoPreview } from "@/components/fullscreen-video";
 import { BlurredPremiumImage } from "../blurred-premium-image";
 import { useCredits } from "@/hooks/dating/useCredits";
 import { useTranslation } from "@/hooks/use-translation";
-import { MediaPlaceholder } from "./MediaPlaceholder";
+import { MediaPlaceholder, MEDIA_PREVIEW_SIZE } from "./MediaPlaceholder";
 import type {
   AIBubbleProps,
-  VideoRequestData,
   VideoResponseData,
   VideoProcessingData,
   VideoFailedData,
 } from "./message-types";
-
-interface RequestProps extends AIBubbleProps {
-  data: VideoRequestData;
-}
-
-export function VideoRequestBubble({
-  data,
-  avatarUrl,
-  profileName,
-  time,
-}: RequestProps) {
-  const markdownStyles = useMarkdownStyles();
-
-  return (
-    <AIBubbleWrapper
-      avatarUrl={avatarUrl}
-      profileName={profileName}
-      time={time}
-    >
-      <View className="bg-surface rounded-2xl rounded-tl-sm px-4 py-3">
-        <Markdown style={markdownStyles}>
-          {data.message || "Let me send you a video..."}
-        </Markdown>
-      </View>
-    </AIBubbleWrapper>
-  );
-}
 
 interface ProcessingProps extends AIBubbleProps {
   data: VideoProcessingData;
@@ -54,8 +26,6 @@ export function VideoProcessingBubble({
   time,
 }: ProcessingProps) {
   const { t } = useTranslation();
-  const markdownStyles = useMarkdownStyles();
-  const previewSize = { width: 250, height: 300 };
 
   return (
     <AIBubbleWrapper
@@ -64,12 +34,11 @@ export function VideoProcessingBubble({
       time={time}
     >
       <View className="bg-surface rounded-2xl rounded-tl-sm overflow-hidden">
-        <MediaPlaceholder {...previewSize} showSpinner />
-        <View className="px-4 py-3">
-          <Markdown style={markdownStyles}>
-            {t("media.recordingVideo")}
-          </Markdown>
-        </View>
+        <MediaPlaceholder
+          {...MEDIA_PREVIEW_SIZE}
+          showSpinner
+          label={t("media.recordingVideo")}
+        />
       </View>
     </AIBubbleWrapper>
   );
@@ -127,7 +96,7 @@ export function VideoResponseBubble({
 
   const videoUrl = freshVideoUrl ?? data.videoUrl;
   const posterUrl = freshPosterUrl ?? data.posterUrl;
-  const previewSize = { width: 250, height: 350 };
+  const previewSize = MEDIA_PREVIEW_SIZE;
 
   return (
     <AIBubbleWrapper
@@ -140,14 +109,16 @@ export function VideoResponseBubble({
           <MediaPlaceholder {...previewSize} showSpinner />
         ) : !isPremium ? (
           posterUrl ? (
-            <BlurredPremiumImage
-              imageUrl={posterUrl}
-              width={previewSize.width}
-              height={previewSize.height}
-              profileName={profileName}
-              profileAvatar={avatarUrl}
-              borderRadius={0}
-            />
+            <View style={previewSize}>
+              <BlurredPremiumImage
+                imageUrl={posterUrl}
+                width={previewSize.width}
+                height={previewSize.height}
+                profileName={profileName}
+                profileAvatar={avatarUrl}
+                borderRadius={0}
+              />
+            </View>
           ) : (
             <MediaPlaceholder {...previewSize} showSpinner />
           )

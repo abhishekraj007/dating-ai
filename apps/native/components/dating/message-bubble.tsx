@@ -20,13 +20,11 @@ import { QuizStartBubble } from "./bubbles/QuizStartBubble";
 import { ChatErrorBubble } from "./bubbles/ChatErrorBubble";
 import { CreditsRequiredBubble } from "./bubbles/CreditsRequiredBubble";
 import {
-  ImageRequestBubble,
   ImageResponseBubble,
   ImageProcessingBubble,
   ImageFailedBubble,
 } from "./bubbles/ImageBubble";
 import {
-  VideoRequestBubble,
   VideoResponseBubble,
   VideoProcessingBubble,
   VideoFailedBubble,
@@ -146,8 +144,11 @@ export const MessageBubble = ({
 
       case "video_request":
         return (
-          <VideoRequestBubble
-            data={structuredContent as VideoRequestData}
+          <AITextBubble
+            content={
+              (structuredContent as VideoRequestData).message ||
+              "Let me send you a video..."
+            }
             {...bubbleProps}
           />
         );
@@ -178,8 +179,11 @@ export const MessageBubble = ({
 
       case "image_request":
         return (
-          <ImageRequestBubble
-            data={structuredContent as ImageRequestData}
+          <AITextBubble
+            content={
+              (structuredContent as ImageRequestData).message ||
+              "Let me send you a photo..."
+            }
             {...bubbleProps}
           />
         );
