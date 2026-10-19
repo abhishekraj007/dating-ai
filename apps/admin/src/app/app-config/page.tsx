@@ -22,7 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
-type NsfwPlatform = "ios" | "android" | "web";
+type NsfwPlatform = "ios" | "android" | "web" | "telegram";
 
 type ConfigForm = {
   baseWebUrl: string;
@@ -390,6 +390,13 @@ export default function AppConfigPage() {
                         platform: "web" as NsfwPlatform,
                         label: "Web",
                         description: "Allow NSFW content on web browsers.",
+                      },
+                      {
+                        id: "nsfw-telegram",
+                        platform: "telegram" as NsfwPlatform,
+                        label: "Telegram",
+                        description:
+                          "Allow NSFW content on the Telegram bot. Keep off to keep Telegram chats SFW.",
                       },
                     ] as const
                   ).map(({ id, platform, label, description }) => (

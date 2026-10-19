@@ -412,6 +412,15 @@
     "letsPlay": "クイズで遊びましょう！",
     "endQuiz": "クイズを終了"
   },
+  "telegram": {
+    "menu": "Telegramで続ける",
+    "menuLinked": "Telegram接続済み",
+    "linkFailed": "Telegramを開けませんでした。もう一度お試しください。",
+    "disconnectTitle": "Telegramを切断しますか？",
+    "disconnectBody": "このキャラクターからの返信がTelegramに届かなくなります。いつでも再接続できます。",
+    "disconnect": "切断",
+    "disconnected": "Telegramを切断しました。"
+  },
   "media": {
     "recordingVideo": "動画を撮影中...",
     "takingPhoto": "写真を撮影中..."

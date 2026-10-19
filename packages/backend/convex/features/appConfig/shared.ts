@@ -1,6 +1,6 @@
 export const APP_CONFIG_KEY = "global";
 
-export type NsfwPlatform = "ios" | "android" | "web";
+export type NsfwPlatform = "ios" | "android" | "web" | "telegram";
 
 export const FALLBACK_ANDROID_APP_ID = "com.noosperai.feelchat";
 

@@ -2,6 +2,7 @@ import { r2 } from "../../uploads";
 import { api } from "../../_generated/api";
 import type { ActionCtx } from "../../_generated/server";
 import { generateImageWithFallback } from "./imageGeneration";
+import type { ChatPlatform } from "./chatPlatformValidator";
 import { IS_DEV } from "./profileGen/constants";
 
 export type ChatStyleOptions = {
@@ -220,7 +221,7 @@ export async function getProfileAvatarUrl(
 
 export async function isNsfwEnabledForPlatform(
   ctx: ActionCtx,
-  platform?: "ios" | "android" | "web",
+  platform?: ChatPlatform,
 ): Promise<boolean> {
   if (!platform) {
     return false;
