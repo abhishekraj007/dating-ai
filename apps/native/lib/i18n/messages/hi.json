@@ -412,6 +412,15 @@
     "letsPlay": "चलो क्विज़ खेलते हैं!",
     "endQuiz": "क्विज़ समाप्त करें"
   },
+  "telegram": {
+    "menu": "Telegram पर जारी रखें",
+    "menuLinked": "Telegram कनेक्टेड",
+    "linkFailed": "Telegram नहीं खुल सका। कृपया फिर से कोशिश करें।",
+    "disconnectTitle": "Telegram डिस्कनेक्ट करें?",
+    "disconnectBody": "आपको Telegram पर इस किरदार के जवाब मिलना बंद हो जाएगा। आप कभी भी दोबारा कनेक्ट कर सकते हैं।",
+    "disconnect": "डिस्कनेक्ट करें",
+    "disconnected": "Telegram डिस्कनेक्ट हो गया।"
+  },
   "media": {
     "recordingVideo": "वीडियो रिकॉर्ड हो रहा है...",
     "takingPhoto": "फ़ोटो ली जा रही है..."

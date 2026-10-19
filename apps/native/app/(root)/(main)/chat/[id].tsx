@@ -14,7 +14,9 @@ import {
   ChevronLeft,
   MessageCircle,
   MoreVertical,
+  Send,
   Trash2,
+  Unlink,
   Video,
 } from "lucide-react-native";
 import { LanguageSheet } from "@/components/language/language-sheet";
@@ -27,7 +29,7 @@ import {
   SuggestionsSheet,
   VideoDurationSheet,
 } from "@/components/dating";
-import { useChatScreen } from "@/hooks/dating";
+import { useChatScreen, useTelegramLink } from "@/hooks/dating";
 import { useThemeColor } from "heroui-native";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -135,6 +137,8 @@ export default function ChatScreen() {
     handleGoBack,
   } = useChatScreen();
 
+  const telegram = useTelegramLink(conversation?.aiProfileId);
+
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
       <Stack.Screen options={{ gestureEnabled: router.canGoBack() }} />
@@ -235,6 +239,33 @@ export default function ChatScreen() {
                       {t("videoDuration.menu")}
                     </Text>
                   </Pressable>
+                  {telegram.isAvailable ? (
+                    <Pressable
+                      onPress={() => {
+                        void telegram.continueOnTelegram();
+                      }}
+                      disabled={telegram.isConnecting}
+                      className="flex-row items-center gap-3 px-3 py-3 rounded-lg active:bg-surface"
+                    >
+                      <Send size={20} color={foregroundColor} />
+                      <Text className="text-foreground text-base font-medium">
+                        {telegram.isLinked
+                          ? t("telegram.menuLinked")
+                          : t("telegram.menu")}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                  {telegram.isLinked ? (
+                    <Pressable
+                      onPress={telegram.disconnectTelegram}
+                      className="flex-row items-center gap-3 px-3 py-3 rounded-lg active:bg-surface"
+                    >
+                      <Unlink size={20} color="#ef4444" />
+                      <Text className="text-red-500 text-base font-medium">
+                        {t("telegram.disconnect")}
+                      </Text>
+                    </Pressable>
+                  ) : null}
                   <Pressable
                     onPress={handleClearChat}
                     className="flex-row items-center gap-3 px-3 py-3 rounded-lg active:bg-surface"

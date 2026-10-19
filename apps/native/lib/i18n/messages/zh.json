@@ -412,6 +412,15 @@
     "letsPlay": "来玩问答吧！",
     "endQuiz": "结束问答"
   },
+  "telegram": {
+    "menu": "在 Telegram 上继续",
+    "menuLinked": "Telegram 已连接",
+    "linkFailed": "无法打开 Telegram。请重试。",
+    "disconnectTitle": "断开 Telegram？",
+    "disconnectBody": "你将不再收到该角色在 Telegram 上的回复。你可以随时重新连接。",
+    "disconnect": "断开连接",
+    "disconnected": "Telegram 已断开。"
+  },
   "media": {
     "recordingVideo": "正在录制视频...",
     "takingPhoto": "正在拍照..."

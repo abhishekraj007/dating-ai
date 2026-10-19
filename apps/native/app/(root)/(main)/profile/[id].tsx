@@ -9,12 +9,13 @@ import { ZoomableImage } from "@/components/zoomable-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Skeleton, colorKit, useThemeColor } from "heroui-native";
-import { X } from "lucide-react-native";
+import { Send, X } from "lucide-react-native";
 import {
   useAIProfile,
   useCredits,
   useStartConversation,
   useConversationByProfile,
+  useTelegramLink,
 } from "@/hooks/dating";
 import {
   InterestChip,
@@ -41,19 +42,21 @@ export default function ProfileDetailScreen() {
   const { height: windowHeight } = useWindowDimensions();
   const backgroundColor = useThemeColor("background");
   const surfaceColor = useThemeColor("surface");
+  const foregroundColor = useThemeColor("foreground");
   const transparentBackground = colorKit.setAlpha(backgroundColor, 0).hex();
   const { profile, isLoading } = useAIProfile(id);
   const { conversation } = useConversationByProfile(id);
   const { startConversation } = useStartConversation();
   const { isAuthenticated } = useConvexAuth();
   const { isPremium } = useCredits();
+  const telegram = useTelegramLink(profile?._id);
   const [isStartingChat, setIsStartingChat] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [hasImageError, setHasImageError] = useState(false);
 
   const headerHeight = getDetailParallaxHeaderHeight(windowHeight);
   const bottomBarPadding = Math.max(insets.bottom, 8);
-  const listBottomInset = 56 + 12 + bottomBarPadding;
+  const listBottomInset = 56 + 44 + 8 + 12 + bottomBarPadding;
 
   const handleImageLoad = useCallback(() => {
     setIsImageLoaded(true);
@@ -87,6 +90,14 @@ export default function ProfileDetailScreen() {
 
     router.push(`/(root)/(main)/chat/${conversationId}`);
     setIsStartingChat(false);
+  };
+
+  const handleTelegramPress = async () => {
+    if (!isAuthenticated) {
+      router.push("/(root)/(auth)");
+      return;
+    }
+    await telegram.continueOnTelegram();
   };
 
   if (isLoading) {
@@ -371,6 +382,24 @@ export default function ProfileDetailScreen() {
           isLoading={isStartingChat}
           onPress={handleChat}
         />
+        {telegram.isAvailable ? (
+          <Button
+            variant="tertiary"
+            size="sm"
+            className="mt-2 self-center rounded-full"
+            isDisabled={telegram.isConnecting}
+            onPress={() => {
+              void handleTelegramPress();
+            }}
+          >
+            <Send size={16} color={foregroundColor} />
+            <Button.Label className="text-foreground/80">
+              {telegram.isLinked
+                ? t("telegram.menuLinked")
+                : t("telegram.menu")}
+            </Button.Label>
+          </Button>
+        ) : null}
       </View>
     </View>
   );

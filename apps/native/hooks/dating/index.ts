@@ -58,4 +58,5 @@ export type {
   FilterOptions,
 } from "./useFilterOptions";
 export { useChatScreen } from "./useChatScreen";
+export { useTelegramLink } from "./useTelegramLink";
 export { useVideoDurationPreference } from "./useVideoDurationPreference";

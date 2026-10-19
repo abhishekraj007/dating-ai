@@ -412,6 +412,15 @@
     "letsPlay": "Vamos jogar um quiz!",
     "endQuiz": "Encerrar quiz"
   },
+  "telegram": {
+    "menu": "Continuar no Telegram",
+    "menuLinked": "Telegram conectado",
+    "linkFailed": "Não foi possível abrir o Telegram. Tente novamente.",
+    "disconnectTitle": "Desconectar o Telegram?",
+    "disconnectBody": "Você deixará de receber as respostas deste personagem no Telegram. Você pode reconectar a qualquer momento.",
+    "disconnect": "Desconectar",
+    "disconnected": "Telegram desconectado."
+  },
   "media": {
     "recordingVideo": "Gravando um vídeo...",
     "takingPhoto": "Tirando uma foto..."
