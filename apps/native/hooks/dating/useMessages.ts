@@ -17,6 +17,7 @@ export interface ProcessedMessage {
   content: string;
   order: number;
   isStreaming: boolean;
+  bubbleIndex?: number;
 }
 
 function buildRenderKey(role: string, order: number, stepOrder: number) {
@@ -36,6 +37,55 @@ export function getReplyRenderKey(messages: ProcessedMessage[]) {
     last.role === "user" ? lastOrder : lastOrder + 1,
     1,
   );
+}
+
+const MAX_REPLY_BUBBLES = 3;
+const LIST_ITEM_START = /^\s*(?:[-*+]|\d+\.)\s/;
+
+function splitReplyIntoBubbles(text: string): string[] {
+  const paragraphs: string[] = [];
+  let current: string[] = [];
+  let inFence = false;
+
+  for (const line of text.trim().split("\n")) {
+    if (line.trimStart().startsWith("```")) {
+      inFence = !inFence;
+    }
+
+    if (!inFence && line.trim() === "") {
+      if (current.length > 0) {
+        paragraphs.push(current.join("\n"));
+        current = [];
+      }
+      continue;
+    }
+
+    current.push(line);
+  }
+
+  if (current.length > 0) {
+    paragraphs.push(current.join("\n"));
+  }
+
+  const bubbles: string[] = [];
+  for (const paragraph of paragraphs) {
+    if (bubbles.length > 0 && LIST_ITEM_START.test(paragraph)) {
+      bubbles[bubbles.length - 1] += `\n\n${paragraph}`;
+    } else {
+      bubbles.push(paragraph);
+    }
+  }
+
+  if (bubbles.length === 0) {
+    return [text];
+  }
+
+  return bubbles.length <= MAX_REPLY_BUBBLES
+    ? bubbles
+    : [
+        ...bubbles.slice(0, MAX_REPLY_BUBBLES - 1),
+        bubbles.slice(MAX_REPLY_BUBBLES - 1).join("\n\n"),
+      ];
 }
 
 function selectLiveResults<T extends { id: string }>(
@@ -367,6 +417,10 @@ function dedupeIdenticalStructuredMessages(
   const seen = new Set<string>();
 
   return messages.filter((message) => {
+    if (!getStructuredMessagePayload(message.content)) {
+      return true;
+    }
+
     const key = `${message.order}:${message.content}`;
     if (seen.has(key)) {
       return false;
@@ -596,17 +650,19 @@ function processMessage(msg: any, index: number): ProcessedMessage[] {
   }
 
   // Fallback to plain text
-  return [
-    {
-      _id: baseId,
-      renderKey,
-      _creationTime: msg._creationTime,
-      role: msg.role,
-      content: messageText,
-      order: msg.order,
-      isStreaming: msg.status === "streaming" || msg.status === "pending",
-    },
-  ];
+  const isStreaming = msg.status === "streaming" || msg.status === "pending";
+  const bubbles = splitReplyIntoBubbles(messageText);
+
+  return bubbles.map((content, i) => ({
+    _id: i === 0 ? baseId : `${baseId}-part-${i}`,
+    renderKey: i === 0 ? renderKey : `${renderKey}-part-${i}`,
+    _creationTime: msg._creationTime,
+    role: msg.role,
+    content,
+    order: msg.order,
+    isStreaming: isStreaming && i === bubbles.length - 1,
+    bubbleIndex: i,
+  }));
 }
 
 // Global state for optimistic messages - shared across hook instances

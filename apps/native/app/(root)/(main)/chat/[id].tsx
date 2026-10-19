@@ -91,6 +91,7 @@ export default function ChatScreen() {
 
     // Typing indicator
     showTypingIndicator,
+    typingRenderKey,
     isResponseStreaming,
     // Sheet states
     isImageSheetOpen,
@@ -253,6 +254,7 @@ export default function ChatScreen() {
               isFollowingLatest={isFollowingLatest}
               isResponseStreaming={isResponseStreaming}
               showTypingIndicator={showTypingIndicator}
+              typingRenderKey={typingRenderKey}
               emptyHeight={emptyHeight}
               keyboardOffset={safeAreaBottom}
               foregroundColorMuted={foregroundColorMuted}

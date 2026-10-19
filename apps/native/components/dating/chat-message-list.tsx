@@ -68,6 +68,7 @@ interface ChatMessageListProps {
   isFollowingLatest: boolean;
   isResponseStreaming: boolean;
   showTypingIndicator: boolean;
+  typingRenderKey?: string;
   emptyHeight: number;
   keyboardOffset: number;
   foregroundColorMuted: string;
@@ -162,6 +163,7 @@ export function ChatMessageList({
   isFollowingLatest,
   isResponseStreaming,
   showTypingIndicator,
+  typingRenderKey,
   emptyHeight,
   keyboardOffset,
   foregroundColorMuted,
@@ -182,9 +184,12 @@ export function ChatMessageList({
   const displayMessages = useMemo(
     () =>
       showTypingIndicator
-        ? [...messages, createTypingMessage(getReplyRenderKey(messages))]
+        ? [
+            ...messages,
+            createTypingMessage(typingRenderKey ?? getReplyRenderKey(messages)),
+          ]
         : messages,
-    [messages, showTypingIndicator],
+    [messages, showTypingIndicator, typingRenderKey],
   );
   const latestUserMessageIndex = displayMessages.findLastIndex(
     (message) => message.role === "user",

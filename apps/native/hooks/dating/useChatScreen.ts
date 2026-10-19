@@ -12,6 +12,7 @@ import {
 import { useRequestChatMedia } from "./useImageRequest";
 import type { MediaRequestOptions } from "./useImageRequest";
 import { useChatScroll } from "./useChatScroll";
+import { useBubblePacing } from "./useBubblePacing";
 import { useChatKeyboardList } from "./useChatKeyboardList";
 import { useCredits } from "./useCredits";
 import { useTranslation } from "@/hooks/use-translation";
@@ -102,7 +103,7 @@ export function useChatScreen() {
     useConversation(id);
   const threadId = conversation?.threadId;
   const {
-    messages,
+    messages: rawMessages,
     isLoading: isLoadingMessages,
     hasMore,
     loadMore,
@@ -156,6 +157,12 @@ export function useChatScreen() {
   > | null>(null);
 
   const conversationKey = threadId ?? id ?? null;
+  const { messages, isPacingPending, typingRenderKey } = useBubblePacing({
+    messages: rawMessages,
+    conversationKey,
+    isLoading: isLoadingMessages,
+    isStopRequested,
+  });
   const latestCreditsRequiredMessageId = useMemo(
     () => getLatestCreditsRequiredMessageId(messages),
     [messages],
@@ -218,7 +225,8 @@ export function useChatScreen() {
     !isStopRequested && (isAITyping || isWaitingForAI);
   const showTypingIndicator =
     isOpeningPending ||
-    (!isStopRequested && (hasInvisibleStreamingMessage || isWaitingForAI));
+    (!isStopRequested &&
+      (hasInvisibleStreamingMessage || isWaitingForAI || isPacingPending));
 
   const handleOpenCreditsModal = useCallback(() => {
     setIsImageSheetOpen(false);
@@ -718,6 +726,7 @@ export function useChatScreen() {
 
     // Typing indicator
     showTypingIndicator,
+    typingRenderKey,
     isResponseStreaming,
     isAITyping,
     // Sheet states

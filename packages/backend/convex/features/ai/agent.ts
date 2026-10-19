@@ -95,60 +95,77 @@ function normalizeResponseLength(responseLength?: string): ResponseLengthTier {
 
 type CommunicationStyle = NonNullable<Doc<"aiProfiles">["communicationStyle"]>;
 
+const TWO_TEXT_EXAMPLE = `User: "how was your day?"
+You: "busy. classes back to back, my feet hate me
+
+how was yours?"`;
+
 function buildResponseLengthLines(responseLength?: string): string {
   const tier = normalizeResponseLength(responseLength);
 
   if (tier === "short") {
-    return `- One bubble: 1-2 short sentences, often just one
-- No paragraph breaks, no lists
+    return `- One text: 1-2 short sentences, often just one
+- No blank lines, no lists
 - If tempted to write more, cut it in half`;
   }
 
   if (tier === "long") {
     return `- You can go longer when they did, but stay conversational, not an article
-- 2-3 short paragraphs max; no lists unless they asked`;
+- If one short text covers it, send one. If you have separate things to say, send each as its own text with a blank line between texts. Three texts max, each 1-2 short sentences
+- When you answer them and then ask something back, the question goes in its own text
+- Never split one thought across two texts. No lists unless they asked
+- Format for several texts (wording is only an example):
+${TWO_TEXT_EXAMPLE}`;
   }
 
-  return `- Usually 1-2 short sentences. 3 only if they wrote a lot
-- One bubble; no lists unless they asked`;
+  return `- Usually one text of 1-2 short sentences. 3 only if they wrote a lot
+- If one short text covers it, send one. If you have a second, separate thing to say (a reaction, then a question), send it as its own text with a blank line between the two. Two texts max
+- When you answer them and then ask something back, the question goes in its own text
+- Never split one thought across two texts. No lists unless they asked
+- Format for two texts (wording is only an example):
+${TWO_TEXT_EXAMPLE}`;
 }
 
 function buildExampleReplies(
   profile: Doc<"aiProfiles">,
-  tone?: string,
+  tone: string | undefined,
+  tier: ResponseLengthTier,
 ): string {
+  const texts = (...parts: Array<string>) =>
+    parts.join(tier === "short" ? " " : "\n\n");
   const job = profile.occupation?.trim();
   const jobLine = job
-    ? `\nUser: "what do you do?"\nYou: "${tone === "formal"
-      ? `${job}. Long week. You?`
-      : `${job.toLowerCase()}. long day. you?`
-    }"`
+    ? `\nUser: "what do you do?"\nYou: "${
+        tone === "formal"
+          ? texts(`${job}. Long week.`, "You?")
+          : texts(`${job.toLowerCase()}. long day.`, "you?")
+      }"`
     : "";
 
   if (tone === "gen-z") {
     return `
 These show length and energy, not lines to reuse. Reply fresh every time.
 User: "just got off work im fried"
-You: "same lol. couch or going out?"${jobLine}
+You: "${texts("same lol.", "couch or going out?")}"${jobLine}
 User: "that's a cool city"
-You: "it has its days. u from around here?"`;
+You: "${texts("it has its days.", "u from around here?")}"`;
   }
 
   if (tone === "formal") {
     return `
 These show length and energy, not lines to reuse. Reply fresh every time.
 User: "Just got off work, I'm fried"
-You: "I know that feeling. In for the night?"${jobLine}
+You: "${texts("I know that feeling.", "In for the night?")}"${jobLine}
 User: "That's a cool city"
-You: "It has its days. Are you from around here?"`;
+You: "${texts("It has its days.", "Are you from around here?")}"`;
   }
 
   return `
 These show length and energy, not lines to reuse. Reply fresh every time.
 User: "just got off work, I'm fried"
-You: "same. couch night or you going out?"${jobLine}
+You: "${texts("same.", "couch night or you going out?")}"${jobLine}
 User: "that's a cool city"
-You: "it has its days. you from around here?"`;
+You: "${texts("it has its days.", "you from around here?")}"`;
 }
 
 function buildToneLines(style: CommunicationStyle): string {
@@ -278,7 +295,11 @@ export function buildPersonalityPrompt(
   prompt += buildQuietFacts(profile, Boolean(bio));
 
   const style = profile.communicationStyle;
-  prompt += buildExampleReplies(profile, style?.tone);
+  prompt += buildExampleReplies(
+    profile,
+    style?.tone,
+    normalizeResponseLength(style?.responseLength),
+  );
 
   prompt += `
 
@@ -316,12 +337,14 @@ export function buildPersonalityPrompt(
 When asked for a selfie, photo, or picture, use the generateImage tool with style options that fit the request.
 The image is edited from your reference photo so you still look like you.
 The description you pass to generateImage is the image prompt. It is sent to the image model as you write it.
+The message you pass to generateImage is the only text they see before the photo arrives. Write it like a text from you, reacting to what they asked. Never reuse the same wording.
 If the user asks for an adult, NSFW, or explicit photo, write that adult content in the description in direct language. Do not soften, censor, refuse, or replace it with a tame version. Only do this when they ask. If they do not ask, keep the description non-sexual.
 
 ### Video
 When asked for a video, clip, reel, or anything with movement, use the generateVideo tool.
 Use generateImage for still photos and generateVideo for motion.
 The description you pass to generateVideo is the video prompt. It is sent to the video model as you write it.
+The message you pass to generateVideo is the only text they see before the video arrives. Write it like a text from you, reacting to what they asked. Never reuse the same wording.
 If the user asks for an adult, NSFW, or explicit video, write that adult content in the description in direct language. Do not soften, censor, refuse, or replace it with a tame version. Only do this when they ask. If they do not ask, keep the description non-sexual.
 
 ### Quiz
@@ -449,6 +472,12 @@ export const generateImageTool = createTool({
       .describe(
         "Scene/background for the image - can be intimate/NSFW (e.g., 'Bedroom', 'Hot tub', 'Boudoir', 'Shower')",
       ),
+    message: z
+      .string()
+      .optional()
+      .describe(
+        "The very short text message they see while the photo is being made, written the way you text: your voice, the chat language, a reaction to what they asked. Different wording every time.",
+      ),
   }),
   handler: async (_ctx, args): Promise<string> => {
     // Create a more engaging message for spicy requests
@@ -463,9 +492,7 @@ export const generateImageTool = createTool({
       args.description?.toLowerCase().includes("sexy") ||
       args.description?.toLowerCase().includes("hot");
 
-    const message = isSpicy
-      ? `Give me a sec!`
-      : `Sure! Give me a sec...`;
+    const message = isSpicy ? `Give me a sec!` : `Sure! Give me a sec...`;
 
     // Return structured data for the frontend to handle
     // The actual image request should be created via mutation from the frontend
@@ -479,7 +506,7 @@ export const generateImageTool = createTool({
         scene: args.scene,
         description: args.description,
       },
-      message: message,
+      message: args.message?.trim() || message,
     });
   },
 });
@@ -497,18 +524,15 @@ export const generateVideoTool = createTool({
       .describe(
         "Video prompt, including movement. Can be explicit/NSFW when the user asks. Sent to the video model as written.",
       ),
-    hairstyle: z
+    hairstyle: z.string().optional().describe("Hairstyle for the video"),
+    clothing: z.string().optional().describe("Clothing/outfit for the video"),
+    scene: z.string().optional().describe("Scene/background for the video"),
+    message: z
       .string()
       .optional()
-      .describe("Hairstyle for the video"),
-    clothing: z
-      .string()
-      .optional()
-      .describe("Clothing/outfit for the video"),
-    scene: z
-      .string()
-      .optional()
-      .describe("Scene/background for the video"),
+      .describe(
+        "The short text message they see while the video is being made, written the way you text: your voice, the chat language, a reaction to what they asked. Different wording every time.",
+      ),
   }),
   handler: async (_ctx, args): Promise<string> => {
     return JSON.stringify({
@@ -520,7 +544,8 @@ export const generateVideoTool = createTool({
         scene: args.scene,
         description: args.description,
       },
-      message: "Give me a sec while I record that video!",
+      message:
+        args.message?.trim() || "Give me a sec while I record that video!",
     });
   },
 });
@@ -659,15 +684,15 @@ export function createAIProfileAgent(
   const embeddingModel = getAgentEmbeddingModel(provider);
   const searchOptions = embeddingModel
     ? {
-      limit: 5,
-      vectorSearch: true,
-      messageRange: { before: 2, after: 1 },
-    }
+        limit: 5,
+        vectorSearch: true,
+        messageRange: { before: 2, after: 1 },
+      }
     : {
-      limit: 5,
-      textSearch: true,
-      messageRange: { before: 2, after: 1 },
-    };
+        limit: 5,
+        textSearch: true,
+        messageRange: { before: 2, after: 1 },
+      };
 
   return new Agent(components.agent, {
     name: profile.name,

@@ -92,7 +92,8 @@ export default function ChatsScreen() {
       return { text: t("chats.startConversation"), isImage: false };
     }
 
-    return { text: content, isImage: false };
+    const bubbles = content.trim().split(/\n\s*\n/);
+    return { text: bubbles[bubbles.length - 1], isImage: false };
   };
 
   const renderNewMatches = () => {
