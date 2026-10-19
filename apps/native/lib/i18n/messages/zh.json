@@ -369,6 +369,12 @@
     "signInToView": "登录查看你的上传",
     "empty": "还没有上传文件"
   },
+  "videoDuration": {
+    "menu": "视频时长",
+    "title": "视频时长",
+    "subtitle": "在 AI 伴侣为你录制视频时生效。",
+    "credits": "{{count}} 积分"
+  },
   "imageRequest": {
     "title": "请求照片",
     "credits": "{{count}} 积分",

@@ -1,14 +1,13 @@
 const FAL_QUEUE_URL = "https://queue.fal.run";
 const WAN_REFERENCE_TO_VIDEO_MODEL = "alibaba/wan-3.0/reference-to-video";
 
-const DEV_DUMMY_VIDEO_URL =
-  "https://samplelib.com/preview/mp4/sample-5s.mp4";
+const DEV_DUMMY_VIDEO_URL = "https://samplelib.com/preview/mp4/sample-5s.mp4";
 
 const DEV_VIDEO_GENERATION_DELAY_MS = 30_000;
 
 const DEFAULT_VIDEO_DURATION = 5;
 const MIN_VIDEO_DURATION = 2;
-const MAX_VIDEO_DURATION = 10;
+const MAX_VIDEO_DURATION = 15;
 const VIDEO_POLL_INTERVAL_MS = 4_000;
 const VIDEO_POLL_ATTEMPTS = 120;
 

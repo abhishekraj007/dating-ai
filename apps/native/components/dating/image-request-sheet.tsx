@@ -24,6 +24,12 @@ import { Camera, Sparkles } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTranslation } from "@/hooks/use-translation";
+import { useVideoDurationPreference } from "@/hooks/dating/useVideoDurationPreference";
+import {
+  VIDEO_DURATION_OPTIONS,
+  videoCreditCost,
+  type VideoDuration,
+} from "@/lib/video-duration";
 
 const HAIRSTYLE_OPTIONS = [
   "Straight hair",
@@ -88,9 +94,6 @@ interface ImageRequestSheetProps {
   credits?: number;
 }
 
-const DEFAULT_VIDEO_DURATION = 5;
-const VIDEO_DURATION_OPTIONS = [5, 10] as const;
-
 interface ImageRequestSheetContentProps {
   mediaType: "photo" | "video";
   onChangeMediaType: (value: "photo" | "video") => void;
@@ -102,8 +105,8 @@ interface ImageRequestSheetContentProps {
   onSelectClothing: (value: string | null) => void;
   selectedScene: string | null;
   onSelectScene: (value: string | null) => void;
-  videoDuration: number;
-  onVideoDurationChange: (value: number) => void;
+  videoDuration: VideoDuration;
+  onVideoDurationChange: (value: VideoDuration) => void;
   resetKey: number;
   onExtraDetailsChange: (value: string, hasDetails: boolean) => void;
 }
@@ -366,6 +369,8 @@ export function ImageRequestSheet({
 }: ImageRequestSheetProps) {
   const { t } = useTranslation();
   const { bottom } = useSafeAreaInsets();
+  const { videoDuration: preferredVideoDuration } =
+    useVideoDurationPreference();
   const [mediaType, setMediaType] = useState<"photo" | "video">("photo");
   const [activeTab, setActiveTab] = useState("hairstyle");
   const [selectedHairstyle, setSelectedHairstyle] = useState<string | null>(
@@ -373,7 +378,9 @@ export function ImageRequestSheet({
   );
   const [selectedClothing, setSelectedClothing] = useState<string | null>(null);
   const [selectedScene, setSelectedScene] = useState<string | null>(null);
-  const [videoDuration, setVideoDuration] = useState(DEFAULT_VIDEO_DURATION);
+  const [videoDuration, setVideoDuration] = useState<VideoDuration>(
+    preferredVideoDuration,
+  );
   const [hasExtraDetails, setHasExtraDetails] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const extraDetailsRef = useRef("");
@@ -382,8 +389,14 @@ export function ImageRequestSheet({
   const hasAnySelection = Boolean(
     selectedHairstyle || selectedClothing || selectedScene || hasExtraDetails,
   );
-  const creditCost = mediaType === "video" ? 200 : 5;
+  const creditCost = mediaType === "video" ? videoCreditCost(videoDuration) : 5;
   const hasEnoughCredits = credits >= creditCost;
+
+  useEffect(() => {
+    if (isOpen) {
+      setVideoDuration(preferredVideoDuration);
+    }
+  }, [isOpen, preferredVideoDuration]);
 
   const handleExtraDetailsChange = (value: string, hasDetails: boolean) => {
     extraDetailsRef.current = value;
@@ -397,7 +410,7 @@ export function ImageRequestSheet({
     setSelectedHairstyle(null);
     setSelectedClothing(null);
     setSelectedScene(null);
-    setVideoDuration(DEFAULT_VIDEO_DURATION);
+    setVideoDuration(preferredVideoDuration);
     setHasExtraDetails(false);
     hasExtraDetailsRef.current = false;
     extraDetailsRef.current = "";

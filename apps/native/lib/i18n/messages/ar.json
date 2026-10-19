@@ -369,6 +369,12 @@
     "signInToView": "سجل الدخول لعرض تحميلاتك",
     "empty": "لم يتم رفع أي ملفات بعد"
   },
+  "videoDuration": {
+    "menu": "مدة الفيديو",
+    "title": "مدة الفيديو",
+    "subtitle": "تُطبق على الفيديوهات المسجلة لك.",
+    "credits": "{{count}} رصيد"
+  },
   "imageRequest": {
     "title": "طلب صورة",
     "credits": "{{count}} رصيد",

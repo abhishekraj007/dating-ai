@@ -34,3 +34,4 @@ export {
   DETAIL_PARALLAX_HEADER_HEIGHT_RATIO,
 } from "./detail-parallax-scroll";
 export { ProfileChatButton } from "./profile-chat-button";
+export { VideoDurationSheet } from "./video-duration-sheet";

@@ -6,10 +6,7 @@ import {
   avatarImageQueryArgs,
   buildAiProfileAvatarUrl,
 } from "../../lib/aiProfileAvatar";
-import {
-  appLanguageValidator,
-  type AppLanguage,
-} from "../../lib/languages";
+import { appLanguageValidator, type AppLanguage } from "../../lib/languages";
 import type { MutationCtx, QueryCtx } from "../../_generated/server";
 import type { Doc } from "../../_generated/dataModel";
 import { activeProfilesDiscoverQuery } from "../ai/discoverQuery";
@@ -152,6 +149,57 @@ export const setUserChatLanguage = mutation({
     }
 
     return await upsertLanguagePreferences(ctx, user._id, { chatLanguage });
+  },
+});
+
+/**
+ * Get preferred video duration (seconds) for the authenticated user.
+ */
+export const getUserVideoDuration = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      return null;
+    }
+
+    const preferences = await getPreferencesForUser(ctx, user._id);
+    return preferences?.videoDuration ?? null;
+  },
+});
+
+/**
+ * Save preferred video duration (seconds) for the authenticated user.
+ */
+export const setUserVideoDuration = mutation({
+  args: {
+    videoDuration: v.union(v.literal(5), v.literal(10), v.literal(15)),
+  },
+  handler: async (ctx, { videoDuration }) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    const existingPreferences = await getPreferencesForUser(ctx, user._id);
+    if (existingPreferences) {
+      await ctx.db.patch(existingPreferences._id, {
+        videoDuration,
+        updatedAt: Date.now(),
+      });
+      return existingPreferences._id;
+    }
+
+    return await ctx.db.insert("userPreferences", {
+      userId: user._id,
+      videoDuration,
+      genderPreference: "female",
+      ageMin: 18,
+      ageMax: 35,
+      zodiacPreferences: [],
+      interestPreferences: [],
+      updatedAt: Date.now(),
+    });
   },
 });
 
@@ -336,8 +384,7 @@ export const getForYouProfiles = query({
     const allProfiles = await activeProfilesDiscoverQuery(
       ctx,
       genderPreference,
-    )
-      .take(scanLimit);
+    ).take(scanLimit);
 
     // Filter profiles
     const filteredProfiles = allProfiles.filter((profile) => {

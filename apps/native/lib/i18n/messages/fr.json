@@ -369,6 +369,12 @@
     "signInToView": "Connectez-vous pour voir vos téléchargements",
     "empty": "Aucun fichier téléchargé pour le moment"
   },
+  "videoDuration": {
+    "menu": "Durée de la vidéo",
+    "title": "Durée de la vidéo",
+    "subtitle": "Appliquée aux vidéos enregistrées pour vous.",
+    "credits": "{{count}} crédits"
+  },
   "imageRequest": {
     "title": "Demander une photo",
     "credits": "{{count}} crédits",

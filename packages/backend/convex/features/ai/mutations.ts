@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, internalMutation } from "../../_generated/server";
+import type { MutationCtx } from "../../_generated/server";
 import { internal } from "../../_generated/api";
 import {
   abortStream,
@@ -34,7 +35,33 @@ import {
 
 const TEXT_MESSAGE_CREDIT_COST = 1;
 const CHAT_IMAGE_REQUEST_CREDIT_COST = 5;
-const CHAT_VIDEO_REQUEST_CREDIT_COST = 200;
+const CHAT_VIDEO_CREDIT_COSTS = { 5: 200, 10: 400, 15: 600 } as const;
+const DEFAULT_CHAT_VIDEO_DURATION = 5;
+
+type ChatVideoDuration = keyof typeof CHAT_VIDEO_CREDIT_COSTS;
+
+function normalizeChatVideoDuration(
+  duration: number | undefined,
+): ChatVideoDuration | undefined {
+  return duration === 5 || duration === 10 || duration === 15
+    ? duration
+    : undefined;
+}
+
+async function getChatVideoDurationForUser(
+  ctx: MutationCtx,
+  userId: string,
+): Promise<ChatVideoDuration> {
+  const preferences = await ctx.db
+    .query("userPreferences")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .unique();
+
+  return (
+    normalizeChatVideoDuration(preferences?.videoDuration) ??
+    DEFAULT_CHAT_VIDEO_DURATION
+  );
+}
 
 function isLikelyChatVideoRequest(content: string) {
   const normalized = content.toLowerCase().trim();
@@ -219,7 +246,8 @@ export const sendMessage = mutation({
     const currentCredits = profile.credits ?? 0;
     const messageCost = TEXT_MESSAGE_CREDIT_COST;
     const imageCost = CHAT_IMAGE_REQUEST_CREDIT_COST;
-    const videoCost = CHAT_VIDEO_REQUEST_CREDIT_COST;
+    const videoCost =
+      CHAT_VIDEO_CREDIT_COSTS[await getChatVideoDurationForUser(ctx, user._id)];
     const isVideoRequest = isLikelyChatVideoRequest(content);
     const isImageRequest = isLikelyChatImageRequest(content);
     const isMediaRequest = isVideoRequest || isImageRequest;
@@ -1368,7 +1396,8 @@ export const createChatVideoRequestInternal = internalMutation({
     }
 
     const currentCredits = profile.credits ?? 0;
-    const videoCost = CHAT_VIDEO_REQUEST_CREDIT_COST;
+    const videoDuration = await getChatVideoDurationForUser(ctx, userId);
+    const videoCost = CHAT_VIDEO_CREDIT_COSTS[videoDuration];
 
     if (currentCredits < videoCost) {
       console.log("Insufficient credits for agent video request");
@@ -1399,7 +1428,7 @@ export const createChatVideoRequestInternal = internalMutation({
       aiProfileId,
       platform,
       prompt,
-      styleOptions,
+      styleOptions: { ...(styleOptions ?? {}), duration: videoDuration },
       status: "pending",
       creditsCharged: videoCost,
     });
@@ -1459,7 +1488,10 @@ export const requestChatVideo = mutation({
     }
 
     const currentCredits = profile.credits ?? 0;
-    const videoCost = CHAT_VIDEO_REQUEST_CREDIT_COST;
+    const videoDuration =
+      normalizeChatVideoDuration(styleOptions?.duration) ??
+      (await getChatVideoDurationForUser(ctx, user._id));
+    const videoCost = CHAT_VIDEO_CREDIT_COSTS[videoDuration];
 
     if (currentCredits < videoCost) {
       throw new Error("Insufficient credits");
@@ -1469,13 +1501,18 @@ export const requestChatVideo = mutation({
       credits: currentCredits - videoCost,
     });
 
+    const resolvedStyleOptions = {
+      ...(styleOptions ?? {}),
+      duration: videoDuration,
+    };
+
     const requestId = await ctx.db.insert("chatVideos", {
       conversationId,
       userId: user._id,
       aiProfileId: conversation.aiProfileId,
       platform,
       prompt,
-      styleOptions,
+      styleOptions: resolvedStyleOptions,
       status: "pending",
       creditsCharged: videoCost,
     });
@@ -1506,7 +1543,7 @@ export const requestChatVideo = mutation({
         prompt: JSON.stringify({
           type: "video_request",
           prompt,
-          styleOptions,
+          styleOptions: resolvedStyleOptions,
           requestId,
           message: userMessage,
         }),

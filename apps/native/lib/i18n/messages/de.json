@@ -369,6 +369,12 @@
     "signInToView": "Melde dich an, um deine Uploads zu sehen",
     "empty": "Noch keine Dateien hochgeladen"
   },
+  "videoDuration": {
+    "menu": "Videolänge",
+    "title": "Videolänge",
+    "subtitle": "Gilt für Videos, die für dich aufgenommen werden.",
+    "credits": "{{count}} Credits"
+  },
   "imageRequest": {
     "title": "Foto anfordern",
     "credits": "{{count}} Credits",

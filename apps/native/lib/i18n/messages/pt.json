@@ -369,6 +369,12 @@
     "signInToView": "Entre para ver seus uploads",
     "empty": "Nenhum arquivo enviado ainda"
   },
+  "videoDuration": {
+    "menu": "Duração do vídeo",
+    "title": "Duração do vídeo",
+    "subtitle": "Aplicada aos vídeos gravados para você.",
+    "credits": "{{count}} créditos"
+  },
   "imageRequest": {
     "title": "Solicitar foto",
     "credits": "{{count}} créditos",

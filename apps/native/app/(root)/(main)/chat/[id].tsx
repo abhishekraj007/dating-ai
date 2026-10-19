@@ -15,6 +15,7 @@ import {
   MessageCircle,
   MoreVertical,
   Trash2,
+  Video,
 } from "lucide-react-native";
 import { LanguageSheet } from "@/components/language/language-sheet";
 import {
@@ -24,6 +25,7 @@ import {
   MessageActionsSheet,
   TopicsSheet,
   SuggestionsSheet,
+  VideoDurationSheet,
 } from "@/components/dating";
 import { useChatScreen } from "@/hooks/dating";
 import { useThemeColor } from "heroui-native";
@@ -104,6 +106,8 @@ export default function ChatScreen() {
     setIsSuggestionsSheetOpen,
     isChatLanguageOpen,
     setIsChatLanguageOpen,
+    isVideoDurationOpen,
+    setIsVideoDurationOpen,
 
     // Computed values
     interactiveQuizQuestionId,
@@ -125,6 +129,7 @@ export default function ChatScreen() {
     handleRetryFailedResponse,
     handleClearChat,
     handleOpenChatLanguage,
+    handleOpenVideoDuration,
     handleOpenCreditsModal,
     handleOpenBuyCredits,
     handleGoBack,
@@ -219,6 +224,15 @@ export default function ChatScreen() {
                     <MessageCircle size={20} color={foregroundColor} />
                     <Text className="text-foreground text-base font-medium">
                       {t("account.item.chatLanguage")}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleOpenVideoDuration}
+                    className="flex-row items-center gap-3 px-3 py-3 rounded-lg active:bg-surface"
+                  >
+                    <Video size={20} color={foregroundColor} />
+                    <Text className="text-foreground text-base font-medium">
+                      {t("videoDuration.menu")}
                     </Text>
                   </Pressable>
                   <Pressable
@@ -346,6 +360,11 @@ export default function ChatScreen() {
         variant="chat"
         isOpen={isChatLanguageOpen}
         onOpenChange={setIsChatLanguageOpen}
+      />
+
+      <VideoDurationSheet
+        isOpen={isVideoDurationOpen}
+        onOpenChange={setIsVideoDurationOpen}
       />
     </SafeAreaView>
   );

@@ -37,6 +37,8 @@ export default defineSchema({
     userId: v.string(), // Better Auth user ID
     appLanguage: v.optional(appLanguageValidator),
     chatLanguage: v.optional(appLanguageValidator),
+    // Preferred duration in seconds for requested/generated videos (5, 10 or 15)
+    videoDuration: v.optional(v.number()),
     // Gender preference
     genderPreference: v.union(
       v.literal("female"),
@@ -252,11 +254,7 @@ export default defineSchema({
     profileAvatarImageKey: v.optional(v.string()), // Denormalized for convenience
     profileName: v.optional(v.string()), // Denormalized for convenience
     openingMessageStatus: v.optional(
-      v.union(
-        v.literal("pending"),
-        v.literal("ready"),
-        v.literal("failed"),
-      ),
+      v.union(v.literal("pending"), v.literal("ready"), v.literal("failed")),
     ),
     freeMessagesRemaining: v.optional(v.number()),
   })

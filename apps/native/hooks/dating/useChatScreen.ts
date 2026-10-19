@@ -14,7 +14,8 @@ import type { MediaRequestOptions } from "./useImageRequest";
 import { useChatScroll } from "./useChatScroll";
 import { useBubblePacing } from "./useBubblePacing";
 import { useChatKeyboardList } from "./useChatKeyboardList";
-import { useCredits } from "./useCredits";
+import { CREDIT_COSTS, useCredits } from "./useCredits";
+import { normalizeVideoDuration, videoCreditCost } from "@/lib/video-duration";
 import { useTranslation } from "@/hooks/use-translation";
 import { usePurchases } from "@/contexts/purchases-context";
 
@@ -146,6 +147,7 @@ export function useChatScreen() {
   const [isSuggestionsSheetOpen, setIsSuggestionsSheetOpen] = useState(false);
   const [isActionsSheetOpen, setIsActionsSheetOpen] = useState(false);
   const [isChatLanguageOpen, setIsChatLanguageOpen] = useState(false);
+  const [isVideoDurationOpen, setIsVideoDurationOpen] = useState(false);
 
   const [isSending, setIsSending] = useState(false);
   const [pendingAssistantState, setPendingAssistantState] = useState<{
@@ -435,10 +437,12 @@ export function useChatScreen() {
     async (options: MediaRequestOptions) => {
       if (!id) return;
 
-      const creditAction =
-        options.mediaType === "video" ? "VIDEO_REQUEST" : "IMAGE_REQUEST";
+      const requiredCredits =
+        options.mediaType === "video"
+          ? videoCreditCost(normalizeVideoDuration(options.duration))
+          : CREDIT_COSTS.IMAGE_REQUEST;
 
-      if (!hasEnoughCredits(creditAction)) {
+      if (credits < requiredCredits) {
         handleOpenBuyCredits();
         return;
       }
@@ -458,7 +462,7 @@ export function useChatScreen() {
         setIsRequestingImage(false);
       }
     },
-    [id, requestMedia, hasEnoughCredits, handleOpenBuyCredits, platform],
+    [id, requestMedia, credits, handleOpenBuyCredits, platform],
   );
 
   const handleOpenImageSheet = () => {
@@ -597,6 +601,11 @@ export function useChatScreen() {
   const handleOpenChatLanguage = useCallback(() => {
     popoverRef.current?.close();
     setIsChatLanguageOpen(true);
+  }, []);
+
+  const handleOpenVideoDuration = useCallback(() => {
+    popoverRef.current?.close();
+    setIsVideoDurationOpen(true);
   }, []);
 
   const handleClearChat = useCallback(() => {
@@ -742,6 +751,8 @@ export function useChatScreen() {
     setIsActionsSheetOpen,
     isChatLanguageOpen,
     setIsChatLanguageOpen,
+    isVideoDurationOpen,
+    setIsVideoDurationOpen,
 
     // Computed values
     interactiveQuizQuestionId,
@@ -763,6 +774,7 @@ export function useChatScreen() {
     handleRetryFailedResponse,
     handleClearChat,
     handleOpenChatLanguage,
+    handleOpenVideoDuration,
     handleOpenCreditsModal,
     handleOpenBuyCredits,
     handleGoBack,

@@ -385,6 +385,12 @@
     "signInToView": "Please sign in to view your uploads",
     "empty": "No files uploaded yet"
   },
+  "videoDuration": {
+    "menu": "Video duration",
+    "title": "Video duration",
+    "subtitle": "Used whenever your companion records a video for you.",
+    "credits": "{{count}} credits"
+  },
   "imageRequest": {
     "title": "Request Photo",
     "videoTitle": "Request Video",

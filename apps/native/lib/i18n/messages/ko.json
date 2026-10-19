@@ -369,6 +369,12 @@
     "signInToView": "업로드를 보려면 로그인하세요",
     "empty": "아직 업로드된 파일이 없습니다"
   },
+  "videoDuration": {
+    "menu": "동영상 길이",
+    "title": "동영상 길이",
+    "subtitle": "캐릭터가 보내는 동영상에 적용됩니다.",
+    "credits": "{{count}} 크레딧"
+  },
   "imageRequest": {
     "title": "사진 요청",
     "credits": "{{count}} 크레딧",

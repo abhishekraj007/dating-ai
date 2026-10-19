@@ -369,6 +369,12 @@
     "signInToView": "アップロードを見るにはサインインしてください",
     "empty": "まだファイルがアップロードされていません"
   },
+  "videoDuration": {
+    "menu": "動画の長さ",
+    "title": "動画の長さ",
+    "subtitle": "キャラクターがあなたに送る動画に適用されます。",
+    "credits": "{{count}}クレジット"
+  },
   "imageRequest": {
     "title": "写真をリクエスト",
     "credits": "{{count}}クレジット",

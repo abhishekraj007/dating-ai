@@ -369,6 +369,12 @@
     "signInToView": "Inicia sesión para ver tus subidas",
     "empty": "Aún no se han subido archivos"
   },
+  "videoDuration": {
+    "menu": "Duración del video",
+    "title": "Duración del video",
+    "subtitle": "Se aplica a los videos grabados para ti.",
+    "credits": "{{count}} créditos"
+  },
   "imageRequest": {
     "title": "Solicitar foto",
     "credits": "{{count}} créditos",
