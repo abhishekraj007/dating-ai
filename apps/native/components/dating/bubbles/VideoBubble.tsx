@@ -117,6 +117,7 @@ export function VideoResponseBubble({
                 profileName={profileName}
                 profileAvatar={avatarUrl}
                 borderRadius={0}
+                mediaType="video"
               />
             </View>
           ) : (

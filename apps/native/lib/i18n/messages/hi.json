@@ -389,8 +389,10 @@
   },
   "premium": {
     "tapToSeePhoto": "फोटो देखने के लिए टैप करें",
+    "tapToSeeVideo": "वीडियो देखने के लिए टैप करें",
     "getCloser": "{{name}} के और करीब आएं",
     "unlockDescription": "{{name}} ने आपको फोटो भेजी है। प्रीमियम लें और ब्लर के पीछे देखें।",
+    "unlockVideoDescription": "{{name}} ने आपको एक वीडियो भेजा है। प्रीमियम लें और ब्लर के पीछे देखें।",
     "unlockUnlimited": "अनलिमिटेड एक्सेस अनलॉक करें"
   },
   "buyCredits": {

@@ -413,8 +413,10 @@
   },
   "premium": {
     "tapToSeePhoto": "Tap to See Photo",
+    "tapToSeeVideo": "Tap to See Video",
     "getCloser": "Get closer to {{name}}",
     "unlockDescription": "Get FeelChat Pro and find out what {{name}} sent you!",
+    "unlockVideoDescription": "Get FeelChat Pro and watch the video {{name}} sent you!",
     "unlockUnlimited": "Unlock Premium Content",
     "keepTalking": "Keep talking to {{name}}",
     "keepTalkingDescription": "Your free messages with {{name}} just ran out. Subscribe to keep the conversation going.",

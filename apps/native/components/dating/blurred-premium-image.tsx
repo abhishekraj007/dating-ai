@@ -17,6 +17,7 @@ interface BlurredPremiumImageProps {
   profileName?: string;
   profileAvatar?: string | null;
   borderRadius?: number;
+  mediaType?: "photo" | "video";
 }
 
 export function BlurredPremiumImage({
@@ -26,6 +27,7 @@ export function BlurredPremiumImage({
   profileName = "AI",
   profileAvatar,
   borderRadius = 16,
+  mediaType = "photo",
 }: BlurredPremiumImageProps) {
   const { t } = useTranslation();
   const [showUnlockModal, setShowUnlockModal] = useState(false);
@@ -69,15 +71,19 @@ export function BlurredPremiumImage({
             <Lock size={16} color="#fff" />
           </View>
           <View style={styles.tapLabel}>
-            <Text style={styles.tapText}>{t("premium.tapToSeePhoto")}</Text>
+            <Text style={styles.tapText}>
+              {t(
+                mediaType === "video"
+                  ? "premium.tapToSeeVideo"
+                  : "premium.tapToSeePhoto",
+              )}
+            </Text>
           </View>
         </View>
       </Pressable>
 
       <Dialog isOpen={showUnlockModal} onOpenChange={setShowUnlockModal}>
-        <Dialog.Portal
-          style={[StyleSheet.absoluteFill, styles.dialogPortal]}
-        >
+        <Dialog.Portal style={[StyleSheet.absoluteFill, styles.dialogPortal]}>
           <Dialog.Overlay className="bg-black/70" />
           <Dialog.Content className="w-[90%] max-w-[360px] self-center bg-[#1a1a1a] rounded-3xl overflow-hidden p-0">
             <Dialog.Close className="absolute top-4 right-4 z-10 bg-white/90 rounded-full p-2">
@@ -105,7 +111,12 @@ export function BlurredPremiumImage({
                 {t("premium.getCloser", { name: profileName })}
               </Dialog.Title>
               <Dialog.Description className="text-[15px] text-[#999] text-center mt-2 leading-[22px]">
-                {t("premium.unlockDescription", { name: profileName })}
+                {t(
+                  mediaType === "video"
+                    ? "premium.unlockVideoDescription"
+                    : "premium.unlockDescription",
+                  { name: profileName },
+                )}
               </Dialog.Description>
 
               <PremiumButton

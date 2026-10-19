@@ -389,8 +389,10 @@
   },
   "premium": {
     "tapToSeePhoto": "Toque para ver a foto",
+    "tapToSeeVideo": "Toque para ver o vídeo",
     "getCloser": "Chegue mais perto de {{name}}",
     "unlockDescription": "{{name}} te enviou uma foto. Obtenha Premium e descubra o que se esconde por trás do desfoque.",
+    "unlockVideoDescription": "{{name}} te enviou um vídeo. Obtenha Premium e descubra o que se esconde por trás do desfoque.",
     "unlockUnlimited": "Desbloquear acesso ilimitado"
   },
   "buyCredits": {

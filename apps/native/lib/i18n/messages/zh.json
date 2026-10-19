@@ -389,8 +389,10 @@
   },
   "premium": {
     "tapToSeePhoto": "点击查看照片",
+    "tapToSeeVideo": "点击查看视频",
     "getCloser": "更接近 {{name}}",
     "unlockDescription": "{{name}} 给你发了一张照片。获取高级版，看看模糊背后的内容。",
+    "unlockVideoDescription": "{{name}} 给你发了一段视频。获取高级版，看看模糊背后的内容。",
     "unlockUnlimited": "解锁无限访问"
   },
   "buyCredits": {

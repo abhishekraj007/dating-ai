@@ -389,8 +389,10 @@
   },
   "premium": {
     "tapToSeePhoto": "タップして写真を見る",
+    "tapToSeeVideo": "タップして動画を見る",
     "getCloser": "{{name}}にもっと近づく",
     "unlockDescription": "{{name}}があなたに写真を送りました。プレミアムを取得して、ぼかしの向こう側を見ましょう。",
+    "unlockVideoDescription": "{{name}}があなたに動画を送りました。プレミアムを取得して、ぼかしの向こう側を見ましょう。",
     "unlockUnlimited": "無制限アクセスをアンロック"
   },
   "buyCredits": {

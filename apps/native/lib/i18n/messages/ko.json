@@ -389,8 +389,10 @@
   },
   "premium": {
     "tapToSeePhoto": "탭하여 사진 보기",
+    "tapToSeeVideo": "탭하여 동영상 보기",
     "getCloser": "{{name}}에게 더 가까이",
     "unlockDescription": "{{name}}이(가) 사진을 보냈습니다. 프리미엄을 구매하고 블러 뒤에 숨겨진 것을 확인하세요.",
+    "unlockVideoDescription": "{{name}}이(가) 동영상을 보냈습니다. 프리미엄을 구매하고 블러 뒤에 숨겨진 것을 확인하세요.",
     "unlockUnlimited": "무제한 액세스 잠금 해제"
   },
   "buyCredits": {

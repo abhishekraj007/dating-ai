@@ -389,8 +389,10 @@
   },
   "premium": {
     "tapToSeePhoto": "Tippe, um das Foto zu sehen",
+    "tapToSeeVideo": "Tippe, um das Video zu sehen",
     "getCloser": "Komm {{name}} näher",
     "unlockDescription": "{{name}} hat dir ein Foto geschickt. Hol dir Premium und entdecke, was sich hinter dem Weichzeichner verbirgt.",
+    "unlockVideoDescription": "{{name}} hat dir ein Video geschickt. Hol dir Premium und entdecke, was sich hinter dem Weichzeichner verbirgt.",
     "unlockUnlimited": "Unbegrenzten Zugang freischalten"
   },
   "buyCredits": {

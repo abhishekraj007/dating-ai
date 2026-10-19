@@ -389,8 +389,10 @@
   },
   "premium": {
     "tapToSeePhoto": "Appuyez pour voir la photo",
+    "tapToSeeVideo": "Appuyez pour voir la vidéo",
     "getCloser": "Rapprochez-vous de {{name}}",
     "unlockDescription": "{{name}} vous a envoyé une photo. Obtenez Premium et découvrez ce qui se cache derrière le flou.",
+    "unlockVideoDescription": "{{name}} vous a envoyé une vidéo. Obtenez Premium et découvrez ce qui se cache derrière le flou.",
     "unlockUnlimited": "Débloquer l'accès illimité"
   },
   "buyCredits": {
