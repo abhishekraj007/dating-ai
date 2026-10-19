@@ -2,6 +2,8 @@
 
 import { v } from "convex/values";
 import { internalAction } from "../../_generated/server";
+import type { ActionCtx } from "../../_generated/server";
+import type { Id } from "../../_generated/dataModel";
 import { internal, api, components } from "../../_generated/api";
 import { createAIProfileAgent, getAvailableAgentProviders, getAgentLanguageModel, buildPersonalityPrompt } from "./agent";
 import { generateText } from "ai";
@@ -32,9 +34,43 @@ import {
   toChatProfileDetails,
 } from "./chatMediaGeneration";
 import { buildInFlightMediaContext } from "./chatMediaPlaceholders";
+import { chatPlatformValidator } from "./chatPlatformValidator";
 import { IS_DEV } from "./profileGen/constants";
 
 type ChatErrorCode = "rate_limited" | "generation_failed";
+
+/**
+ * Schedules the outbound channel delivery for a generated response.
+ * No-op when the request did not originate from a chat channel.
+ */
+async function scheduleChannelReply(
+  ctx: ActionCtx,
+  channelDeliveryId: Id<"channelDeliveries"> | undefined,
+): Promise<void> {
+  if (!channelDeliveryId) {
+    return;
+  }
+  await ctx.scheduler.runAfter(
+    0,
+    internal.features.telegram.delivery.deliverReply,
+    { deliveryId: channelDeliveryId },
+  );
+}
+
+/** Marks a channel delivery failed (e.g. the app user cancelled). */
+async function failChannelDelivery(
+  ctx: ActionCtx,
+  channelDeliveryId: Id<"channelDeliveries"> | undefined,
+  reason: string,
+): Promise<void> {
+  if (!channelDeliveryId) {
+    return;
+  }
+  await ctx.runMutation(internal.features.telegram.delivery.failDelivery, {
+    deliveryId: channelDeliveryId,
+    errorMessage: reason,
+  });
+}
 
 function getChatErrorDetails(error: unknown): {
   code: ChatErrorCode;
@@ -183,9 +219,8 @@ export const generateResponse = internalAction({
     userId: v.optional(v.string()),
     aiProfileId: v.optional(v.id("aiProfiles")),
     promptContent: v.optional(v.string()),
-    platform: v.optional(
-      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
-    ),
+    platform: v.optional(chatPlatformValidator),
+    channelDeliveryId: v.optional(v.id("channelDeliveries")),
   },
   returns: v.null(),
   handler: async (
@@ -198,6 +233,7 @@ export const generateResponse = internalAction({
       aiProfileId,
       promptContent,
       platform,
+      channelDeliveryId,
     },
   ) => {
     const latestConversation = await ctx.runQuery(
@@ -207,6 +243,11 @@ export const generateResponse = internalAction({
 
     if (!latestConversation) {
       console.error("Conversation not found:", conversationId);
+      await failChannelDelivery(
+        ctx,
+        channelDeliveryId,
+        "Conversation not found",
+      );
       return null;
     }
 
@@ -215,6 +256,7 @@ export const generateResponse = internalAction({
         internal.features.ai.mutations.finalizePendingPromptState,
         { conversationId, promptMessageId },
       );
+      await failChannelDelivery(ctx, channelDeliveryId, "Cancelled");
       return null;
     }
 
@@ -243,6 +285,7 @@ export const generateResponse = internalAction({
 
     if (!profile) {
       console.error("Profile not found:", profileId);
+      await scheduleChannelReply(ctx, channelDeliveryId);
       return null;
     }
 
@@ -285,6 +328,7 @@ export const generateResponse = internalAction({
         internal.features.ai.mutations.finalizePendingPromptState,
         { conversationId, promptMessageId },
       );
+      await scheduleChannelReply(ctx, channelDeliveryId);
       return null;
     }
 
@@ -327,6 +371,7 @@ export const generateResponse = internalAction({
             internal.features.ai.mutations.finalizePendingPromptState,
             { conversationId, promptMessageId },
           );
+          await failChannelDelivery(ctx, channelDeliveryId, "Cancelled");
           return null;
         }
       }
@@ -360,6 +405,7 @@ export const generateResponse = internalAction({
         { conversationId, promptMessageId },
       );
 
+      await scheduleChannelReply(ctx, channelDeliveryId);
       return null;
     }
 
@@ -373,6 +419,7 @@ export const generateResponse = internalAction({
         internal.features.ai.mutations.finalizePendingPromptState,
         { conversationId, promptMessageId },
       );
+      await failChannelDelivery(ctx, channelDeliveryId, "Cancelled");
       return null;
     }
 
@@ -434,6 +481,7 @@ export const generateResponse = internalAction({
                   platform,
                   prompt: args.description || "A video",
                   promptMessageId,
+                  channelDeliveryId,
                   styleOptions: {
                     hairstyle: args.hairstyle,
                     clothing: args.clothing,
@@ -447,6 +495,7 @@ export const generateResponse = internalAction({
                   internal.features.ai.mutations.finalizePendingPromptState,
                   { conversationId, promptMessageId },
                 );
+                await scheduleChannelReply(ctx, channelDeliveryId);
                 return null;
               }
               console.log("Video request created successfully");
@@ -454,6 +503,7 @@ export const generateResponse = internalAction({
                 internal.features.ai.mutations.finalizePendingPromptState,
                 { conversationId, promptMessageId },
               );
+              await scheduleChannelReply(ctx, channelDeliveryId);
               return null;
             } catch (error) {
               console.error(
@@ -489,6 +539,7 @@ export const generateResponse = internalAction({
                   platform,
                   prompt: args.description || "A selfie",
                   promptMessageId,
+                  channelDeliveryId,
                   styleOptions: {
                     hairstyle: args.hairstyle,
                     clothing: args.clothing,
@@ -502,6 +553,7 @@ export const generateResponse = internalAction({
                   internal.features.ai.mutations.finalizePendingPromptState,
                   { conversationId, promptMessageId },
                 );
+                await scheduleChannelReply(ctx, channelDeliveryId);
                 return null;
               }
               console.log("Image request created successfully");
@@ -510,6 +562,7 @@ export const generateResponse = internalAction({
                 internal.features.ai.mutations.finalizePendingPromptState,
                 { conversationId, promptMessageId },
               );
+              await scheduleChannelReply(ctx, channelDeliveryId);
               return null;
             } catch (error) {
               console.error(
@@ -527,6 +580,7 @@ export const generateResponse = internalAction({
       { conversationId, promptMessageId },
     );
 
+    await scheduleChannelReply(ctx, channelDeliveryId);
     return null;
   },
 });
@@ -917,15 +971,21 @@ export const generateVoiceMessage = internalAction({
 export const generateOpeningMessage = internalAction({
   args: {
     conversationId: v.id("aiConversations"),
+    channelDeliveryId: v.optional(v.id("channelDeliveries")),
   },
   returns: v.null(),
-  handler: async (ctx, { conversationId }) => {
+  handler: async (ctx, { conversationId, channelDeliveryId }) => {
     const conversation = await ctx.runQuery(
       internal.features.ai.internalQueries.getConversationInternal,
       { conversationId },
     );
 
     if (!conversation) {
+      await failChannelDelivery(
+        ctx,
+        channelDeliveryId,
+        "Conversation not found",
+      );
       return null;
     }
 
@@ -943,6 +1003,7 @@ export const generateOpeningMessage = internalAction({
           status: "failed",
         },
       );
+      await failChannelDelivery(ctx, channelDeliveryId, "Profile not found");
       return null;
     }
 
@@ -980,7 +1041,7 @@ export const generateOpeningMessage = internalAction({
       }
     }
 
-    await saveMessage(ctx, components.agent, {
+    const { messageId } = await saveMessage(ctx, components.agent, {
       threadId: conversation.threadId,
       userId: conversation.userId,
       message: {
@@ -998,6 +1059,14 @@ export const generateOpeningMessage = internalAction({
         status: "ready",
       },
     );
+
+    if (channelDeliveryId) {
+      await ctx.runMutation(
+        internal.features.telegram.delivery.attachOpeningResponseMessage,
+        { deliveryId: channelDeliveryId, messageId },
+      );
+      await scheduleChannelReply(ctx, channelDeliveryId);
+    }
 
     return null;
   },

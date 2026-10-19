@@ -269,7 +269,12 @@ export default defineSchema({
     userId: v.string(),
     aiProfileId: v.id("aiProfiles"),
     platform: v.optional(
-      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+      v.union(
+        v.literal("ios"),
+        v.literal("android"),
+        v.literal("web"),
+        v.literal("telegram"),
+      ),
     ),
     prompt: v.string(),
     styleOptions: v.optional(
@@ -291,12 +296,18 @@ export default defineSchema({
     replicateJobId: v.optional(v.string()),
     errorMessage: v.optional(v.string()),
     creditsCharged: v.number(),
+    // Set when the request originated from a channel (e.g. Telegram) so the
+    // finished media can be delivered back to that chat.
+    channelDeliveryId: v.optional(v.id("channelDeliveries")),
+    // Unix ms when the finished media was delivered to the channel chat.
+    channelDeliveredAt: v.optional(v.number()),
   })
     .index("by_conversation", ["conversationId"])
     .index("by_conversation_and_status", ["conversationId", "status"])
     .index("by_user", ["userId"])
     .index("by_status", ["status"])
-    .index("by_image_key", ["imageKey"]),
+    .index("by_image_key", ["imageKey"])
+    .index("by_channel_delivery", ["channelDeliveryId"]),
 
   // Chat video generation requests
   chatVideos: defineTable({
@@ -304,7 +315,12 @@ export default defineSchema({
     userId: v.string(),
     aiProfileId: v.id("aiProfiles"),
     platform: v.optional(
-      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+      v.union(
+        v.literal("ios"),
+        v.literal("android"),
+        v.literal("web"),
+        v.literal("telegram"),
+      ),
     ),
     prompt: v.string(),
     styleOptions: v.optional(
@@ -328,13 +344,19 @@ export default defineSchema({
     replicateJobId: v.optional(v.string()),
     errorMessage: v.optional(v.string()),
     creditsCharged: v.number(),
+    // Set when the request originated from a channel (e.g. Telegram) so the
+    // finished media can be delivered back to that chat.
+    channelDeliveryId: v.optional(v.id("channelDeliveries")),
+    // Unix ms when the finished media was delivered to the channel chat.
+    channelDeliveredAt: v.optional(v.number()),
   })
     .index("by_conversation", ["conversationId"])
     .index("by_conversation_and_status", ["conversationId", "status"])
     .index("by_user", ["userId"])
     .index("by_status", ["status"])
     .index("by_video_key", ["videoKey"])
-    .index("by_poster_key", ["posterKey"]),
+    .index("by_poster_key", ["posterKey"])
+    .index("by_channel_delivery", ["channelDeliveryId"]),
 
   // System AI profile generation jobs (manual + cron)
   profileGenerationJobs: defineTable({
@@ -531,10 +553,96 @@ export default defineSchema({
     // Platforms where NSFW content is enabled. Missing or empty means disabled.
     nsfwEnabledPlatforms: v.optional(
       v.array(
-        v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+        v.union(
+          v.literal("ios"),
+          v.literal("android"),
+          v.literal("web"),
+          v.literal("telegram"),
+        ),
       ),
     ),
     updatedAt: v.number(),
     updatedBy: v.string(),
   }).index("by_key", ["key"]),
+
+  // Links an authenticated app user to a Telegram chat.
+  // Created when the user presses "Start" on a character's deep link.
+  channelLinks: defineTable({
+    platform: v.literal("telegram"),
+    platformUserId: v.string(), // Telegram user id
+    platformChatId: v.string(), // Telegram private chat id
+    userId: v.string(), // Better Auth user id
+    status: v.union(v.literal("active"), v.literal("revoked")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_platform_and_platform_user", ["platform", "platformUserId"])
+    .index("by_user", ["userId"]),
+
+  // One-time tokens for linking the app account to Telegram.
+  // Only the SHA-256 hash of the token is stored; tokens are short-lived.
+  channelLinkTokens: defineTable({
+    tokenHash: v.string(), // SHA-256 hex of the raw token
+    userId: v.string(), // Better Auth user id
+    aiProfileId: v.id("aiProfiles"),
+    expiresAt: v.number(), // Unix ms
+    usedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_token_hash", ["tokenHash"]),
+
+  // Maps a character to its Telegram conversation (topic when enabled,
+  // or the single linked DM in fallback mode).
+  channelThreads: defineTable({
+    platform: v.literal("telegram"),
+    platformChatId: v.string(),
+    topicId: v.optional(v.number()), // Telegram message_thread_id when topics are on
+    userId: v.string(), // Better Auth user id
+    aiProfileId: v.id("aiProfiles"),
+    conversationId: v.id("aiConversations"),
+    isActive: v.boolean(), // fallback mode: character currently receiving messages
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_platform_and_chat", ["platform", "platformChatId"])
+    .index("by_chat_and_profile", ["platformChatId", "aiProfileId"])
+    .index("by_user", ["userId"]),
+
+  // Raw Telegram updates kept for idempotency and debugging.
+  telegramUpdates: defineTable({
+    updateId: v.number(),
+    status: v.union(
+      v.literal("received"),
+      v.literal("processed"),
+      v.literal("failed"),
+    ),
+    payload: v.optional(v.string()),
+    messagePreview: v.optional(v.string()),
+    error: v.optional(v.string()),
+    receivedAt: v.number(),
+  })
+    .index("by_update_id", ["updateId"])
+    .index("by_received_at", ["receivedAt"]),
+
+  // One row per outbound Telegram reply that must be delivered.
+  channelDeliveries: defineTable({
+    platform: v.literal("telegram"),
+    platformChatId: v.string(),
+    topicId: v.optional(v.number()),
+    userId: v.string(), // Better Auth user id
+    aiProfileId: v.id("aiProfiles"),
+    conversationId: v.id("aiConversations"),
+    kind: v.union(v.literal("chat"), v.literal("opening")),
+    promptMessageId: v.optional(v.string()), // set for "chat" deliveries
+    responseMessageId: v.optional(v.string()), // set for "opening" deliveries
+    status: v.union(
+      v.literal("pending"),
+      v.literal("text_sending"),
+      v.literal("text_sent"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    errorMessage: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
 });

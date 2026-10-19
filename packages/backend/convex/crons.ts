@@ -19,4 +19,12 @@ crons.interval(
   {},
 );
 
+// Clean up processed Telegram webhook updates (stores raw payloads).
+crons.interval(
+  "cleanup old telegram updates",
+  { hours: 24 },
+  "features/telegram/webhook:cleanupOldUpdates" as any,
+  {},
+);
+
 export default crons;

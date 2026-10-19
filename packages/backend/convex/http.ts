@@ -152,4 +152,47 @@ http.route({
   }),
 });
 
+// Telegram bot webhook. Telegram retries on non-2xx, so this must stay fast:
+// the update is persisted and processing happens asynchronously.
+const MAX_TELEGRAM_UPDATE_LENGTH = 32_768;
+
+http.route({
+  path: "/telegram/webhook",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
+    if (!secret) {
+      return new Response("Telegram is not configured", { status: 503 });
+    }
+
+    if (request.headers.get("X-Telegram-Bot-Api-Secret-Token") !== secret) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const raw = await request.text();
+    if (raw.length > MAX_TELEGRAM_UPDATE_LENGTH) {
+      return new Response("Payload too large", { status: 413 });
+    }
+
+    let updateId: unknown;
+    try {
+      const parsed = JSON.parse(raw) as { update_id?: unknown };
+      updateId = parsed.update_id;
+    } catch {
+      return new Response("Invalid JSON", { status: 400 });
+    }
+
+    if (typeof updateId !== "number" || !Number.isFinite(updateId)) {
+      return new Response("Missing update_id", { status: 400 });
+    }
+
+    await ctx.runMutation(internal.features.telegram.webhook.recordUpdate, {
+      updateId,
+      payload: raw,
+    });
+
+    return new Response("ok", { status: 200 });
+  }),
+});
+
 export default http;

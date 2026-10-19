@@ -59,6 +59,33 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
           await ctx.db.delete(profile._id);
           console.log("Deleted profile for user:", authUser._id);
         }
+
+        // Disconnect chat-channel links (e.g. Telegram) so a deleted account
+        // stops receiving or sending messages on those channels.
+        const channelLinks = await ctx.db
+          .query("channelLinks")
+          .withIndex("by_user", (q) => q.eq("userId", authUser._id))
+          .take(50);
+
+        for (const link of channelLinks) {
+          await ctx.db.delete(link._id);
+        }
+
+        const channelThreads = await ctx.db
+          .query("channelThreads")
+          .withIndex("by_user", (q) => q.eq("userId", authUser._id))
+          .take(50);
+
+        for (const thread of channelThreads) {
+          await ctx.db.delete(thread._id);
+        }
+
+        if (channelLinks.length > 0 || channelThreads.length > 0) {
+          console.log(
+            `Deleted ${channelLinks.length} channel links and ${channelThreads.length} channel threads for user:`,
+            authUser._id,
+          );
+        }
       },
     },
   },

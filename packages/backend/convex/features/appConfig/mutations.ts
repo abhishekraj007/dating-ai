@@ -24,7 +24,12 @@ export const upsertAppConfig = mutation({
     revenueCatCreditProductIds: v.optional(v.array(v.string())),
     nsfwEnabledPlatforms: v.optional(
       v.array(
-        v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+        v.union(
+          v.literal("ios"),
+          v.literal("android"),
+          v.literal("web"),
+          v.literal("telegram"),
+        ),
       ),
     ),
   },

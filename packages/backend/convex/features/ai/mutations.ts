@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, internalMutation } from "../../_generated/server";
 import type { MutationCtx } from "../../_generated/server";
+import type { Id } from "../../_generated/dataModel";
 import { internal } from "../../_generated/api";
 import {
   abortStream,
@@ -14,6 +15,7 @@ import {
   chatImageStyleOptionsValidator,
   chatVideoStyleOptionsValidator,
 } from "./chatMediaValidators";
+import { chatPlatformValidator } from "./chatPlatformValidator";
 import {
   attachMediaProcessingPlaceholder,
   buildMediaFailedContent,
@@ -138,6 +140,42 @@ export const startConversation = mutation({
       throw new Error("Not authenticated");
     }
 
+    const started: {
+      conversationId: Id<"aiConversations">;
+      isNew: boolean;
+    } = await ctx.runMutation(
+      internal.features.ai.mutations.startConversationInternal,
+      {
+        userId: user._id,
+        aiProfileId,
+        grantFreeMessages,
+      },
+    );
+
+    return started.conversationId;
+  },
+});
+
+/**
+ * Internal conversation starter shared by the app and chat channels.
+ * When `skipOpeningMessage` is set the caller is responsible for creating the
+ * opening response (used by Telegram so the greeting can be delivered).
+ */
+export const startConversationInternal = internalMutation({
+  args: {
+    userId: v.string(),
+    aiProfileId: v.id("aiProfiles"),
+    grantFreeMessages: v.optional(v.boolean()),
+    skipOpeningMessage: v.optional(v.boolean()),
+  },
+  returns: v.object({
+    conversationId: v.id("aiConversations"),
+    isNew: v.boolean(),
+  }),
+  handler: async (
+    ctx,
+    { userId, aiProfileId, grantFreeMessages, skipOpeningMessage },
+  ) => {
     const profile = await ctx.db.get(aiProfileId);
     if (!profile || profile.status !== "active") {
       throw new Error("Profile not found");
@@ -146,23 +184,23 @@ export const startConversation = mutation({
     const existingConversation = await ctx.db
       .query("aiConversations")
       .withIndex("by_user_and_profile", (q) =>
-        q.eq("userId", user._id).eq("aiProfileId", aiProfileId),
+        q.eq("userId", userId).eq("aiProfileId", aiProfileId),
       )
       .first();
 
     if (existingConversation) {
-      return existingConversation._id;
+      return { conversationId: existingConversation._id, isNew: false };
     }
 
     const threadId = await createThread(ctx, components.agent, {
-      userId: user._id,
+      userId,
       title: `Chat with ${profile.name}`,
       summary: `Conversation with AI profile ${profile.name}`,
     });
 
     const conversationId = await ctx.db.insert("aiConversations", {
       threadId,
-      userId: user._id,
+      userId,
       aiProfileId,
       relationshipLevel: 1,
       compatibilityScore: 60,
@@ -176,13 +214,15 @@ export const startConversation = mutation({
         : {}),
     });
 
-    await ctx.scheduler.runAfter(
-      0,
-      internal.features.ai.actions.generateOpeningMessage,
-      { conversationId },
-    );
+    if (!skipOpeningMessage) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.features.ai.actions.generateOpeningMessage,
+        { conversationId },
+      );
+    }
 
-    return conversationId;
+    return { conversationId, isNew: true };
   },
 });
 
@@ -217,9 +257,7 @@ export const sendMessage = mutation({
   args: {
     conversationId: v.id("aiConversations"),
     content: v.string(),
-    platform: v.optional(
-      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
-    ),
+    platform: v.optional(chatPlatformValidator),
   },
   returns: v.object({ messageId: v.string() }),
   handler: async (ctx, { conversationId, content, platform }) => {
@@ -233,10 +271,61 @@ export const sendMessage = mutation({
       throw new Error("Conversation not found");
     }
 
+    const sent: {
+      messageId: string;
+      channelDeliveryId?: Id<"channelDeliveries">;
+    } = await ctx.runMutation(
+      internal.features.ai.mutations.sendUserMessageInternal,
+      {
+        userId: user._id,
+        conversationId,
+        content,
+        platform,
+      },
+    );
+
+    return { messageId: sent.messageId };
+  },
+});
+
+/**
+ * Shared message pipeline for the app and chat channels. Channel callers pass
+ * a `channel` target, which creates a delivery row so the reply is sent back
+ * to the channel chat after generation.
+ */
+export const sendUserMessageInternal = internalMutation({
+  args: {
+    userId: v.string(),
+    conversationId: v.id("aiConversations"),
+    content: v.string(),
+    platform: v.optional(chatPlatformValidator),
+    channel: v.optional(
+      v.object({
+        platformChatId: v.string(),
+        topicId: v.optional(v.number()),
+      }),
+    ),
+  },
+  returns: v.object({
+    messageId: v.string(),
+    channelDeliveryId: v.optional(v.id("channelDeliveries")),
+  }),
+  handler: async (
+    ctx,
+    { userId, conversationId, content, platform, channel },
+  ): Promise<{
+    messageId: string;
+    channelDeliveryId?: Id<"channelDeliveries">;
+  }> => {
+    const conversation = await ctx.db.get(conversationId);
+    if (!conversation || conversation.userId !== userId) {
+      throw new Error("Conversation not found");
+    }
+
     // Get user profile to check/deduct credits
     const profile = await ctx.db
       .query("profile")
-      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", user._id))
+      .withIndex("by_auth_user_id", (q) => q.eq("authUserId", userId))
       .unique();
 
     if (!profile) {
@@ -247,7 +336,7 @@ export const sendMessage = mutation({
     const messageCost = TEXT_MESSAGE_CREDIT_COST;
     const imageCost = CHAT_IMAGE_REQUEST_CREDIT_COST;
     const videoCost =
-      CHAT_VIDEO_CREDIT_COSTS[await getChatVideoDurationForUser(ctx, user._id)];
+      CHAT_VIDEO_CREDIT_COSTS[await getChatVideoDurationForUser(ctx, userId)];
     const isVideoRequest = isLikelyChatVideoRequest(content);
     const isImageRequest = isLikelyChatImageRequest(content);
     const isMediaRequest = isVideoRequest || isImageRequest;
@@ -268,9 +357,25 @@ export const sendMessage = mutation({
     // Save user message using Agent component
     const { messageId } = await saveMessage(ctx, components.agent, {
       threadId: conversation.threadId,
-      userId: user._id,
+      userId,
       prompt: content,
     });
+
+    // Channel deliveries track the outbound reply for this prompt.
+    let channelDeliveryId: Id<"channelDeliveries"> | undefined;
+    if (channel) {
+      channelDeliveryId = await ctx.runMutation(
+        internal.features.telegram.delivery.createChatDelivery,
+        {
+          platformChatId: channel.platformChatId,
+          topicId: channel.topicId,
+          userId,
+          aiProfileId: conversation.aiProfileId,
+          conversationId,
+          promptMessageId: messageId,
+        },
+      );
+    }
 
     // Update conversation stats
     const newMessageCount = conversation.messageCount + 1;
@@ -297,7 +402,7 @@ export const sendMessage = mutation({
     if (isMediaRequest && currentCredits < mediaCost) {
       await saveMediaCreditsRequiredMessage(ctx, {
         threadId: conversation.threadId,
-        userId: user._id,
+        userId,
         agentName: aiProfile.name,
         action: isVideoRequest ? "video_request" : "image_request",
         requiredCredits: mediaCost,
@@ -305,7 +410,16 @@ export const sendMessage = mutation({
         promptMessageId: messageId,
       });
 
-      return { messageId };
+      // No generation runs here, so deliver the credits notice directly.
+      if (channelDeliveryId) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.features.telegram.delivery.deliverReply,
+          { deliveryId: channelDeliveryId },
+        );
+      }
+
+      return { messageId, channelDeliveryId };
     }
 
     if (!isMediaRequest && !usesFreeMessage) {
@@ -322,14 +436,15 @@ export const sendMessage = mutation({
         conversationId,
         promptMessageId: messageId,
         threadId: conversation.threadId,
-        userId: user._id,
+        userId,
         aiProfileId: conversation.aiProfileId,
         promptContent: content,
         platform,
+        channelDeliveryId,
       },
     );
 
-    return { messageId };
+    return { messageId, channelDeliveryId };
   },
 });
 
@@ -1037,12 +1152,11 @@ export const createChatImageRequestInternal = internalMutation({
     conversationId: v.id("aiConversations"),
     userId: v.string(), // Better Auth user ID (string, not v.id("users"))
     aiProfileId: v.id("aiProfiles"),
-    platform: v.optional(
-      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
-    ),
+    platform: v.optional(chatPlatformValidator),
     prompt: v.string(),
     styleOptions: chatImageStyleOptionsValidator,
     promptMessageId: v.optional(v.string()),
+    channelDeliveryId: v.optional(v.id("channelDeliveries")),
   },
   returns: v.union(v.id("chatImages"), v.null()),
   handler: async (
@@ -1055,6 +1169,7 @@ export const createChatImageRequestInternal = internalMutation({
       prompt,
       styleOptions,
       promptMessageId,
+      channelDeliveryId,
     },
   ) => {
     // Get user profile to check/deduct credits
@@ -1084,6 +1199,7 @@ export const createChatImageRequestInternal = internalMutation({
           action: "image_request",
           requiredCredits: imageCost,
           currentCredits,
+          promptMessageId,
         });
       }
 
@@ -1105,6 +1221,7 @@ export const createChatImageRequestInternal = internalMutation({
       styleOptions,
       status: "pending",
       creditsCharged: imageCost,
+      channelDeliveryId,
     });
 
     await attachMediaProcessingPlaceholder(ctx, {
@@ -1136,9 +1253,7 @@ export const requestChatImage = mutation({
   args: {
     conversationId: v.id("aiConversations"),
     prompt: v.string(),
-    platform: v.optional(
-      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
-    ),
+    platform: v.optional(chatPlatformValidator),
     styleOptions: chatImageStyleOptionsValidator,
   },
   returns: v.id("chatImages"),
@@ -1353,6 +1468,21 @@ export const updateChatImageRequest = internalMutation({
       }
     }
 
+    // Channel (e.g. Telegram) deliveries send the finished media back to chat.
+    if (
+      request.channelDeliveryId &&
+      (updates.status === "completed" || updates.status === "failed")
+    ) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.features.telegram.delivery.deliverMedia,
+        {
+          deliveryId: request.channelDeliveryId,
+          imageRequestId: requestId,
+        },
+      );
+    }
+
     return null;
   },
 });
@@ -1365,12 +1495,11 @@ export const createChatVideoRequestInternal = internalMutation({
     conversationId: v.id("aiConversations"),
     userId: v.string(),
     aiProfileId: v.id("aiProfiles"),
-    platform: v.optional(
-      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
-    ),
+    platform: v.optional(chatPlatformValidator),
     prompt: v.string(),
     styleOptions: chatVideoStyleOptionsValidator,
     promptMessageId: v.optional(v.string()),
+    channelDeliveryId: v.optional(v.id("channelDeliveries")),
   },
   returns: v.union(v.id("chatVideos"), v.null()),
   handler: async (
@@ -1383,6 +1512,7 @@ export const createChatVideoRequestInternal = internalMutation({
       prompt,
       styleOptions,
       promptMessageId,
+      channelDeliveryId,
     },
   ) => {
     const profile = await ctx.db
@@ -1412,6 +1542,7 @@ export const createChatVideoRequestInternal = internalMutation({
           action: "video_request",
           requiredCredits: videoCost,
           currentCredits,
+          promptMessageId,
         });
       }
 
@@ -1431,6 +1562,7 @@ export const createChatVideoRequestInternal = internalMutation({
       styleOptions: { ...(styleOptions ?? {}), duration: videoDuration },
       status: "pending",
       creditsCharged: videoCost,
+      channelDeliveryId,
     });
 
     await attachMediaProcessingPlaceholder(ctx, {
@@ -1461,9 +1593,7 @@ export const requestChatVideo = mutation({
   args: {
     conversationId: v.id("aiConversations"),
     prompt: v.string(),
-    platform: v.optional(
-      v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
-    ),
+    platform: v.optional(chatPlatformValidator),
     styleOptions: chatVideoStyleOptionsValidator,
   },
   returns: v.id("chatVideos"),
@@ -1681,6 +1811,21 @@ export const updateChatVideoRequest = internalMutation({
           }
         }
       }
+    }
+
+    // Channel (e.g. Telegram) deliveries send the finished media back to chat.
+    if (
+      request.channelDeliveryId &&
+      (updates.status === "completed" || updates.status === "failed")
+    ) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.features.telegram.delivery.deliverMedia,
+        {
+          deliveryId: request.channelDeliveryId,
+          videoRequestId: requestId,
+        },
+      );
     }
 
     return null;

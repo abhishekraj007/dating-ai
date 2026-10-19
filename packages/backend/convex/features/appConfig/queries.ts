@@ -14,7 +14,12 @@ const fallbackBaseWebUrl =
   process.env.SITE_URL ?? process.env.EXPO_PUBLIC_CONVEX_SITE_URL;
 
 const nsfwEnabledPlatformsValidator = v.array(
-  v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+  v.union(
+    v.literal("ios"),
+    v.literal("android"),
+    v.literal("web"),
+    v.literal("telegram"),
+  ),
 );
 
 const publicAppConfigValidator = v.object({
